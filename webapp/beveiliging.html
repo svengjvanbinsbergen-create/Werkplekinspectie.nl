@@ -1,0 +1,82 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Beveiliging &amp; back-up</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,sans-serif}
+body{background:#F6F7F9;color:#141A22;padding:28px 20px 70px;max-width:1100px;margin:0 auto}
+.k{color:#4A5565;font-size:14px;font-weight:600}h1{font-size:28px;font-weight:700;margin:2px 0 6px}
+.lead{color:#4A5565;font-size:14px;max-width:760px;margin-bottom:18px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;font-size:13px;color:#4A5565}
+.t{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.done{background:#E6F4EC;color:#1E7A4C}.must{background:#FDECEA;color:#B42318}.imp{background:#FFF1DC;color:#8A4B00}.later{background:#F3F4F6;color:#4A5565}
+h2{font-size:17px;font-weight:650;margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.card{background:#fff;border-radius:16px;box-shadow:0 0 0 1px #E7E9ED;padding:14px 16px}
+.card .h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .n{font-weight:650;font-size:15px}.card .d{font-size:13px;color:#4A5565;margin-top:4px;line-height:1.45}
+.note{background:#FFF8E8;border:1px solid #F3E8BC;border-radius:14px;padding:12px 16px;font-size:13px;color:#5E4500;margin:10px 0 18px}
+</style></head><body>
+<div class="k">Werkplekinspectie · onderzoek door DeepSeek-harnas, gecureerd door Claude</div>
+<h1>Beveiliging &amp; back-up</h1>
+<div class="lead">Hardening-plan voor de app (PWA) + web-app + Supabase-backend, met database-back-up en AVG. Volledige bron: docs/beveiliging-onderzoek.md. Prioriteit richt zich op "vóór je met echte data gaat werken".</div>
+<div class="legend">
+  <span><span class="t done">AL GEDAAN</span></span>
+  <span><span class="t must">MUST vóór echte data</span></span>
+  <span><span class="t imp">BELANGRIJK</span></span>
+  <span><span class="t later">LATER</span></span>
+</div>
+<div class="note"><b>Let op — Supabase &amp; tokens.</b> De Supabase-client bewaart de sessie standaard in localStorage, terwijl de veiligste aanpak HttpOnly-cookies is. Keuze bij het live gaan: standaard gebruiken (met korte JWT-expiry + RLS, acceptabel) óf cookie-gebaseerde opslag instellen. Nu bewaart de demo alleen een rol-id, geen token.</div>
+
+<h2>Database &amp; back-up</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Dagelijkse automatische back-ups</span><span class="t must">MUST</span></div><div class="d">Supabase maakt dagelijkse back-ups (afh. van plan); plan en dekking controleren en documenteren.</div></div>
+  <div class="card"><div class="h"><span class="n">Point-in-Time Recovery (PITR)</span><span class="t must">MUST</span></div><div class="d">Terugzetten naar een exact moment, bijv. vlak vóór een foute delete of migratie. Betaalde add-on.</div></div>
+  <div class="card"><div class="h"><span class="n">Eigen export (pg_dump) als extra kopie</span><span class="t imp">BELANGRIJK</span></div><div class="d">Periodieke, portable kopie los van Supabase — herstelbaar ook als het project zelf uitvalt.</div></div>
+  <div class="card"><div class="h"><span class="n">Restore drill (herstel testen)</span><span class="t imp">BELANGRIJK</span></div><div class="d">Regelmatig terugzetten naar een testomgeving — een back-up die je nooit test, telt niet.</div></div>
+  <div class="card"><div class="h"><span class="n">Aparte back-up-opslag</span><span class="t imp">BELANGRIJK</span></div><div class="d">Eigen exports in een andere locatie/account, zodat één storing niet alle kopieën raakt.</div></div>
+  <div class="card"><div class="h"><span class="n">RPO/RTO vastleggen</span><span class="t later">LATER</span></div><div class="d">Bepaal max. dataverlies en max. hersteltijd voor inspectiedata en toets de back-ups daaraan.</div></div>
+</div>
+
+<h2>Supabase / backend</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Row Level Security op elke tabel</span><span class="t done">AL GEDAAN</span></div><div class="d">RLS aan; geen policy = geen toegang. Inspecteur ziet eigen, coördinator/hoofd alles (schema.sql).</div></div>
+  <div class="card"><div class="h"><span class="n">AVG-dataminimalisatie in het model</span><span class="t done">AL GEDAAN</span></div><div class="d">Geen namen van geïnspecteerde medewerkers in vrije tekst; alleen de app-gebruiker.</div></div>
+  <div class="card"><div class="h"><span class="n">service_role key alleen server-side</span><span class="t must">MUST</span></div><div class="d">Nooit in de client, browser of repo; anders omzeilt iemand alle RLS.</div></div>
+  <div class="card"><div class="h"><span class="n">EU-regio + ondertekende DPA</span><span class="t must">MUST</span></div><div class="d">Project in EU-regio aanmaken en de Supabase-verwerkersovereenkomst tekenen (AVG).</div></div>
+  <div class="card"><div class="h"><span class="n">MFA op het Supabase-dashboard</span><span class="t must">MUST</span></div><div class="d">Verplicht voor alle leden; dashboard-toegang beperken tot wie het nodig heeft.</div></div>
+  <div class="card"><div class="h"><span class="n">Auth: e-mailverificatie, wachtwoordbeleid, korte JWT</span><span class="t must">MUST</span></div><div class="d">E-mailverificatie aan, sterk wachtwoordbeleid, korte JWT-expiry met refresh-rotatie.</div></div>
+  <div class="card"><div class="h"><span class="n">Storage-buckets privé + policies</span><span class="t imp">BELANGRIJK</span></div><div class="d">Foto's/bijlagen in privé-buckets met policy per pad en operatie (nodig zodra foto's komen).</div></div>
+  <div class="card"><div class="h"><span class="n">Rate limiting vóór de API</span><span class="t imp">BELANGRIJK</span></div><div class="d">Via reverse proxy/Cloudflare op login/reset/API; alarm op afwijkend verkeer.</div></div>
+</div>
+
+<h2>Web &amp; app (client)</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">HTTPS afdwingen + HSTS</span><span class="t must">MUST</span></div><div class="d">Alles over HTTPS, HSTS-header, geen gemengde content, Secure-cookies.</div></div>
+  <div class="card"><div class="h"><span class="n">Veilige headers (CSP, X-Content-Type, frame)</span><span class="t imp">BELANGRIJK</span></div><div class="d">Content-Security-Policy, X-Content-Type-Options, frame-bescherming als extra laag tegen XSS/clickjacking.</div></div>
+  <div class="card"><div class="h"><span class="n">Geen tokens in localStorage</span><span class="t imp">BELANGRIJK</span></div><div class="d">Tokens in HttpOnly/Secure-cookies of kortlevend in-memory (zie let-op hierboven).</div></div>
+  <div class="card"><div class="h"><span class="n">Sessie-timeout + wissen bij uitloggen</span><span class="t imp">BELANGRIJK</span></div><div class="d">Korte idle-timeout; bij uitloggen tokens, IndexedDB, caches en sleutels wissen.</div></div>
+  <div class="card"><div class="h"><span class="n">Offline-data versleutelen</span><span class="t later">LATER</span></div><div class="d">Gevoelige offline inspectiedata in IndexedDB versleutelen (WebCrypto) zodra offline komt.</div></div>
+  <div class="card"><div class="h"><span class="n">Autorisatie altijd server-side</span><span class="t must">MUST</span></div><div class="d">Rol-check in de UI is cosmetisch; de echte grens is RLS/policies op de server. (UI al gebouwd.)</div></div>
+  <div class="card"><div class="h"><span class="n">Dependency-scan + lockfile</span><span class="t imp">BELANGRIJK</span></div><div class="d">Lockfiles, kwetsbaarheden scannen en kwetsbare packages tijdig patchen.</div></div>
+  <div class="card"><div class="h"><span class="n">Geen gevoelige data in logs</span><span class="t imp">BELANGRIJK</span></div><div class="d">Nooit tokens, persoonsgegevens of oordelen loggen; client- en serverlogs saneren.</div></div>
+</div>
+
+<h2>Operationeel &amp; AVG</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Least privilege + MFA + offboarding</span><span class="t must">MUST</span></div><div class="d">Alleen nodige rechten, MFA verplicht, toegang direct intrekken bij vertrek.</div></div>
+  <div class="card"><div class="h"><span class="n">Audit-trail (wie-wat-wanneer)</span><span class="t imp">BELANGRIJK</span></div><div class="d">Beheer- en beveiligingsacties centraal loggen, beschermd tegen wijzigen — ook bewijskracht voor VCA.</div></div>
+  <div class="card"><div class="h"><span class="n">Datalek-procedure (AVG 72 uur)</span><span class="t must">MUST</span></div><div class="d">Wie beoordeelt, hoe je binnen 72 uur bij de AP meldt en wanneer je betrokkenen informeert.</div></div>
+  <div class="card"><div class="h"><span class="n">Monitoring &amp; alerts</span><span class="t imp">BELANGRIJK</span></div><div class="d">Alerts op verdachte logins, fouten en afwijkend gedrag.</div></div>
+  <div class="card"><div class="h"><span class="n">Incident-responsplan</span><span class="t later">LATER</span></div><div class="d">Rollen, contacten en stappen voor detectie, containment, herstel en evaluatie.</div></div>
+  <div class="card"><div class="h"><span class="n">Patchbeleid + periodieke review/pentest</span><span class="t later">LATER</span></div><div class="d">Vaste patchtermijnen, spoedpatches voor kritiek; jaarlijks een review, pentest bij grote wijzigingen.</div></div>
+</div>
+
+<h2>Mijn advies — eerst dit (als de backend live gaat)</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">1. EU-regio + DPA + MFA op dashboard</span><span class="t must">MUST</span></div><div class="d">De basis vóór er één echt gegeven in gaat.</div></div>
+  <div class="card"><div class="h"><span class="n">2. RLS verifiëren + service_role nooit client</span><span class="t must">MUST</span></div><div class="d">Het schema heeft RLS; testen dat elke rol alleen ziet wat mag.</div></div>
+  <div class="card"><div class="h"><span class="n">3. PITR aan + eerste restore drill</span><span class="t must">MUST</span></div><div class="d">Back-up die getest is dat 'ie terugkomt.</div></div>
+  <div class="card"><div class="h"><span class="n">4. HTTPS/HSTS + veilige headers + datalek-procedure</span><span class="t must">MUST</span></div><div class="d">Transport en proces op orde.</div></div>
+</div>
+</body></html>
