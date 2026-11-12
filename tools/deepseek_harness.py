@@ -72,7 +72,7 @@ def call(messages, model, temperature, cheapest):
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=180) as r:
+        with urllib.request.urlopen(req, timeout=600) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
         return {"_error": f"HTTP {e.code}: {e.read().decode(errors='replace')}"}
@@ -141,7 +141,7 @@ def main():
             text, err = reply_text(resp)
             return task.get("label", "taak"), text, err
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(8, len(tasks))) as ex:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(10, len(tasks))) as ex:
             results = list(ex.map(run, tasks))
 
         for label, text, err in results:
