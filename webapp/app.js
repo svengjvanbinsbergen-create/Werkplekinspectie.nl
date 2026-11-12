@@ -246,7 +246,7 @@
     go(h) { location.hash = "#/" + h; },
     route() {
       this.renderAcct();
-      if (!this.user) { $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
+      if (!this.user) { $("app").classList.add("nonav"); $("view").dataset.page = "login"; $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
       let parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
       let page = parts[0];
@@ -255,6 +255,7 @@
       if (tab && tab.web && !isWeb()) page = "alleenweb";
       this.renderTabs(page);
       $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
+      $("app").classList.toggle("nonav", page === "inspectie"); $("view").dataset.page = page; $("app").dataset.page = page;
       this.wakeLock(page === "inspectie");
       this._page = page; this.checkMeldingen();
       const fn = this["view_" + page];
@@ -264,7 +265,7 @@
       window.scrollTo(0, 0);
     },
     renderTabs(active) {
-      $("tabbar").innerHTML = TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
+      $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
         `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
     },
 
@@ -1264,18 +1265,18 @@
         ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
         ${this.tile("lilac", D.n_wpi, "Inspecties", f.product || f.locatie || f.periode ? "in selectie" : c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
       </div>`));
-      const chartCard = el(`<div class="grid" style="grid-template-columns:1fr;gap:14px;margin-top:14px"></div>`);
+      const chartCard = el(`<div class="grid dashgrid" style="gap:14px;margin-top:14px"></div>`);
       chartCard.appendChild(el(`<div class="card"><h3>Oordelen per maand</h3>${this.chartOordeel(D.maanden, D.om)}
         <div class="legend"><span><i style="background:var(--green)"></i>Conform</span><span><i style="background:var(--amber)"></i>Verbeterpunt</span><span><i style="background:var(--red)"></i>Afwijking</span></div></div>`));
       chartCard.appendChild(el(`<div class="card"><h3>Verplichte WPI’s per maand <span class="muted" style="font-size:12px;font-weight:500">· hele periode</span></h3>${this.chartProg()}
         <div class="legend"><span><i style="background:var(--green)"></i>Uitgevoerd</span><span><i style="background:var(--red)"></i>Gemist</span><span><i style="background:var(--grey)"></i>Loopt nog</span></div></div>`));
       chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars(D.klasse)}
         <div class="muted" style="font-size:12px;margin-top:8px">Tik een klasse om alles erop te filteren.</div></div>`));
-      v.appendChild(chartCard);
       const t = this.data.trendacties;
-      v.appendChild(el(`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`));
-      v.appendChild(el(`<div class="listcard">${t.map((a) =>
-        `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-todo" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
+      chartCard.appendChild(el(`<div class="card"><h3>Trendacties (VCA 7.2) <button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} CSV</button></h3>
+        <div class="tablewrap"><table><thead><tr><th>Nr</th><th>Onderwerp</th><th>Actiehouder</th><th>Termijn</th><th>Status</th></tr></thead><tbody>${t.map((a) =>
+        `<tr><td style="white-space:nowrap;font-weight:700">${esc(a.nr)}</td><td>${esc(a.onderwerp)}</td><td>${esc(a.actiehouder)}</td><td style="white-space:nowrap">${esc(a.termijn)}</td><td><span class="badge ${a.status === "Open" ? "b-todo" : "b-done"}">${esc(a.status)}</span></td></tr>`).join("")}</tbody></table></div></div>`));
+      v.appendChild(chartCard);
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen. Bij minder dan 5 waarnemingen tonen we geen percentage maar het aantal (n).</div>`));
     },
     chartOordeel(mnd, om) {
