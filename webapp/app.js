@@ -1,0 +1,321 @@
+/* Werkplekinspectie — werkende prototype-app (vanilla JS, geen build-stap).
+   Data: fictieve voorbeelddata. Client-side state; nog geen echte backend. */
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const el = (h) => { const d = document.createElement("div"); d.innerHTML = h.trim(); return d.firstElementChild; };
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const MND = { "05": "mei", "06": "jun", "07": "jul", "08": "aug", "09": "sep", "10": "okt", "11": "nov", "12": "dec" };
+  const mlabel = (m) => MND[m.slice(5, 7)] || m;
+
+  const IC = {
+    home: '<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z"/>',
+    list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+    chart: '<path d="M4 20V4M4 20h16M8 16v-5M13 16V8M18 16v-8"/>',
+    person: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+    check: '<path d="M4 12l5 5L20 6"/>', chev: '<path d="M9 6l6 6-6 6"/>', back: '<path d="M15 6l-6 6 6 6"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>', cam: '<rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.2"/><path d="M8 7l1.5-2h5L16 7"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
+    warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+  };
+  const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
+
+  const TABS = [
+    { id: "vandaag", lab: "Vandaag", ic: "home" },
+    { id: "inspecties", lab: "Inspecties", ic: "list" },
+    { id: "acties", lab: "Acties", ic: "list" },
+    { id: "dashboard", lab: "Dashboard", ic: "chart" },
+  ];
+
+  const App = {
+    data: {}, state: { inspectie: null, extra: [] },
+
+    async boot() {
+      const names = ["cijfers", "kennisbank", "voorbeelddata", "trendacties"];
+      const got = await Promise.all(names.map((n) => fetch("data/" + n + ".json").then((r) => r.json())));
+      names.forEach((n, i) => (this.data[n] = got[i]));
+      window.addEventListener("hashchange", () => this.route());
+      this.route();
+    },
+
+    go(h) { location.hash = "#/" + h; },
+    route() {
+      const parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
+      const page = parts[0];
+      this.renderTabs(page);
+      const fn = this["view_" + page];
+      $("view").innerHTML = "";
+      if (fn) fn.call(this, parts.slice(1));
+      else this.view_vandaag();
+      window.scrollTo(0, 0);
+    },
+    renderTabs(active) {
+      $("tabbar").innerHTML = TABS.map((t) =>
+        `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
+    },
+
+    tile(cls, n, lab, sub, onclick) {
+      return `<div class="tile ${cls}${onclick ? " click" : ""}" ${onclick ? `onclick="${onclick}"` : ""}>
+        <div class="lab">${lab}</div><div class="n">${n}</div><div class="sub">${sub}${onclick ? " ›" : ""}</div></div>`;
+    },
+
+    openModal(title, sub, body) {
+      $("mod").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div style="font-size:20px;font-weight:700">${esc(title)}</div>
+        <button onclick="App.closeModal()" style="background:#F3F4F6;width:36px;height:36px;border-radius:50%;font-size:18px;color:#4A5565">×</button></div>
+        ${sub ? `<div class="muted" style="font-size:13px;margin:4px 0 14px">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
+      $("ov").classList.add("on");
+    },
+    closeModal() { $("ov").classList.remove("on"); },
+
+    // ---------------- VANDAAG ----------------
+    view_vandaag() {
+      const c = this.data.cijfers;
+      const v = $("view");
+      v.appendChild(el(`<div><div class="kicker">Woensdag 11 november 2026 · Service &amp; Montage</div><h1>Vandaag</h1></div>`));
+      v.appendChild(el(`<div class="grid kpis">
+        ${this.tile("sage", c.vp_x + " / " + c.vp_y, "Per werkplek", c.vp_mis.length + " gemist", "App.go('dashboard')")}
+        ${this.tile("sky", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.go('inspecties')")}
+        ${this.tile("blush", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.go('acties')")}
+      </div>`));
+      v.appendChild(el(`<h2>Ingepland vandaag</h2>`));
+      const card = el(`<div class="card"><div class="row" style="border:0">
+        <div class="grow"><div class="s">P26-168 · RWZI Voorbeeldstad · 2 monteurs</div><div class="t" style="font-size:19px;margin-top:2px">Damwand</div></div>
+        <span class="badge b-todo">Ingepland</span></div>
+        <button class="btn primary" style="margin-top:10px" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">${svg("check", 18)} Start inspectie</button>
+        </div>`);
+      v.appendChild(card);
+      v.appendChild(el(`<h2>Of spontaan</h2>`));
+      v.appendChild(el(`<div class="listcard">${this.productKeuzeRows()}</div>`));
+    },
+    productKeuzeRows() {
+      const kb = this.data.kennisbank;
+      return Object.keys(kb).map((code) =>
+        `<div class="row" style="cursor:pointer" onclick="App.startInspectie('${code}','spontaan','${esc(kb[code].naam)}')">
+          <span class="grow"><span class="t">${esc(kb[code].naam)}</span> <span class="s">· ${kb[code].regels.length} regels</span></span>
+          <span class="s">${svg("chev", 18)}</span></div>`).join("");
+    },
+
+    // ---------------- INSPECTIE-FLOW ----------------
+    startInspectie(code, project, titel) {
+      const taken = [...new Set(this.data.kennisbank[code].regels.map((r) => r.taak))];
+      this.state.inspectie = { code, project, titel, taak: null, oordelen: {}, acties: [] };
+      this.go("inspectie/taak");
+    },
+    view_inspectie(parts) {
+      const step = parts[0] || "taak";
+      const ins = this.state.inspectie;
+      if (!ins) return this.go("vandaag");
+      if (step === "taak") return this.flowTaak(ins);
+      if (step === "toets") return this.flowToets(ins);
+      if (step === "klaar") return this.flowKlaar(ins);
+    },
+    flowHead(ins, kicker) {
+      return `<div><button class="btn ghost sm" onclick="history.back()">${svg("back", 16)} Terug</button>
+        <div class="kicker" style="margin-top:12px">${esc(kicker)}</div><h1>${esc(ins.titel)}</h1></div>`;
+    },
+    flowTaak(ins) {
+      const regels = this.data.kennisbank[ins.code].regels;
+      const taken = [...new Set(regels.map((r) => r.taak))];
+      const v = $("view");
+      v.appendChild(el(this.flowHead(ins, "Wat doen de monteurs nu?")));
+      v.appendChild(el(`<div class="muted" style="margin-bottom:10px">Kies de taak die je ziet. Je toetst daarna alleen de risico’s die je waarneemt.</div>`));
+      v.appendChild(el(`<div class="listcard">${taken.map((t) => {
+        const n = regels.filter((r) => r.taak === t).length;
+        return `<div class="row" style="cursor:pointer" onclick="App.kiesTaak('${esc(t).replace(/'/g, "\\'")}')">
+          <span class="grow"><span class="t">${esc(t)}</span><div class="s">${n} risicoregels</div></span>${svg("chev", 18)}</div>`;
+      }).join("")}</div>`));
+    },
+    kiesTaak(taak) { this.state.inspectie.taak = taak; this.go("inspectie/toets"); },
+    flowToets(ins) {
+      const regels = this.data.kennisbank[ins.code].regels.filter((r) => r.taak === ins.taak);
+      const v = $("view");
+      v.appendChild(el(this.flowHead(ins, "Toetsen · " + ins.taak)));
+      v.appendChild(el(`<div class="muted" style="margin-bottom:10px">Tik per risico aan wat je ziet. Niets gezien? Laat leeg.</div>`));
+      const wrap = el(`<div class="grid" style="gap:10px"></div>`);
+      regels.forEach((r) => {
+        const cur = ins.oordelen[r.id] || "";
+        const maatr = Array.isArray(r.maatregelen) ? r.maatregelen.join(" · ") : (r.maatregelen || "");
+        wrap.appendChild(el(`<div class="card" style="padding:14px 16px">
+          <div style="font-size:12px;color:#4A5565;font-weight:600">${esc(r.id)} · ${esc(r.klasse || "")}</div>
+          <div class="t" style="margin:2px 0 2px">${esc(r.risico || "")}</div>
+          <div class="s" style="margin-bottom:10px">${esc(maatr).slice(0, 160)}</div>
+          <div class="seg" data-id="${esc(r.id)}">
+            ${["C", "A", "V"].map((o) => `<button class="${cur === o ? "on-" + o : ""}" onclick="App.zetOordeel('${esc(r.id)}','${o}')">[${o}] ${{ C: "Conform", A: "Afwijking", V: "Verbeterpunt" }[o]}</button>`).join("")}
+          </div></div>`));
+      });
+      v.appendChild(wrap);
+      v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.go('inspectie/klaar')">Afronden</button>`));
+    },
+    zetOordeel(id, o) {
+      const ins = this.state.inspectie;
+      ins.oordelen[id] = ins.oordelen[id] === o ? "" : o;
+      // acties bij A/V
+      ins.acties = Object.entries(ins.oordelen).filter(([, v]) => v === "A" || v === "V").map(([rid, v]) => ({ rid, oordeel: v }));
+      this.route();
+    },
+    flowKlaar(ins) {
+      const vals = Object.values(ins.oordelen).filter(Boolean);
+      const cnt = { C: 0, A: 0, V: 0 };
+      vals.forEach((o) => cnt[o]++);
+      const v = $("view");
+      v.appendChild(el(this.flowHead(ins, "Afronden · " + ins.taak)));
+      v.appendChild(el(`<div class="grid kpis">
+        ${this.tile("sage", cnt.C, "Conform", "gezien")}
+        ${this.tile("blush", cnt.A, "Afwijking", cnt.A ? "actie nodig" : "geen")}
+        ${this.tile("butter", cnt.V, "Verbeterpunt", cnt.V ? "actie nodig" : "geen")}</div>`));
+      if (ins.acties.length) {
+        v.appendChild(el(`<h2>Acties (${ins.acties.length})</h2>`));
+        v.appendChild(el(`<div class="listcard">${ins.acties.map((a) =>
+          `<div class="row"><span class="grow"><span class="t">${esc(a.rid)}</span><div class="s">Standaard: Hoofd S&amp;M · termijn kort</div></span><span class="badge b-${a.oordeel}">[${a.oordeel}]</span></div>`).join("")}</div>`));
+      }
+      v.appendChild(el(`<div class="card" style="margin-top:16px"><div class="t">Getoetst tijdens bezoek</div>
+        <div class="s">${esc(ins.titel)} · taak ${esc(ins.taak)} · ${vals.length} regels beoordeeld</div></div>`));
+      v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.bewaarInspectie()">Inspectie vastleggen</button>`));
+      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px" onclick="App.go('vandaag')">Later afmaken</button>`));
+    },
+    bewaarInspectie() {
+      this.state.extra.push(this.state.inspectie);
+      this.state.inspectie = null;
+      this.openModal("Vastgelegd", "De inspectie is opgeslagen in deze sessie (voorbeeld, geen echte opslag).",
+        `<button class="btn primary" onclick="App.closeModal();App.go('vandaag')">Naar Vandaag</button>`);
+    },
+
+    // ---------------- INSPECTIES ----------------
+    view_inspecties() {
+      const wpis = this.data.voorbeelddata.wpis || [];
+      const v = $("view");
+      v.appendChild(el(`<div><div class="kicker">${wpis.length} inspecties · mei–nov 2026</div><h1>Inspecties</h1></div>`));
+      const extra = this.state.extra.map((e) => `<div class="row"><span class="grow"><span class="t">${esc(e.titel)}</span><div class="s">Zojuist · taak ${esc(e.taak)}</div></span><span class="badge b-done">Nieuw</span></div>`).join("");
+      const rows = wpis.slice().reverse().map((w) => {
+        const dam = (w.nr || "").split("-")[1] || "";
+        return `<div class="row"><span class="grow"><span class="t">${esc(w.product || w.nr)}</span><div class="s">${esc(w.nr)} · ${esc(w.ingang || "")}</div></span><span class="s">${dam ? dam.slice(6, 8) + "-" + dam.slice(4, 6) : ""}</span></div>`;
+      }).join("");
+      v.appendChild(el(`<div class="listcard">${extra}${rows}</div>`));
+    },
+
+    // ---------------- ACTIES ----------------
+    view_acties() {
+      const c = this.data.cijfers, t = this.data.trendacties;
+      const v = $("view");
+      v.appendChild(el(`<div><div class="kicker">Hoofd Service &amp; Montage</div><h1>Acties</h1></div>`));
+      v.appendChild(el(`<div class="grid kpis">
+        ${this.tile("blush", c.act_status.Open, "Open", c.act_over.length + " over termijn")}
+        ${this.tile("sage", c.act_status.Afgerond, "Afgerond", "getoetst")}
+        ${this.tile("butter", c.act_prio.direct, "Direct", "hoogste prioriteit")}</div>`));
+      v.appendChild(el(`<h2>Trendacties (VCA 7.2)</h2>`));
+      v.appendChild(el(`<div class="listcard">${t.map((a) =>
+        `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
+    },
+
+    // ---------------- DASHBOARD ----------------
+    view_dashboard() {
+      const c = this.data.cijfers, w = c.waarnemingen;
+      const pct = Math.round(100 * c.oordeel.Conform / w.totaal);
+      const v = $("view");
+      v.appendChild(el(`<div><div class="kicker">Trendanalyse · mei–nov 2026 · peildatum 11-11-2026</div><h1>Dashboard</h1></div>`));
+      v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Tik op een tegel of staaf voor de achterliggende regels.</div>`));
+      v.appendChild(el(`<div class="grid kpis">
+        ${this.tile("sage", pct + "%", "Conform", c.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")}
+        ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
+        ${this.tile("blush", c.vp_mis.length, "Programma gemist", c.vp_x + " van " + c.vp_y, "App.drill('programma')")}
+        ${this.tile("butter", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
+        ${this.tile("lilac", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
+      </div>`));
+      const chartCard = el(`<div class="grid" style="grid-template-columns:1fr;gap:14px;margin-top:14px"></div>`);
+      chartCard.appendChild(el(`<div class="card"><h3>Oordelen per maand</h3>${this.chartOordeel()}
+        <div class="legend"><span><i style="background:var(--green)"></i>Conform</span><span><i style="background:var(--amber)"></i>Verbeterpunt</span><span><i style="background:var(--red)"></i>Afwijking</span></div></div>`));
+      chartCard.appendChild(el(`<div class="card"><h3>Verplichte WPI’s per maand</h3>${this.chartProg()}
+        <div class="legend"><span><i style="background:var(--green)"></i>Uitgevoerd</span><span><i style="background:var(--red)"></i>Gemist</span><span><i style="background:var(--grey)"></i>Loopt nog</span></div></div>`));
+      chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars()}</div>`));
+      v.appendChild(chartCard);
+    },
+    chartOordeel() {
+      const c = this.data.cijfers, mnd = c.maanden, om = c.oordeel_maand;
+      const tot = mnd.map((m) => Object.values(om[m] || {}).reduce((a, b) => a + b, 0));
+      const mx = Math.max(...tot, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
+      const col = { Conform: "#1E7A4C", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
+      let g = "";
+      mnd.forEach((m, i) => {
+        const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
+        ["Conform", "Verbeterpunt", "Afwijking", "Niet van toepassing"].forEach((k) => {
+          const val = (om[m] || {})[k] || 0; if (!val) return; const h = val / mx * (H - 50); y -= h;
+          p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${col[k]}"/>`;
+        });
+        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="600" fill="#141A22">${tot[i]}</text>`;
+        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#4A5565">${mlabel(m)}</text>`;
+        p += `<rect x="${(pad + gap * i).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"/>`;
+        g += `<g style="cursor:pointer" onclick="App.drill('oordeelmaand','${m}')">${p}</g>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+    },
+    chartProg() {
+      const c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
+      const ys = mnd.map((m) => (vm[m] || {}).y + ((vm[m] || {}).lopend || 0));
+      const mx = Math.max(...ys, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
+      let g = `<defs><pattern id="h" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#F3F4F6"/><line x1="0" y1="0" x2="0" y2="6" stroke="#C9CED6" stroke-width="2"/></pattern></defs>`;
+      mnd.forEach((m, i) => {
+        const d = vm[m] || {}, ok = d.ok || 0, y_ = d.y || 0, lop = d.lopend || 0, gem = y_ - ok;
+        const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
+        [[ok, "#1E7A4C", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
+          if (val <= 0) return; const h = val / mx * (H - 50); y -= h;
+          p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${cl}" stroke="${ht ? "#9AA2AE" : "none"}" stroke-width="${ht}"/>`;
+        });
+        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="600" fill="#141A22">${ok}/${y_}</text>`;
+        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#4A5565">${mlabel(m)}</text>`;
+        p += `<rect x="${(pad + gap * i).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"/>`;
+        g += `<g style="cursor:pointer" onclick="App.drill('programma','${m}')">${p}</g>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+    },
+    klasseBars() {
+      const kg = this.data.cijfers.klasse_gezien;
+      const rows = Object.entries(kg).map(([k, v]) => [k, v.Afwijking || 0, v.Verbeterpunt || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2])).slice(0, 7);
+      const mx = Math.max(...rows.map((r) => r[1] + r[2]), 1);
+      return rows.map(([k, a, vv]) => `<div onclick="App.drill('klasse','${esc(k).replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:12px;margin:9px 0;cursor:pointer">
+        <div style="width:190px;font-size:13px;font-weight:500;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</div>
+        <div style="flex:1;display:flex;align-items:center;height:16px">
+          <div style="width:${(a / mx * 100).toFixed(1)}%;height:16px;background:var(--red);border-radius:3px 0 0 3px"></div>
+          <div style="width:${(vv / mx * 100).toFixed(1)}%;height:16px;background:var(--amber);border-radius:0 3px 3px 0"></div>
+          <span style="margin-left:8px;font-size:12px;color:var(--soft);font-weight:600">${a + vv}</span></div></div>`).join("");
+    },
+    drill(key, param) {
+      const c = this.data.cijfers, OB = { C: "b-C", A: "b-A", V: "b-V" };
+      const bg = (o) => `<span class="badge b-${o[0] === "N" ? "N" : o[0]}">${o[0]} ${0}</span>`;
+      const oc = (o) => ["Conform", "Afwijking", "Verbeterpunt", "Niet van toepassing"].filter((k) => o[k]).map((k) =>
+        `<span class="badge b-${k === "Niet van toepassing" ? "N" : k[0]}">${k[0]} ${o[k]}</span>`).join(" ") || "—";
+      const tbl = (h, rows) => `<table><thead><tr>${h.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((x) => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+      if (key === "conform" || key === "waarnemingen") {
+        const o = c.oordeel, w = c.waarnemingen;
+        return this.openModal("Waarnemingen en oordelen", "Alle waarnemingen in de periode (momentopname).",
+          tbl(["Oordeel", "Aantal"], [["Conform", o.Conform], ["Afwijking", o.Afwijking], ["Verbeterpunt", o.Verbeterpunt], ["Niet van toepassing", o["Niet van toepassing"]]].map((r) => [`<span class="badge b-${r[0] === "Niet van toepassing" ? "N" : r[0][0]}">${esc(r[0])}</span>`, r[1]]))
+          + `<div class="muted" style="margin-top:14px;font-size:13px">TRA-regels ${w.TRA} · onderwerpen ${w.Algemeen} · buiten TRA ${w.buiten_TRA} · totaal ${w.totaal}.</div>`);
+      }
+      if (key === "programma") {
+        let rows = c.vp_mis.map((o) => [esc(o.project.replace(" (fictief)", "")), esc(o.product), esc(o.locatie), mlabel(o.maand), esc(o.cat), `<span class="badge b-A">gemist</span>`]);
+        let sub = `${c.vp_x} van ${c.vp_y} verplichte WPI’s uitgevoerd; ${c.vp_mis.length} gemist.`;
+        if (param) { rows = rows.filter((r) => r[3] === mlabel(param)); sub = `Maand ${mlabel(param)}: gemiste verplichte WPI’s.`; }
+        return this.openModal("Gemiste verplichte WPI’s", sub, rows.length ? tbl(["Project", "Product", "Locatie", "Maand", "Soort", ""], rows) : `<div class="muted">Geen gemiste WPI’s in deze selectie.</div>`);
+      }
+      if (key === "oordeelmaand") {
+        const o = c.oordeel_maand[param] || {};
+        return this.openModal("Oordelen · " + mlabel(param), "Waarnemingen in deze maand.", `<div style="margin-bottom:6px">${oc(o)}</div>`);
+      }
+      if (key === "klasse") {
+        const v = c.klasse_gezien[param] || {};
+        return this.openModal(param, "Waarnemingen in deze klasse.", tbl(["", "Aantal"],
+          [["Conform", v.Conform || 0], ["Afwijking", v.Afwijking || 0], ["Verbeterpunt", v.Verbeterpunt || 0], ["Totaal gezien", v.tot || 0]].map((r) => [`<span class="badge b-${r[0] === "Totaal gezien" ? "N" : r[0][0]}">${esc(r[0])}</span>`, r[1]])));
+      }
+      if (key === "inspecties") {
+        const rows = Object.entries(c.per_wpi).sort().map(([nr, w]) => [esc(nr), esc(w.ingang || ""), oc(w.oord || {})]);
+        return this.openModal("Inspecties", c.n_wpi + " WPI’s in de periode.", tbl(["WPI", "Ingang", "Oordelen"], rows));
+      }
+      if (key === "acties") {
+        const rows = this.data.trendacties.map((a) => [esc(a.nr), esc(a.onderwerp), esc(a.actiehouder), esc(a.termijn), `<span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span>`]);
+        return this.openModal("Trendacties (VCA 7.2)", "Acties uit de trendanalyse, met actiehouder en termijn.", tbl(["Nr", "Onderwerp", "Actiehouder", "Termijn", "Status"], rows));
+      }
+    },
+  };
+  window.App = App;
+  App.boot();
+})();

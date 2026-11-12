@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Werkplekinspectie</title>
+<meta name="description" content="Werkplekinspectie — momentopname-methode (voorbeeld, fictieve data)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="logo">N</span><span>Werkplekinspectie</span></div>
+    <span class="chip">Voorbeeld · fictief</span>
+  </div>
+  <div class="view" id="view"></div>
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+<div id="ov" onclick="if(event.target===this)App.closeModal()"><div id="mod"></div></div>
+<script src="app.js"></script>
+</body>
+</html>
