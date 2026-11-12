@@ -4,6 +4,9 @@
 Dun CLI-laagje rond de OpenRouter chat-completions API. Claude roept dit aan
 om DeepSeek het uitvoerende werk te laten doen; Claude beoordeelt de output.
 
+Rolverdeling per taak (wie doet wat): zie tools/DELEGATIE.md.
+Leidend principe: bij twijfel doet Claude het zelf.
+
 De API-key wordt NIET uit de omgeving gelezen: de netwerk-proxy van deze
 sessie injecteert hem automatisch in de Authorization-header. Daarom staat
 hier een placeholder. Buiten deze omgeving: zet OPENROUTER_API_KEY.
