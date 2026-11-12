@@ -1,0 +1,15 @@
+const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});
+const errs=[];p.on('pageerror',e=>errs.push(e.message));
+await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(900);
+await p.evaluate(()=>App.login('u-winfred'));await p.waitForTimeout(1300);await p.screenshot({path:'b1.png'});
+await p.evaluate(()=>{App.actFilter='telaat';App.go('acties')});await p.waitForTimeout(700);await p.screenshot({path:'b2.png'});
+await p.evaluate(()=>{App.actFilter='alle';App.route()});await p.waitForTimeout(500);await p.screenshot({path:'b3.png'});
+await p.evaluate(()=>{App.go('dashboard')});await p.waitForTimeout(500);await p.screenshot({path:'b4.png'});
+console.log('tabs telefoon:',await p.evaluate(()=>[...document.querySelectorAll('#tabbar a')].map(a=>a.textContent)));
+await p.evaluate(()=>App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad',true));await p.waitForTimeout(400);
+await p.fill('#f-taak','ze halen de damwand eruit met de kraan');await p.locator('#taakvs .pick').first().click();await p.waitForTimeout(300);
+await p.fill('#f-zie','hijsband is rafelig');await p.click('text=Volgende: koppel aan de TRA');await p.waitForTimeout(600);await p.screenshot({path:'b5.png'});
+await p.locator('.q .pick').first().click();await p.waitForTimeout(300);await p.screenshot({path:'b6.png'});
+await p.setViewportSize({width:1280,height:800});await p.evaluate(()=>App.go('dashboard'));await p.waitForTimeout(800);await p.screenshot({path:'b7.png'});
+console.log('tabs web:',await p.evaluate(()=>[...document.querySelectorAll('#tabbar a')].map(a=>a.textContent)));
+console.log(errs);await b.close()})();
