@@ -357,3 +357,28 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
   #app.nonav .topbar .brand{visibility:visible}
 }
 @media(min-width:900px){#app.nonav .view,#app.nonav .topbar{width:100%}}
+
+/* ---- vrolijke grafieken in app-stijl ---- */
+.grafiek h3{font-size:17px;font-weight:800}
+.grafiek h3 .sub{font-size:13px;font-weight:700;color:var(--soft);margin-left:6px}
+.svgchart{width:100%;height:auto;font-family:Nunito,system-ui,sans-serif;overflow:visible}
+.legend{gap:14px;margin-top:8px}
+.legend span{font-weight:700;font-size:12.5px}
+.legend i{width:11px;height:11px;border-radius:50%}
+.donut{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.svgdonut{width:170px;height:170px;flex:none;font-family:Nunito,system-ui,sans-serif}
+.donutleg{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px}
+.donutleg div{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px}
+.donutleg i{width:12px;height:12px;border-radius:50%;flex:none}
+.donutleg span{flex:1;color:var(--soft)}
+.kbars{display:flex;flex-direction:column;gap:10px}
+.kbar{display:grid;grid-template-columns:150px 1fr 30px;gap:12px;align-items:center;width:100%;text-align:left}
+.kbar .kl{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kbar .spoor{display:flex;height:14px;border-radius:999px;background:#F6F0E7;overflow:hidden}
+.kbar .spoor span{height:100%}
+.kbar b{font-size:14px;text-align:right}
+.kbar:hover .kl{color:var(--accent)}
+@media(min-width:900px){
+  .dashgrid .breed{grid-column:1/-1}
+  .dashgrid svg.svgchart{max-height:none}
+}

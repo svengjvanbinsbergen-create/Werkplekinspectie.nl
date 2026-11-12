@@ -1242,7 +1242,7 @@
     setFilter(k, val) { this.dashFilter[k] = this.dashFilter[k] === val ? "" : val; this.route(); },
     view_dashboard() {
       const c = this.data.cijfers, D = this.computeDash(), f = this.dashFilter;
-      const w = D.waarn, pct = w.totaal ? Math.round(100 * D.oordeel.Conform / w.totaal) : 0;
+      const w = D.waarn, beo = D.oordeel.Conform + D.oordeel.Afwijking + D.oordeel.Verbeterpunt, pct = beo ? Math.round(100 * D.oordeel.Conform / beo) : 0;
       const progPct = Math.round(100 * c.vp_x / c.vp_y), progDoel = 90;
       const v = $("view");
       const prods = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.product))].sort();
@@ -1258,76 +1258,104 @@
       </div>`));
       v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Filters werken op waarnemingen en oordelen. Tik op een tegel, staaf of klasse voor detail / kruis-filter.</div>`));
       v.appendChild(el(`<div class="grid kpis">
-        ${w.totaal >= 5 ? this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")
-          : this.tile("mist", "n = " + w.totaal, "Conform", "te weinig voor een percentage (n < 5)", "App.drill('conform')")}
+        ${beo >= 5 ? this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + beo + " beoordeeld", "App.drill('conform')")
+          : this.tile("mist", "n = " + beo, "Conform", "te weinig voor een percentage (n < 5)", "App.drill('conform')")}
         ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
         ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, "App.drill('programma')")}
         ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
         ${this.tile("lilac", D.n_wpi, "Inspecties", f.product || f.locatie || f.periode ? "in selectie" : c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
       </div>`));
+      const PAL = this.PAL, leg = (items) => `<div class="legend">${items.map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
       const chartCard = el(`<div class="grid dashgrid" style="gap:14px;margin-top:14px"></div>`);
-      chartCard.appendChild(el(`<div class="card"><h3>Oordelen per maand</h3>${this.chartOordeel(D.maanden, D.om)}
-        <div class="legend"><span><i style="background:var(--green)"></i>Conform</span><span><i style="background:var(--amber)"></i>Verbeterpunt</span><span><i style="background:var(--red)"></i>Afwijking</span></div></div>`));
-      chartCard.appendChild(el(`<div class="card"><h3>Verplichte WPI’s per maand <span class="muted" style="font-size:12px;font-weight:500">· hele periode</span></h3>${this.chartProg()}
-        <div class="legend"><span><i style="background:var(--green)"></i>Uitgevoerd</span><span><i style="background:var(--red)"></i>Gemist</span><span><i style="background:var(--grey)"></i>Loopt nog</span></div></div>`));
-      chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars(D.klasse)}
-        <div class="muted" style="font-size:12px;margin-top:8px">Tik een klasse om alles erop te filteren.</div></div>`));
-      const t = this.data.trendacties;
-      chartCard.appendChild(el(`<div class="card"><h3>Trendacties (VCA 7.2) <button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} CSV</button></h3>
-        <div class="tablewrap"><table><thead><tr><th>Nr</th><th>Onderwerp</th><th>Actiehouder</th><th>Termijn</th><th>Status</th></tr></thead><tbody>${t.map((a) =>
-        `<tr><td style="white-space:nowrap;font-weight:700">${esc(a.nr)}</td><td>${esc(a.onderwerp)}</td><td>${esc(a.actiehouder)}</td><td style="white-space:nowrap">${esc(a.termijn)}</td><td><span class="badge ${a.status === "Open" ? "b-todo" : "b-done"}">${esc(a.status)}</span></td></tr>`).join("")}</tbody></table></div></div>`));
+      chartCard.appendChild(el(`<div class="card grafiek breed"><h3>Hoeveel ziet er goed uit? <span class="sub">% conform per maand</span></h3>${this.chartTrend(D.maanden, D.om)}
+        <div class="s" style="margin-top:6px">Een open rondje = minder dan 5 waarnemingen in die maand: te weinig voor een percentage.</div></div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h3>Oordelen per maand</h3>${this.chartOordeel(D.maanden, D.om)}
+        ${leg([[PAL.C, "Conform"], [PAL.V, "Verbeterpunt"], [PAL.A, "Afwijking"]])}</div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h3>Verdeling oordelen</h3>${this.chartDonut(D.oordeel)}</div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h3>Inspectieprogramma <span class="sub">verplichte WPI’s per maand</span></h3>${this.chartProg()}
+        ${leg([[PAL.C, "Uitgevoerd"], [PAL.A, "Gemist"], ["#E6DCCD", "Loopt nog"]])}</div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h3>Waar zitten de aandachtspunten? <span class="sub">per klasse</span></h3>${this.klasseBars(D.klasse)}
+        ${leg([[PAL.A, "Afwijking"], [PAL.V, "Verbeterpunt"]])}</div>`));
       v.appendChild(chartCard);
-      v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen. Bij minder dan 5 waarnemingen tonen we geen percentage maar het aantal (n).</div>`));
+      v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Klik op een maand, een stuk van de ring of een klasse voor de details. Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen.</div>`));
+    },
+    // zachte, warme kleuren die bij de app passen
+    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#8B7F72" },
+    // %-conform per maand als zachte lijn met vlak eronder
+    chartTrend(mnd, om) {
+      const P = this.PAL, W = 1100, H = 230, L = 44, R = 24, T = 30, Bm = 30, iw = W - L - R, ih = H - T - Bm;
+      const pts = mnd.map((m, i) => { const o = om[m] || {}, tot = (o.Conform || 0) + (o.Afwijking || 0) + (o.Verbeterpunt || 0);
+        return { m, tot, p: tot ? (o.Conform || 0) / tot : null, x: L + (mnd.length === 1 ? iw / 2 : iw * i / (mnd.length - 1)) }; });
+      const y = (p) => T + ih * (1 - p);
+      const geldig = pts.filter((q) => q.p !== null);
+      let g = `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.C}" stop-opacity=".35"/><stop offset="1" stop-color="${P.C}" stop-opacity="0"/></linearGradient></defs>`;
+      [0, .5, 1].forEach((t) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="${P.track}" stroke-width="2" stroke-dasharray="${t === 0 ? "" : "4 6"}"/><text x="${L - 8}" y="${y(t) + 4}" text-anchor="end" font-size="12" fill="${P.soft}">${t * 100}%</text>`; });
+      if (geldig.length > 1) {
+        let d = `M${geldig[0].x},${y(geldig[0].p)}`;
+        for (let k = 1; k < geldig.length; k++) { const a = geldig[k - 1], b = geldig[k], cx = (a.x + b.x) / 2; d += ` C${cx},${y(a.p)} ${cx},${y(b.p)} ${b.x},${y(b.p)}`; }
+        g += `<path d="${d} L${geldig[geldig.length - 1].x},${T + ih} L${geldig[0].x},${T + ih} Z" fill="url(#tg)"/><path d="${d}" fill="none" stroke="${P.C}" stroke-width="4" stroke-linecap="round"/>`;
+      }
+      pts.forEach((q) => {
+        const klein = q.tot < 5, yy = q.p === null ? T + ih : y(q.p);
+        g += `<g style="cursor:pointer" onclick="App.drill('oordeelmaand','${q.m}')"><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
+          <circle cx="${q.x}" cy="${yy}" r="7" fill="${klein ? "#fff" : P.C}" stroke="${klein ? P.N : "#fff"}" stroke-width="3"/>
+          ${q.p !== null && !klein ? `<text x="${q.x}" y="${yy - 14}" text-anchor="middle" font-size="13" font-weight="800" fill="${P.ink}">${Math.round(q.p * 100)}%</text>` : `<text x="${q.x}" y="${yy - 14}" text-anchor="middle" font-size="12" fill="${P.soft}">n=${q.tot}</text>`}
+          <text x="${q.x}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${P.soft}">${mlabel(q.m)}</text></g>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
+    },
+    // gestapelde ronde staven met een zacht spoor erachter
+    staven(kol, max, labels, onclickFn) {
+      const P = this.PAL, W = 560, H = 230, pad = 8, top = 30, bot = 30, gap = (W - pad * 2) / kol.length, bw = Math.min(42, gap * 0.5), ih = H - top - bot;
+      let g = "";
+      kol.forEach((segs, i) => {
+        const x = pad + gap * i + (gap - bw) / 2; let yb = top + ih, tot = 0, p = "";
+        p += `<rect x="${x}" y="${top}" width="${bw}" height="${ih}" rx="${bw / 2}" fill="${P.track}"/>`;
+        segs.forEach(([val, col, pat]) => { if (!val) return; tot += val; const h = Math.max(6, val / max * ih); yb -= h;
+          p += `<rect x="${x}" y="${yb + 1.5}" width="${bw}" height="${h - 3}" rx="${Math.min(bw / 2, (h - 3) / 2)}" fill="${col}"${pat ? ` stroke="#CFC2B0" stroke-dasharray="3 3"` : ""}/>`; });
+        p += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" font-size="15" font-weight="800" fill="${P.ink}">${labels[i][0]}</text>`;
+        p += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
+        p += `<rect x="${pad + gap * i}" y="0" width="${gap}" height="${H}" fill="transparent"/>`;
+        g += `<g style="cursor:pointer" onclick="${onclickFn(i)}">${p}</g>`;
+      });
+      return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },
     chartOordeel(mnd, om) {
-      const c = this.data.cijfers;
-      const tot = mnd.map((m) => Object.values(om[m] || {}).reduce((a, b) => a + b, 0));
-      const mx = Math.max(...tot, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
-      const col = { Conform: "#2F5D50", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
-      let g = "";
-      mnd.forEach((m, i) => {
-        const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
-        ["Conform", "Verbeterpunt", "Afwijking", "Niet van toepassing"].forEach((k) => {
-          const val = (om[m] || {})[k] || 0; if (!val) return; const h = val / mx * (H - 50); y -= h;
-          p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${col[k]}"/>`;
-        });
-        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="600" fill="#141A22">${tot[i]}</text>`;
-        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#4A5565">${mlabel(m)}</text>`;
-        p += `<rect x="${(pad + gap * i).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer" onclick="App.drill('oordeelmaand','${m}')">${p}</g>`;
-      });
-      return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+      const P = this.PAL, tot = mnd.map((m) => ["Conform", "Verbeterpunt", "Afwijking"].reduce((a, k) => a + ((om[m] || {})[k] || 0), 0));
+      return this.staven(mnd.map((m) => [[(om[m] || {}).Conform, P.C], [(om[m] || {}).Verbeterpunt, P.V], [(om[m] || {}).Afwijking, P.A]]),
+        Math.max(...tot, 1), mnd.map((m, i) => [tot[i], mlabel(m)]), (i) => `App.drill('oordeelmaand','${mnd[i]}')`);
     },
     chartProg() {
-      const c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
-      const ys = mnd.map((m) => (vm[m] || {}).y + ((vm[m] || {}).lopend || 0));
-      const mx = Math.max(...ys, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
-      let g = `<defs><pattern id="h" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#F3F4F6"/><line x1="0" y1="0" x2="0" y2="6" stroke="#C9CED6" stroke-width="2"/></pattern></defs>`;
-      mnd.forEach((m, i) => {
-        const d = vm[m] || {}, ok = d.ok || 0, y_ = d.y || 0, lop = d.lopend || 0, gem = y_ - ok;
-        const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
-        [[ok, "#2F5D50", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
-          if (val <= 0) return; const h = val / mx * (H - 50); y -= h;
-          p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${cl}" stroke="${ht ? "#9AA2AE" : "none"}" stroke-width="${ht}"/>`;
-        });
-        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="600" fill="#141A22">${ok}/${y_}</text>`;
-        p += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="12" fill="#4A5565">${mlabel(m)}</text>`;
-        p += `<rect x="${(pad + gap * i).toFixed(1)}" y="0" width="${gap.toFixed(1)}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer" onclick="App.drill('programma','${m}')">${p}</g>`;
+      const P = this.PAL, c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
+      const kol = mnd.map((m) => { const d = vm[m] || {}; return [[d.ok || 0, P.C], [(d.y || 0) - (d.ok || 0), P.A], [d.lopend || 0, "#EFE6D8", true]]; });
+      const max = Math.max(...mnd.map((m) => ((vm[m] || {}).y || 0) + ((vm[m] || {}).lopend || 0)), 1);
+      return this.staven(kol, max, mnd.map((m) => [((vm[m] || {}).ok || 0) + "/" + ((vm[m] || {}).y || 0), mlabel(m)]), (i) => `App.drill('programma','${mnd[i]}')`);
+    },
+    // ring met verdeling, conform-% in het midden
+    chartDonut(o) {
+      const P = this.PAL, d = [["Conform", P.C], ["Verbeterpunt", P.V], ["Afwijking", P.A], ["Niet van toepassing", P.N]].map(([k, c]) => [k, o[k] || 0, c]);
+      const tot = d.reduce((a, x) => a + x[1], 0) || 1, R = 70, r = 46, cx = 90, cy = 90;
+      let a0 = -Math.PI / 2, g = "";
+      d.forEach(([k, val, col]) => {
+        if (!val) return; const a1 = a0 + val / tot * Math.PI * 2 - 0.03;
+        const pt = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)], big = a1 - a0 > Math.PI ? 1 : 0;
+        const [x0, y0] = pt(R, a0), [x1, y1] = pt(R, a1), [x2, y2] = pt(r, a1), [x3, y3] = pt(r, a0);
+        g += `<path d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${col}" style="cursor:pointer" onclick="App.drill('conform')"/>`;
+        a0 = a1 + 0.03;
       });
-      return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+      const ok = (o.Conform || 0) + (o.Afwijking || 0) + (o.Verbeterpunt || 0), pc = ok >= 5 ? Math.round(100 * (o.Conform || 0) / ok) + "%" : "n=" + ok;
+      g += `<text x="${cx}" y="${cy + 2}" text-anchor="middle" font-size="26" font-weight="800" fill="${P.ink}">${pc}</text><text x="${cx}" y="${cy + 22}" text-anchor="middle" font-size="12" font-weight="700" fill="${P.soft}">conform</text>`;
+      return `<div class="donut"><svg viewBox="0 0 180 180" class="svgdonut">${g}</svg><div class="donutleg">${d.map(([k, val, col]) =>
+        `<div><i style="background:${col}"></i><span>${k}</span><b>${val}</b></div>`).join("")}</div></div>`;
     },
     klasseBars(kg) {
+      const P = this.PAL;
       kg = kg || this.data.cijfers.klasse_gezien;
-      const rows = Object.entries(kg).map(([k, v]) => [k, v.Afwijking || 0, v.Verbeterpunt || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2])).slice(0, 7);
-      if (!rows.length) return `<div class="muted" style="font-size:13px">Geen afwijkingen of verbeterpunten in deze selectie.</div>`;
+      const rows = Object.entries(kg).map(([k, v]) => [k, v.Afwijking || 0, v.Verbeterpunt || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2])).slice(0, 6);
+      if (!rows.length) return `<div class="muted" style="font-size:13px">Geen afwijkingen of verbeterpunten in deze selectie. 🌿</div>`;
       const mx = Math.max(...rows.map((r) => r[1] + r[2]), 1);
-      return rows.map(([k, a, vv]) => `<div onclick="App.setFilter('klasse','${esc(k).replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:12px;margin:9px 0;cursor:pointer">
-        <div style="width:190px;font-size:13px;font-weight:500;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</div>
-        <div style="flex:1;display:flex;align-items:center;height:16px">
-          <div style="width:${(a / mx * 100).toFixed(1)}%;height:16px;background:var(--red);border-radius:3px 0 0 3px"></div>
-          <div style="width:${(vv / mx * 100).toFixed(1)}%;height:16px;background:var(--amber);border-radius:0 3px 3px 0"></div>
-          <span style="margin-left:8px;font-size:12px;color:var(--soft);font-weight:600">${a + vv}</span></div></div>`).join("");
+      return `<div class="kbars">${rows.map(([k, a, vv]) => `<button class="kbar" onclick="App.setFilter('klasse','${esc(k).replace(/'/g, "\\'")}')">
+        <span class="kl">${esc(k)}</span><span class="spoor"><span style="width:${(a / mx * 100).toFixed(1)}%;background:${P.A}"></span><span style="width:${(vv / mx * 100).toFixed(1)}%;background:${P.V}"></span></span><b>${a + vv}</b></button>`).join("")}</div>`;
     },
     drill(key, param) {
       const c = this.data.cijfers, OB = { C: "b-C", A: "b-A", V: "b-V" };
@@ -1362,7 +1390,8 @@
       }
       if (key === "acties") {
         const rows = this.data.trendacties.map((a) => [esc(a.nr), esc(a.onderwerp), esc(a.actiehouder), esc(a.termijn), `<span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span>`]);
-        return this.openModal("Trendacties (VCA 7.2)", "Acties uit de trendanalyse, met actiehouder en termijn.", tbl(["Nr", "Onderwerp", "Actiehouder", "Termijn", "Status"], rows));
+        return this.openModal("Trendacties (VCA 7.2)", "Acties uit de trendanalyse, met actiehouder en termijn.", `<div class="tablewrap">${tbl(["Nr", "Onderwerp", "Actiehouder", "Termijn", "Status"], rows)}</div>
+          <button class="btn ghost sm" style="margin-top:14px" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button>`);
       }
     },
   };
