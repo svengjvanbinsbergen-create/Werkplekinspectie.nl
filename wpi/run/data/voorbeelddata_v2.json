@@ -1,0 +1,3632 @@
+{
+ "let_op": "FICTIEVE VOORBEELDDATA - geen echte inspecties, personen of locaties",
+ "peildatum": "2026-11-11",
+ "wpis": [
+  {
+   "nr": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "Rioolgemaal Demowijk",
+   "project": "P26-360 (fictief)",
+   "product": "Semi Compact Hydrovijzel",
+   "code": "SHV",
+   "fase": "Betonwerkzaamheden",
+   "taken": [
+    "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "RWZI Voorbeeldstad",
+   "project": "P26-462 (fictief)",
+   "product": "Nabezinktank",
+   "code": "NBT",
+   "fase": "Nieuwe Ruimerbrug incl. Middendraaipunt en Loopwagen",
+   "taken": [
+    "Plaatsen nieuwe ruimerbrug (incl. ankers, middendraaipunt, loopwagen, toegangstrap)"
+   ],
+   "monteurs": 3
+  },
+  {
+   "nr": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Gemeente Voorbeeldhaven",
+   "locatie": "Poldergemaal Proefsluis",
+   "project": "P26-255 (fictief)",
+   "product": "Bandfilter",
+   "code": "BAN",
+   "fase": "Montage",
+   "taken": [
+    "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "Rioolgemaal Demowijk",
+   "project": "P26-405 (fictief)",
+   "product": "Microfilter",
+   "code": "MIC",
+   "fase": "Montage",
+   "taken": [
+    "Monteren Microfilter"
+   ],
+   "monteurs": 4
+  },
+  {
+   "nr": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "Rioolgemaal Demowijk",
+   "project": "P26-115 (fictief)",
+   "product": "Roosterreiniger",
+   "code": "ROO",
+   "fase": "Veiligstellen Lototo",
+   "taken": [
+    "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+    "Situatie Kraanopstelling"
+   ],
+   "monteurs": 4
+  },
+  {
+   "nr": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "Rioolgemaal Demowijk",
+   "project": "P26-355 (fictief)",
+   "product": "Compactvijzel",
+   "code": "CPV",
+   "fase": "Montage van de Compact-Vijzel",
+   "taken": [
+    "Monteren (Compactvijzel)"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "Rioolgemaal Demowijk",
+   "project": "P26-332 (fictief)",
+   "product": "Bandfilter",
+   "code": "BAN",
+   "fase": "Demontage",
+   "taken": [
+    "Demonteren bestaande bandscreen (transportketting, zeefpanelen, hoofdframe, geleiders)"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Gemeente Voorbeeldhaven",
+   "locatie": "Poldergemaal Proefsluis",
+   "project": "P26-275 (fictief)",
+   "product": "Semi Compact Hydrovijzel",
+   "code": "SHV",
+   "fase": "Inbedrijfstelling",
+   "taken": [
+    "Inbedrijfstelling van de Vijzelinstallatie"
+   ],
+   "monteurs": 4
+  },
+  {
+   "nr": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Gemeente Voorbeeldhaven",
+   "locatie": "Poldergemaal Proefsluis",
+   "project": "P26-271 (fictief)",
+   "product": "Borstelbeluchter",
+   "code": "BBL",
+   "fase": "Demontage Componenten",
+   "taken": [
+    "Demonteren aandrijving, tandwielkast en borstelbeluchter"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "Gemaal Fictiefpolder",
+   "project": "P26-378 (fictief)",
+   "product": "Damwand",
+   "code": "DAM",
+   "fase": "Montage",
+   "taken": [
+    "Plaatsen damwand"
+   ],
+   "monteurs": 3
+  },
+  {
+   "nr": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "Gemaal Fictiefpolder",
+   "project": "P26-459 (fictief)",
+   "product": "Stortmalvijzel",
+   "code": "SMV",
+   "fase": "Betonwerkzaamheden",
+   "taken": [
+    "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+   ],
+   "monteurs": 4
+  },
+  {
+   "nr": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "soort": "WPI coördinator",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "RWZI Voorbeeldstad",
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "code": "DAM",
+   "fase": "Demontage",
+   "taken": [
+    "Verwijderen damwand"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "inspecteur": "Directielid (fictief)",
+   "soort": "VGM-inspectie directie",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "Gemaal Fictiefpolder",
+   "project": "P26-448 (fictief)",
+   "product": "Slibindikker",
+   "code": "SLI",
+   "fase": "Voorbereiding",
+   "taken": [
+    "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "Situatie Kraanopstelling"
+   ],
+   "monteurs": 4
+  },
+  {
+   "nr": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "inspecteur": "Directielid (fictief)",
+   "soort": "VGM-inspectie directie",
+   "opdrachtgever": "Waterschap Voorbeeld-Noord",
+   "locatie": "Gemaal Fictiefpolder",
+   "project": "P26-307 (fictief)",
+   "product": "Landox",
+   "code": "LDX",
+   "fase": "Afmontage Stromingsprofiel",
+   "taken": [
+    "Monteren stromingsprofiel rondom FlowBooster (in droge put)"
+   ],
+   "monteurs": 2
+  },
+  {
+   "nr": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "inspecteur": "Directielid (fictief)",
+   "soort": "VGM-inspectie directie",
+   "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+   "locatie": "RWZI Testdorp",
+   "project": "P26-228 (fictief)",
+   "product": "Bandfilter",
+   "code": "BAN",
+   "fase": "Veiligstellen Lototo",
+   "taken": [
+    "Afschakelprotocol en Veiligstelling (LOTOTO) Bandscreen",
+    "Situatie Kraanopstelling"
+   ],
+   "monteurs": 3
+  }
+ ],
+ "regels": [
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "actie": "WPI-20260518-SHV-C1-1"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Afwijking",
+   "classificatie": "PBM",
+   "prioriteit": "kort",
+   "actie": "WPI-20260518-SHV-C1-2"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "kort",
+   "actie": "WPI-20260518-SHV-C1-3"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.01",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "direct",
+   "actie": "WPI-20260518-SHV-C1-4"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.02",
+   "soort": "TRA",
+   "omschrijving": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.03",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen ",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.04",
+   "soort": "TRA",
+   "omschrijving": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische",
+   "oordeel": "Afwijking",
+   "classificatie": "Besloten ruimte en gas",
+   "prioriteit": "kort",
+   "actie": "WPI-20260518-SHV-C1-5"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Conform",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260511-NBT-C2-1"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "direct",
+   "actie": "WPI-20260511-NBT-C2-2"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Afwijking",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "kort",
+   "actie": "WPI-20260511-NBT-C2-3"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.01",
+   "soort": "TRA",
+   "omschrijving": "Oog- en gezichtsletsel en blootstelling aan kwartsstof bij boren van ankergaten in beton: betondeeltjes en sto",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20260511-NBT-C2-4"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke overbelasting bij boren met zware boorhamer in ongemakkelijke werkhouding in de besloten ruimte van de",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "actie": "WPI-20260511-NBT-C2-5"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.03",
+   "soort": "TRA",
+   "omschrijving": "Blootstelling aan chemische stoffen (lijm/epoxy, grouting/cement) bij verankering en aanvullen middendraaipunt",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling handen/vingers bij montage en positioneren van loopwagen, ruimerbrug op verankering en middendraaip",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "actie": "WPI-20260511-NBT-C2-6"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.05",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.06",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte bij werken op werkbordes t.p.v. middenkolom bij vastzetten boutverbindingen en afstellen mid",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.07",
+   "soort": "TRA",
+   "omschrijving": "Onverwachte beweging van loopwagen of toegangstrap bij montage of hijsen: onvoldoende ondersteuning tijdens mo",
+   "oordeel": "Niet van toepassing",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.08",
+   "soort": "TRA",
+   "omschrijving": "Beknelling bij neerlaten en positioneren van de nieuwe ruimerbrug: bij het laten zakken van de brug op de loop",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.09",
+   "soort": "TRA",
+   "omschrijving": "Onvoldoende fixatie van de nieuwe ruimerbrug tijdens montagewerkzaamheden: tijdens uitlijnen, vastzetten boutv",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "actie": "WPI-20260608-BAN-C1-1"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "PBM",
+   "prioriteit": "kort",
+   "actie": "WPI-20260608-BAN-C1-2"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "actie": "WPI-20260608-BAN-C1-3"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260608-BAN-C1-4"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onver",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260608-BAN-C1-5"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.02",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte bij werken op steigers in het diepe kanaal van bodem tot dekniveau, bij uitlijnen geleiders ",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.03",
+   "soort": "TRA",
+   "omschrijving": "Beknelling handen/vingers bij demonteren transportketting en zeefpanelen: losmaken van verbindingspennen en bo",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.04",
+   "soort": "TRA",
+   "omschrijving": "Brandgevaar, verbrandingen en inademen lasrook bij lassen ankerbouten aan ingestorte platen: vonken en spetter",
+   "oordeel": "Conform",
+   "classificatie": "Besloten ruimte en gas"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.05",
+   "soort": "TRA",
+   "omschrijving": "Vrijkomen van kwartsstof en gehoorschade bij boren in beton voor ankerbouten met boorhamers in galmende betonn",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.06",
+   "soort": "TRA",
+   "omschrijving": "Huidirritatie en chemische verbranding bij contact met natte cementmortel/grout bij grouting van ingegoten del",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.07",
+   "soort": "TRA",
+   "omschrijving": "Grijpgevaar door draaiende delen bij invoeren transportketting via aangedreven tandwielen tijdens montage (mac",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.08",
+   "soort": "TRA",
+   "omschrijving": "Onbalans transportketting door ongelijkmatig verdelen van zeefpanelen: kan leiden tot scheefloop van ketting, ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "direct",
+   "actie": "WPI-20260608-BAN-C1-6"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "kort",
+   "actie": "WPI-20260609-MIC-C2-1"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260609-MIC-C2-2"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20260609-MIC-C2-3"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Conform",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte: werken op of rond de rand van de microfilterput; verlies van balans of uitglijden leidt tot",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het be",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.05",
+   "soort": "TRA",
+   "omschrijving": "Zwaaiend microfilter tijdens hijsen: onvoldoende beheersing van de positie en afwezigheid van stuurlijnen leid",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "direct",
+   "actie": "WPI-20260609-MIC-C2-4"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.06",
+   "soort": "TRA",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.07",
+   "soort": "TRA",
+   "omschrijving": "Botsen/Beschadigen, het microfilter kan tegen de putwand of andere objecten aanslaan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.08",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op microfilteronderd",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20260609-MIC-C2-5"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.09",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht draaien trommelzeef tijdens montage: bij plaatsen zeeframen of bouten kan trommel onverwacht draaie",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "direct",
+   "actie": "WPI-20260609-MIC-C2-6"
+  },
+  {
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.10",
+   "soort": "TRA",
+   "omschrijving": "Vrijkomen van stof: bij boren in beton voor bevestiging van onderdelen.",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20260609-MIC-C2-7"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Conform",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260723-ROO-C1-1"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.01",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht inschakelen door automatische bediening: de loopwagen of grijper kan tijdens onderhoud onverwacht s",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.02",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht inschakelen tijdens uitschakelhandeling: foutieve volgorde of overslaan van schakelstap leidt tot d",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.03",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM o",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "direct",
+   "actie": "WPI-20260723-ROO-C1-2"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.04",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aan",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "actie": "WPI-20260723-ROO-C1-3"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.05",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.06",
+   "soort": "TRA",
+   "omschrijving": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanrakin",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.07",
+   "soort": "TRA",
+   "omschrijving": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.08",
+   "soort": "TRA",
+   "omschrijving": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.09",
+   "soort": "TRA",
+   "omschrijving": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.10",
+   "soort": "TRA",
+   "omschrijving": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "PBM",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260818-CPV-C2-1"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20260818-CPV-C2-2"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val ",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "actie": "WPI-20260818-CPV-C2-3"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het be",
+   "oordeel": "Niet van toepassing",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.05",
+   "soort": "TRA",
+   "omschrijving": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen le",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.06",
+   "soort": "TRA",
+   "omschrijving": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknellin",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.07",
+   "soort": "TRA",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.08",
+   "soort": "TRA",
+   "omschrijving": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.09",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260818-CPV-C2-4"
+  },
+  {
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.10",
+   "soort": "TRA",
+   "omschrijving": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "direct",
+   "actie": "WPI-20260921-BAN-C1-1"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "actie": "WPI-20260921-BAN-C1-2"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "direct",
+   "actie": "WPI-20260921-BAN-C1-3"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.01",
+   "soort": "TRA",
+   "omschrijving": "Beknelling handen/vingers bij demonteren transportketting en zeefpanelen: losmaken van verbindingspennen en bo",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "actie": "WPI-20260921-BAN-C1-4"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting bij uitnemen en verplaatsen van zware kettingsecties, zeefpanelen en hoofdframe in ongemakke",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onver",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260921-BAN-C1-5"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.04",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte bij werken op steigers/randen van het kanaal tijdens demontage; verlies van balans of uitgli",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.05",
+   "soort": "TRA",
+   "omschrijving": "Snijgevaar door scherpe randen van versleten zeefpanelen en kettingdelen: handen/armen kunnen scherpe randen o",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.06",
+   "soort": "TRA",
+   "omschrijving": "Vallen in water/kanaal: verlies van balans of uitglijden op nat dek/steiger leidt tot val in het inlaatkanaal.",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.07",
+   "soort": "TRA",
+   "omschrijving": "Vallen in water/kanaal: verlies van balans of uitglijden op nat dek/steiger leidt tot val in het inlaatkanaal.",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "Buiten TRA",
+   "soort": "Buiten TRA",
+   "omschrijving": "Werken in het donker bij uitloop van het werk: geen werkverlichting in de TRA",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "TRA onvolledig",
+   "prioriteit": "planmatig"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Afwijking",
+   "classificatie": "PBM",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260914-SHV-C2-1"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "kort",
+   "actie": "WPI-20260914-SHV-C2-2"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "SHV-6.01",
+   "soort": "TRA",
+   "omschrijving": "Gevaar voor elektrocutie.",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260914-SHV-C2-3"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "SHV-6.02",
+   "soort": "TRA",
+   "omschrijving": "Beknelling door draaiende delen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "SHV-6.03",
+   "soort": "TRA",
+   "omschrijving": "Beknelling door draaiende vijzel",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Conform",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.02",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.03",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het be",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.05",
+   "soort": "TRA",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.06",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261015-BBL-C1-1"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Conform",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Afwijking",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261021-DAM-C2-1"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte: werken op of rond de rand van het inlaatkanaal/de put; verlies van balans of uitglijden lei",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "actie": "WPI-20261021-DAM-C2-2"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261021-DAM-C2-3"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het be",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.05",
+   "soort": "TRA",
+   "omschrijving": "Zwaaiende damwand tijdens hijsen: onvoldoende beheersing van de damwand en afwezigheid van stuurlijnen leidt t",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "actie": "WPI-20261021-DAM-C2-4"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.06",
+   "soort": "TRA",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "direct",
+   "actie": "WPI-20261021-DAM-C2-5"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.07",
+   "soort": "TRA",
+   "omschrijving": "Vallen damwand uit store rack of beknelling bij plaatsen: damwand wordt na test in store rack opgeslagen op de",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.08",
+   "soort": "TRA",
+   "omschrijving": "Botsen/Beschadigen, de damwand kan tegen de geleiding, kanaalwand of andere objecten aanslaan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.09",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.10",
+   "soort": "TRA",
+   "omschrijving": "Vrijkomen van stof: bij boren in beton voor bevestiging van onderdelen.",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "Buiten TRA",
+   "soort": "Buiten TRA",
+   "omschrijving": "Werken in het donker bij uitloop van het werk: geen werkverlichting in de TRA",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "TRA onvolledig",
+   "prioriteit": "planmatig"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "actie": "WPI-20261110-SMV-C1-1"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "SMV-3.01",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "SMV-3.02",
+   "soort": "TRA",
+   "omschrijving": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "SMV-3.03",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen ",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "SMV-3.04",
+   "soort": "TRA",
+   "omschrijving": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische",
+   "oordeel": "Conform",
+   "classificatie": "Besloten ruimte en gas"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "actie": "WPI-20261105-DAM-C2-1"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "actie": "WPI-20261105-DAM-C2-2"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte: werken op of rond de rand van het inlaatkanaal/de put; verlies van balans of uitglijden lei",
+   "oordeel": "Conform",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.02",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.04",
+   "soort": "TRA",
+   "omschrijving": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het be",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.05",
+   "soort": "TRA",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.06",
+   "soort": "TRA",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261105-DAM-C2-3"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.07",
+   "soort": "TRA",
+   "omschrijving": "Besloten ruimte; aanwezigheid in het inlaatkanaal/de put zonder adequate ventilatie en gasbewaking; ophoping v",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Besloten ruimte en gas",
+   "prioriteit": "direct",
+   "actie": "WPI-20261105-DAM-C2-4"
+  },
+  {
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.08",
+   "soort": "TRA",
+   "omschrijving": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de damwand plotseling verschuiven wanneer de damwand n",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "direct",
+   "actie": "WPI-20260605-SLI-DL-1"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Conform",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Conform",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Afwijking",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260605-SLI-DL-2"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.01",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM o",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.02",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aan",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.03",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.04",
+   "soort": "TRA",
+   "omschrijving": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanrakin",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260605-SLI-DL-3"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.05",
+   "soort": "TRA",
+   "omschrijving": "Struikelgevaar: losliggende kabels op de werkvloer.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.06",
+   "soort": "TRA",
+   "omschrijving": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (slibindikkerunit); bezwijken hijsmid",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.07",
+   "soort": "TRA",
+   "omschrijving": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.08",
+   "soort": "TRA",
+   "omschrijving": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.09",
+   "soort": "TRA",
+   "omschrijving": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260605-SLI-DL-4"
+  },
+  {
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "Buiten TRA",
+   "soort": "Buiten TRA",
+   "omschrijving": "Gladheid op het bordes door algengroei",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "TRA onvolledig",
+   "prioriteit": "planmatig"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "actie": "WPI-20260921-LDX-DL-1"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "actie": "WPI-20260921-LDX-DL-2"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Conform",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Conform",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Conform",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20260921-LDX-DL-3"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "LDX-4.01",
+   "soort": "TRA",
+   "omschrijving": "Vallen van hoogte in droog bassin: monteur werkt vanaf de bassinrand, via een ladder of op de bodem van het dr",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "LDX-4.02",
+   "soort": "TRA",
+   "omschrijving": "Beknelling bij positioneren stromingsprofiel: handen, vingers of voeten kunnen bekneld raken tussen het profie",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "LDX-4.03",
+   "soort": "TRA",
+   "omschrijving": "Vallen van de last bij hijsen stromingsprofiel in het bassin: onjuist aanslaan of onverwachte beweging tijdens",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "actie": "WPI-20260921-LDX-DL-4"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "LDX-4.04",
+   "soort": "TRA",
+   "omschrijving": "Fysieke belasting bij montage in geforceerde houding.",
+   "oordeel": "Conform",
+   "classificatie": "Gedrag en werkwijze"
+  },
+  {
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "Buiten TRA",
+   "soort": "Buiten TRA",
+   "omschrijving": "Kruisend werkverkeer van de opdrachtgever langs de werkplek",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "TRA onvolledig",
+   "prioriteit": "planmatig"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "A",
+   "soort": "Algemeen",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Documenten en voorbereiding"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "B",
+   "soort": "Algemeen",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "C",
+   "soort": "Algemeen",
+   "omschrijving": "PBM",
+   "oordeel": "Conform",
+   "classificatie": "PBM"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "D",
+   "soort": "Algemeen",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Arbeidsmiddelen en keuring"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "E",
+   "soort": "Algemeen",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "F",
+   "soort": "Algemeen",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Orde en netheid"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "G",
+   "soort": "Algemeen",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Gevaarlijke stoffen en hygiëne"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "H",
+   "soort": "Algemeen",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Noodvoorzieningen"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "I",
+   "soort": "Algemeen",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261109-BAN-DL-1"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.01",
+   "soort": "TRA",
+   "omschrijving": "Automatische bediening niet uitgeschakeld: bandscreen werkt op tijd-, niveau- of drukverschil-sturing en kan t",
+   "oordeel": "Niet beoordeeld",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.02",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM o",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.03",
+   "soort": "TRA",
+   "omschrijving": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aan",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.04",
+   "soort": "TRA",
+   "omschrijving": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+   "oordeel": "Conform",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.05",
+   "soort": "TRA",
+   "omschrijving": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanrakin",
+   "oordeel": "Niet van toepassing",
+   "classificatie": "Veiligstellen-LOTOTO"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.06",
+   "soort": "TRA",
+   "omschrijving": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+   "oordeel": "Geen afwijking waargenomen",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.07",
+   "soort": "TRA",
+   "omschrijving": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "actie": "WPI-20261109-BAN-DL-2"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.08",
+   "soort": "TRA",
+   "omschrijving": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+   "oordeel": "Conform",
+   "classificatie": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.09",
+   "soort": "TRA",
+   "omschrijving": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+   "oordeel": "Niet van toepassing",
+   "classificatie": "Hijsen"
+  }
+ ],
+ "acties": [
+  {
+   "actie": "WPI-20260518-SHV-C1-1",
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-15"
+  },
+  {
+   "actie": "WPI-20260518-SHV-C1-2",
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "C",
+   "omschrijving": "PBM",
+   "oordeel": "Afwijking",
+   "classificatie": "PBM",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-06-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-05-28"
+  },
+  {
+   "actie": "WPI-20260518-SHV-C1-3",
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "H",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-05-30"
+  },
+  {
+   "actie": "WPI-20260518-SHV-C1-4",
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.01",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-05-18",
+   "status": "Afgerond",
+   "afgerond_op": "2026-05-18"
+  },
+  {
+   "actie": "WPI-20260518-SHV-C1-5",
+   "wpi": "WPI-20260518-SHV-C1",
+   "datum": "2026-05-18",
+   "ref": "SHV-4.04",
+   "omschrijving": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische",
+   "oordeel": "Afwijking",
+   "classificatie": "Besloten ruimte en gas",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-05-23"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-1",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "D",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-07-06",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-22"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-2",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "E",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-05-11",
+   "status": "Afgerond",
+   "afgerond_op": "2026-05-11"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-3",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "H",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Afwijking",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-05-25",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-08"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-4",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.01",
+   "omschrijving": "Oog- en gezichtsletsel en blootstelling aan kwartsstof bij boren van ankergaten in beton: betondeeltjes en sto",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-05-25",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-24"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-5",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.02",
+   "omschrijving": "Fysieke overbelasting bij boren met zware boorhamer in ongemakkelijke werkhouding in de besloten ruimte van de",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-05-25",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-02"
+  },
+  {
+   "actie": "WPI-20260511-NBT-C2-6",
+   "wpi": "WPI-20260511-NBT-C2",
+   "datum": "2026-05-11",
+   "ref": "NBT-5.04",
+   "omschrijving": "Beknelling handen/vingers bij montage en positioneren van loopwagen, ruimerbrug op verankering en middendraaip",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-05-25",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-09"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-1",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-22",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-25"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-2",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "C",
+   "omschrijving": "PBM",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "PBM",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-06-22",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-25"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-3",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "E",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-06-22",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-14"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-4",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "H",
+   "omschrijving": "Noodvoorzieningen",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Noodvoorzieningen",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-08-03",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-30"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-5",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.01",
+   "omschrijving": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onver",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-08-03",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-14"
+  },
+  {
+   "actie": "WPI-20260608-BAN-C1-6",
+   "wpi": "WPI-20260608-BAN-C1",
+   "datum": "2026-06-08",
+   "ref": "BAN-3.08",
+   "omschrijving": "Onbalans transportketting door ongelijkmatig verdelen van zeefpanelen: kan leiden tot scheefloop van ketting, ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-06-08",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-08"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-1",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "D",
+   "omschrijving": "Arbeidsmiddelen en gereedschap",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-06-23",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-23"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-2",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "E",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-08-04",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-22"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-3",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "G",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-23",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-30"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-4",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.05",
+   "omschrijving": "Zwaaiend microfilter tijdens hijsen: onvoldoende beheersing van de positie en afwezigheid van stuurlijnen leid",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-09",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-09"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-5",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.08",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op microfilteronderd",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-06-23",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-23"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-6",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.09",
+   "omschrijving": "Onverwacht draaien trommelzeef tijdens montage: bij plaatsen zeeframen of bouten kan trommel onverwacht draaie",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-06-09",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-09"
+  },
+  {
+   "actie": "WPI-20260609-MIC-C2-7",
+   "wpi": "WPI-20260609-MIC-C2",
+   "datum": "2026-06-09",
+   "ref": "MIC-3.10",
+   "omschrijving": "Vrijkomen van stof: bij boren in beton voor bevestiging van onderdelen.",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-06-23",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-30"
+  },
+  {
+   "actie": "WPI-20260723-ROO-C1-1",
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "F",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-09-17",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-19"
+  },
+  {
+   "actie": "WPI-20260723-ROO-C1-2",
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.03",
+   "omschrijving": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM o",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-07-23",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-23"
+  },
+  {
+   "actie": "WPI-20260723-ROO-C1-3",
+   "wpi": "WPI-20260723-ROO-C1",
+   "datum": "2026-07-23",
+   "ref": "ROO-1.04",
+   "omschrijving": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aan",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-08-06",
+   "status": "Afgerond",
+   "afgerond_op": "2026-08-11"
+  },
+  {
+   "actie": "WPI-20260818-CPV-C2-1",
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "C",
+   "omschrijving": "PBM",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "PBM",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-10-13",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-17"
+  },
+  {
+   "actie": "WPI-20260818-CPV-C2-2",
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "G",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-09-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-08-28"
+  },
+  {
+   "actie": "WPI-20260818-CPV-C2-3",
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.03",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-09-01",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-25"
+  },
+  {
+   "actie": "WPI-20260818-CPV-C2-4",
+   "wpi": "WPI-20260818-CPV-C2",
+   "datum": "2026-08-18",
+   "ref": "CPV-3.09",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-10-13",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-27"
+  },
+  {
+   "actie": "WPI-20260921-BAN-C1-1",
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-09-21",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-21"
+  },
+  {
+   "actie": "WPI-20260921-BAN-C1-2",
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "E",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-10-05",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20260921-BAN-C1-3",
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "G",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-09-21",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-21"
+  },
+  {
+   "actie": "WPI-20260921-BAN-C1-4",
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.01",
+   "omschrijving": "Beknelling handen/vingers bij demonteren transportketting en zeefpanelen: losmaken van verbindingspennen en bo",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-10-05",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20260921-BAN-C1-5",
+   "wpi": "WPI-20260921-BAN-C1",
+   "datum": "2026-09-21",
+   "ref": "BAN-2.03",
+   "omschrijving": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onver",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-11-16",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-24"
+  },
+  {
+   "actie": "WPI-20260914-SHV-C2-1",
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "C",
+   "omschrijving": "PBM",
+   "oordeel": "Afwijking",
+   "classificatie": "PBM",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-11-09",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-04"
+  },
+  {
+   "actie": "WPI-20260914-SHV-C2-2",
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "F",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-09-28",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-30"
+  },
+  {
+   "actie": "WPI-20260914-SHV-C2-3",
+   "wpi": "WPI-20260914-SHV-C2",
+   "datum": "2026-09-14",
+   "ref": "SHV-6.01",
+   "omschrijving": "Gevaar voor elektrocutie.",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-11-09",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-24"
+  },
+  {
+   "actie": "WPI-20261015-BBL-C1-1",
+   "wpi": "WPI-20261015-BBL-C1",
+   "datum": "2026-10-15",
+   "ref": "BBL-2.06",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-12-10",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261021-DAM-C2-1",
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "F",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Afwijking",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-12-16",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261021-DAM-C2-2",
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.02",
+   "omschrijving": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewric",
+   "oordeel": "Afwijking",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-11-04",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261021-DAM-C2-3",
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.03",
+   "omschrijving": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerk",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-12-16",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261021-DAM-C2-4",
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.05",
+   "omschrijving": "Zwaaiende damwand tijdens hijsen: onvoldoende beheersing van de damwand en afwezigheid van stuurlijnen leidt t",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-11-04",
+   "status": "Afgerond",
+   "afgerond_op": "2026-11-11"
+  },
+  {
+   "actie": "WPI-20261021-DAM-C2-5",
+   "wpi": "WPI-20261021-DAM-C2",
+   "datum": "2026-10-21",
+   "ref": "DAM-3.06",
+   "omschrijving": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van ",
+   "oordeel": "Afwijking",
+   "classificatie": "Arbeidsmiddelen en keuring",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-10-21",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-21"
+  },
+  {
+   "actie": "WPI-20261110-SMV-C1-1",
+   "wpi": "WPI-20261110-SMV-C1",
+   "datum": "2026-11-10",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-11-24",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261105-DAM-C2-1",
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-11-19",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261105-DAM-C2-2",
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "G",
+   "omschrijving": "Gevaarlijke stoffen, hygiëne en milieu",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-11-19",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261105-DAM-C2-3",
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.06",
+   "omschrijving": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen",
+   "oordeel": "Afwijking",
+   "classificatie": "Gevaarlijke stoffen en hygiëne",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-12-31",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261105-DAM-C2-4",
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "ref": "DAM-2.07",
+   "omschrijving": "Besloten ruimte; aanwezigheid in het inlaatkanaal/de put zonder adequate ventilatie en gasbewaking; ophoping v",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Besloten ruimte en gas",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "Hoofd Service & Montage",
+   "termijn": "2026-11-05",
+   "status": "Afgerond",
+   "afgerond_op": "2026-11-05"
+  },
+  {
+   "actie": "WPI-20260605-SLI-DL-1",
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "A",
+   "omschrijving": "Voorbereiding en documenten",
+   "oordeel": "Afwijking",
+   "classificatie": "Documenten en voorbereiding",
+   "prioriteit": "direct",
+   "direct_gecorrigeerd": true,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-06-05",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-05"
+  },
+  {
+   "actie": "WPI-20260605-SLI-DL-2",
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "F",
+   "omschrijving": "Werkplek en omgeving",
+   "oordeel": "Afwijking",
+   "classificatie": "Orde en netheid",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-07-31",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-03"
+  },
+  {
+   "actie": "WPI-20260605-SLI-DL-3",
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.04",
+   "omschrijving": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanrakin",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2026-07-31",
+   "status": "Afgerond",
+   "afgerond_op": "2026-07-31"
+  },
+  {
+   "actie": "WPI-20260605-SLI-DL-4",
+   "wpi": "WPI-20260605-SLI-DL",
+   "datum": "2026-06-05",
+   "ref": "SLI-1.09",
+   "omschrijving": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-07-31",
+   "status": "Afgerond",
+   "afgerond_op": "2026-06-30"
+  },
+  {
+   "actie": "WPI-20260921-LDX-DL-1",
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "B",
+   "omschrijving": "Veiligstellen (LOTOTO)",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-10-05",
+   "status": "Afgerond",
+   "afgerond_op": "2026-09-27"
+  },
+  {
+   "actie": "WPI-20260921-LDX-DL-2",
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "E",
+   "omschrijving": "Hijsen en kraan",
+   "oordeel": "Afwijking",
+   "classificatie": "Hijsen",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Werkvoorbereider",
+   "termijn": "2026-10-05",
+   "status": "Afgerond",
+   "afgerond_op": "2026-11-03"
+  },
+  {
+   "actie": "WPI-20260921-LDX-DL-3",
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "I",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Montage Coördinator",
+   "termijn": "2026-11-16",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-23"
+  },
+  {
+   "actie": "WPI-20260921-LDX-DL-4",
+   "wpi": "WPI-20260921-LDX-DL",
+   "datum": "2026-09-21",
+   "ref": "LDX-4.03",
+   "omschrijving": "Vallen van de last bij hijsen stromingsprofiel in het bassin: onjuist aanslaan of onverwachte beweging tijdens",
+   "oordeel": "Afwijking",
+   "classificatie": "Veiligstellen-LOTOTO",
+   "prioriteit": "kort",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2026-10-05",
+   "status": "Afgerond",
+   "afgerond_op": "2026-10-28"
+  },
+  {
+   "actie": "WPI-20261109-BAN-DL-1",
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "I",
+   "omschrijving": "Gedrag en samenwerking",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Gedrag en werkwijze",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "QHSE-Manager",
+   "termijn": "2027-01-04",
+   "status": "Open",
+   "afgerond_op": null
+  },
+  {
+   "actie": "WPI-20261109-BAN-DL-2",
+   "wpi": "WPI-20261109-BAN-DL",
+   "datum": "2026-11-09",
+   "ref": "BAN-1.07",
+   "omschrijving": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ",
+   "oordeel": "Verbeterpunt",
+   "classificatie": "Hijsen",
+   "prioriteit": "planmatig",
+   "direct_gecorrigeerd": false,
+   "actiehouder": "Monteur (voorman)",
+   "termijn": "2027-01-04",
+   "status": "Open",
+   "afgerond_op": null
+  }
+ ],
+ "programma": [
+  {
+   "maand": "2026-05",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-05",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-07",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-07",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 0
+  },
+  {
+   "maand": "2026-08",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 0
+  },
+  {
+   "maand": "2026-08",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-10",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-10",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  }
+ ],
+ "versie": "2 (classificaties en direct gecorrigeerde acties rechtgezet)"
+}

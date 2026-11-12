@@ -1,0 +1,878 @@
+<!DOCTYPE html><html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WPI-app ontwerp en WPI-methode — tussenstop 12-11-2026</title>
+<style>
+:root{--ink:#1B2430;--muted:#5B6675;--line:#DDE2E8;--bg:#F6F7F9;--pri:#1F5FBF;--ai:#6B4FD8}
+*{box-sizing:border-box}body{margin:0;font:15px/1.55 Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+header{padding:28px 32px 12px;max-width:1500px;margin:auto}h1{font-size:26px;margin:0 0 6px}
+.chip{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:999px;padding:2px 10px;font-size:13px;color:var(--muted)}
+main{max-width:1500px;margin:auto;padding:0 32px 60px}
+.status{background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin:16px 0 26px}
+.status table{border-collapse:collapse;width:100%}.status td,.status th{border-top:1px solid var(--line);padding:8px;text-align:left;vertical-align:top}
+nav.jump{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:2;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
+nav.jump a{font-size:12px;text-decoration:none;color:var(--pri);border:1px solid var(--line);background:#fff;border-radius:6px;padding:2px 7px}
+h2{margin:34px 0 10px;font-size:20px}
+.scr{display:grid;gap:22px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin:16px 0}
+.scr.phone{grid-template-columns:390px 1fr}.scr.web{grid-template-columns:minmax(0,1.6fr) minmax(320px,1fr)}
+.shot{max-height:900px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fafafa}
+.shot img{width:100%;display:block}
+.note h3{margin:0 0 8px;font-size:17px}.note .code{margin:0;color:var(--muted);font-size:13px}.note h2{font-size:15px;margin:16px 0 4px}
+.note table{border-collapse:collapse;font-size:13px}.note td,.note th{border:1px solid var(--line);padding:4px 6px}
+@media(max-width:900px){.scr.phone,.scr.web{grid-template-columns:1fr}main,header{padding:0 14px}}
+</style></head><body>
+<header><h1>WPI — tussenstop 12-11-2026</h1><span class="chip">Voorbeeldinhoud · fictief</span>
+<p style="color:var(--muted);max-width:900px">Stand van de gauntlet-loops: de nieuwe WPI-methode voor Noardling (voorstel, voorbeeldrapport, dashboard) en het schermontwerp van de configureerbare inspectie-app. Klik op een scherm voor de volle grootte; rechts staat per scherm de annotatie (hoe configureer je het, uitbreidingen, verbeteringen).</p></header>
+<main><div class="status">
+<h2 style="margin-top:0">Stand per onderdeel (laatste oordeel criticus, blind tegen SafetyCulture)</h2>
+<table>
+<tr><th>Onderdeel</th><th>Laatste ronde</th><th>Wint bij gebruiker/lezer</th><th>Verliest nog op</th></tr>
+<tr><td>Voorbeeldrapport WPI-20261105-DAM-C2 (11 p.)</td><td>ronde 9 gebouwd; ronde 8 beoordeeld</td><td>Coördinator én VCA-auditor; VCA 7.1 compleet en letterlijk; data veld voor veld gelijk</td><td>Scanbaarheid (in ronde 9 aangepakt) en DAM-2.08 (in ronde 9 herschreven) — nog niet opnieuw beoordeeld</td></tr>
+<tr><td>Voorstel nieuwe methode (20 p. + bijlage A 9 p.)</td><td>ronde 8 gebouwd; ronde 7 beoordeeld</td><td>Directie/Hoofd S&amp;M én VCA-auditor</td><td>Vormgeving (beelden en codes in ronde 8 aangepakt), kosten (nu doorgerekend) — nog niet opnieuw beoordeeld</td></tr>
+<tr><td>Dashboard (gepubliceerd)</td><td>ronde 6 gebouwd; ronde 5 beoordeeld</td><td>Hoofd S&amp;M/directie én VCA-auditor; alle cijfers kloppen</td><td>Telefoon en afdrukversie (in ronde 6 aangepakt) — nog niet opnieuw beoordeeld</td></tr>
+<tr><td>App telefoon P01–P10</td><td>ronde 3 gebouwd</td><td>VGM-coördinator (herleidbaar, niets verzonnen)</td><td>Inspecteur buiten (lawaai, handschoenen) — ronde 3 voegt snel tikken, vaste onderbalk, offline-gedrag en koppeling tot op de maatregel toe</td></tr>
+<tr><td>App web W01–W03, W16 (begeleider configureren, versies)</td><td>ronde 2 gebouwd</td><td>VGM-coördinator; koper nipt</td><td>Lengte en dichtheid — ronde 2 nog niet beoordeeld</td></tr>
+<tr><td>App web W04–W06b (kennisbank, RI&amp;E/TRA omzetten)</td><td>ronde 3 gebouwd</td><td>Beide gebruikers (koper duidelijk)</td><td>Eenvoud voor ander bedrijf — ronde 3 voegt de route van een ander bedrijf toe</td></tr>
+<tr><td>App web W07–W17 (rapport, dashboard, acties, programma, rollen, AI/AVG, huisstijl, organisaties)</td><td>ronde 2–3 gebouwd</td><td>Inhoudelijk A op bijna alle schermen</td><td>Visueel (lengte, lege vlakken) en feitenfouten in W14 — in de laatste ronde hersteld, nog niet opnieuw beoordeeld</td></tr>
+</table>
+<p style="color:var(--muted);margin-bottom:0">Kanttekening: de critici konden van SafetyCulture alleen de teksten van de helpartikelen en het voorbeeldrapport lezen, geen schermafbeeldingen (de werkomgeving blokkeert safetyculture.com en Chrome was niet bereikbaar). Alle inhoud is fictief voorbeeldmateriaal (dataset 10.4).</p>
+</div>
+
+<nav class="jump"><a href="#P01-start">P01</a><a href="#P01b-overige-punten">P01b</a><a href="#P02-product-taak">P02</a><a href="#P03-algemeen">P03</a><a href="#P03b-algemeen-uitgeklapt">P03b</a><a href="#P04-tra-toetsing">P04</a><a href="#P04b-snel-tikken">P04b</a><a href="#P05-inspreken">P05</a><a href="#P06-foto">P06</a><a href="#P07-bevinding-actie">P07</a><a href="#P07b-actie-offline">P07b</a><a href="#P07c-termijn">P07c</a><a href="#P08-afsluiten">P08</a><a href="#P09-rapport-klaar">P09</a><a href="#P10-acties-toetsen">P10</a><a href="#P10b-uitgevoerd-melden">P10b</a><a href="#W01-overzicht">W01</a><a href="#W02-begeleider">W02</a><a href="#W02b-begeleider-stappen">W02b</a><a href="#W02c-begeleider-alle-stappen">W02c</a><a href="#W03-begeleider-regels">W03</a><a href="#W03b-begeleider-oordelen">W03b</a><a href="#W03c-begeleider-classificaties">W03c</a><a href="#W04-kennisbank">W04</a><a href="#W05-catalogus-kiezen">W05</a><a href="#W06-upload-omzetten">W06</a><a href="#W06b-rie-omzetten">W06b</a><a href="#W07-rapportontwerper">W07</a><a href="#W08-dashboardbouwer">W08</a><a href="#W09-dashboard">W09</a><a href="#W09b-trendanalyse">W09b</a><a href="#W10-inspecties">W10</a><a href="#W11-acties">W11</a><a href="#W12-programma">W12</a><a href="#W13-gebruikers-rollen">W13</a><a href="#W14-ai-data">W14</a><a href="#W15-huisstijl">W15</a><a href="#W16-versies-publiceren">W16</a><a href="#W17-organisaties">W17</a></nav>
+<h2>Telefoon — inspecteur (16 schermen)</h2><section class="scr phone" id="P01-start">
+<div class="shot"><a href="img/P01-start.jpg" target="_blank"><img loading="lazy" src="img/P01-start.jpg" alt="P01-start — Nieuwe inspectie (kop)"></a></div>
+<div class="note"><p class="code">P01-start</p><h3>P01-start — Nieuwe inspectie (kop)</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Kopvelden (welke, verplicht, volgorde) en de soorten inspectie (bij Noardling: WPI coördinator / VGM-inspectie directie / overig) staan in W02-begeleider, stap "Kop".</li>
+<li>Per veld kiest de beheerder of het wordt voorgevuld uit de projectplanning (W12-programma); voorgevulde velden krijgen het label "uit planning".</li>
+<li>"Opnieuw bekijken": de beheerder stelt in welke historie meekomt (open acties, afwijkingen van de laatste N maanden, zelfde product en/of zelfde project) en wat de begeleider erover zegt (W02). Elk punt toont actienummer en project van herkomst; de volledige lijst staat op P01b.</li>
+<li>Wat vóór vertrek op het toestel komt (TRA van het geplande product, kennisbankversie, eerdere WPI's met acties) volgt uit W14-ai-data; de regel "Op dit toestel" toont het resultaat.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Project kiezen via QR-code op de bouwkeet of via locatie, zodat de kop zonder tikken klopt.</li>
+<li>Monteurs kiezen uit de personeelslijst met controle op geldig VCA-diploma.</li>
+<li>Weer en omstandigheden als voorstel uit een weerdienst (inspecteur bevestigt).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>"Bekijken" bij DAM-2.04 opent alleen het punt; de toetsing van de actie zelf hoort bij de toetser (Hoofd Service &amp; Montage) in P10. Een melding naar die toetser vanuit hier ("termijn verlopen") ontbreekt nog.</li>
+<li>Als het product op locatie afwijkt van de planning, moet dat opvallender gemeld worden dan nu.</li>
+<li>De soort-keuze staat los van de spraak; "directie-inspectie" zeggen zou hem ook moeten omzetten (nu niet zichtbaar).</li>
+</ul></div></section><section class="scr phone" id="P01b-overige-punten">
+<div class="shot"><a href="img/P01b-overige-punten.jpg" target="_blank"><img loading="lazy" src="img/P01b-overige-punten.jpg" alt="P01b-overige-punten — Overige punten van eerdere inspecties"></a></div>
+<div class="note"><p class="code">P01b-overige-punten</p><h3>P01b-overige-punten — Overige punten van eerdere inspecties</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Welke eerdere punten meekomen (open en afgerond, periode, zelfde product of project) stelt de beheerder in bij W02, stap "Kop".</li>
+<li>Of afgeronde punten bij de regel terugkomen of alleen in de afsluiting, staat in W02 (bij Noardling: terug bij de regel als de taak gekozen is).</li>
+<li>Herkomst (actienummer, project) komt uit de actieregistratie (W11); de velden zijn niet te verbergen.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Filteren op taak zodra de taak gekozen is (P02), zodat alleen de punten van die taak overblijven.</li>
+<li>Bij een afgerond punt de toetsdatum en de toetser tonen, als bewijs dat de verbeteractie gecontroleerd is.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Lange bevindingen (DAM-1.06) nemen drie regels; bij meer dan vijf punten past de lijst niet meer zonder groeperen per taak.</li>
+<li>"Klaar" brengt terug naar P01; een directe stap naar P02 (taak kiezen) scheelt een tik.</li>
+</ul></div></section><section class="scr phone" id="P02-product-taak">
+<div class="shot"><a href="img/P02-product-taak.jpg" target="_blank"><img loading="lazy" src="img/P02-product-taak.jpg" alt="P02-product-taak — Product en taak kiezen"></a></div>
+<div class="note"><p class="code">P02-product-taak</p><h3>P02-product-taak — Product en taak kiezen</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Producten, fasen en taken komen uit de kennisbank (W04); de klant bepaalt of er op taak- of taakstapniveau gekozen wordt.</li>
+<li>In W02 staat of meerdere taken tegelijk mogen en hoe de begeleider een taak voorstelt (uit spraak, uit planning of allebei); het voorstel toont het "Jij"-citaat waarop het is gebaseerd.</li>
+<li>Het gedrag bij "Niet in kennisbank" (vrije taakobservatie, vermelding in het rapport, signaal naar de kennisbankbeheerder) stelt de klant in bij W02/W03.</li>
+<li>Het formaat van het WPI-nummer (bij Noardling WPI-JJJJMMDD-productcode-initialen) staat in W07-rapportontwerper.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Productherkenning uit een foto van het typeplaatje als voorstel.</li>
+<li>De fase van het project (uit de planning) gebruiken om de waarschijnlijke taak bovenaan te zetten.</li>
+<li>Vervolgvraag van de begeleider als de spraak op twee taken wijst ("kraan staat": ook Situatie Kraanopstelling toetsen?).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Bij producten met veel taken wordt de lijst lang; groeperen per fase met inklappen is nodig.</li>
+<li>"Ander product" opent een zoekscherm met spraak en lijst dat nog niet ontworpen is.</li>
+<li>"Taak bevestigen" neemt het voorstel over zonder het vakje eerst aan te tikken; bij een gebruikerstest met twee monteurs nagaan of dat begrepen wordt (criterium: beiden bevestigen de juiste taak zonder hulp).</li>
+</ul></div></section><section class="scr phone" id="P03-algemeen">
+<div class="shot"><a href="img/P03-algemeen.jpg" target="_blank"><img loading="lazy" src="img/P03-algemeen.jpg" alt="P03-algemeen — Algemene observatie (getoond zonder bereik)"></a></div>
+<div class="note"><p class="code">P03-algemeen</p><h3>P03-algemeen — Algemene observatie (getoond zonder bereik)</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Onderwerpen (bij Noardling A t/m I) met naam, hulptekst, volgorde en verplicht/optioneel stelt de klant in bij W02-begeleider.</li>
+<li>Het oordeelmodel (C/A/V/NVT, plus GA en NB via de afsluitvraag) en de regel "oordeel op slot zolang de tekst [niet verstaan] bevat of niet bevestigd is" komen uit W03.</li>
+<li>Wat zonder bereik werkt stelt de klant in bij W14: spraak omzetten op het toestel (label "op toestel"), lokaal opslaan; AI-voorstellen pas bij bereik.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Per onderwerp snel tikken zoals bij de TRA-regels (P04b): waarnemingschip "gezien: aanwezig / niet aanwezig" naast vrij inspreken.</li>
+<li>Een foto direct aan het actieve onderwerp hangen via de knop Foto, zonder koppelvraag.</li>
+<li>Wachtrij-overzicht: welke opnames bij bereik nog een voorstel krijgen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>"in orde? via afsluitvraag" kan expliciet maken welke onderwerpen dan als [GA] Geen afwijking waargenomen worden vastgelegd.</li>
+<li>De samengevatte rij "[C] Conform · 4 onderwerpen" verbergt de waarnemingen tot uitklappen (P03b); bij een afwijkend oordeel achteraf moet de inspecteur twee keer tikken.</li>
+</ul></div></section><section class="scr phone" id="P03b-algemeen-uitgeklapt">
+<div class="shot"><a href="img/P03b-algemeen-uitgeklapt.jpg" target="_blank"><img loading="lazy" src="img/P03b-algemeen-uitgeklapt.jpg" alt="P03b-algemeen-uitgeklapt — Conforme onderwerpen uitgeklapt"></a></div>
+<div class="note"><p class="code">P03b-algemeen-uitgeklapt</p><h3>P03b-algemeen-uitgeklapt — Conforme onderwerpen uitgeklapt</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Of onderwerpen met hetzelfde oordeel worden samengevat (en vanaf hoeveel) stelt de klant in bij W02.</li>
+<li>De waarneming per onderwerp is altijd de eigen tekst van de inspecteur ("Jij"); dat is vast en niet configureerbaar (W03).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Per onderwerp de gekoppelde foto als kleine miniatuur.</li>
+<li>Lang tikken op een onderwerp om het oordeel te wijzigen zonder het te openen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De waarnemingen zijn hier kort; bij lange teksten past de lijst niet meer en moet ieder onderwerp apart uitklappen.</li>
+<li>Het actieve onderwerp is ingeklapt tot één regel; terug naar invullen kost één tik.</li>
+</ul></div></section><section class="scr phone" id="P04-tra-toetsing">
+<div class="shot"><a href="img/P04-tra-toetsing.jpg" target="_blank"><img loading="lazy" src="img/P04-tra-toetsing.jpg" alt="P04-tra-toetsing — Taakgerichte toetsing tot op de maatregel"></a></div>
+<div class="note"><p class="code">P04-tra-toetsing</p><h3>P04-tra-toetsing — Taakgerichte toetsing tot op de maatregel</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Welke regels getoond worden (eerst de standaardmaatregelen van het product, dan per taak of taakstap) en in welke volgorde stelt de klant in bij W02; de regels en maatregelzinnen komen letterlijk uit W04 (kennisbank v1.3).</li>
+<li>De koppeling wordt vastgelegd als regel-ID plus veld "maatregel" (de letterlijke maatregelzin); W07 bepaalt of die kolom in het rapport staat.</li>
+<li>De doorvraagregels bij Afwijking en Verbeterpunt (wat precies, direct genomen maatregel, volledig opgelost) staan in W02; wat "Direct gevaar" doet (stilleggen, veiligstellen, melden) en de 2 s ingedrukt houden staan in W03.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>"Direct gevaar" koppelen aan de procedure incidentmelding: na stilleggen meteen een melding starten met locatie en tijd ingevuld.</li>
+<li>Volgorde laten meelopen met het werk (taakstap die nu gebeurt) in plaats van de vaste ID-volgorde.</li>
+<li>Tikken per regel: met spraak 2 tikken (Inspreken, daarna "Klopt" in P05) plus 1 voor het oordeel = 3; zonder spraak 3 (maatregel, oordeel, waarnemingschip, zie P04b). Bij Afwijking komt er 1 bij (Volledig opgelost? Ja/Nee).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>"Direct gevaar · houd 2 s ingedrukt": testen met drie monteurs buiten, met werkhandschoenen (EN 388), elk vijf keer. Criterium: alle pogingen lukken binnen 4 s en bij 20 keer in de jaszak geen ongewilde melding. Lukt dat niet, dan een bevestigingsscherm.</li>
+<li>De risicotekst staat alleen onder "Hele tekst"; een veld "korte naam" in W04, door de beheerder vastgelegd, zou de kaart herkenbaarder maken.</li>
+<li>Bij "Volledig opgelost? Nee" springt de begeleider naar P07; dat de actie dan al is voorgevuld met de direct genomen maatregel, is nog niet zichtbaar.</li>
+</ul></div></section><section class="scr phone" id="P04b-snel-tikken">
+<div class="shot"><a href="img/P04b-snel-tikken.jpg" target="_blank"><img loading="lazy" src="img/P04b-snel-tikken.jpg" alt="P04b-snel-tikken — Een regel afhandelen zonder spraak"></a></div>
+<div class="note"><p class="code">P04b-snel-tikken</p><h3>P04b-snel-tikken — Een regel afhandelen zonder spraak</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>De vaste waarnemingschips ("gezien: aanwezig", "gezien: niet aanwezig") en of een chip als waarneming telt bij [C] Conform stelt de klant in bij W03 (oordeelmodel).</li>
+<li>Of snel tikken voor alle regels mag of alleen voor bepaalde klassen (bijvoorbeeld niet bij Besloten ruimte en gas), staat in W02.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Extra chips per klasse in de kennisbank, bijvoorbeeld "gemeten: in orde" voor gasmeting.</li>
+<li>Herhaal laatste oordeel voor de volgende regel met dezelfde maatregel.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Tikken per regel: zonder spraak [C] Conform 3 tikken (maatregel, oordeel, chip); [A] of [V] 3 tikken plus typen of inspreken, omdat een chip daar niet genoeg is. Met spraak: Inspreken, "Klopt", oordeel = 3.</li>
+<li>Testen met drie monteurs buiten met handschoenen: tien regels zonder spraak. Criterium: gemiddeld ≤ 10 s per Conform-regel en geen verkeerd gekozen maatregel; anders de maatregelrijen hoger maken.</li>
+</ul></div></section><section class="scr phone" id="P05-inspreken">
+<div class="shot"><a href="img/P05-inspreken.jpg" target="_blank"><img loading="lazy" src="img/P05-inspreken.jpg" alt="P05-inspreken — Spraak, transcript en voorstel tot op de maatregel"></a></div>
+<div class="note"><p class="code">P05-inspreken</p><h3>P05-inspreken — Spraak, transcript en voorstel tot op de maatregel</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Spraakherkenning (op het toestel of via de AI-aanbieder) en de AI-aanbieder zelf (Claude eerst, later andere) stelt de klant in bij W14-ai-data, met waar audio en tekst heen gaan en hoe lang de opname bewaard blijft.</li>
+<li>Welke velden de begeleider uit vrije spraak haalt (waarneming, maatregel, direct genomen maatregel, taakstap) en wanneer hij doorvraagt staat in W02.</li>
+<li>De volgorde "eerst maatregel en tekst bevestigen (Klopt / Aanpassen / Overslaan), dan pas oordeel" en de eis dat de AI nooit een oordeel voorinvult staan in W03.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Opnemen starten met een knop op headset of zijknop, zonder het scherm aan te raken.</li>
+<li>De vraag van de begeleider laten voorlezen, zodat de inspecteur niet hoeft te kijken.</li>
+<li>Inspreken in een andere taal (bijvoorbeeld Duits) met een Nederlands rapport.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Er is geen zichtbare zekerheid van de koppeling; bij twijfel tussen twee maatregelen moet de begeleider vragen in plaats van voorstellen.</li>
+<li>Deel 1 en 3 staan niet meer op dit scherm (alleen in de kop "Deel 2 van 3"); terug naar deel 1 kost een tik op de koptekst, wat niet zichtbaar is.</li>
+</ul></div></section><section class="scr phone" id="P06-foto">
+<div class="shot"><a href="img/P06-foto.jpg" target="_blank"><img loading="lazy" src="img/P06-foto.jpg" alt="P06-foto — Foto maken en toelichting inspreken"></a></div>
+<div class="note"><p class="code">P06-foto</p><h3>P06-foto — Foto maken en toelichting inspreken</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>In de begeleider (W02), per stap: foto verplicht of optioneel per oordeel (bijvoorbeeld verplicht bij Afwijking), en de nummering (Foto 1, Foto 2, …).</li>
+<li>Koppeldoelen: de onderwerpen (bij Noardling A–I) en de regel-ID's uit de kennisbank (W04). Ook instelbaar: of de AI een koppeling mag voorstellen of altijd moet vragen.</li>
+<li>Privacyregels (W03): tekst van de privacyhint, vervagen verplicht of aangeraden. De bewaartermijn van foto's staat in W14.</li>
+<li>Organisatie-instelling: fotokwaliteit en stempels (datum, tijd, locatie).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Gezichtsdetectie die vervagen voorstelt (in Voorstel-stijl, alleen met bereik; de inspecteur beslist).</li>
+<li>Meerdere foto's of een korte video onder één toelichting.</li>
+<li>Per markering op de foto (pijl of cirkel met nummer) een eigen korte ingesproken toelichting.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Als de AI twijfelt tussen twee maatregelzinnen, beide naast elkaar tonen in plaats van één koppeling met "Wijzig".</li>
+<li>"Markeren" (pijl, cirkel, tekst) levert een gemarkeerde kopie; die komt in rapportonderdeel 8 Foto's, het origineel blijft bewaard. Vervagen werkt anders: het onvervaagde origineel wordt niet bewaard (AVG). Dat verschil in het bewerkscherm uitleggen.</li>
+<li>Vervagen ongedaan kunnen maken zolang de foto nog niet verzonden is.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Getekend als offline (inspecteur staat in het kanaal). Foto, vervagen en markeren werken op het toestel; het transcript is spraak-naar-tekst "op toestel".</li>
+<li>Koppeling aan DAM-2.07 en de maatregelzin "continue 4-gasmeting" komt van de waarneming die al bij die regel stond, niet van de AI.</li>
+<li>Het toelichtingsvoorstel volgt bij bereik en moet dan nog bevestigd worden (zie P08: "Nog 1 voorstel te bevestigen"). Tot dan geldt de eigen tekst.</li>
+</ul></div></section><section class="scr phone" id="P07-bevinding-actie">
+<div class="shot"><a href="img/P07-bevinding-actie.jpg" target="_blank"><img loading="lazy" src="img/P07-bevinding-actie.jpg" alt="P07-bevinding-actie — Bevinding uitwerken tot actie"></a></div>
+<div class="note"><p class="code">P07-bevinding-actie</p><h3>P07-bevinding-actie — Bevinding uitwerken tot actie</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>In de begeleider (W02/W03): welke actievelden verplicht zijn, in welke volgorde de AI doorvraagt, de standaardtoetser (bij Noardling: Hoofd Service &amp; Montage) en de harde regel "toetser is nooit de actiehouder".</li>
+<li>Prioriteiten: namen en standaardtermijn per prioriteit (direct = vandaag, kort = 14 dagen, planmatig = vrij). Daaruit komt het datumvoorstel.</li>
+<li>Classificaties (bij Noardling 14 stuks) en de vaste klasse per onderwerp of risicoregel in de kennisbank (W04).</li>
+<li>De keuzelijst met actiehouders (functies of personen) komt uit Gebruikers en rollen (W13).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een standaardset verbeteracties per klasse in de kennisbank (W04), zodat de AI vaker uit de eigen set voorstelt (onderstreept: "uit standaardset").</li>
+<li>Een veld "bron" (Inspectie / Idee monteurs / Buiten TRA), zoals in de voorbeelddata.</li>
+<li>Een melding als er al een open actie met dezelfde bevinding op dit product of project staat.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De knop "+" voor een tweede actie bij deze bevinding heeft alleen een icoon (de actieregel moest ruimte maken voor het volledige actienummer); buiten testen of dat duidelijk genoeg is.</li>
+<li>Tikken per actie bij een volledig voorstel: 3 (prioriteit, "Ja, do 19 nov", Opslaan); met "Andere datum" 4 à 5. Corrigeren gaat met inspreken. Meten of een vaste standaardprioriteit per klasse een tik scheelt.</li>
+<li>Corrigeren per veld (tik op het veld en spreek in) in plaats van alles opnieuw inspreken.</li>
+<li>Actiehouder en toetser als keuzelijst met zoeken als de organisatie veel functies heeft.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>P07 en P07c zijn online (weer bereik na het kanaal). Zonder bereik ziet de inspecteur P07b: alleen zijn transcript, lege velden met "voorstel volgt bij bereik" en alles met de hand tikbaar.</li>
+<li>Classificatie komt uit de vaste klasse van het onderwerp of de regel in de kennisbank, dus ook offline beschikbaar.</li>
+<li>Termijn bij prioriteit is een vaste regel (kort = 2 weken), geen AI; daarom ook offline.</li>
+</ul></div></section><section class="scr phone" id="P07b-actie-offline">
+<div class="shot"><a href="img/P07b-actie-offline.jpg" target="_blank"><img loading="lazy" src="img/P07b-actie-offline.jpg" alt="P07b-actie-offline — Bevinding tot actie zonder bereik"></a></div>
+<div class="note"><p class="code">P07b-actie-offline</p><h3>P07b-actie-offline — Bevinding tot actie zonder bereik</h3><p>Zelfde stap als P07, maar zonder bereik (afspraak offline 12-11): geen AI, dus geen voorstellen.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>In de begeleider (W02): welke actievelden offline met de hand verplicht zijn vóór "Opslaan lokaal" (bij Noardling: direct gecorrigeerd, prioriteit, actiehouder, termijn).</li>
+<li>Standaardtoetser en standaardtermijn per prioriteit (W03/W11); deze regels werken zonder AI en dus ook offline.</li>
+<li>Of spraak-naar-tekst op het toestel mag (W14, AI en data); zo niet, dan alleen de geluidsopname.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>De lijst met actiehouders lokaal bewaren met de laatst gebruikte bovenaan.</li>
+<li>Bij bereik één melding: "3 voorstellen klaar om te bevestigen", met een snelle bevestigronde.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Bevinding, maatregel en verbeteractie ook kort kunnen typen in het veld zelf (typen zit in het veld, niet in de onderbalk).</li>
+<li>Laten zien hoeveel opnames nog op het toestel wachten.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Alles wordt lokaal opgeslagen; de actie krijgt al haar nummer (WPI-20261105-DAM-C2-2).</li>
+<li>Bij bereik vult de AI bevinding, direct genomen maatregel en verbeteractie in als Voorstel; de inspecteur bevestigt daarna (P08 houdt "Klopt" tegen tot dat gebeurd is).</li>
+</ul></div></section><section class="scr phone" id="P07c-termijn">
+<div class="shot"><a href="img/P07c-termijn.jpg" target="_blank"><img loading="lazy" src="img/P07c-termijn.jpg" alt="P07c-termijn — Bevinding tot actie, termijn met één tik"></a></div>
+<div class="note"><p class="code">P07c-termijn</p><h3>P07c-termijn — Bevinding tot actie, termijn met één tik</h3><p>Tweede toestand van P07: prioriteit "kort" is gekozen, het termijnvoorstel staat direct onder de chips.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Standaardtermijn per prioriteit (W03/W11): bij Noardling direct = vandaag, kort = 2 weken, planmatig = zelf kiezen.</li>
+<li>Of "Opslaan" na de termijnkeuze automatisch gebeurt (2 tikken) of apart (3 tikken).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Termijn laten verschuiven naar de eerstvolgende werkdag of het coördinatorenoverleg op maandag.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Tikken per actie: prioriteit (1), "Ja, do 19 nov" (1), Opslaan (1) = 3. Bij planmatig komt er een datumkiezer bij.</li>
+<li>"Ja, do 19 nov" en "Andere datum" zijn bewust even zwaar (beide secundair).</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>De termijn is een vaste regel, geen AI-voorstel; offline staat hij daarom ook klaar (P07b). Online heet hij Voorstel omdat de begeleider hem aanbiedt.</li>
+</ul></div></section><section class="scr phone" id="P08-afsluiten">
+<div class="shot"><a href="img/P08-afsluiten.jpg" target="_blank"><img loading="lazy" src="img/P08-afsluiten.jpg" alt="P08-afsluiten — Afsluitvraag en samenvatting"></a></div>
+<div class="note"><p class="code">P08-afsluiten</p><h3>P08-afsluiten — Afsluitvraag en samenvatting</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Afsluitregels in de begeleider (W02): de tekst van de afsluitvraag, wat "niets op aan te merken" oplevert (Geen afwijking waargenomen) en wat "niet bekeken" oplevert (Niet beoordeeld), en of bevestigen verplicht is vóór het rapport.</li>
+<li>Het oordeelmodel (W03): codes, woorden en kleuren, en welke oordelen als "waargenomen" tellen.</li>
+<li>Controles vóór afsluiten, per controle blokkeren of alleen waarschuwen: elke afwijking of elk verbeterpunt heeft een actie, de toetser is niet de actiehouder, elke foto heeft een toelichting.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Minimale dekking per inspectiesoort (bijvoorbeeld bij een directie-WPI: alle TRA-regels van de taak waarnemen), met een waarschuwing als die niet gehaald is.</li>
+<li>Een samenvatting per onderwerp (A–I) naast de telling per oordeel, voor lange inspecties.</li>
+<li>Vergelijking met de vorige WPI op hetzelfde product of project.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De smalle strook voor Niet beoordeeld buiten testen; nu met code en aantal in elk segment.</li>
+<li>"bekijken" bij Niet beoordeeld springt terug naar P04 met die regel geopend.</li>
+<li>Classificatie per bevinding (VCA 7.2) aantikbaar maken om hem hier nog te wijzigen.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Getekend online. "Klopt" blijft uitgeschakeld zolang er voorstellen open staan (hier 1: de toelichting van Foto 3, gemaakt offline in P06 en bij bereik binnengekomen).</li>
+<li>Zonder bereik kan de inspecteur afsluiten met alleen zijn eigen tekst; de tellingen zijn rekenwerk op het toestel. Het totaalbeeld als Voorstel komt dan later en moet nog bevestigd worden vóór het rapport definitief is.</li>
+</ul></div></section><section class="scr phone" id="P09-rapport-klaar">
+<div class="shot"><a href="img/P09-rapport-klaar.jpg" target="_blank"><img loading="lazy" src="img/P09-rapport-klaar.jpg" alt="P09-rapport-klaar — Rapport gereed"></a></div>
+<div class="note"><p class="code">P09-rapport-klaar</p><h3>P09-rapport-klaar — Rapport gereed</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Rapportontwerper (W07): onderdelen en volgorde (bij Noardling 9 vaste onderdelen), huisstijl en bestandsformaten (PDF, Word). De bestandsnaam is het WPI-nummer.</li>
+<li>Nummerformaat van de inspectie (WPI-JJJJMMDD-productcode-initialen) en van de acties (WPI-nummer-volgnummer).</li>
+<li>Bestemmingen in de wachtrij: de rapportmap (QMS, SharePoint of Drive), de actielijst, het dashboard, en wie een bericht krijgt.</li>
+<li>AI en data (W14): offline versleuteld bewaren op de telefoon, de bewaartermijn daar, en waar de data heen gaat zodra er bereik is.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een deellink met verloopdatum naast de PDF (link = actuele stand, PDF = momentopname).</li>
+<li>Ondertekening door de inspecteur (naam en tijdstip), eventueel ook door de leidinggevende ter plaatse.</li>
+<li>Delen zonder bereik via de deelfunctie van de telefoon (lokaal bestand, bijvoorbeeld via Bluetooth).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Het minirapport is nu een schets; beter is een echte verkleinde eerste pagina.</li>
+<li>Een foutstatus ontwerpen voor een upload die mislukt, met de reden en "opnieuw".</li>
+<li>"Aanpassen" na het rapport maakt een nieuwe rapportversie (rapportversie 2), met audittrail.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Getekend offline (onderweg). Het rapport is op het toestel gemaakt uit bevestigde inhoud; er is geen AI voor nodig. Het totaalbeeld-voorstel is in P08 met bereik gemaakt en bevestigd.</li>
+<li>De wachtrij toont "0 voorstellen open". Staan er nog voorstellen open, dan staat dat hier en blijft het rapport concept.</li>
+<li>Berichten gaan bij bereik alleen naar de actiehouders van de 8 open acties; WPI-20261105-DAM-C2-4 is al ter plaatse afgerond.</li>
+</ul></div></section><section class="scr phone" id="P10-acties-toetsen">
+<div class="shot"><a href="img/P10-acties-toetsen.jpg" target="_blank"><img loading="lazy" src="img/P10-acties-toetsen.jpg" alt="P10-acties-toetsen — Mijn acties en toetsen"></a></div>
+<div class="note"><p class="code">P10-acties-toetsen</p><h3>P10-acties-toetsen — Mijn acties en toetsen</h3><h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Toetsregels (W03/W11): wie standaard toetst, bij welke prioriteit ter plaatse toetsen verplicht is, en of een foto bij het toetsen verplicht is.</li>
+<li>Statussen en wie ze mag zetten: Open, Uitgevoerd gemeld (door de actiehouder), Afgerond (alleen door de toetser, na toetsing), Vervallen. Afkeuren is geen status: de actie gaat terug naar Open, met ingesproken reden en een nieuwe termijn.</li>
+<li>Termijnbewaking: herinneringen vóór de termijn en escalatie bij "te laat" (naar wie en na hoeveel dagen).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een weekoverzicht voor het coördinatorenoverleg op maandag, per actienummer.</li>
+<li>Acties op dezelfde locatie bundelen, zodat één bezoek meerdere toetsingen afhandelt.</li>
+<li>Toetsen op afstand op basis van een foto van de actiehouder, alleen voor de prioriteit planmatig.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Bij een tweede keer afkeuren van dezelfde actie automatisch melden aan de eigenaar van de procedure (Hoofd Service &amp; Montage).</li>
+<li>Het voorstel "genoemd / niet genoemd" ook naast de toetsfoto leggen, als de beheerder dat in W03 instelt; nu alleen naast de ingesproken tekst.</li>
+<li>Te laat-acties in "Lopend" bovenaan zetten en apart tellen.</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Getekend online. Zonder bereik is er geen "genoemd / niet genoemd": de toetser vinkt dan alle onderdelen van de verbeteractie zelf af (gezien / ontbreekt); de toetsing gaat in de wachtrij en de status wordt pas bij bereik Afgerond.</li>
+<li>"Afronden" is pas actief als alle niet-genoemde onderdelen zijn afgevinkt en de toetsfoto is gemaakt (als de beheerder een foto verplicht stelt).</li>
+</ul></div></section><section class="scr phone" id="P10b-uitgevoerd-melden">
+<div class="shot"><a href="img/P10b-uitgevoerd-melden.jpg" target="_blank"><img loading="lazy" src="img/P10b-uitgevoerd-melden.jpg" alt="P10b-uitgevoerd-melden — Actie uitgevoerd melden (actiehouder)"></a></div>
+<div class="note"><p class="code">P10b-uitgevoerd-melden</p><h3>P10b-uitgevoerd-melden — Actie uitgevoerd melden (actiehouder)</h3><p>Hoort bij P10 (tabblad "Zelf uitvoeren"). De actiehouder meldt de verbeteractie klaar met foto en ingesproken toelichting; de status wordt "Uitgevoerd gemeld" en de actie verschijnt bij de toetser onder "Te toetsen" (P10).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Toetsregels (W03/W11): of een foto verplicht is bij "Uitgevoerd melden", per prioriteit.</li>
+<li>Wie bericht krijgt bij een melding (standaard de toetser) en via welk kanaal.</li>
+<li>Of de begeleider de toelichting naast de verbeteractie legt ("genoemd / niet genoemd") of dat alleen de toetser dat ziet.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Gedeeltelijk uitgevoerd melden met een nieuwe termijn voor de rest.</li>
+<li>Meerdere acties tegelijk uitgevoerd melden als ze bij hetzelfde bezoek horen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>"Later" laat een herinnering kiezen in plaats van alleen het blad te sluiten.</li>
+<li>Na melden een bevestiging tonen met wie toetst en wanneer de melding is verstuurd (of in de wachtrij staat).</li>
+</ul>
+<h2>Zonder bereik</h2>
+<ul>
+<li>Getekend online. Zonder bereik wordt de melding met foto en tekst lokaal bewaard en bij bereik verstuurd; de vergelijking met de verbeteractie volgt dan als Voorstel.</li>
+</ul></div></section>
+<h2>Web — configuratie en resultaten (23 schermen)</h2><section class="scr web" id="W01-overzicht">
+<div class="shot"><a href="img/W01-overzicht.jpg" target="_blank"><img loading="lazy" src="img/W01-overzicht.jpg" alt="W01-overzicht — Startpagina beheer"></a></div>
+<div class="note"><p class="code">W01-overzicht</p><h3>W01-overzicht — Startpagina beheer</h3><p>Webscherm 1440 × 1982 px. Alle getallen komen uit <code>voorbeelddata.json</code> (versie 10.4, fictief, peildatum 11-11-2026): programma per operationele werkplek 12 van 32 verplichte WPI's (lange projecten 3 van 16 maanden, korte projecten met risicokenmerk 9 van 16, 5 lopen nog), per inspecteur 15 van 17, 17 open acties waarvan 4 over termijn (0 direct, 6 kort, 11 planmatig), laatste 5 WPI's met tellingen per oordeel.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Welke tegels en blokken op de startpagina staan en in welke volgorde, stel je per rol in via Dashboardbouwer (W08).</li>
+<li>De regel voor "verplicht per werkplek" (lang project elke kalendermaand, kort project met hijsen, besloten ruimte of open water ten minste één) en de frequentie per inspecteur komen uit Programma (W12).</li>
+<li>De drempel voor signalen uit inspecties (nu: elke waarneming Buiten TRA telt, vanaf 2 keer heet het terugkerend; klasse ongebruikt na 6 maanden) stel je in bij Dashboardbouwer (W08). Het scherm zegt dat onder de signalen.</li>
+<li>"Over termijn" volgt uit de standaardtermijnen per prioriteit in Regels en grenzen (W03c).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een signaal met één klik omzetten in een conceptwijziging (bijvoorbeeld een nieuwe TRA-regel), met de inspecties als aanleiding erbij.</li>
+<li>Herinnering aan de coördinator zodra een lopend lang project halverwege de maand nog geen WPI heeft.</li>
+<li>Blok "Te toetsen door mij" voor wie toetser is, gekoppeld aan P10.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De lijst "Werkplekken in november" toont alleen de lopende maand; een knop naar de gemiste maanden (20 stuks sinds mei) ontbreekt nog.</li>
+<li>Open acties toont de 4 die het langst over termijn zijn; een keuze tussen termijn, prioriteit en "wacht op toetsing" ontbreekt.</li>
+<li>De tegels hebben geen vergelijking met de vorige periode; die staat alleen op het dashboard (W09).</li>
+</ul></div></section><section class="scr web" id="W02-begeleider">
+<div class="shot"><a href="img/W02-begeleider.jpg" target="_blank"><img loading="lazy" src="img/W02-begeleider.jpg" alt="W02-begeleider — Begeleider configureren (stap 3 geselecteerd)"></a></div>
+<div class="note"><p class="code">W02-begeleider</p><h3>W02-begeleider — Begeleider configureren (stap 3 geselecteerd)</h3><p>Webscherm 1440 × 2697 px. Bovenaan het verloop van de inspectie als horizontale, sleepbare flow (stappen 0–7, slot = vast, met doorlopende onderdelen en toon en taal op één regel). Daaronder de editor van stap 3 (taakgerichte toetsing) en het proefgesprek. De andere stappen staan in W02b (stap 2) en W02c (alle stappen). Voorbeeld: Damwand · Verwijderen damwand (DAM-2.01 t/m 2.08, 6 standaardmaatregelen, uit <code>kennisbank.json</code>).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Stappen slepen voor de volgorde; vaste stappen (gesprek met monteurs, afsluitcontrole, rapport) hebben een slot. Eigen stappen (bijvoorbeeld handtekening) zijn aan of uit te zetten.</li>
+<li>Per stap: doel in gewone taal, wat de begeleider laat zien, de openingsvraag en een veldentabel met "wie vult in" (inspecteur / voorstel bevestigen / afgeleid) en "nodig".</li>
+<li>Doorvragen met als/dan-regels die voor alle 666 TRA-regels tegelijk gelden, als compacte rijen (als · dan · inspecteur merkt · geraakt in proefgesprek), uitklapbaar. Een zin in gewone taal wordt een regel als Voorstel.</li>
+<li>Het proefgesprek laat bij elk bericht zien welke instelling het veroorzaakte, en vangt te brede regels af: regel 6 raakt alle 21 producten; met "de gekozen taak" 71 van 138 taken.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Meerdere begeleiders per organisatie (kiezer "Begeleider 1 van 2"), bijvoorbeeld voor het toetsen van acties ter plaatse.</li>
+<li>Stap-sjablonen uit een bibliotheek (handtekening, toolbox-vraag, LMRA-controle) om in de flow te slepen.</li>
+<li>Weergave "Als tekst": de volledige instructie die naar de AI-aanbieder gaat, alleen-lezen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Het proefgesprek begint bij stap 3; een knop "begin bij stap …" en "kop vullen met testgegevens" maken proberen sneller.</li>
+<li>De waarschuwing over het bereik van een regel verschijnt nu pas na een afwijkend proefscenario; vooraf tonen bij het opstellen van de regel zou eerder helpen.</li>
+</ul></div></section><section class="scr web" id="W02b-begeleider-stappen">
+<div class="shot"><a href="img/W02b-begeleider-stappen.jpg" target="_blank"><img loading="lazy" src="img/W02b-begeleider-stappen.jpg" alt="W02b-begeleider-stappen — Begeleider configureren (stap 2 geselecteerd)"></a></div>
+<div class="note"><p class="code">W02b-begeleider-stappen</p><h3>W02b-begeleider-stappen — Begeleider configureren (stap 2 geselecteerd)</h3><p>Webscherm 1440 × 2329 px. Tweede toestand van W02: stap 2 Algemene observatie geselecteerd, proefgesprek ingeklapt voor de brede tabel. Onderwerpen A–I en hun voorbeeldpunten komen letterlijk uit <code>ref/wpi-begeleider.md</code>; de standaardklasse per onderwerp volgt de koppeling in <code>voorbeelddata.json</code> (A Documenten en voorbereiding … I Gedrag en werkwijze). De keuzes voor "foto gevraagd" (B Altijd, I Nee) zijn fictieve instellingen.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Onderwerpen slepen, hernoemen, toevoegen of verwijderen; per onderwerp de punten die de begeleider wil horen.</li>
+<li>Per onderwerp een standaardklasse (voorstel bij een bevinding) en "foto gevraagd": Altijd, Bij A of V, of Nee.</li>
+<li>Per onderwerp één regel "Inspecteur merkt" met de vraag zoals de inspecteur die hoort.</li>
+<li>Openingsvraag en velden van de stap, met wie wat invult.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Per soort inspectie (WPI coördinator, VGM-inspectie directie) een andere set onderwerpen.</li>
+<li>Onderwerpen uit een branchebibliotheek kiezen (bouw, industrie, waterzuivering).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De "Inspecteur merkt"-regel is nu tekst; een kleine telefoonweergave per onderwerp bij hover zou het verschil met de punten duidelijker maken.</li>
+<li>Bij negen onderwerpen past alles; bij meer dan twaalf is inklappen per groep nodig.</li>
+</ul></div></section><section class="scr web" id="W02c-begeleider-alle-stappen">
+<div class="shot"><a href="img/W02c-begeleider-alle-stappen.jpg" target="_blank"><img loading="lazy" src="img/W02c-begeleider-alle-stappen.jpg" alt="W02c-begeleider-alle-stappen — Begeleider configureren (weergave Alle stappen)"></a></div>
+<div class="note"><p class="code">W02c-begeleider-alle-stappen</p><h3>W02c-begeleider-alle-stappen — Begeleider configureren (weergave Alle stappen)</h3><p>Webscherm 1440 × 2674 px. Derde toestand van W02: de weergave "Alle stappen" met de compacte editors van stap 0 (kopvelden), 1 (product en taak, met de terugval "product niet in kennisbank / geen product-TRA"), 4 (gesprek met monteurs, vast), 5 (veldentabel van de actie), 6 (ingeklapt) en 7 (rapport en gegevens: WPI-nummerformaat, fotonummering, gegevenstabel). Stap 2 en 3 zijn ingeklapt; die staan in W02b en W02. De skill telt rapport als stap 7 en de dataregel als stap 8; hier staan ze samen in stap 7.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Per veld "wie vult in": Inspecteur (zegt of kiest), Voorstel bevestigen (AI zet klaar, inspecteur bevestigt) of Afgeleid (uit kennisbank, project of instelling), en of het veld verplicht is.</li>
+<li>Vragen van stap 4 zijn aan te passen en te slepen; de stap zelf staat vast.</li>
+<li>Het WPI-nummer is opgebouwd uit vaste delen (datum, productcode, initialen) waarvan de volgorde vastligt.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Eigen kopvelden (bijvoorbeeld werkvergunningnummer) die meegaan naar de gegevenstabel.</li>
+<li>Een stap "Handtekening monteurs" als eigen stap na stap 4.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De status "Uitgevoerd gemeld" staat bij acties (W11) maar nog niet als keuze in deze veldentabel.</li>
+<li>Het WPI-nummer bij inspecties zonder product-TRA heeft nog geen vaste productcode.</li>
+</ul></div></section><section class="scr web" id="W03-begeleider-regels">
+<div class="shot"><a href="img/W03-begeleider-regels.jpg" target="_blank"><img loading="lazy" src="img/W03-begeleider-regels.jpg" alt="W03-begeleider-regels — Gedragsregels en grenzen (tabblad Grenzen)"></a></div>
+<div class="note"><p class="code">W03-begeleider-regels</p><h3>W03-begeleider-regels — Gedragsregels en grenzen (tabblad Grenzen)</h3><p>Webscherm 1440 × 2196 px. Eerste van drie tabbladen onder "Regels, oordelen en classificaties": Grenzen (secties 1–4, dit scherm), Oordelen en afsluitvraag (W03b, sectie 5) en Classificaties en acties (W03c, secties 6–7). Harde grenzen staan met een slot "Altijd aan", zonder schakelaar.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Drie soorten regels, steeds gelabeld: Vast (voor elke klant, niet uit te zetten), VCA (uit de norm, met de letterlijke minimumeis erbij) en Eigen keuze (vrij aan te passen).</li>
+<li>Direct gevaar: de kernzin "Stop het werk." ligt vast; de klant mag alleen aanvullen. De klant kiest voorbeeldsituaties, wie gewaarschuwd wordt en via welk kanaal, en het meldingsformulier. Bij twijfel geldt altijd eerst stoppen. Klaargezet als voorstel worden alleen prioriteit Direct en een classificatie; het oordeel blijft open.</li>
+<li>Privacy: "Namen alleen in de kop" en "naam weglaten bij een bevinding" liggen vast; fotohint, derden en het verwijderen van spraakopnames zijn eigen keuze.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Per regel een veld "waarom" (bijvoorbeeld AVG-afweging) dat meegaat naar de versiegeschiedenis (W16).</li>
+<li>De stopregel koppelen aan de incidentregistratie in plaats van alleen het formulier openen.</li>
+<li>Gezichten automatisch onherkenbaar maken op het toestel, naast de hint.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De voorbeelden bij direct gevaar zijn vrije tekst; een branchepakket met situaties om uit te kiezen maakt het sneller.</li>
+<li>Het label "Eigen keuze" zegt niet wie de keuze maakte; met naam en datum is het beter te verantwoorden bij een audit.</li>
+</ul></div></section><section class="scr web" id="W03b-begeleider-oordelen">
+<div class="shot"><a href="img/W03b-begeleider-oordelen.jpg" target="_blank"><img loading="lazy" src="img/W03b-begeleider-oordelen.jpg" alt="W03b-begeleider-oordelen — Oordelen en afsluitvraag"></a></div>
+<div class="note"><p class="code">W03b-begeleider-oordelen</p><h3>W03b-begeleider-oordelen — Oordelen en afsluitvraag</h3><p>Webscherm 1440 × 2092 px. Tweede tabblad van W03: het oordeelmodel (6 oordelen, hoe ze ontstaan, of een eigen waarneming vereist is, hoe ze meetellen), de afsluitvraag en de oordeelknoppen zoals de inspecteur ze ziet (zonder voorselectie). De samenvatting in het voorbeeldgesprek volgt WPI-20261105-DAM-C2 uit de voorbeelddata (10 [C], 4 [A], 1 [V], 9 acties).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Namen en betekenissen van oordelen aanpassen en eigen oordelen toevoegen, met per oordeel hoe het meetelt in rapport en dashboard.</li>
+<li>De tekst van de afsluitvraag en of de inspecteur per onderwerp apart mag antwoorden.</li>
+<li>Of [NVT] als knop verschijnt of onder "meer".</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een eigen oordeel "Afwijkende werkwijze, TRA beoordelen" als volwaardig oordeel in plaats van een vlag.</li>
+<li>Per oordeel een eigen kleur en code voor andere talen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Na hernoemen ziet de beheerder niet welke oude rapporten de oude naam houden; een lijst "geldt voor rapporten t/m v1.3" ontbreekt.</li>
+<li>De afsluitvraag is één tekst; varianten voor korte en lange inspecties zijn er nog niet.</li>
+</ul></div></section><section class="scr web" id="W03c-begeleider-classificaties">
+<div class="shot"><a href="img/W03c-begeleider-classificaties.jpg" target="_blank"><img loading="lazy" src="img/W03c-begeleider-classificaties.jpg" alt="W03c-begeleider-classificaties — Classificaties, prioriteiten en acties"></a></div>
+<div class="note"><p class="code">W03c-begeleider-classificaties</p><h3>W03c-begeleider-classificaties — Classificaties, prioriteiten en acties</h3><p>Webscherm 1440 × 1829 px. Derde tabblad van W03. 14 klassen met per klasse het aantal TRA-regels (uit <code>kennisbank.json</code>, samen 666) en het aantal bevindingen ([A] en [V] in <code>voorbeelddata.json</code>); Milieu is nergens gebruikt. Het scherm zegt dat de app bewust geen "Onderaannemer of derden" en geen "TRA onvolledig" kent (die laatste is vervangen door de vlag Buiten TRA) en dat de skill wpi-begeleider op dit punt verouderd is. Voorbeeldactie: WPI-20260914-DAM-C1-1.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Klassen toevoegen, hernoemen en slepen voor de volgorde in rapport en dashboard; ongebruikte klassen vallen op.</li>
+<li>Standaardtermijn per prioriteit (direct, kort, planmatig), de standaardtoetser en wie nooit als actiehouder wordt voorgesteld.</li>
+<li>Of de inspecteur bij "direct gecorrigeerd" ter plaatse toetst.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Klassen koppelen aan een branche-arbocatalogus, zodat trends vergelijkbaar worden tussen bedrijven.</li>
+<li>Per klasse een eigen standaardtoetser (bijvoorbeeld Hijsen naar de werkvoorbereider).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De skill wpi-begeleider moet worden bijgewerkt naar de 14 klassen van de app, anders wijken de oude rapporten en de app af.</li>
+<li>Bij het hernoemen van een klasse is niet zichtbaar wat er met bestaande bevindingen gebeurt.</li>
+</ul></div></section><section class="scr web" id="W04-kennisbank">
+<div class="shot"><a href="img/W04-kennisbank.jpg" target="_blank"><img loading="lazy" src="img/W04-kennisbank.jpg" alt="W04-kennisbank"></a></div>
+<div class="note"><p class="code">W04-kennisbank</p><h3>W04-kennisbank</h3><p>Webscherm, 1440 × 3196 px (ronde 3). Twee toestanden onder elkaar:
+1. <strong>Noardling B.V.</strong>: ingang Producten en TRA's, risicomethode Fine &amp; Kinney, regel IDV-4.08 open. Inhoud van IDV fase 4 uit <code>kennisbank.json</code> en <code>Indraaivijzel.xltx</code>.
+2. <strong>Bouwbedrijf Voorbeeld B.V. (fictief)</strong>: ingang Werkplekken, gevuld uit hun RI&amp;E via W06b. Werkplek › Risico › Maatregel, prioriteit Hoog/midden/laag. Alle inhoud is verzonnen en gelijk aan W05 en W06b.</p>
+<p>Wat de gebruiker ziet: bovenaan één kaart "Inrichting van de kennisbank" met ingang, niveaus en risicomethode; daaronder de boom, de lijst en de open regel. Controlepunten staan in één regel. Rij- en celnummers staan alleen achter de link "Bron".</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li><strong>Ingang kiezen</strong> (kaart Inrichting): Producten en TRA's, Werkplekken uit RI&amp;E, of beide. Zonder RI&amp;E staat er "geen RI&amp;E" met de knop RI&amp;E uploaden (naar W06b).</li>
+<li><strong>Niveaus aanpassen</strong>: hernoemen, overslaan of toevoegen. Een overgeslagen niveau blijft doorgestreept zichtbaar, zodat je ziet wat er weg is (Bouwbedrijf: Activiteit).</li>
+<li><strong>Risicomethode</strong>: Fine &amp; Kinney, Hoog/midden/laag of Geen score. Dit bepaalt wat de coördinator per regel invult (drie keuzes, één keuze of niets). Zonder score of prioriteit kun je opslaan in het concept, maar niet publiceren (dezelfde zin als in W05).</li>
+<li><strong>Per maatregel de toetswijze</strong> (Kijken, Vragen, Document). Die bepaalt hoe de begeleider ernaar vraagt. Het type (collectief, individueel, PBM) is optioneel; Bouwbedrijf gebruikt het niet.</li>
+<li><strong>Standaardmaatregelen</strong> per organisatie, gekoppeld aan alle of aan gekozen werkplekken of producten.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Per regel laten zien hoe vaak hij is getoetst en hoe vaak er een afwijking was. Bij 3 afwijkingen in een kwartaal stelt de app voor de TRA of RI&amp;E te herzien.</li>
+<li>"Document" opent de werkinstructie zelf.</li>
+<li>Eigen controleregels in de controlestrook, zoals een grens voor restrisico of een verplichte klasse.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De uitgeklapte controlestrook (elk punt springt naar de regels) is nog niet getekend.</li>
+<li>Wisselen van risicomethode als er al regels zijn: het scherm dat laat zien hoeveel regels een nieuwe waarde nodig hebben, ontbreekt nog. De app rekent niet stil om.</li>
+</ul></div></section><section class="scr web" id="W05-catalogus-kiezen">
+<div class="shot"><a href="img/W05-catalogus-kiezen.jpg" target="_blank"><img loading="lazy" src="img/W05-catalogus-kiezen.jpg" alt="W05-catalogus-kiezen"></a></div>
+<div class="note"><p class="code">W05-catalogus-kiezen</p><h3>W05-catalogus-kiezen</h3><p>Webscherm, 1440 × 3207 px (ronde 3). Twee toestanden:
+1. <strong>Noardling B.V.</strong>, risicomethode Fine &amp; Kinney. De groepen staan echt op aantal regels, van veel naar weinig: 50, 35, 35, 22, 13, 13 (nagerekend in <code>kennisbank.json</code>). Het rechterpaneel vraagt drie keuzes in woorden.
+2. <strong>Bouwbedrijf Voorbeeld B.V. (fictief)</strong>, risicomethode Hoog/midden/laag. Risico's uit hun eigen kennisbank gaan naar een nieuwe werkplek "Servicebus". Het rechterpaneel vraagt één keuze; er is niets vooraf gekozen.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li><strong>Waar de risicomethode wordt ingesteld</strong>: in Kennisbank › Inrichting (W04), één keer per organisatie. W05 toont de methode alleen, met de link Wijzigen.</li>
+<li><strong>Wat de methode doet</strong>:</li>
+<li><em>Fine &amp; Kinney</em>: rechterpaneel met kans, hoe vaak en hoe erg; het rapport toont het risicogetal zonder en met maatregelen; het dashboard kan "restrisico boven 20" tonen.</li>
+<li><em>Hoog/midden/laag</em>: één keuze; het rapport toont de prioriteit; het dashboard toont de verdeling hoog/midden/laag.</li>
+<li><em>Geen score</em>: geen keuze; het rapport toont geen kolom met de score; het dashboard groepeert op klasse.</li>
+<li><strong>Publiceren zonder score</strong>: opslaan in het concept mag, publiceren niet. Bij "Geen score" geldt dit niet.</li>
+<li><strong>Bronnen per organisatie</strong>: eigen kennisbank, de startbibliotheek of een gekoppelde branche-arbocatalogus.</li>
+<li><strong>Per overgenomen risico</strong>: de tekst overnemen of aanpassen. Bij Noardling blijft hij ook gekoppeld aan de catalogus; een wijziging in de catalogus komt binnen als voorstel en wordt nooit vanzelf doorgevoerd.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Hetzelfde risico in één keer naar alle producten met dezelfde taak, bv. "Situatie Kraanopstelling" bij alle 21.</li>
+<li>Varianten gelijktrekken: de 10 teksten van Biologische agentia naast elkaar zetten, één tekst kiezen en elke regel apart goedkeuren.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Groeperen op het begin van de tekst houdt varianten soms uit elkaar ("Aanrijding of beknelling door kraanbeweging"). Groeperen op betekenis, met bevestiging door een mens, lost dat op.</li>
+<li>Het uitgeklapte keuzemenu in woorden (bv. de 7 niveaus voor kans) is nog niet getekend.</li>
+</ul></div></section><section class="scr web" id="W06-upload-omzetten">
+<div class="shot"><a href="img/W06-upload-omzetten.jpg" target="_blank"><img loading="lazy" src="img/W06-upload-omzetten.jpg" alt="W06-upload-omzetten"></a></div>
+<div class="note"><p class="code">W06-upload-omzetten</p><h3>W06-upload-omzetten</h3><p>Webscherm, 1440 × 1972 px (ronde 3); de onderbalk blijft onderaan in beeld. Damwand.xltx van Noardling, 31 regels.</p>
+<p>Wat de gebruiker in de eerste schermhoogte ziet: wat er gebeurd is ("De AI deed voor alle 31 regels een voorstel; jij beslist per regel"), waar hij begint (5 regels met twijfel) en één knop. De voortgang staat één keer, in de onderbalk. Daar staat ook waarom "Overnemen in concept" nog niet kan: er zijn nog regels open en daarna moet een tweede goedkeurder kijken.</p>
+<p>Feiten uit de bestanden:
+- Vergelijking met <code>kennisbank.json</code>, met spaties en regeleinden genegeerd: 30 gelijk, 1 anders (DAM-3.10 "vijzelonderdelen" tegenover "onderdelen").
+- Twijfel "type ontbreekt" bij DAM-1.02, DAM-3.09, DAM-4.01 en DAM-5.01: hun maatregeltekst begint niet met Collectief, Individueel of PBM.
+- DAM-3.09 heeft bij "hoe erg" 3 zonder en 7 met maatregelen. De AI stelt geen nieuwe waarde voor.
+- DAM-3.01 verwijst alleen naar "Standaard maatregel". DAM-2.01 is hetzelfde risico bij Verwijderen damwand.</p>
+<p>Fictief: de 20 goedgekeurde regels, de keuze bij DAM-1.02 en het tijdstip.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li><strong>Kolommen koppelen</strong>: één keer per bestandsopmaak. Daarna staat er één regel met "Wijzigen". Bestanden met een afwijkende kop wachten in de Wachtrij.</li>
+<li><strong>Wat als twijfel telt</strong>: in te stellen per organisatie (type ontbreekt, alleen een verwijzing, tekst anders dan de kennisbank, gevolg erger na maatregelen).</li>
+<li><strong>Vast, niet in te stellen</strong>: elke regel apart goedkeuren; de AI kiest geen type, geen score en geen beslissing vooraf; een tweede goedkeurder kijkt altijd vóór het overnemen, en dat is altijd iemand anders dan wie beoordeelde (gelijk aan de vaste regels in W13).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>"Navragen" als echte taak: de vraag gaat naar de opsteller van de TRA en het antwoord komt terug bij de regel.</li>
+<li>Goedgekeurde correcties terugschrijven naar een nieuwe versie van de Excel-TRA.</li>
+<li>Bij opnieuw uploaden alleen nieuwe, gewijzigde en vervallen regels tonen.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De toestand "één regel tegelijk" voor de 6 regels zonder twijfel (doorlopen met toetsen) is nog niet getekend.</li>
+<li>De tooltip achter "Bron" (bestand, blad, rij) is nog niet getekend.</li>
+</ul></div></section><section class="scr web" id="W06b-rie-omzetten">
+<div class="shot"><a href="img/W06b-rie-omzetten.jpg" target="_blank"><img loading="lazy" src="img/W06b-rie-omzetten.jpg" alt="W06b-rie-omzetten"></a></div>
+<div class="note"><p class="code">W06b-rie-omzetten</p><h3>W06b-rie-omzetten</h3><p>Webscherm, 1440 × 2035 px (ronde 3, nieuw); de onderbalk blijft onderaan in beeld. Route van een ander bedrijf: RI&amp;E-PDF per werkplek → werkplekken in de kennisbank (W04, tweede toestand) → prioriteit hoog/midden/laag (W05, tweede toestand).</p>
+<p>Alles is fictief: Bouwbedrijf Voorbeeld B.V., de PDF "RI&amp;E Bouwbedrijf Voorbeeld 2026" (18 pagina's, 4 werkplekken, 23 risico's, 12 regels plan van aanpak), de tekst van pagina 7 en de voortgang. De werkplekken, risico's en pagina's zijn gelijk aan W04 en W05.</p>
+<p>Wat de gebruiker ziet: links de PDF-pagina met genummerde gemarkeerde passages, rechts per passage het voorstel (werkplek, risico, maatregelen, prioriteit) met de bronlink "p. 7, §3.2". De gekozen passage is in beide kolommen blauw omlijnd. Ontbreekt iets in de bron, dan zegt het voorstel dat in gewone woorden ("Deze maatregel staat er niet bij") en is er niets ingevuld. Een prioriteit is alleen gekozen als die letterlijk in de bron staat (passage 1 en 2).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li><strong>Herkende indeling</strong>: welk hoofdstuk de werkplekken bevat en welk het plan van aanpak. De klant bevestigt dit één keer ("Wijzigen").</li>
+<li><strong>Doelstructuur</strong>: volgt de niveaus uit W04 (hier Werkplek › Risico › Maatregel, Activiteit overgeslagen) en de risicomethode (Hoog/midden/laag).</li>
+<li><strong>Plan van aanpak naar Acties</strong>: elke regel wordt een voorgestelde actie in W11. Actiehouder en termijn komen uit de bron zoals ze er staan (rol, kwartaal); de klant kiest een persoon, een datum en een toetser. De toetser is verplicht en nooit de actiehouder.</li>
+<li><strong>Vast</strong>: elke regel apart goedkeuren; daarna kijkt een tweede goedkeurder, altijd iemand anders.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Leeskwaliteit bij gescande PDF's: tekst die de AI niet kon lezen, als aparte teller en gemarkeerd op de pagina.</li>
+<li>Een volgende RI&amp;E (bv. na 4 jaar) vergelijken met de vorige: alleen nieuwe en gewijzigde passages.</li>
+<li>Word-bestanden (.docx) met dezelfde weergave: koppen in plaats van paginanummers.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De tab "Plan van aanpak" (12 regels als acties) heeft hier alleen één kaart; de volledige lijst is nog niet getekend.</li>
+<li>Bij een lange pagina moeten PDF en voorstellen samen scrollen; dat gedrag is nog niet uitgewerkt.</li>
+</ul></div></section><section class="scr web" id="W07-rapportontwerper">
+<div class="shot"><a href="img/W07-rapportontwerper.jpg" target="_blank"><img loading="lazy" src="img/W07-rapportontwerper.jpg" alt="W07-rapportontwerper — Uitkomstdocument configureren"></a></div>
+<div class="note"><p class="code">W07-rapportontwerper</p><h3>W07-rapportontwerper — Uitkomstdocument configureren</h3><p>Webscherm 1440 × 2343 px. Voorbeeldweergave: pagina 5–6 van 11 van het voorbeeldrapport WPI-20261105-DAM-C2 (fictief), met dezelfde indeling: onderdeel 4 begint op pagina 5 (DAM-2.01 t/m 2.05), loopt door op pagina 6 (DAM-2.06 t/m 2.08, “Buiten TRA: geen”) en daarna begint onderdeel 5. Risico- en maatregelteksten van DAM-2.05 en DAM-2.07 letterlijk uit kennisbank.json; waarnemingen letterlijk uit het voorbeeldrapport. Onderdelen in de volgorde van dat rapport: voorblad, 1 Kop t/m 9 Gegevenstabel; de bevestiging en bespreking zit in onderdeel 2, de vaste tekst VCA 7.1 d en e in onderdeel 6 (pagina 7).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Onderdelen aan/uit zetten en aan het nummer verslepen; onderdelen met "vast" (Kop, Positieve bevindingen, Bevindingen en acties, Gegevenstabel) kan alleen een beheerder uitzetten, met een reden in de versiegeschiedenis.</li>
+<li>Per onderdeel titel, inleidende tekst met invoegvelden ({product}, {TRA-revisie}, {revisie-opmerking}, {aantal regels}, {taak}), welke regels erin komen (ook “Waarnemingen buiten de TRA” onder de tabel) en welke kolommen; elke kolom toont zijn bron (Kennisbank, Inspecteur, Berekend).</li>
+<li>De samenvatting door de begeleider hoort bij onderdeel 2: aan/uit, alleen uit wat de inspecteur zei, pas na bevestiging in het rapport.</li>
+<li>Vaste teksten kiezen uit de normbibliotheek (VCA 2026/6.1, vraag 7.1) of als eigen tekst; een normtekst blijft letterlijk en geeft een melding als de norm wijzigt.</li>
+<li>Meerdere uitkomstdocumenten (volledig, directie-overzicht, versie voor opdrachtgever) op dezelfde gegevens; logo, kleuren en voorblad komen uit Huisstijl (W15).</li>
+<li>Uitvoer: bestandsnaam (= WPI-nummer), formaten, opslag standaard in de app (rapportarchief) met periodieke export naar het eigen QMS (map en ritme instelbaar), en ontvangers.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Voorwaardelijke onderdelen, bijvoorbeeld "Besloten ruimte" alleen als het project dat risicokenmerk heeft (W12).</li>
+<li>Vertaalde rapportversie (Duits voor groep S&amp;M DE) met de eigen termenlijst.</li>
+<li>Digitale paraaf van de inspecteur vanaf de telefoon (P08) in onderdeel 9.</li>
+<li>Directe koppeling met een documentsysteem (bijvoorbeeld SharePoint) als alternatief voor de periodieke export.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Een miniatuurstrook van alle pagina's naast de voorbeeldweergave, zodat de lengte van het rapport zichtbaar is.</li>
+<li>Per vast onderdeel de VCA-eistekst als uitleg bij het slotje tonen.</li>
+<li>Twee voorbeeldinspecties naast elkaar (weinig en veel bevindingen) om lege of te lange onderdelen te vinden.</li>
+</ul></div></section><section class="scr web" id="W08-dashboardbouwer">
+<div class="shot"><a href="img/W08-dashboardbouwer.jpg" target="_blank"><img loading="lazy" src="img/W08-dashboardbouwer.jpg" alt="W08-dashboardbouwer — Resultatendashboard configureren"></a></div>
+<div class="note"><p class="code">W08-dashboardbouwer</p><h3>W08-dashboardbouwer — Resultatendashboard configureren</h3><p>Webscherm 1440 × 1827 px. Dashboardfilters, doelen en "wie ziet wat" staan boven de vouw; daaronder tegelbibliotheek, canvas en tegelinstellingen. Het canvas toont de voorbeelddata (fictief, v10.4) via <code>cijfers.json</code>: 12 van 32 verplichte WPI's, directie 3 van 3 kwartalen, 76% eigen waarneming (190 van 249), 17 open acties waarvan 4 over termijn, 20 van 82 getoetste TRA-regels met [A] of [V]. Klassenamen staan voluit.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Een tegel uit de bibliotheek naar het canvas slepen. Tegels met het sterretje komen uit de WPI-methode (dekking, TRA-regels, buiten de TRA, programma, directie, toetser).</li>
+<li>Per tegel kies je de gegevens, wat je meet, waarnaar je opsplitst, per wat, een tegelfilter, de weergave, de sortering, de doellijn, de vergelijkingsperiode, een drempelmelding, waar een klik naartoe gaat en een uitlegtekst.</li>
+<li>Dashboardfilters zet je aan of uit, met een standaardwaarde. Doelen leg je één keer vast (VCA 7.1 en 7.2 gemarkeerd, eigen doelen apart) en die gebruik je in alle tegels.</li>
+<li>Per rol stel je in welke tegels en welke gegevens iemand ziet (de lezer ziet geen namen), en of de directie elke maand een PDF krijgt.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Sjabloon "VCA 7.1 en 7.2" dat ook de indeling van de trendanalyse (W09b) meelevert.</li>
+<li>Dezelfde bouwer voor het telefoondashboard "Mijn acties" (P10).</li>
+<li>Een tegel die twee jaren vergelijkt zodra er een tweede jaar met gegevens is.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De bibliotheek is ingedeeld naar gegevensbron. Een indeling naar vraag ("Halen we het programma?") werkt mogelijk sneller.</li>
+<li>Het canvas laat het programma met 7 van de 24 projecten zien. "Volledig tonen" per tegel ontbreekt nog.</li>
+<li>Ongedaan maken en een versiegeschiedenis per dashboard staan alleen in W16.</li>
+</ul></div></section><section class="scr web" id="W09-dashboard">
+<div class="shot"><a href="img/W09-dashboard.jpg" target="_blank"><img loading="lazy" src="img/W09-dashboard.jpg" alt="W09-dashboard — Resultatendashboard (tabblad Overzicht)"></a></div>
+<div class="note"><p class="code">W09-dashboard</p><h3>W09-dashboard — Resultatendashboard (tabblad Overzicht)</h3><p>Webscherm 1440 × 2396 px, met tabbladen Overzicht · Klassen en TRA-regels · Acties · Trendanalyse VCA 7.2. Alleen het actieve tabblad Overzicht is volledig getekend; de trendanalyse is een eigen scherm (W09b). Alle getallen komen uit <code>cijfers.json</code> (voorbeelddata v10.4, fictief, peildatum 11-11-2026).</p>
+<p>Nagerekend: programma 12 van 32 (lang 3 van 16, kort met risico 9 van 16), 5 perioden lopen nog, waarvan er 3 al gedaan zijn (P26-168, P26-156 en P26-135 in november, met een stippelrand en een vinkje). September staat op 3 van 9. P26-379 heeft in september geen WPI en dus een kruisje. P26-391 staat in het raster (1 van 1). Directie 3 van 3 kwartalen. Eigen waarneming 190 van 249. Open acties 17 (6 kort, 11 planmatig), waarvan 4 over termijn en 1 binnen 7 dagen; afgerond 25, waarvan 17 op tijd. Open per toetser: Hoofd S&amp;M 11, Coördinator 2 3, Coördinator 1 2, Directielid 1.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Tegels, doelen en wie wat ziet komen uit de Dashboardbouwer (W08). "Aanpassen" opent dit dashboard daar.</li>
+<li>De programmaregels (lang/kort, risicokenmerken, directie per kwartaal) komen uit Programma (W12).</li>
+<li>Klassen en het oordeelmodel komen uit Regels en grenzen (W03). Termijnen en toetsregels komen uit Acties (W11).</li>
+<li>De kijker kiest de filters (periode, vestiging, soort, product, opdrachtgever). De standaard per rol stelt de beheerder in.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Doorklikken vanaf elke cel van het raster en elke balk naar de onderliggende regels in Inspecties (W10).</li>
+<li>Raster per locatie groeperen of alleen de gemiste verplichtingen tonen.</li>
+<li>Een vergelijking met vorig jaar zodra er vier volledige kwartalen zijn.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Oordelen per maand zijn absolute aantallen, dus maanden met meer inspecties lijken slechter. Een schakelaar naar percentages ontbreekt nog.</li>
+<li>Q2 telt pas vanaf mei (het begin van de gegevens). Dat staat alleen als voetnoot.</li>
+</ul></div></section><section class="scr web" id="W09b-trendanalyse">
+<div class="shot"><a href="img/W09b-trendanalyse.jpg" target="_blank"><img loading="lazy" src="img/W09b-trendanalyse.jpg" alt="W09b-trendanalyse — Jaarlijkse trendanalyse (VCA 7.2)"></a></div>
+<div class="note"><p class="code">W09b-trendanalyse</p><h3>W09b-trendanalyse — Jaarlijkse trendanalyse (VCA 7.2)</h3><p>Webscherm 1440 × 2834 px. Dit is het tabblad "Trendanalyse VCA 7.2" van het dashboard, als eigen scherm. Je ziet de letterlijke eis (blauw kader) naast de eigen keuze van Noardling (oranje), de voortgang in vijf stappen, de basiscijfers, conclusies per klasse (positief en negatief, met de trend mei–aug tegenover sep–nov), de te ondernemen acties met actiehouder, toetser en termijn, en de follow-up.</p>
+<p>Alle getallen komen uit <code>cijfers.json</code> (v10.4, fictief). Nagerekend: 15 WPI's (7 en 8), 249 regels, 152 [C], 38 [A]+[V] (22 en 16), 41 [GA], 42 acties. Per klasse komen [C], [A], [V], de trend, de dekking en de acties (open, af, te laat) uit <code>trend_klasse</code>. Terugkerende bevindingen komen uit <code>thema</code>: handenwas 6×, stuurlijn 4×, afzetting hijszone 3×, eten of drinken 3×, mangatwacht 2×. Geluid bij hijsen staat 3× buiten de TRA. De follow-up laat zien: 25 afgerond, waarvan 17 binnen termijn, 17 open waarvan 4 over termijn, 9 van 42 ter plaatse getoetst, en een gemiddelde doorlooptijd van 35,1 dagen bij prioriteit kort.</p>
+<p>Herkomst: de app rekent de cijfers. Twee conclusies zijn geschreven door de VGM-coördinator ("Jij"). Drie zijn voorstellen van de AI ("Voorstel", accentstijl) met de knoppen Overnemen en Aanpassen. Actie TA-2026-5 is ook een voorstel. De besloten acties TA-2026-1 t/m 4 zijn fictieve voorbeeldbesluiten. De trendanalyse van 2025 bestaat niet in de app; het scherm zegt dat ook en biedt overnemen of een bijlage aan, in plaats van een verzonnen follow-up.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>De periode en het vaste moment (bijv. december, over het kalenderjaar), wie vaststelt (eigenaar procedure) en het follow-upritme stel je in bij Programma of de Dashboardbouwer.</li>
+<li>Of de AI conclusies mag voorstellen, en op welke drempel (bijv. een klasse met ≥ 2 dezelfde bevindingen), stel je in bij de begeleider (W02/W03).</li>
+<li>Nummering van trendacties (TA-jaar-volgnr) en de regel "Hoofd S&amp;M actiehouder → directie toetst" stel je in bij Gebruikers en rollen (W13).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Na vaststelling een PDF met handtekening en versie, als bewijsstuk "Trendanalyse" voor de audit.</li>
+<li>Effectmeting: per besloten actie dezelfde klasse in het volgende jaar naast de oude cijfers.</li>
+<li>Een actie TA-… direct koppelen aan een kennisbankwijziging (bijv. een nieuwe TRA-regel "communicatie bij omgevingsgeluid").</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De trend vergelijkt twee ongelijke helften (4 en 3 maanden). Per WPI genormeerd zou eerlijker zijn.</li>
+<li>Klassen met één bevinding krijgen geen conclusie. Een vaste tekst "geen trend" kan dit afronden.</li>
+</ul></div></section><section class="scr web" id="W10-inspecties">
+<div class="shot"><a href="img/W10-inspecties.jpg" target="_blank"><img loading="lazy" src="img/W10-inspecties.jpg" alt="W10-inspecties — Lijst en detail van één inspectie"></a></div>
+<div class="note"><p class="code">W10-inspecties</p><h3>W10-inspecties — Lijst en detail van één inspectie</h3><p>Webscherm 1440 × 2685 px, één pagina met tabbladen (Regels en acties · Rapport · Foto's · Gesprek met monteurs · Audittrail). Alleen het actieve tabblad is getekend. Links staat de lijst van 15 inspecties met [A]/[V], dekking ("x van y zelf waargenomen") en open acties, en daaronder de herkomst van de geselecteerde regel.</p>
+<p>Detail van WPI-20261105-DAM-C2 (v10.4, fictief): 17 regels (9 algemeen, 8 TRA), 15 zelf waargenomen, oordelen 10 [C] · 4 [A] · 1 [V] · 1 [GA] · 1 [NB]. Er zijn 9 acties (prioriteit: 1 direct, 5 kort, 3 planmatig; actie 8 is sinds v10.4 kort, termijn 19-11-2026), waarvan 8 open en 1 afgerond (actie 4, direct gecorrigeerd en ter plaatse getoetst door Coördinator 2). Regel A hoort bij acties 1 en 8, regel G bij 2 en 9, DAM-2.06 bij 3 en 7, DAM-2.07 bij 4 en 5, en DAM-2.03 bij 6. De actietabel heeft een aparte kolom Toetser. "Waargenomen" staat in neutraal vet, niet in linkblauw. De ingesproken tekst bij DAM-2.07 is een fictief voorbeeld.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>De kolommen en filters van de lijst kiest de gebruiker. Standaardweergaven per rol stelt de beheerder in.</li>
+<li>Welke tabbladen een rol ziet (bijv. de lezer zonder audittrail en zonder namen) volgt uit Gebruikers en rollen (W13).</li>
+<li>Het tabblad Rapport toont het document volgens het rapportsjabloon dat bij deze inspectie gold (inrichting v1.3, W07/W16).</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Twee inspecties op hetzelfde project naast elkaar zetten (bijv. P26-168 in oktober en november).</li>
+<li>Een bevestigd oordeel corrigeren met een verplichte reden; het origineel blijft in de audittrail.</li>
+<li>Alleen deze inspectie exporteren als gegevenstabel voor de opdrachtgever.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De herkomst staat in de linkerkolom, los van de rij. Een uitklapper per regel zou de koppeling duidelijker maken.</li>
+<li>De voorbeelddata heeft geen tijden en geen foto's. Daarom tonen het tabblad Foto's en de audittrail geen aantallen.</li>
+</ul></div></section><section class="scr web" id="W11-acties">
+<div class="shot"><a href="img/W11-acties.jpg" target="_blank"><img loading="lazy" src="img/W11-acties.jpg" alt="W11-acties — Actiebeheer"></a></div>
+<div class="note"><p class="code">W11-acties</p><h3>W11-acties — Actiebeheer</h3><p>Webscherm 1440 × 2502 px, getoond als <strong>Hoofd Service &amp; Montage</strong>: toetser van 11 open acties, en zelf actiehouder van 6. Bij die 6 toetst iemand anders ("niet jouw toetsing", met slot). Zo is het rolconflict uit ronde 1 weg.</p>
+<p>Getallen uit <code>cijfers.json</code> (v10.4, fictief, peildatum 11-11-2026): 42 acties: Open 17 (0 direct, 6 kort, 11 planmatig) · Uitgevoerd gemeld 0 · Afgerond 25 · Vervallen 0. Daarnaast 4 over termijn en 1 met termijn binnen 7 dagen. 17 van de 25 zijn binnen termijn afgerond. <strong>9 van de 42 zijn ter plaatse getoetst</strong> (beide schrijfwijzen geteld: "(ter plaatse)" en ", ter plaatse"). Bij alle 42 verschillen toetser en actiehouder. Geselecteerd: WPI-20260914-DAM-C1-1, 44 dagen over termijn, met toetser Hoofd S&amp;M.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Statussen: Open → Uitgevoerd gemeld (de actiehouder meldt klaar, P10b) → Afgerond (alleen de toetser, na toetsing) en Vervallen (alleen met reden). Afkeuren zet de actie terug op Open, met een reden. "Uitgevoerd gemeld" is een voorstel van dit ontwerp; in de voorbeelddata komt de status nog niet voor (daarom 0).</li>
+<li>Termijnbewaking: herinnering, melding bij verstreken termijn, de lijst voor het maandagoverleg, standaardtermijnen per prioriteit, melding aan de toetser bij "Uitgevoerd gemeld", en wanneer bewijs verplicht is.</li>
+<li>Vergrendeld: de toetser is nooit de actiehouder, en een actie is pas afgerond na toetsing (VCA 7.1). Wie standaard toetst, en wie nooit actiehouder is (QHSE-Manager), stel je in bij Gebruikers en rollen (W13).</li>
+<li>Weergaven "Alle open", "Ik toets" en "Ik ben actiehouder", plus filters die je als eigen weergave kunt opslaan.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Acties over hetzelfde onderwerp samenvoegen tot één structurele actie (drie keer geluid bij hijsen, alle drie open en over termijn of bijna).</li>
+<li>De trendacties (TA-2026-…) uit W09b in dezelfde lijst, met een eigen filter.</li>
+<li>Een actie koppelen aan een kennisbankwijziging, zodat afronden pas kan als de wijziging gepubliceerd is.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De afgeronde acties staan ingeklapt en zijn niet direct doorzoekbaar.</li>
+<li>Het detailpaneel laat niet zien wat de inspecteur zei; dat staat alleen in W10.</li>
+</ul></div></section><section class="scr web" id="W12-programma">
+<div class="shot"><a href="img/W12-programma.jpg" target="_blank"><img loading="lazy" src="img/W12-programma.jpg" alt="W12-programma — Inspectieprogramma"></a></div>
+<div class="note"><p class="code">W12-programma</p><h3>W12-programma — Inspectieprogramma</h3><p>Webscherm 1440 × 1969 px. Bovenaan staan de regels (in concept), daaronder de stand en de planning. Alle getallen komen uit <code>cijfers.json</code> (v10.4, fictief, peildatum 11-11-2026), met dezelfde regel als W09 en W01.</p>
+<p>Nagerekend:
+- 12 van 32 verplichte WPI's gedaan (lang 3 van 16, kort met risico 9 van 16). Er zijn 0 overige korte projecten. Directie 3 van 3 kwartalen. 5 lopende perioden, waarvan 3 al gedaan.
+- November: 3 gedaan (P26-135, P26-168, P26-156), 2 nog te doen (P26-436 en P26-446, uiterlijk 30-11) en 1 gemist (P26-379, klaar 10-11).
+- Per maand: mei 2/4, jun 3/5, jul 1/4, aug 1/3, sep 3/9, okt 2/6, nov 0/1 afgesloten plus 5 lopend.
+- December: 4 lange projecten lopen door, dus 4 verplichte WPI's.
+- Planning per inspecteur: 15 van 17.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Vier regels met keuzevelden: de grens voor lange projecten en hun frequentie, de risicokenmerken (zelf aan te vullen), de verhouding voor overige korte projecten, en de directie-eis. Bij elke regel staat de bron (VCA 7.1, voetnoot 10 of de eigen procedure).</li>
+<li>De bron van de projecten kies je zelf: de projectplanning (koppeling) of handmatig. De risicokenmerken komen uit de werkvoorbereiding.</li>
+<li>Per open verplichting kies je een inspecteur, en je deelt de planning. De regels gaan pas in na publicatie (W16); de planning zelf geldt direct.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een voorstel voor de planning op basis van locatie en beschikbaarheid, dat de coördinator bevestigt.</li>
+<li>Een melding halverwege de maand als een lang project nog geen WPI heeft.</li>
+<li>Een afwijkende frequentie per opdrachtgever.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>In de voorbeelddata zijn er geen overige korte projecten, dus de werking van regel 3 is niet te zien.</li>
+<li>Een voorvertoning "met deze regels zouden er x verplichtingen zijn" vóór publicatie ontbreekt nog.</li>
+</ul></div></section><section class="scr web" id="W13-gebruikers-rollen">
+<div class="shot"><a href="img/W13-gebruikers-rollen.jpg" target="_blank"><img loading="lazy" src="img/W13-gebruikers-rollen.jpg" alt="W13-gebruikers-rollen — Gebruikers, rollen en rechten"></a></div>
+<div class="note"><p class="code">W13-gebruikers-rollen</p><h3>W13-gebruikers-rollen — Gebruikers, rollen en rechten</h3><p>Webscherm 1440 × 2730 px. Eén pagina met vier delen (gebruikers, regels actiehouder/toetser, groepen, rechten), geen tabbladen. Getallen uit voorbeelddata v10.4, nagerekend: Werkvoorbereider is actiehouder van 4 open acties; Hoofd Service &amp; Montage is actiehouder van 10 acties, toetser steeds de inspecteur van die inspectie (4 afgerond, 6 open). Gebruikers per groep tellen op tot 10: 3 op organisatieniveau, 6 in S&amp;M NL (waarvan 2 in Projecten op locatie), 1 in S&amp;M DE.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Gebruiker uitnodigen met functie, één of meer rollen en een groep als bereik. Rollen: Inspecteur, Coördinator, Medewerker (actiehouder, ziet eigen acties), Directie, Lezer, Beheerder; Leverancier staat daarbuiten, ziet geen inspectiegegevens en werkt in de leveranciersomgeving (W17).</li>
+<li>Regels voor actiehouder en toetser als zinnen met keuzelijsten: "Functie QHSE-manager is nooit actiehouder", "Standaardtoetser is Hoofd Service &amp; Montage", "Is de standaardtoetser zelf actiehouder, dan toetst de inspecteur", "Ter plaatse uitgevoerd → inspecteur toetst ter plaatse". Toetser ≠ actiehouder is vast: VCA 7.1 vraagt verantwoordelijken voor uitvoering én toetsing; de app maakt dat twee personen.</li>
+<li>Groepen en werkplekken in een boom (het programma volgt procedure 5.5, voorstel: lang project elke maand een WPI, kort project met risicokenmerk minstens één, overige korte projecten één op de vier per kwartaal); elke groep erft begeleider, kennisbank, rapport, programma en lezers van de groep erboven, tenzij iets "eigen" wordt gemaakt (tabel "Wat geldt waar").</li>
+<li>Rechtenmatrix per rol aanpassen of een eigen rol maken; inloggen via Microsoft Entra ID met MFA, externe lezers via e-mailcode.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Tijdelijke rol met einddatum (vervangend coördinator tijdens vakantie).</li>
+<li>Onderaannemers als eigen groep die alleen acties op hun eigen werk zien.</li>
+<li>Regels per actieklasse, bijvoorbeeld "Besloten ruimte en gas: toetser altijd QHSE-manager".</li>
+<li>Logboek van rechtenwijzigingen, ook zichtbaar in Versies en publiceren (W16).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Bij een regelwijziging tonen welke open acties een andere toetser krijgen, vóór opslaan.</li>
+<li>Uitleg per recht bij aanwijzen in de matrix ("als toetser", "zonder namen").</li>
+<li>Monteurs zonder account zijn nu alleen "Monteur ter plaatse"; een lichte inlog per ploeg zou eigen acties op de telefoon mogelijk maken.</li>
+</ul></div></section><section class="scr web" id="W14-ai-data">
+<div class="shot"><a href="img/W14-ai-data.jpg" target="_blank"><img loading="lazy" src="img/W14-ai-data.jpg" alt="W14-ai-data — AI-aanbieder en data"></a></div>
+<div class="note"><p class="code">W14-ai-data</p><h3>W14-ai-data — AI-aanbieder en data</h3><p>Webscherm 1440 × 2343 px. Accentkleur alleen nog voor AI-voorstellen (hier niet gebruikt). Geen prijzen verzonnen; kosten pas na gemeten verbruik.</p>
+<p>Nagezocht op 12-11-2026; alleen dit staat als feit in het scherm:
+- Anthropic, Data residency (platform.claude.com/docs/en/manage-claude/data-residency): workspace geo bepaalt opslag; “Currently, "us" is the only available workspace geo”; voor inferentie alleen “us” en “global” (global is standaard). Geen EU-optie. Ook bij het door Anthropic beheerde aanbod op AWS en Google Cloud is de workspace geo “us”.
+- Anthropic, Commercial Terms: klant in de EER contracteert met Anthropic Ireland, Limited; de DPA is “incorporated into these Terms by reference”; geen training op klantinhoud.
+- Anthropic, DPA: standaardcontractbepalingen module 2 en 3 (Iers recht); importeur is de Anthropic-entiteit die de overeenkomst sloot; subverwerkers via openbare lijst, 15 dagen bezwaar; wissen binnen 30 dagen na einde. De DPA noemt het EU-VS Data Privacy Framework niet; een DPF-certificering van Anthropic heb ik niet gevonden, daarom “controleren”.
+- Claude op Google Vertex AI (Anthropic-docs): multi-region “eu” en regionale endpoints zoals europe-west1; regionaal alleen Claude Sonnet 4.6 en ouder; multi-region en regionaal 10% duurder. Amazon Bedrock (AWS-aankondiging, voor Claude 3.7 Sonnet): cross-region inference in Ierland, Parijs, Frankfurt en Stockholm; per model te controleren.
+- OpenRouter, In-Region Routing: eu.openrouter.ai, Business- of Enterprise-plan; geen terugval als er geen EU-endpoint is; account-, factuur-, authenticatie-, beveiligings- en misbruikgegevens kunnen in de VS staan.
+- DeepSeek, privacybeleid (laatste update 10-02-2026): “we directly collect, process and store your Personal Data in People's Republic of China.”
+- AVG art. 46 lid 2 onder c (standaardbepalingen), art. 49 (uitzonderingen voor specifieke situaties).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Aanbieder kiezen uit vier routes: Claude via Anthropic (opslag VS), Claude via de EU-regio van een cloudplatform, DeepSeek via OpenRouter met een vastgezette host, of een EU-gehost open model. Per route staan regio, doorgifte en beperkingen.</li>
+<li>Bij de actieve aanbieder: regio (“VS (opslag) · inferentie global/us · doorgifte zeker”), contractpartij, overeenkomst (van toepassing via de Commercial Terms), grondslag doorgifte (art. 45–49: SCC module 2/3 plus transfer impact assessment; DPF controleren) en training/wissen, elk met status.</li>
+<li>Status “in gebruik onder voorbehoud” zolang de DPIA (art. 35 AVG) niet af is; de DPIA is een taak met eigenaar, termijn, adviseur en zeven stappen, waaronder TIA en instemming van de ondernemingsraad (WOR art. 27).</li>
+<li>Grondslag verwerking kiezen (gerechtvaardigd belang, VCA als bedrijfsbelang; of wettelijke verplichting via Arbowet art. 5 en 8), per functie een aanbieder, bewaartermijnen en maandlimiet.</li>
+<li>Namen vervangen door rollen: herkenning uit kop en gebruikerslijst, controle door de inspecteur vóór verzenden en opslaan; belofte “zo veel mogelijk”.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Aanbieder per groep (bijvoorbeeld S&amp;M DE op een EU-route) in plaats van één voor de hele organisatie.</li>
+<li>Twee aanbieders naast elkaar draaien op dezelfde proefgesprekken en de verschillen tonen.</li>
+<li>Export van het AI-logboek voor audit of inzageverzoek.</li>
+<li>Eigen sleutel (API-key) of eigen cloudcontract van de klant, zodat de overeenkomst rechtstreeks loopt.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De bronregels automatisch op “te controleren” zetten als de aanbieder zijn voorwaarden of residency-docs wijzigt.</li>
+<li>Bij een EU-route per functie tonen welke modellen daar beschikbaar zijn, vóór de wissel.</li>
+<li>Een rekenvoorbeeld voor kosten op basis van de proefgesprekken.</li>
+</ul></div></section><section class="scr web" id="W15-huisstijl">
+<div class="shot"><a href="img/W15-huisstijl.jpg" target="_blank"><img loading="lazy" src="img/W15-huisstijl.jpg" alt="W15-huisstijl — Huisstijl"></a></div>
+<div class="note"><p class="code">W15-huisstijl</p><h3>W15-huisstijl — Huisstijl</h3><p>Webscherm 1440 × 1394 px. Logo is een neutrale plaatshouder; de rapportkleuren (#2B5C8A, #E58A1F) zijn voorbeeldwaarden, geen Noardling-huisstijl. Contrast op wit: 7,0 : 1, 2,6 : 1 en 6,1 : 1. Het voorblad in de voorbeeldweergave volgt het voorbeeldrapport (adres vestiging, datum en tijd, werkplek, project, inspecteur, “Acties: 8 open van 9”); de rapportpagina is pagina 7 van 11 (onderdeel 6). Organisatiebeheer staat op een eigen scherm voor de rol Leverancier (W17).</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Logo in een lichte en een donkere variant uploaden.</li>
+<li>Hoofdkleur en tweede kleur voor het rapport; de app controleert contrast en laat een kleur onder 4,5 : 1 alleen voor vlakken toe. Oordeel-, AI- en knopkleuren liggen vast.</li>
+<li>Lettertype voor koppen en tekst kiezen of uploaden; taal van de app en rapporttalen (Nederlands, Duits, Engels).</li>
+<li>Voorblad: indeling (strak, met adresblok, met foto), velden en een afwijkend voorblad per groep (bijvoorbeeld S&amp;M DE).</li>
+<li>Het resultaat staat rechts op drie plekken tegelijk: voorblad, een rapportpagina en de app.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Een eigen VGM-merk voor de app zelf (naam, icoon) in plaats van "Begeleid Inspecteren".</li>
+<li>Donker thema met eigen kleuren en dezelfde contrastcontrole.</li>
+<li>Logo van de opdrachtgever naast het eigen logo op het voorblad, per opdrachtgever aan te zetten.</li>
+<li>Huisstijl importeren uit een bestaand Word-sjabloon (kleuren, lettertype, logo).</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Voorbeeld van een eigen geüpload lettertype in de rapportpagina, inclusief controle op ontbrekende tekens (ë, ü, ß).</li>
+<li>Het tabblad Organisatiegegevens (naam, adressen per vestiging, KvK) is alleen aangeduid; het adres op het voorblad komt daaruit.</li>
+<li>Bij het wijzigen van de hoofdkleur meteen tonen welke oordeelchips en tabelkoppen erdoor veranderen.</li>
+</ul></div></section><section class="scr web" id="W16-versies-publiceren">
+<div class="shot"><a href="img/W16-versies-publiceren.jpg" target="_blank"><img loading="lazy" src="img/W16-versies-publiceren.jpg" alt="W16-versies-publiceren — Versies en publiceren"></a></div>
+<div class="note"><p class="code">W16-versies-publiceren</p><h3>W16-versies-publiceren — Versies en publiceren</h3><p>Webscherm 1440 × 2589 px. Bovenaan alle versies met per versie de inspecties die ermee zijn gedaan (de 15 fictieve WPI's verdeeld over v1.0–v1.3). Daaronder de vergelijking concept v1.4 tegenover v1.3 (7 wijzigingen, elk met was / wordt / wat de inspecteur merkt / aanleiding), rechts proefdraaien en de publicatiestappen. Aanleidingen verwijzen naar acties en Buiten TRA-regels in <code>voorbeelddata.json</code>; de oude tekst van DAM-2.06 komt uit <code>kennisbank.json</code>.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>Begeleider, kennisbank en rapport worden samen als één versie gepubliceerd; wijzigen gebeurt altijd in het concept. Een vergelijking tussen versies, zoals hier, hebben we in de help-artikelen van SafetyCulture niet gevonden.</li>
+<li>Proefdraaien bestaat uit vaste grenstests (altijd, niet over te slaan) en eigen proefscenario's uit het proefgesprek (W02). Een afwijkend scenario blokkeert de vrijgave tot het is opgelost of met een reden is geaccepteerd.</li>
+<li>Vrijgave in twee stappen: opstellen door de beheerder, vrijgeven door de eigenaar van de procedure (bij Noardling het Hoofd Service &amp; Montage). Ingangsdatum direct of op datum; de reden gaat mee naar het QMS.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Export van de versiegeschiedenis als wijzigingsoverzicht voor documentbeheer, met handtekening van de vrijgever.</li>
+<li>Proefscenario's laten draaien op een tweede AI-aanbieder voordat je van aanbieder wisselt.</li>
+<li>Het "nieuw sinds deze versie"-bericht voor de inspecteur instelbaar per rol.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>De weergave "Instructietekst" (het technische verschil) is alleen als schakelaar aanwezig, niet uitgewerkt.</li>
+<li>Bij veel versies wordt de versiestrook te breed; een tijdlijn met inklapbare lijst inspecties is dan nodig.</li>
+<li>Nieuwe TRA-regels hebben al een eigen goedkeuring in de kennisbank (W06); dubbel goedkeuren moet hier worden voorkomen.</li>
+</ul></div></section><section class="scr web" id="W17-organisaties">
+<div class="shot"><a href="img/W17-organisaties.jpg" target="_blank"><img loading="lazy" src="img/W17-organisaties.jpg" alt="W17-organisaties — Organisaties (leveranciersomgeving)"></a></div>
+<div class="note"><p class="code">W17-organisaties</p><h3>W17-organisaties — Organisaties (leveranciersomgeving)</h3><p>Webscherm 1440 × 966 px. Alleen voor de rol Leverancier (W13). Organisaties behalve Noardling B.V. zijn fictief; aantallen voor Noardling gelijk aan W13 (4 groepen, 10 gebruikers) en W14 (Claude via Anthropic, onder voorbehoud). De kop toont “Alle organisaties” in plaats van een klant.</p>
+<h2>Hoe configureert de klant dit</h2>
+<ul>
+<li>De leverancier maakt een organisatie aan met naam, sjabloon, eerste beheerder, status (proef, actief, demo) met einddatum en opslag van de app-gegevens (EU).</li>
+<li>Daarna richt de eerste beheerder zelf alles in: AI-aanbieder (W14), huisstijl (W15), kennisbank (W06), gebruikers (W13).</li>
+<li>Sjablonen beheren: welke begeleider, onderwerpen, oordeelmodel, rapport en dashboard een nieuwe organisatie meekrijgt.</li>
+<li>Ondersteuning binnen een organisatie alleen na toestemming van haar beheerder, met einddatum en logboek.</li>
+</ul>
+<h2>Uitbreidingen</h2>
+<ul>
+<li>Sjablonen per branche (installatietechniek, bouw, industrie) met een lege of voorbeeldkennisbank.</li>
+<li>Organisatie kopiëren als proefomgeving, zonder inspectiegegevens.</li>
+<li>Facturatie per organisatie op basis van gebruikers en gemeten AI-verbruik.</li>
+</ul>
+<h2>Verbeteringen</h2>
+<ul>
+<li>Een eigen navigatie voor de leveranciersomgeving (Organisaties, Sjablonen, Facturatie) in plaats van de klantnavigatie.</li>
+<li>Bij “Nieuwe organisatie” meteen tonen wat het sjabloon wel en niet invult.</li>
+<li>Signaal als een organisatie lang op “onder voorbehoud” staat (DPIA niet af).</li>
+</ul></div></section>
+</main></body></html>

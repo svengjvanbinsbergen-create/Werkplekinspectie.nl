@@ -1,0 +1,3705 @@
+{
+ "n_wpi": 15,
+ "n_regels": 192,
+ "n_acties": 42,
+ "n_proj": 24,
+ "soort_wpi": {
+  "WPI coördinator": 12,
+  "VGM-inspectie directie": 3
+ },
+ "oordeel": {
+  "Conform": 152,
+  "Afwijking": 22,
+  "Verbeterpunt": 16,
+  "Niet van toepassing": 2
+ },
+ "ingang": {
+  "ingepland": 13,
+  "spontaan": 2
+ },
+ "waarnemingen": {
+  "totaal": 190,
+  "NVT": 2,
+  "TRA": 87,
+  "Algemeen": 98,
+  "buiten_TRA": 5
+ },
+ "stappen_per_wpi": {
+  "WPI-20260505-POM-C2": [
+   {
+    "taak": "Demontage van de pomp",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260513-IDV-C1": [
+   {
+    "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260608-IDV-DL": [
+   {
+    "taak": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260610-POM-C2": [
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Hoofd-/werkschakelaar uitschakelen en vergrendelen, zekeringen verwijderen, noodstroom (UPS/aggregaat) uitschakelen, spanningsvrij controleren met duspol en waarschuwingsbord aanbrengen bij pompput"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Landustrie Pomp uitschakelen via schakelkast conform afschakelprotocol"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Spanningsvrij controleren met duspol"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Voedingskabel elektromotor demonteren"
+   },
+   {
+    "taak": "Situatie Kraanopstelling",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260624-ROO-C1": [
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+    "taakstap": "Roosterreiniger uitschakelen via schakelkast (handmatig commando)"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+    "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+    "taakstap": "Spanningsvrij controleren met duspol"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+    "taakstap": "Voedingskabel elektromotor demonteren"
+   },
+   {
+    "taak": "Situatie Kraanopstelling",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260709-ROO-C1": [
+   {
+    "taak": "Montage roosterreiniger-installatie",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260810-ROO-C2": [
+   {
+    "taak": "Inbedrijfstelling van de Roosterreiniger",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260911-BAN-C2": [
+   {
+    "taak": "Demonteren bestaande bandscreen (transportketting, zeefpanelen, hoofdframe, geleiders)",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260914-DAM-C1": [
+   {
+    "taak": "Verwijderen damwand",
+    "taakstap": null
+   }
+  ],
+  "WPI-20260925-DAM-DL": [
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Spanningsvrij controleren met duspol"
+   },
+   {
+    "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+    "taakstap": "Voedingskabel elektromotor demonteren"
+   },
+   {
+    "taak": "Situatie Kraanopstelling",
+    "taakstap": null
+   }
+  ],
+  "WPI-20261002-POM-C1": [
+   {
+    "taak": "Demontage van de pomp",
+    "taakstap": null
+   }
+  ],
+  "WPI-20261026-IDV-C2": [
+   {
+    "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+    "taakstap": null
+   }
+  ],
+  "WPI-20261102-BAN-DL": [
+   {
+    "taak": "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)",
+    "taakstap": null
+   }
+  ],
+  "WPI-20261103-ROO-C1": [
+   {
+    "taak": "Montage roosterreiniger-installatie",
+    "taakstap": null
+   }
+  ],
+  "WPI-20261105-DAM-C2": [
+   {
+    "taak": "Verwijderen damwand",
+    "taakstap": null
+   }
+  ]
+ },
+ "n_stappen_per_wpi": {
+  "WPI-20260505-POM-C2": 1,
+  "WPI-20260513-IDV-C1": 1,
+  "WPI-20260608-IDV-DL": 1,
+  "WPI-20260610-POM-C2": 6,
+  "WPI-20260624-ROO-C1": 5,
+  "WPI-20260709-ROO-C1": 1,
+  "WPI-20260810-ROO-C2": 1,
+  "WPI-20260911-BAN-C2": 1,
+  "WPI-20260914-DAM-C1": 1,
+  "WPI-20260925-DAM-DL": 3,
+  "WPI-20261002-POM-C1": 1,
+  "WPI-20261026-IDV-C2": 1,
+  "WPI-20261102-BAN-DL": 1,
+  "WPI-20261103-ROO-C1": 1,
+  "WPI-20261105-DAM-C2": 1
+ },
+ "n_stappen_tot": 26,
+ "stappen_met_taakstap": 11,
+ "getoetst": {
+  "taken": 15,
+  "taakstappen": 11
+ },
+ "taken_getoetst": [
+  [
+   "Afschakelprotocol en Veiligstelling (LOTOTO)",
+   7
+  ],
+  [
+   "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+   4
+  ],
+  [
+   "Situatie Kraanopstelling",
+   3
+  ],
+  [
+   "Demontage van de pomp",
+   2
+  ],
+  [
+   "Afmonteren (stuwkant, vijzelafdekking)",
+   2
+  ],
+  [
+   "Montage roosterreiniger-installatie",
+   2
+  ],
+  [
+   "Verwijderen damwand",
+   2
+  ],
+  [
+   "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)",
+   1
+  ],
+  [
+   "Inbedrijfstelling van de Roosterreiniger",
+   1
+  ],
+  [
+   "Demonteren bestaande bandscreen (transportketting, zeefpanelen, hoofdframe, geleiders)",
+   1
+  ],
+  [
+   "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)",
+   1
+  ]
+ ],
+ "oordeel_soort": {
+  "Algemeen": {
+   "Conform": 90,
+   "Afwijking": 6,
+   "Verbeterpunt": 2
+  },
+  "TRA": {
+   "Conform": 62,
+   "Afwijking": 16,
+   "Verbeterpunt": 9,
+   "Niet van toepassing": 2
+  },
+  "Buiten TRA": {
+   "Verbeterpunt": 5
+  }
+ },
+ "oordeel_maand": {
+  "2026-05": {
+   "Conform": 17,
+   "Afwijking": 3,
+   "Verbeterpunt": 5
+  },
+  "2026-06": {
+   "Conform": 31,
+   "Afwijking": 7,
+   "Verbeterpunt": 2,
+   "Niet van toepassing": 1
+  },
+  "2026-07": {
+   "Conform": 14,
+   "Verbeterpunt": 1,
+   "Afwijking": 2
+  },
+  "2026-08": {
+   "Conform": 8
+  },
+  "2026-09": {
+   "Conform": 30,
+   "Verbeterpunt": 1,
+   "Afwijking": 4
+  },
+  "2026-10": {
+   "Conform": 19,
+   "Verbeterpunt": 5,
+   "Niet van toepassing": 1
+  },
+  "2026-11": {
+   "Conform": 33,
+   "Verbeterpunt": 2,
+   "Afwijking": 6
+  }
+ },
+ "wpi_maand": {
+  "2026-05": 2,
+  "2026-06": 3,
+  "2026-07": 1,
+  "2026-08": 1,
+  "2026-09": 3,
+  "2026-10": 2,
+  "2026-11": 3
+ },
+ "neg_klasse": [
+  [
+   "Hijsen",
+   14
+  ],
+  [
+   "Gevaarlijke stoffen en hygiëne",
+   12
+  ],
+  [
+   "Besloten ruimte en gas",
+   4
+  ],
+  [
+   "Arbeidsmiddelen en keuring",
+   2
+  ],
+  [
+   "Gedrag en werkwijze",
+   1
+  ],
+  [
+   "Veiligstellen-LOTOTO",
+   1
+  ],
+  [
+   "Omgeving en afzetting",
+   1
+  ],
+  [
+   "Orde en netheid",
+   1
+  ],
+  [
+   "Werken op hoogte of bij water",
+   1
+  ],
+  [
+   "Documenten en voorbereiding",
+   1
+  ]
+ ],
+ "neg_klasse_A": {
+  "Hijsen": 7,
+  "Arbeidsmiddelen en keuring": 2,
+  "Gevaarlijke stoffen en hygiëne": 7,
+  "Gedrag en werkwijze": 1,
+  "Besloten ruimte en gas": 4,
+  "Documenten en voorbereiding": 1
+ },
+ "neg_klasse_V": {
+  "Gevaarlijke stoffen en hygiëne": 5,
+  "Hijsen": 7,
+  "Veiligstellen-LOTOTO": 1,
+  "Omgeving en afzetting": 1,
+  "Orde en netheid": 1,
+  "Werken op hoogte of bij water": 1
+ },
+ "n_neg": 38,
+ "klasse_gezien": {
+  "Veiligstellen-LOTOTO": {
+   "Conform": 21,
+   "tot": 22,
+   "Verbeterpunt": 1
+  },
+  "Arbeidsmiddelen en keuring": {
+   "Conform": 10,
+   "tot": 12,
+   "Afwijking": 2
+  },
+  "Hijsen": {
+   "Conform": 32,
+   "tot": 48,
+   "Afwijking": 7,
+   "Verbeterpunt": 7,
+   "Niet van toepassing": 2
+  },
+  "Orde en netheid": {
+   "Conform": 9,
+   "tot": 10,
+   "Verbeterpunt": 1
+  },
+  "Gevaarlijke stoffen en hygiëne": {
+   "Conform": 14,
+   "tot": 26,
+   "Verbeterpunt": 5,
+   "Afwijking": 7
+  },
+  "Noodvoorzieningen": {
+   "Conform": 13,
+   "tot": 13
+  },
+  "Werken op hoogte of bij water": {
+   "Conform": 10,
+   "tot": 11,
+   "Verbeterpunt": 1
+  },
+  "Gedrag en werkwijze": {
+   "Conform": 16,
+   "tot": 17,
+   "Afwijking": 1
+  },
+  "Documenten en voorbereiding": {
+   "Conform": 8,
+   "tot": 9,
+   "Afwijking": 1
+  },
+  "PBM": {
+   "Conform": 11,
+   "tot": 11
+  },
+  "Fysieke belasting": {
+   "Conform": 5,
+   "tot": 5
+  },
+  "Besloten ruimte en gas": {
+   "Conform": 3,
+   "tot": 7,
+   "Afwijking": 4
+  },
+  "Omgeving en afzetting": {
+   "Verbeterpunt": 1,
+   "tot": 1
+  }
+ },
+ "tra_afw": [
+  {
+   "ref": "DAM-2.06",
+   "oms": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen en op de werkplek.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Verwijderen damwand",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 2,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260914-DAM-C1",
+    "WPI-20261105-DAM-C2"
+   ]
+  },
+  {
+   "ref": "DAM-2.07",
+   "oms": "Besloten ruimte; aanwezigheid in het inlaatkanaal/de put zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+   "klasse": "Besloten ruimte en gas",
+   "taak": "Verwijderen damwand",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 2,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260914-DAM-C1",
+    "WPI-20261105-DAM-C2"
+   ]
+  },
+  {
+   "ref": "ROO-3.09",
+   "oms": "Werken in besloten ruimte (inlaatkanaal/put): tekort aan zuurstof, ophoping H2S/CO/methaan, beperkte vluchtweg bij montage in de put.",
+   "klasse": "Besloten ruimte en gas",
+   "taak": "Montage roosterreiniger-installatie",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 2,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260709-ROO-C1",
+    "WPI-20261103-ROO-C1"
+   ]
+  },
+  {
+   "ref": "POM-2.04",
+   "oms": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op pomponderdelen en op de werkplek.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Demontage van de pomp",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 1,
+   "V": 1,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260505-POM-C2",
+    "WPI-20261002-POM-C1"
+   ]
+  },
+  {
+   "ref": "POM-2.03",
+   "oms": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+   "klasse": "Hijsen",
+   "taak": "Demontage van de pomp",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 0,
+   "V": 2,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260505-POM-C2",
+    "WPI-20261002-POM-C1"
+   ]
+  },
+  {
+   "ref": "BAN-3.06",
+   "oms": "Huidirritatie en chemische verbranding bij contact met natte cementmortel/grout bij grouting van ingegoten delen; misalignment van geleiders bij overschrijden maximale giethoogte (2,5 m/dag).",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20261102-BAN-DL"
+   ]
+  },
+  {
+   "ref": "DAM-1.06",
+   "oms": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (damwand); bezwijken hijsmiddel of kraanarm.",
+   "klasse": "Hijsen",
+   "taak": "Situatie Kraanopstelling",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260925-DAM-DL"
+   ]
+  },
+  {
+   "ref": "DAM-1.07",
+   "oms": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+   "klasse": "Hijsen",
+   "taak": "Situatie Kraanopstelling",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260925-DAM-DL"
+   ]
+  },
+  {
+   "ref": "IDV-3.05",
+   "oms": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+   "klasse": "Hijsen",
+   "taak": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260608-IDV-DL"
+   ]
+  },
+  {
+   "ref": "IDV-3.08",
+   "oms": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260608-IDV-DL"
+   ]
+  },
+  {
+   "ref": "IDV-5.02",
+   "oms": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+   "klasse": "Hijsen",
+   "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260513-IDV-C1"
+   ]
+  },
+  {
+   "ref": "POM-1.08",
+   "oms": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+   "klasse": "Hijsen",
+   "taak": "Situatie Kraanopstelling",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260610-POM-C2"
+   ]
+  },
+  {
+   "ref": "ROO-1.10",
+   "oms": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+   "klasse": "Hijsen",
+   "taak": "Situatie Kraanopstelling",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260624-ROO-C1"
+   ]
+  },
+  {
+   "ref": "ROO-3.07",
+   "oms": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van draagkolom tijdens hijswerken.",
+   "klasse": "Hijsen",
+   "taak": "Montage roosterreiniger-installatie",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 1,
+   "V": 0,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260709-ROO-C1"
+   ]
+  },
+  {
+   "ref": "DAM-2.03",
+   "oms": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+   "klasse": "Hijsen",
+   "taak": "Verwijderen damwand",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 0,
+   "V": 1,
+   "C": 1,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260914-DAM-C1",
+    "WPI-20261105-DAM-C2"
+   ]
+  },
+  {
+   "ref": "DAM-2.04",
+   "oms": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+   "klasse": "Hijsen",
+   "taak": "Verwijderen damwand",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 0,
+   "V": 1,
+   "C": 1,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260914-DAM-C1",
+    "WPI-20261105-DAM-C2"
+   ]
+  },
+  {
+   "ref": "IDV-5.04",
+   "oms": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 0,
+   "V": 1,
+   "C": 1,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260513-IDV-C1",
+    "WPI-20261026-IDV-C2"
+   ]
+  },
+  {
+   "ref": "ROO-1.05",
+   "oms": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+   "klasse": "Veiligstellen-LOTOTO",
+   "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+   "taakstap": "Spanningsvrij controleren met duspol",
+   "getoetst": 1,
+   "A": 0,
+   "V": 1,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260624-ROO-C1"
+   ]
+  },
+  {
+   "ref": "ROO-3.02",
+   "oms": "Vrijkomen van kwartsstof en gehoorschade bij boren in beton voor ankerbouten in galmende betonnen ruimte.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Montage roosterreiniger-installatie",
+   "taakstap": null,
+   "getoetst": 1,
+   "A": 0,
+   "V": 1,
+   "C": 0,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260709-ROO-C1"
+   ]
+  },
+  {
+   "ref": "ROO-3.03",
+   "oms": "Huidirritatie en chemische verbranding bij contact met natte cementmortel/grout bij aanstorten van ankers.",
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "taak": "Montage roosterreiniger-installatie",
+   "taakstap": null,
+   "getoetst": 2,
+   "A": 0,
+   "V": 1,
+   "C": 1,
+   "NVT": 0,
+   "wpis": [
+    "WPI-20260709-ROO-C1",
+    "WPI-20261103-ROO-C1"
+   ]
+  }
+ ],
+ "n_tra_refs": 69,
+ "n_tra_refs_afw": 20,
+ "tra_neg_rows": 25,
+ "tra_rows": 89,
+ "tra_neg_prod": {
+  "IDV": 4,
+  "POM": 5,
+  "ROO": 7,
+  "DAM": 8,
+  "BAN": 1
+ },
+ "buiten_tra": [
+  {
+   "wpi": "WPI-20260513-IDV-C1",
+   "oms": "Geluid van naastgelegen installatie bemoeilijkt communicatie bij hijsen",
+   "oordeel": "Verbeterpunt",
+   "klasse": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260505-POM-C2",
+   "oms": "Geluid van naastgelegen installatie bemoeilijkt communicatie bij hijsen",
+   "oordeel": "Verbeterpunt",
+   "klasse": "Hijsen"
+  },
+  {
+   "wpi": "WPI-20260610-POM-C2",
+   "oms": "Werken in het donker bij uitloop van het werk: geen werkverlichting in de TRA",
+   "oordeel": "Verbeterpunt",
+   "klasse": "Omgeving en afzetting"
+  },
+  {
+   "wpi": "WPI-20261002-POM-C1",
+   "oms": "Gladheid op het bordes door algengroei",
+   "oordeel": "Verbeterpunt",
+   "klasse": "Werken op hoogte of bij water"
+  },
+  {
+   "wpi": "WPI-20261026-IDV-C2",
+   "oms": "Geluid van naastgelegen installatie bemoeilijkt communicatie bij hijsen",
+   "oordeel": "Verbeterpunt",
+   "klasse": "Hijsen"
+  }
+ ],
+ "act_status": {
+  "Afgerond": 25,
+  "Open": 17
+ },
+ "act_prio": {
+  "planmatig": 20,
+  "kort": 13,
+  "direct": 9
+ },
+ "act_open_prio": {
+  "kort": 6,
+  "planmatig": 11
+ },
+ "act_over": [
+  "WPI-20260914-DAM-C1-1",
+  "WPI-20260513-IDV-C1-3",
+  "WPI-20260505-POM-C2-5",
+  "WPI-20260610-POM-C2-2"
+ ],
+ "act_binnen7": [
+  "WPI-20261105-DAM-C2-1"
+ ],
+ "act_toetser_open": {
+  "Hoofd Service & Montage": 11,
+  "Directielid (fictief)": 1,
+  "Coördinator 1 (fictief)": 2,
+  "Coördinator 2 (fictief)": 3
+ },
+ "act_houder_open": {
+  "Werkvoorbereider": 4,
+  "Coördinator 1 (fictief)": 2,
+  "Coördinator 2 (fictief)": 5,
+  "Hoofd Service & Montage": 6
+ },
+ "act_toetser": {
+  "Hoofd Service & Montage": 23,
+  "Coördinator 1 (fictief)": 11,
+  "Coördinator 2 (fictief)": 6,
+  "Directielid (fictief)": 2
+ },
+ "act_terplaatse": 9,
+ "act_direct_gecorr": 9,
+ "act_dgm": 4,
+ "act_bron": {
+  "Inspectie": 35,
+  "Idee monteurs": 2,
+  "Buiten TRA": 5
+ },
+ "act_klasse": [
+  [
+   "Hijsen",
+   14
+  ],
+  [
+   "Gevaarlijke stoffen en hygiëne",
+   14
+  ],
+  [
+   "Besloten ruimte en gas",
+   5
+  ],
+  [
+   "Arbeidsmiddelen en keuring",
+   2
+  ],
+  [
+   "Documenten en voorbereiding",
+   2
+  ],
+  [
+   "Gedrag en werkwijze",
+   1
+  ],
+  [
+   "Veiligstellen-LOTOTO",
+   1
+  ],
+  [
+   "Orde en netheid",
+   1
+  ],
+  [
+   "Omgeving en afzetting",
+   1
+  ],
+  [
+   "Werken op hoogte of bij water",
+   1
+  ]
+ ],
+ "doorloop_gem": 23.6,
+ "doorloop_prio": {
+  "direct": [
+   0.0,
+   9
+  ],
+  "kort": [
+   35.1,
+   7
+  ],
+  "planmatig": [
+   38.1,
+   9
+  ]
+ },
+ "optijd": 17,
+ "n_af": 25,
+ "laat_af": [
+  "WPI-20260513-IDV-C1-2",
+  "WPI-20260624-ROO-C1-2",
+  "WPI-20260709-ROO-C1-1",
+  "WPI-20260709-ROO-C1-3",
+  "WPI-20261002-POM-C1-3",
+  "WPI-20260608-IDV-DL-1",
+  "WPI-20260608-IDV-DL-2",
+  "WPI-20260925-DAM-DL-1"
+ ],
+ "zelf_toets": 0,
+ "open_ouder": [
+  [
+   "WPI-20260914-DAM-C1-1",
+   58
+  ],
+  [
+   "WPI-20261002-POM-C1-1",
+   40
+  ],
+  [
+   "WPI-20261103-ROO-C1-1",
+   8
+  ],
+  [
+   "WPI-20261105-DAM-C2-1",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-2",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-3",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-5",
+   6
+  ],
+  [
+   "WPI-20260925-DAM-DL-2",
+   47
+  ],
+  [
+   "WPI-20260513-IDV-C1-3",
+   182
+  ],
+  [
+   "WPI-20260505-POM-C2-5",
+   190
+  ],
+  [
+   "WPI-20260610-POM-C2-2",
+   154
+  ],
+  [
+   "WPI-20261002-POM-C1-4",
+   40
+  ],
+  [
+   "WPI-20261026-IDV-C2-1",
+   16
+  ],
+  [
+   "WPI-20261105-DAM-C2-6",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-7",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-8",
+   6
+  ],
+  [
+   "WPI-20261105-DAM-C2-9",
+   6
+  ]
+ ],
+ "vp_geen": [
+  "P26-521 (fictief)",
+  "P26-535 (fictief)",
+  "P26-500 (fictief)",
+  "P26-528 (fictief)",
+  "P26-514 (fictief)",
+  "P26-556 (fictief)",
+  "P26-549 (fictief)",
+  "P26-507 (fictief)",
+  "P26-542 (fictief)"
+ ],
+ "vp": [
+  {
+   "project": "P26-128 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260505-POM-C2"
+   ]
+  },
+  {
+   "project": "P26-244 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260513-IDV-C1"
+   ]
+  },
+  {
+   "project": "P26-521 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-535 (fictief)",
+   "product": "Dompelpompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-354 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260610-POM-C2"
+   ]
+  },
+  {
+   "project": "P26-472 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260608-IDV-DL"
+   ]
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-08",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260624-ROO-C1"
+   ]
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-08",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-528 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-121 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260709-ROO-C1"
+   ]
+  },
+  {
+   "project": "P26-514 (fictief)",
+   "product": "Slibindikker",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-333 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-08",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260810-ROO-C2"
+   ]
+  },
+  {
+   "project": "P26-556 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-549 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-391 (fictief)",
+   "product": "Bandfilter (Bandscreen)",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260911-BAN-C2"
+   ]
+  },
+  {
+   "project": "P26-507 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-507 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-304 (fictief)",
+   "product": "Damwand",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260914-DAM-C1"
+   ]
+  },
+  {
+   "project": "P26-194 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20260925-DAM-DL"
+   ]
+  },
+  {
+   "project": "P26-542 (fictief)",
+   "product": "Dompelpompen",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20261002-POM-C1"
+   ]
+  },
+  {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": false,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20261105-DAM-C2"
+   ]
+  },
+  {
+   "project": "P26-446 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20261026-IDV-C2"
+   ]
+  },
+  {
+   "project": "P26-446 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": false,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-135 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "risico",
+   "maand": "2026-11",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20261103-ROO-C1"
+   ]
+  },
+  {
+   "project": "P26-156 (fictief)",
+   "product": "Bandfilter",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": true,
+   "ok": true,
+   "wpis": [
+    "WPI-20261102-BAN-DL"
+   ]
+  }
+ ],
+ "overig": [],
+ "vp_x": 15,
+ "vp_y": 32,
+ "vp_cat": {
+  "lang": [
+   5,
+   15
+  ],
+  "risico": [
+   10,
+   17
+  ]
+ },
+ "vp_lopend": 2,
+ "vp_mis": [
+  {
+   "project": "P26-521 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-535 (fictief)",
+   "product": "Dompelpompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "risico",
+   "maand": "2026-05",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-500 (fictief)",
+   "product": "Beluchter",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-08",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-08",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-528 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-06",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-514 (fictief)",
+   "product": "Slibindikker",
+   "locatie": "Rioolgemaal Demowijk",
+   "cat": "risico",
+   "maand": "2026-07",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-556 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-549 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-507 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-507 (fictief)",
+   "product": "Beluchter",
+   "locatie": "Poldergemaal Proefsluis",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-542 (fictief)",
+   "product": "Dompelpompen",
+   "locatie": "RWZI Testdorp",
+   "cat": "risico",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  }
+ ],
+ "per_project": {
+  "P26-128 (fictief)": {
+   "p": {
+    "project": "P26-128 (fictief)",
+    "product": "Pompen",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-04-26",
+    "eind": "2026-05-14",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 18,
+   "obl": [
+    {
+     "project": "P26-128 (fictief)",
+     "product": "Pompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "risico",
+     "maand": "2026-05",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260505-POM-C2"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260505-POM-C2"
+   ],
+   "risk": [
+    "open_water"
+   ]
+  },
+  "P26-244 (fictief)": {
+   "p": {
+    "project": "P26-244 (fictief)",
+    "product": "Indraaivijzel",
+    "locatie": "Poldergemaal Proefsluis",
+    "opdrachtgever": "Gemeente Voorbeeldhaven",
+    "start": "2026-05-07",
+    "eind": "2026-05-17",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": false
+   },
+   "cat": "risico",
+   "dur": 10,
+   "obl": [
+    {
+     "project": "P26-244 (fictief)",
+     "product": "Indraaivijzel",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "risico",
+     "maand": "2026-05",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260513-IDV-C1"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260513-IDV-C1"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan"
+   ]
+  },
+  "P26-521 (fictief)": {
+   "p": {
+    "project": "P26-521 (fictief)",
+    "product": "Beluchter",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-05-07",
+    "eind": "2026-05-11",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 4,
+   "obl": [
+    {
+     "project": "P26-521 (fictief)",
+     "product": "Beluchter",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "risico",
+     "maand": "2026-05",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-535 (fictief)": {
+   "p": {
+    "project": "P26-535 (fictief)",
+    "product": "Dompelpompen",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-05-10",
+    "eind": "2026-05-12",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 2,
+   "obl": [
+    {
+     "project": "P26-535 (fictief)",
+     "product": "Dompelpompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "risico",
+     "maand": "2026-05",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "open_water"
+   ]
+  },
+  "P26-354 (fictief)": {
+   "p": {
+    "project": "P26-354 (fictief)",
+    "product": "Pompen",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-06-02",
+    "eind": "2026-06-14",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 12,
+   "obl": [
+    {
+     "project": "P26-354 (fictief)",
+     "product": "Pompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "risico",
+     "maand": "2026-06",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260610-POM-C2"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260610-POM-C2"
+   ],
+   "risk": [
+    "open_water"
+   ]
+  },
+  "P26-472 (fictief)": {
+   "p": {
+    "project": "P26-472 (fictief)",
+    "product": "Indraaivijzel",
+    "locatie": "RWZI Testdorp",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-06-05",
+    "eind": "2026-06-17",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": false
+   },
+   "cat": "risico",
+   "dur": 12,
+   "obl": [
+    {
+     "project": "P26-472 (fictief)",
+     "product": "Indraaivijzel",
+     "locatie": "RWZI Testdorp",
+     "cat": "risico",
+     "maand": "2026-06",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260608-IDV-DL"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260608-IDV-DL"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan"
+   ]
+  },
+  "P26-500 (fictief)": {
+   "p": {
+    "project": "P26-500 (fictief)",
+    "product": "Beluchter",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-06-10",
+    "eind": "2026-08-22",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": false
+   },
+   "cat": "lang",
+   "dur": 73,
+   "obl": [
+    {
+     "project": "P26-500 (fictief)",
+     "product": "Beluchter",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-06",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-500 (fictief)",
+     "product": "Beluchter",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-07",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-500 (fictief)",
+     "product": "Beluchter",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-08",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 3,
+   "wpis": [],
+   "risk": []
+  },
+  "P26-379 (fictief)": {
+   "p": {
+    "project": "P26-379 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "Gemaal Fictiefpolder",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-06-17",
+    "eind": "2026-11-10",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "lang",
+   "dur": 146,
+   "obl": [
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-06",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260624-ROO-C1"
+     ]
+    },
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-07",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-08",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 1,
+   "y": 5,
+   "wpis": [
+    "WPI-20260624-ROO-C1"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-528 (fictief)": {
+   "p": {
+    "project": "P26-528 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "Rioolgemaal Demowijk",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-06-19",
+    "eind": "2026-06-24",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 5,
+   "obl": [
+    {
+     "project": "P26-528 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Rioolgemaal Demowijk",
+     "cat": "risico",
+     "maand": "2026-06",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "open_water"
+   ]
+  },
+  "P26-121 (fictief)": {
+   "p": {
+    "project": "P26-121 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "Rioolgemaal Demowijk",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-06-30",
+    "eind": "2026-07-22",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 22,
+   "obl": [
+    {
+     "project": "P26-121 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Rioolgemaal Demowijk",
+     "cat": "risico",
+     "maand": "2026-07",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260709-ROO-C1"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260709-ROO-C1"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-514 (fictief)": {
+   "p": {
+    "project": "P26-514 (fictief)",
+    "product": "Slibindikker",
+    "locatie": "Rioolgemaal Demowijk",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-07-23",
+    "eind": "2026-07-27",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": false
+   },
+   "cat": "risico",
+   "dur": 4,
+   "obl": [
+    {
+     "project": "P26-514 (fictief)",
+     "product": "Slibindikker",
+     "locatie": "Rioolgemaal Demowijk",
+     "cat": "risico",
+     "maand": "2026-07",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan"
+   ]
+  },
+  "P26-333 (fictief)": {
+   "p": {
+    "project": "P26-333 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "RWZI Testdorp",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-08-05",
+    "eind": "2026-08-22",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 17,
+   "obl": [
+    {
+     "project": "P26-333 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "RWZI Testdorp",
+     "cat": "risico",
+     "maand": "2026-08",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260810-ROO-C2"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260810-ROO-C2"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-556 (fictief)": {
+   "p": {
+    "project": "P26-556 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "RWZI Testdorp",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-09-02",
+    "eind": "2026-09-13",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 11,
+   "obl": [
+    {
+     "project": "P26-556 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "RWZI Testdorp",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-549 (fictief)": {
+   "p": {
+    "project": "P26-549 (fictief)",
+    "product": "Beluchter",
+    "locatie": "Poldergemaal Proefsluis",
+    "opdrachtgever": "Gemeente Voorbeeldhaven",
+    "start": "2026-09-04",
+    "eind": "2026-09-11",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 7,
+   "obl": [
+    {
+     "project": "P26-549 (fictief)",
+     "product": "Beluchter",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-391 (fictief)": {
+   "p": {
+    "project": "P26-391 (fictief)",
+    "product": "Bandfilter (Bandscreen)",
+    "locatie": "Rioolgemaal Demowijk",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-09-07",
+    "eind": "2026-09-18",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 11,
+   "obl": [
+    {
+     "project": "P26-391 (fictief)",
+     "product": "Bandfilter (Bandscreen)",
+     "locatie": "Rioolgemaal Demowijk",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260911-BAN-C2"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260911-BAN-C2"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-507 (fictief)": {
+   "p": {
+    "project": "P26-507 (fictief)",
+    "product": "Beluchter",
+    "locatie": "Poldergemaal Proefsluis",
+    "opdrachtgever": "Gemeente Voorbeeldhaven",
+    "start": "2026-09-08",
+    "eind": "2026-10-18",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": true,
+    "open_water": true
+   },
+   "cat": "lang",
+   "dur": 40,
+   "obl": [
+    {
+     "project": "P26-507 (fictief)",
+     "product": "Beluchter",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "lang",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-507 (fictief)",
+     "product": "Beluchter",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 2,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "besloten_ruimte_vergunning",
+    "open_water"
+   ]
+  },
+  "P26-304 (fictief)": {
+   "p": {
+    "project": "P26-304 (fictief)",
+    "product": "Damwand",
+    "locatie": "Gemaal Fictiefpolder",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-09-11",
+    "eind": "2026-09-25",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": true,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 14,
+   "obl": [
+    {
+     "project": "P26-304 (fictief)",
+     "product": "Damwand",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260914-DAM-C1"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260914-DAM-C1"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "besloten_ruimte_vergunning",
+    "open_water"
+   ]
+  },
+  "P26-194 (fictief)": {
+   "p": {
+    "project": "P26-194 (fictief)",
+    "product": "Damwand",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-09-16",
+    "eind": "2026-10-09",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": true,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 23,
+   "obl": [
+    {
+     "project": "P26-194 (fictief)",
+     "product": "Damwand",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20260925-DAM-DL"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20260925-DAM-DL"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "besloten_ruimte_vergunning",
+    "open_water"
+   ]
+  },
+  "P26-542 (fictief)": {
+   "p": {
+    "project": "P26-542 (fictief)",
+    "product": "Dompelpompen",
+    "locatie": "RWZI Testdorp",
+    "opdrachtgever": "Waterschap Voorbeeld-Zuid",
+    "start": "2026-09-16",
+    "eind": "2026-09-27",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": true,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 11,
+   "obl": [
+    {
+     "project": "P26-542 (fictief)",
+     "product": "Dompelpompen",
+     "locatie": "RWZI Testdorp",
+     "cat": "risico",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 0,
+   "y": 1,
+   "wpis": [],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "besloten_ruimte_vergunning",
+    "open_water"
+   ]
+  },
+  "P26-436 (fictief)": {
+   "p": {
+    "project": "P26-436 (fictief)",
+    "product": "Pompen",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-09-23",
+    "eind": "2026-12-14",
+    "hijsen_mobiele_kraan": false,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "lang",
+   "dur": 82,
+   "obl": [
+    {
+     "project": "P26-436 (fictief)",
+     "product": "Pompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20261002-POM-C1"
+     ]
+    },
+    {
+     "project": "P26-436 (fictief)",
+     "product": "Pompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-11",
+     "telt": false,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20261002-POM-C1"
+   ],
+   "risk": [
+    "open_water"
+   ]
+  },
+  "P26-168 (fictief)": {
+   "p": {
+    "project": "P26-168 (fictief)",
+    "product": "Damwand",
+    "locatie": "RWZI Voorbeeldstad",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-10-12",
+    "eind": "2026-12-18",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": true,
+    "open_water": true
+   },
+   "cat": "lang",
+   "dur": 67,
+   "obl": [
+    {
+     "project": "P26-168 (fictief)",
+     "product": "Damwand",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-168 (fictief)",
+     "product": "Damwand",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
+     "maand": "2026-11",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20261105-DAM-C2"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 2,
+   "wpis": [
+    "WPI-20261105-DAM-C2"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "besloten_ruimte_vergunning",
+    "open_water"
+   ]
+  },
+  "P26-446 (fictief)": {
+   "p": {
+    "project": "P26-446 (fictief)",
+    "product": "Indraaivijzel",
+    "locatie": "Poldergemaal Proefsluis",
+    "opdrachtgever": "Gemeente Voorbeeldhaven",
+    "start": "2026-10-19",
+    "eind": "2026-12-23",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": false
+   },
+   "cat": "lang",
+   "dur": 65,
+   "obl": [
+    {
+     "project": "P26-446 (fictief)",
+     "product": "Indraaivijzel",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20261026-IDV-C2"
+     ]
+    },
+    {
+     "project": "P26-446 (fictief)",
+     "product": "Indraaivijzel",
+     "locatie": "Poldergemaal Proefsluis",
+     "cat": "lang",
+     "maand": "2026-11",
+     "telt": false,
+     "ok": false,
+     "wpis": []
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20261026-IDV-C2"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan"
+   ]
+  },
+  "P26-135 (fictief)": {
+   "p": {
+    "project": "P26-135 (fictief)",
+    "product": "Roosterreiniger",
+    "locatie": "Gemaal Fictiefpolder",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-10-27",
+    "eind": "2026-11-16",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "risico",
+   "dur": 20,
+   "obl": [
+    {
+     "project": "P26-135 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "risico",
+     "maand": "2026-11",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20261103-ROO-C1"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20261103-ROO-C1"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  },
+  "P26-156 (fictief)": {
+   "p": {
+    "project": "P26-156 (fictief)",
+    "product": "Bandfilter",
+    "locatie": "Gemaal Fictiefpolder",
+    "opdrachtgever": "Waterschap Voorbeeld-Noord",
+    "start": "2026-10-30",
+    "eind": "2026-12-23",
+    "hijsen_mobiele_kraan": true,
+    "besloten_ruimte_vergunning": false,
+    "open_water": true
+   },
+   "cat": "lang",
+   "dur": 54,
+   "obl": [
+    {
+     "project": "P26-156 (fictief)",
+     "product": "Bandfilter",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-11",
+     "telt": true,
+     "ok": true,
+     "wpis": [
+      "WPI-20261102-BAN-DL"
+     ]
+    }
+   ],
+   "x": 1,
+   "y": 1,
+   "wpis": [
+    "WPI-20261102-BAN-DL"
+   ],
+   "risk": [
+    "hijsen_mobiele_kraan",
+    "open_water"
+   ]
+  }
+ },
+ "programma": [
+  {
+   "maand": "2026-05",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-05",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-07",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-07",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 0
+  },
+  {
+   "maand": "2026-08",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 0
+  },
+  {
+   "maand": "2026-08",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-10",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-10",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Coördinator 1 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Coördinator 2 (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-06",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-09",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  },
+  {
+   "maand": "2026-11",
+   "inspecteur": "Directielid (fictief)",
+   "gepland": 1,
+   "uitgevoerd": 1
+  }
+ ],
+ "dir_kw": {
+  "Q2 2026": 1,
+  "Q3 2026": 1,
+  "Q4 2026": 1
+ },
+ "insp_wpi": {
+  "Coördinator 2 (fictief)": 6,
+  "Coördinator 1 (fictief)": 6,
+  "Directielid (fictief)": 3
+ },
+ "per_wpi": {
+  "WPI-20260505-POM-C2": {
+   "n": 13,
+   "oord": {
+    "Conform": 8,
+    "Afwijking": 2,
+    "Verbeterpunt": 3
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Demontage van de pomp",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 5,
+   "open": 1,
+   "alg": 7,
+   "tra": 5,
+   "bui": 1
+  },
+  "WPI-20260513-IDV-C1": {
+   "n": 12,
+   "oord": {
+    "Conform": 9,
+    "Afwijking": 1,
+    "Verbeterpunt": 2
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 3,
+   "open": 1,
+   "alg": 6,
+   "tra": 5,
+   "bui": 1
+  },
+  "WPI-20260608-IDV-DL": {
+   "n": 11,
+   "oord": {
+    "Conform": 8,
+    "Afwijking": 3
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 3,
+   "open": 0,
+   "alg": 4,
+   "tra": 7,
+   "bui": 0
+  },
+  "WPI-20260610-POM-C2": {
+   "n": 16,
+   "oord": {
+    "Conform": 13,
+    "Niet van toepassing": 1,
+    "Afwijking": 1,
+    "Verbeterpunt": 1
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Hoofd-/werkschakelaar uitschakelen en vergrendelen, zekeringen verwijderen, noodstroom (UPS/aggregaat) uitschakelen, spanningsvrij controleren met duspol en waarschuwingsbord aanbrengen bij pompput"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Landustrie Pomp uitschakelen via schakelkast conform afschakelprotocol"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Spanningsvrij controleren met duspol"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Voedingskabel elektromotor demonteren"
+    },
+    {
+     "taak": "Situatie Kraanopstelling",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 6,
+   "acties": 2,
+   "open": 1,
+   "alg": 6,
+   "tra": 9,
+   "bui": 1
+  },
+  "WPI-20260624-ROO-C1": {
+   "n": 14,
+   "oord": {
+    "Conform": 10,
+    "Afwijking": 3,
+    "Verbeterpunt": 1
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+     "taakstap": "Roosterreiniger uitschakelen via schakelkast (handmatig commando)"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+     "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+     "taakstap": "Spanningsvrij controleren met duspol"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger",
+     "taakstap": "Voedingskabel elektromotor demonteren"
+    },
+    {
+     "taak": "Situatie Kraanopstelling",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 5,
+   "acties": 4,
+   "open": 0,
+   "alg": 7,
+   "tra": 7,
+   "bui": 0
+  },
+  "WPI-20260709-ROO-C1": {
+   "n": 17,
+   "oord": {
+    "Conform": 14,
+    "Verbeterpunt": 1,
+    "Afwijking": 2
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Montage roosterreiniger-installatie",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 3,
+   "open": 0,
+   "alg": 8,
+   "tra": 9,
+   "bui": 0
+  },
+  "WPI-20260810-ROO-C2": {
+   "n": 8,
+   "oord": {
+    "Conform": 8
+   },
+   "ingang": "spontaan",
+   "stappen": [
+    {
+     "taak": "Inbedrijfstelling van de Roosterreiniger",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 0,
+   "open": 0,
+   "alg": 7,
+   "tra": 1,
+   "bui": 0
+  },
+  "WPI-20260911-BAN-C2": {
+   "n": 10,
+   "oord": {
+    "Conform": 10
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Demonteren bestaande bandscreen (transportketting, zeefpanelen, hoofdframe, geleiders)",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 0,
+   "open": 0,
+   "alg": 6,
+   "tra": 4,
+   "bui": 0
+  },
+  "WPI-20260914-DAM-C1": {
+   "n": 13,
+   "oord": {
+    "Conform": 10,
+    "Verbeterpunt": 1,
+    "Afwijking": 2
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Verwijderen damwand",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 3,
+   "open": 1,
+   "alg": 7,
+   "tra": 6,
+   "bui": 0
+  },
+  "WPI-20260925-DAM-DL": {
+   "n": 12,
+   "oord": {
+    "Conform": 10,
+    "Afwijking": 2
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Spanningsvrij controleren met duspol"
+    },
+    {
+     "taak": "Afschakelprotocol en Veiligstelling (LOTOTO)",
+     "taakstap": "Voedingskabel elektromotor demonteren"
+    },
+    {
+     "taak": "Situatie Kraanopstelling",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 3,
+   "acties": 2,
+   "open": 1,
+   "alg": 5,
+   "tra": 7,
+   "bui": 0
+  },
+  "WPI-20261002-POM-C1": {
+   "n": 14,
+   "oord": {
+    "Conform": 10,
+    "Verbeterpunt": 4
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Demontage van de pomp",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 4,
+   "open": 2,
+   "alg": 8,
+   "tra": 5,
+   "bui": 1
+  },
+  "WPI-20261026-IDV-C2": {
+   "n": 11,
+   "oord": {
+    "Conform": 9,
+    "Niet van toepassing": 1,
+    "Verbeterpunt": 1
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Afmonteren (stuwkant, vijzelafdekking)",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 1,
+   "open": 1,
+   "alg": 6,
+   "tra": 4,
+   "bui": 1
+  },
+  "WPI-20261102-BAN-DL": {
+   "n": 12,
+   "oord": {
+    "Conform": 11,
+    "Afwijking": 1
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 1,
+   "open": 0,
+   "alg": 5,
+   "tra": 7,
+   "bui": 0
+  },
+  "WPI-20261103-ROO-C1": {
+   "n": 14,
+   "oord": {
+    "Conform": 12,
+    "Verbeterpunt": 1,
+    "Afwijking": 1
+   },
+   "ingang": "spontaan",
+   "stappen": [
+    {
+     "taak": "Montage roosterreiniger-installatie",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 2,
+   "open": 1,
+   "alg": 8,
+   "tra": 6,
+   "bui": 0
+  },
+  "WPI-20261105-DAM-C2": {
+   "n": 15,
+   "oord": {
+    "Afwijking": 4,
+    "Conform": 10,
+    "Verbeterpunt": 1
+   },
+   "ingang": "ingepland",
+   "stappen": [
+    {
+     "taak": "Verwijderen damwand",
+     "taakstap": null
+    }
+   ],
+   "n_stappen": 1,
+   "acties": 9,
+   "open": 8,
+   "alg": 8,
+   "tra": 7,
+   "bui": 0
+  }
+ },
+ "act_open_n": 17,
+ "act_toetser_open_hsm": 11,
+ "act_houder_open_hsm": 6,
+ "act_open_detail": {
+  "WPI-20260914-DAM-C1-1": {
+   "dagen_tot_termijn": -44,
+   "dagen_open": 58
+  },
+  "WPI-20261002-POM-C1-1": {
+   "dagen_tot_termijn": 16,
+   "dagen_open": 40
+  },
+  "WPI-20261103-ROO-C1-1": {
+   "dagen_tot_termijn": 48,
+   "dagen_open": 8
+  },
+  "WPI-20261105-DAM-C2-1": {
+   "dagen_tot_termijn": 1,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-2": {
+   "dagen_tot_termijn": 8,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-3": {
+   "dagen_tot_termijn": 8,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-5": {
+   "dagen_tot_termijn": 50,
+   "dagen_open": 6
+  },
+  "WPI-20260925-DAM-DL-2": {
+   "dagen_tot_termijn": 9,
+   "dagen_open": 47
+  },
+  "WPI-20260513-IDV-C1-3": {
+   "dagen_tot_termijn": -126,
+   "dagen_open": 182
+  },
+  "WPI-20260505-POM-C2-5": {
+   "dagen_tot_termijn": -134,
+   "dagen_open": 190
+  },
+  "WPI-20260610-POM-C2-2": {
+   "dagen_tot_termijn": -98,
+   "dagen_open": 154
+  },
+  "WPI-20261002-POM-C1-4": {
+   "dagen_tot_termijn": 16,
+   "dagen_open": 40
+  },
+  "WPI-20261026-IDV-C2-1": {
+   "dagen_tot_termijn": 40,
+   "dagen_open": 16
+  },
+  "WPI-20261105-DAM-C2-6": {
+   "dagen_tot_termijn": 50,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-7": {
+   "dagen_tot_termijn": 8,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-8": {
+   "dagen_tot_termijn": 8,
+   "dagen_open": 6
+  },
+  "WPI-20261105-DAM-C2-9": {
+   "dagen_tot_termijn": 50,
+   "dagen_open": 6
+  }
+ },
+ "act_over_bron": {
+  "Inspectie": 1,
+  "Buiten TRA": 3
+ },
+ "act_open_direct": 0,
+ "act_houders": [
+  "Coördinator 1 (fictief)",
+  "Coördinator 2 (fictief)",
+  "Hoofd Service & Montage",
+  "Monteur (voorman)",
+  "Monteur ter plaatse",
+  "Monteurs ter plaatse",
+  "Werkvoorbereider"
+ ],
+ "act_toetsers": [
+  "Coördinator 1 (fictief)",
+  "Coördinator 2 (fictief)",
+  "Directielid (fictief)",
+  "Hoofd Service & Montage"
+ ],
+ "act_klassen": [
+  "Arbeidsmiddelen en keuring",
+  "Besloten ruimte en gas",
+  "Documenten en voorbereiding",
+  "Gedrag en werkwijze",
+  "Gevaarlijke stoffen en hygiëne",
+  "Hijsen",
+  "Omgeving en afzetting",
+  "Orde en netheid",
+  "Veiligstellen-LOTOTO",
+  "Werken op hoogte of bij water"
+ ],
+ "act_projecten": [
+  "P26-121 (fictief)",
+  "P26-128 (fictief)",
+  "P26-135 (fictief)",
+  "P26-156 (fictief)",
+  "P26-168 (fictief)",
+  "P26-194 (fictief)",
+  "P26-244 (fictief)",
+  "P26-304 (fictief)",
+  "P26-354 (fictief)",
+  "P26-379 (fictief)",
+  "P26-436 (fictief)",
+  "P26-446 (fictief)",
+  "P26-472 (fictief)"
+ ],
+ "vp_maand": {
+  "2026-05": {
+   "ok": 2,
+   "y": 4,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-06": {
+   "ok": 3,
+   "y": 5,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-07": {
+   "ok": 1,
+   "y": 4,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-08": {
+   "ok": 1,
+   "y": 3,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-09": {
+   "ok": 3,
+   "y": 8,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-10": {
+   "ok": 2,
+   "y": 5,
+   "lopend": 0,
+   "lopend_ok": 0
+  },
+  "2026-11": {
+   "ok": 3,
+   "y": 3,
+   "lopend": 2,
+   "lopend_ok": 0
+  }
+ },
+ "vp_lopend_ok": 0,
+ "maand_nu": [
+  {
+   "project": "P26-135 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "start": "2026-10-27",
+   "eind": "2026-11-16",
+   "dur": 20,
+   "cat": "risico",
+   "risk": [
+    "kraan",
+    "open water"
+   ],
+   "status": "gedaan",
+   "wpi": "WPI-20261103-ROO-C1",
+   "datum": "2026-11-03",
+   "inspecteur": "Coördinator 1 (fictief)"
+  },
+  {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "start": "2026-09-23",
+   "eind": "2026-12-14",
+   "dur": 82,
+   "cat": "lang",
+   "risk": [
+    "open water"
+   ],
+   "status": "nog te doen",
+   "dagen": 19,
+   "uiterlijk": "2026-11-30"
+  },
+  {
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "start": "2026-10-12",
+   "eind": "2026-12-18",
+   "dur": 67,
+   "cat": "lang",
+   "risk": [
+    "kraan",
+    "besloten ruimte",
+    "open water"
+   ],
+   "status": "gedaan",
+   "wpi": "WPI-20261105-DAM-C2",
+   "datum": "2026-11-05",
+   "inspecteur": "Coördinator 2 (fictief)"
+  },
+  {
+   "project": "P26-446 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "Poldergemaal Proefsluis",
+   "start": "2026-10-19",
+   "eind": "2026-12-23",
+   "dur": 65,
+   "cat": "lang",
+   "risk": [
+    "kraan"
+   ],
+   "status": "nog te doen",
+   "dagen": 19,
+   "uiterlijk": "2026-11-30"
+  },
+  {
+   "project": "P26-156 (fictief)",
+   "product": "Bandfilter",
+   "locatie": "Gemaal Fictiefpolder",
+   "start": "2026-10-30",
+   "eind": "2026-12-23",
+   "dur": 54,
+   "cat": "lang",
+   "risk": [
+    "kraan",
+    "open water"
+   ],
+   "status": "gedaan",
+   "wpi": "WPI-20261102-BAN-DL",
+   "datum": "2026-11-02",
+   "inspecteur": "Directielid (fictief)"
+  }
+ ],
+ "maand_nu_telling": {
+  "gedaan": 3,
+  "nog te doen": 2
+ },
+ "volgende_maand": "2026-12",
+ "volgende_maand_proj": [
+  {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "eind": "2026-12-14",
+   "cat": "lang"
+  },
+  {
+   "project": "P26-168 (fictief)",
+   "product": "Damwand",
+   "locatie": "RWZI Voorbeeldstad",
+   "eind": "2026-12-18",
+   "cat": "lang"
+  },
+  {
+   "project": "P26-446 (fictief)",
+   "product": "Indraaivijzel",
+   "locatie": "Poldergemaal Proefsluis",
+   "eind": "2026-12-23",
+   "cat": "lang"
+  },
+  {
+   "project": "P26-156 (fictief)",
+   "product": "Bandfilter",
+   "locatie": "Gemaal Fictiefpolder",
+   "eind": "2026-12-23",
+   "cat": "lang"
+  }
+ ],
+ "prog_insp": {
+  "Coördinator 1 (fictief)": {
+   "gepland": 7,
+   "uitgevoerd": 6,
+   "maanden": {
+    "2026-05": [
+     1,
+     1
+    ],
+    "2026-06": [
+     1,
+     1
+    ],
+    "2026-07": [
+     1,
+     1
+    ],
+    "2026-08": [
+     0,
+     1
+    ],
+    "2026-09": [
+     1,
+     1
+    ],
+    "2026-10": [
+     1,
+     1
+    ],
+    "2026-11": [
+     1,
+     1
+    ]
+   }
+  },
+  "Coördinator 2 (fictief)": {
+   "gepland": 7,
+   "uitgevoerd": 6,
+   "maanden": {
+    "2026-05": [
+     1,
+     1
+    ],
+    "2026-06": [
+     1,
+     1
+    ],
+    "2026-07": [
+     0,
+     1
+    ],
+    "2026-08": [
+     1,
+     1
+    ],
+    "2026-09": [
+     1,
+     1
+    ],
+    "2026-10": [
+     1,
+     1
+    ],
+    "2026-11": [
+     1,
+     1
+    ]
+   }
+  },
+  "Directielid (fictief)": {
+   "gepland": 3,
+   "uitgevoerd": 3,
+   "maanden": {
+    "2026-06": [
+     1,
+     1
+    ],
+    "2026-09": [
+     1,
+     1
+    ],
+    "2026-11": [
+     1,
+     1
+    ]
+   }
+  }
+ },
+ "prog_gepland": 17,
+ "prog_uitgevoerd": 15,
+ "kwartalen": [
+  "Q2 2026",
+  "Q3 2026",
+  "Q4 2026"
+ ],
+ "dir_kw_ok": 3,
+ "maanden": [
+  "2026-05",
+  "2026-06",
+  "2026-07",
+  "2026-08",
+  "2026-09",
+  "2026-10",
+  "2026-11"
+ ],
+ "periode": [
+  "2026-05-05",
+  "2026-11-05"
+ ],
+ "trend_helften": {
+  "H1": [
+   "2026-05",
+   "2026-06",
+   "2026-07",
+   "2026-08"
+  ],
+  "H2": [
+   "2026-09",
+   "2026-10",
+   "2026-11"
+  ],
+  "wpi_H1": 7,
+  "wpi_H2": 8
+ },
+ "trend_klasse": {
+  "Veiligstellen-LOTOTO": {
+   "tot": 22,
+   "C": 21,
+   "A": 0,
+   "V": 1,
+   "NVT": 0,
+   "neg_H1": 1,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 1,
+   "act_open": 0,
+   "act_af": 1,
+   "act_te_laat": 0
+  },
+  "Arbeidsmiddelen en keuring": {
+   "tot": 12,
+   "C": 10,
+   "A": 2,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 2,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 2,
+   "act_open": 0,
+   "act_af": 2,
+   "act_te_laat": 0
+  },
+  "Hijsen": {
+   "tot": 48,
+   "C": 32,
+   "A": 7,
+   "V": 7,
+   "NVT": 2,
+   "neg_H1": 8,
+   "neg_H2": 6,
+   "bui": 3,
+   "act": 14,
+   "act_open": 6,
+   "act_af": 8,
+   "act_te_laat": 5
+  },
+  "Orde en netheid": {
+   "tot": 10,
+   "C": 9,
+   "A": 0,
+   "V": 1,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 1,
+   "bui": 0,
+   "act": 1,
+   "act_open": 1,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "Gevaarlijke stoffen en hygiëne": {
+   "tot": 26,
+   "C": 14,
+   "A": 7,
+   "V": 5,
+   "NVT": 0,
+   "neg_H1": 6,
+   "neg_H2": 6,
+   "bui": 0,
+   "act": 14,
+   "act_open": 5,
+   "act_af": 9,
+   "act_te_laat": 4
+  },
+  "Noodvoorzieningen": {
+   "tot": 13,
+   "C": 13,
+   "A": 0,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 0,
+   "act_open": 0,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "Werken op hoogte of bij water": {
+   "tot": 11,
+   "C": 10,
+   "A": 0,
+   "V": 1,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 1,
+   "bui": 1,
+   "act": 1,
+   "act_open": 1,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "Gedrag en werkwijze": {
+   "tot": 17,
+   "C": 16,
+   "A": 1,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 1,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 1,
+   "act_open": 0,
+   "act_af": 1,
+   "act_te_laat": 1
+  },
+  "Documenten en voorbereiding": {
+   "tot": 9,
+   "C": 8,
+   "A": 1,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 1,
+   "bui": 0,
+   "act": 2,
+   "act_open": 2,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "PBM": {
+   "tot": 11,
+   "C": 11,
+   "A": 0,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 0,
+   "act_open": 0,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "Fysieke belasting": {
+   "tot": 5,
+   "C": 5,
+   "A": 0,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 0,
+   "neg_H2": 0,
+   "bui": 0,
+   "act": 0,
+   "act_open": 0,
+   "act_af": 0,
+   "act_te_laat": 0
+  },
+  "Besloten ruimte en gas": {
+   "tot": 7,
+   "C": 3,
+   "A": 4,
+   "V": 0,
+   "NVT": 0,
+   "neg_H1": 1,
+   "neg_H2": 3,
+   "bui": 0,
+   "act": 5,
+   "act_open": 1,
+   "act_af": 4,
+   "act_te_laat": 1
+  },
+  "Omgeving en afzetting": {
+   "tot": 1,
+   "C": 0,
+   "A": 0,
+   "V": 1,
+   "NVT": 0,
+   "neg_H1": 1,
+   "neg_H2": 0,
+   "bui": 1,
+   "act": 1,
+   "act_open": 1,
+   "act_af": 0,
+   "act_te_laat": 1
+  }
+ },
+ "buiten_tra_cnt": [
+  [
+   "Geluid van naastgelegen installatie bemoeilijkt communicatie bij hijsen",
+   3
+  ],
+  [
+   "Werken in het donker bij uitloop van het werk: geen werkverlichting in de TRA",
+   1
+  ],
+  [
+   "Gladheid op het bordes door algengroei",
+   1
+  ]
+ ],
+ "positief": 152,
+ "thema": [
+  {
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "thema": "Geen handenwasgelegenheid bij de werkplek",
+   "n": 6,
+   "wpis": [
+    "WPI-20260505-POM-C2",
+    "WPI-20260709-ROO-C1",
+    "WPI-20261103-ROO-C1",
+    "WPI-20261105-DAM-C2",
+    "WPI-20260608-IDV-DL",
+    "WPI-20260608-IDV-DL"
+   ],
+   "open": 2,
+   "refs": [
+    "G",
+    "ROO-3.02",
+    "ROO-3.03",
+    "G",
+    "G",
+    "IDV-3.08"
+   ]
+  },
+  {
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "thema": "Eten of drinken in de werkzone",
+   "n": 3,
+   "wpis": [
+    "WPI-20260513-IDV-C1",
+    "WPI-20260914-DAM-C1",
+    "WPI-20261102-BAN-DL"
+   ],
+   "open": 0,
+   "refs": [
+    "IDV-5.04",
+    "DAM-2.06",
+    "BAN-3.06"
+   ]
+  },
+  {
+   "klasse": "Hijsen",
+   "thema": "Hijszone niet volledig afgezet tijdens het hijsen",
+   "n": 3,
+   "wpis": [
+    "WPI-20260513-IDV-C1",
+    "WPI-20260505-POM-C2",
+    "WPI-20260624-ROO-C1"
+   ],
+   "open": 0,
+   "refs": [
+    "IDV-5.02",
+    "POM-2.03",
+    "ROO-1.10"
+   ]
+  },
+  {
+   "klasse": "Hijsen",
+   "thema": "Geen stuurlijn gebruikt bij het begeleiden van de last",
+   "n": 3,
+   "wpis": [
+    "WPI-20260709-ROO-C1",
+    "WPI-20261002-POM-C1",
+    "WPI-20260608-IDV-DL"
+   ],
+   "open": 0,
+   "refs": [
+    "ROO-3.07",
+    "POM-2.03",
+    "IDV-3.05"
+   ]
+  },
+  {
+   "klasse": "Hijsen",
+   "thema": "Geluid van naastgelegen installatie bemoeilijkt communicatie bij hijsen",
+   "n": 3,
+   "wpis": [
+    "WPI-20260513-IDV-C1",
+    "WPI-20260505-POM-C2",
+    "WPI-20261026-IDV-C2"
+   ],
+   "open": 3,
+   "refs": [
+    "Buiten TRA",
+    "Buiten TRA",
+    "Buiten TRA"
+   ]
+  },
+  {
+   "klasse": "Arbeidsmiddelen en keuring",
+   "thema": "Arbeidsmiddel met verlopen keuringsdatum in gebruik",
+   "n": 2,
+   "wpis": [
+    "WPI-20260505-POM-C2",
+    "WPI-20260624-ROO-C1"
+   ],
+   "open": 0,
+   "refs": [
+    "D",
+    "D"
+   ]
+  },
+  {
+   "klasse": "Besloten ruimte en gas",
+   "thema": "Geen mangatwacht aanwezig bij het betreden",
+   "n": 2,
+   "wpis": [
+    "WPI-20260914-DAM-C1",
+    "WPI-20261103-ROO-C1"
+   ],
+   "open": 0,
+   "refs": [
+    "DAM-2.07",
+    "ROO-3.09"
+   ]
+  },
+  {
+   "klasse": "Gevaarlijke stoffen en hygiëne",
+   "thema": "Geen gelaatsbescherming gedragen bij spatgevaar",
+   "n": 2,
+   "wpis": [
+    "WPI-20260505-POM-C2",
+    "WPI-20261002-POM-C1"
+   ],
+   "open": 0,
+   "refs": [
+    "POM-2.04",
+    "POM-2.04"
+   ]
+  }
+ ]
+}

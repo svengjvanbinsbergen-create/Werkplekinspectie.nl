@@ -1,0 +1,373 @@
+<meta name='dash-one-writer'>
+<style>
+.w-root{container-type:inline-size}
+.w-page{font-family:var(--font-anthropic-sans);color:var(--color-fg);font-size:clamp(15px,.5cqi + 12px,19px);line-height:1.45;display:grid;gap:.9em;font-variant-numeric:tabular-nums}
+.w-page>*,.w-sec>*,.w-two>*{min-width:0}
+.w-page h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:1.85em;line-height:1.15;margin:0}
+.w-page h2{font-size:1.15em;font-weight:600;margin:0 0 .2em;display:flex;flex-wrap:wrap;gap:.35em .6em;align-items:center}
+.w-page h3{font-size:1em;font-weight:600;margin:.7em 0 .35em}
+.w-page p{margin:.3em 0}
+.w-mut{color:var(--color-fg-muted)}
+.w-sm{font-size:max(12px,.86em)}
+.w-blok{display:block}
+.w-ban{background:#b85c00;color:#fff;font-weight:700;letter-spacing:.02em;text-align:center;padding:.3em .8em;border-radius:var(--cds-radius);font-size:max(12px,.9em)}
+.w-kop{display:grid;gap:.15em}
+.w-sub{font-size:1.05em;margin:0}
+.w-in{display:inline-block;min-width:7em;border-bottom:1px solid var(--color-fg-muted)}
+.w-vb{font-size:max(11px,.62em);font-weight:700;letter-spacing:.02em;color:#b85c00;border:1px solid #b85c00;border-radius:99px;padding:.1em .6em;margin-left:auto;white-space:nowrap}
+.w-card{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.9em 1em}
+.w-sec{display:grid;gap:.9em}
+.w-sec[hidden],.w-filterbar[hidden]{display:none}
+.w-vca,.w-own{font-size:max(11px,.66em);font-weight:700;color:#fff;border-radius:4px;padding:.12em .5em;white-space:nowrap}
+.w-vca{background:#1f5fa8}.w-own{background:#b85c00}
+.w-kader{border-left:5px solid #1f5fa8;padding:.1em 0 .1em .8em;margin:.5em 0}
+.w-kader.w-o{border-color:#b85c00}
+.w-tabbar{display:flex;flex-wrap:wrap;gap:.35em;border-bottom:2px solid var(--color-border-line);padding-bottom:.35em}
+.w-tab{font:inherit;font-weight:600;color:var(--color-fg);background:transparent;border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.45em .95em;min-height:2.6em;cursor:pointer}
+.w-tab[aria-selected=true]{background:var(--color-fg);color:var(--color-bg);border-color:var(--color-fg)}
+.w-filters{display:flex;flex-wrap:wrap;gap:.5em .7em;align-items:end}
+.w-filters label{display:grid;gap:.15em;font-size:max(12px,.82em);color:var(--color-fg-muted);flex:1 1 9em;min-width:0}
+.w-filters select{width:100%;font-size:1.05em;min-height:2.4em}
+.w-fout{color:var(--color-bad);font-weight:700}
+.w-btn{font:inherit;font-size:.9em;color:var(--color-fg);background:var(--color-bg);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.4em .9em;min-height:2.4em;cursor:pointer}
+.w-btn[aria-pressed=true]{background:var(--color-fg);color:var(--color-bg)}
+.w-tabs{display:flex;flex-wrap:wrap;gap:.4em;margin:.4em 0}
+.w-msgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17em),1fr));gap:.8em;margin-top:.4em}
+.w-msg{border-radius:var(--cds-radius);padding:.7em .9em;border:1px solid var(--color-border-line);border-top-width:5px}
+.w-msg p{font-size:1.2em;line-height:1.35;margin:.25em 0 0}
+.w-msgl{font-weight:700;font-size:max(12px,.85em);letter-spacing:.02em;text-transform:uppercase}
+.w-goed{border-top-color:var(--color-ok)}.w-risico{border-top-color:var(--color-bad)}.w-nu{border-top-color:#1f5fa8}
+.w-let{margin-top:.7em!important;padding:.5em .7em;border-radius:var(--cds-radius);background:color-mix(in srgb,var(--color-warn) 14%,var(--color-panel));font-size:max(12px,.9em)}
+.w-concl summary,#definities summary,.w-sub2 summary{cursor:pointer;font-weight:600}
+.w-concl ul{margin:.5em 0 0;padding-left:1.2em;display:grid;gap:.45em}
+.w-sub2{margin-top:.8em}
+.w-tilebox{display:grid;gap:.5em}
+.w-tilehead{display:flex;flex-wrap:wrap;gap:.4em;align-items:center;font-weight:600}
+.w-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11em),1fr));gap:.6em}
+.w-tile{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.6em .8em;display:grid;gap:.1em;align-content:start}
+.w-tile>span{font-size:max(12px,.84em);color:var(--color-fg-muted)}
+.w-tile>b{font-family:var(--font-anthropic-serif);font-weight:400;font-size:1.9em;line-height:1.1}
+.w-tile small{font-size:max(12px,.8em);color:var(--color-fg-muted)}
+.w-clk{cursor:pointer;text-decoration:underline dotted;text-underline-offset:.2em}
+.w-clk:hover,.w-clk:focus-visible{outline:2px solid var(--color-fg);outline-offset:2px}
+.w-seg.w-clk,.w-col .w-clk,.w-chip.w-clk,.w-item.w-clk{text-decoration:none}
+.w-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,21em),1fr));gap:1em}
+.w-rel{position:relative}
+.w-tip{position:absolute;z-index:4;pointer-events:none;background:var(--cds-surface-popover,var(--color-bg));border:1px solid var(--cds-border,var(--color-border-line));box-shadow:var(--cds-shadow-popover,0 2px 8px #0003);border-radius:6px;padding:.35em .6em;font-size:max(12px,.84em);max-width:17em;white-space:pre-line;opacity:0}
+.w-tip.w-on{opacity:1}
+.w-leg{display:flex;flex-wrap:wrap;gap:.25em 1em;font-size:max(12px,.84em);margin:.3em 0 .5em}
+.w-leg span{display:inline-flex;align-items:center;gap:.4em}
+.w-sw{display:inline-block;width:.9em;height:.9em;border-radius:3px;flex:none}
+.o-con{background:var(--color-ok)}
+.o-gee{background:color-mix(in srgb,var(--color-ok) 35%,var(--color-panel));box-shadow:inset 0 0 0 1.5px var(--color-ok)}
+.o-ver{background:var(--color-warn)}
+.o-afw{background:var(--color-bad)}
+.o-nb{background:repeating-linear-gradient(45deg,var(--color-fg-muted) 0 2px,transparent 2px 6px);box-shadow:inset 0 0 0 1px var(--color-fg-muted)}
+.o-nvt{background:var(--color-border-line)}
+.o-ja{background:var(--w-s1)}
+.o-ab{background:repeating-linear-gradient(-45deg,var(--w-s1) 0 3px,transparent 3px 6px);box-shadow:inset 0 0 0 2px var(--w-s1)}
+.w-bars{display:grid;gap:.5em}
+.w-bar{display:grid;grid-template-columns:minmax(8em,15em) 1fr auto;gap:.15em .7em;align-items:center}
+.w-full .w-bar{grid-template-columns:1fr auto}
+.w-full .w-bt{grid-column:1/-1;order:3}
+.w-bl{min-width:0;overflow-wrap:anywhere}
+.w-bl small{display:block;color:var(--color-fg-muted);font-size:max(12px,.8em)}
+.w-bt{display:flex;gap:2px;height:1.1em;min-width:0}
+.w-trk{background:color-mix(in srgb,var(--color-fg-muted) 16%,transparent);border-radius:0 4px 4px 0}
+.w-seg{display:block;height:100%;min-width:3px}
+.w-seg:last-child{border-radius:0 4px 4px 0}
+.w-bv{font-size:max(12px,.86em);white-space:nowrap;text-align:right}
+.w-cols{display:flex;gap:.45em;align-items:flex-end;height:13em;margin-top:1.2em}
+.w-col{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:2px}
+.w-col .w-seg{width:min(100%,3em);margin:0 auto;height:auto}
+.w-col .w-seg:nth-child(2){border-radius:4px 4px 0 0}
+.w-col>em{font-style:normal;font-size:max(12px,.8em);text-align:center}
+.w-colx{display:flex;gap:.45em;text-align:center;margin-top:.3em}
+.w-colx div{flex:1 1 0;min-width:0;display:grid}
+.w-colx span{font-size:max(12px,.82em)}
+.w-colx small{font-size:12px;color:var(--color-fg-muted);white-space:nowrap}
+.w-scroll{overflow-x:auto;max-width:100%}
+.w-tbl{border-collapse:collapse;width:100%;font-size:max(12px,.86em)}
+.w-tbl th,.w-tbl td{text-align:left;vertical-align:top;padding:.4em .5em;border-bottom:1px solid var(--color-border-line)}
+.w-tbl th{font-weight:600;color:var(--color-fg-muted)}
+.w-tbl td.w-num,.w-tbl th.w-num{text-align:right}
+.w-tbl small{font-size:max(12px,.85em)}
+.w-actt,.w-klaart,.w-trendt{table-layout:fixed}
+.w-actt th:nth-child(1){width:13%}.w-actt th:nth-child(2){width:10%}.w-actt th:nth-child(3){width:9%}.w-actt th:nth-child(4){width:22%}.w-actt th:nth-child(5){width:22%}.w-actt th:nth-child(6){width:12%}.w-actt th:nth-child(7){width:12%}
+.w-klaart th:nth-child(1){width:15%}.w-klaart th:nth-child(2){width:22%}.w-klaart th:nth-child(3){width:23%}.w-klaart th:nth-child(4){width:11%}.w-klaart th:nth-child(5){width:10%}.w-klaart th:nth-child(6){width:9%}.w-klaart th:nth-child(7){width:10%}
+.w-trendt th:nth-child(1){width:11%}.w-trendt th:nth-child(2){width:47%}.w-trendt th:nth-child(3){width:13%}.w-trendt th:nth-child(4){width:12%}.w-trendt th:nth-child(5){width:10%}.w-trendt th:nth-child(6){width:7%}
+.w-actt td,.w-klaart td,.w-trendt td{overflow-wrap:break-word}
+.w-actt td:nth-child(n+6),.w-klaart td:nth-child(4),.w-klaart td:nth-child(7),.w-trendt td:nth-child(n+3){hyphens:auto}
+.w-actt td:first-child b,.w-klaart td:first-child b{overflow-wrap:anywhere}
+.w-fict{display:block;font-size:max(12px,.8em);color:#b85c00;font-weight:600}
+.w-sticky th:first-child,.w-sticky td:first-child{position:sticky;left:0;background:var(--color-panel);z-index:1}
+.w-badge{display:inline-flex;align-items:center;gap:.35em}
+.w-st{font-weight:700}
+.w-st.ok{color:var(--color-ok)}.w-st.bad{color:var(--color-bad)}.w-st.warn{color:var(--color-warn)}
+.w-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,12em),1fr));gap:.5em;margin:.4em 0}
+.w-chip{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.4em .6em;display:grid;gap:.1em;font-size:.9em}
+.w-chip small{color:var(--color-fg-muted);font-size:max(12px,.85em)}
+.w-chip.w-no{border-style:dashed;border-color:var(--color-bad)}
+.w-items{display:grid;gap:.45em}
+.w-item{border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:.45em .7em}
+.w-item summary{cursor:pointer;display:grid;gap:.1em}
+.w-item summary b{font-weight:600}
+.w-item ul{margin:.3em 0;padding-left:1.2em}
+.w-det:empty{display:none}
+.w-det.w-open{margin-top:.8em;border:2px solid var(--color-fg);border-radius:var(--cds-radius);padding:.6em .7em}
+.w-dh{display:flex;gap:.6em;justify-content:space-between;align-items:start;margin-bottom:.4em;font-weight:600}
+.w-svg text{font-size:12px;fill:var(--cds-text-secondary,var(--color-fg-muted))}
+.w-svg .w-val{fill:var(--color-fg);font-weight:600}
+[data-dash-source-state=refreshing]{opacity:.5}
+@container (max-width:700px){
+ .w-bar{grid-template-columns:1fr auto}.w-bl{grid-column:1/-1}
+ .w-vb{margin-left:0}
+ .w-cards,.w-cards tbody,.w-cards td{display:block;width:auto!important}
+ .w-cards thead{display:none}
+ .w-cards tr{display:grid;gap:.15em;padding:.55em 0;border-bottom:1px solid var(--color-border-line)}
+ .w-cards td{border:0;padding:0;text-align:left!important}
+ .w-cards td::before{content:attr(data-l) ': ';color:var(--color-fg-muted);font-weight:600}
+ .w-cols{gap:.2em}.w-colx{gap:.2em}
+ .w-msg p{font-size:1.1em}
+ .w-tab{padding:.4em .7em}
+}
+</style>
+<div class='w-root'><div class='w-page' lang='nl'>
+
+<div class='w-ban' id='voorbeeld'>VOORBEELD — fictieve data · geen echte inspecties, personen, opdrachtgevers of locaties</div>
+
+<header id='kop' class='w-kop'>
+<h1>Trendanalyse werkplekinspecties 2026</h1>
+<p class='w-sub'>Noardling B.V., Service &amp; Montage · periode <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=per_van'>—</b> t/m <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=per_tot'>—</b> · peildatum <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=peil'>—</b></p>
+<p class='w-sm w-mut'>Opgesteld door: <span class='w-in'>……………</span> · Vastgesteld op: <span class='w-in'>……………</span> (in te vullen; leeg in dit voorbeeld). Alleen eigen monteurs.</p>
+</header>
+
+<nav class='w-tabbar' role='tablist' aria-label='Onderdelen'>
+<button type='button' class='w-tab' role='tab' data-tabknop='overzicht' aria-selected='true'>Overzicht</button>
+<button type='button' class='w-tab' role='tab' data-tabknop='programma' aria-selected='false'>Programma</button>
+<button type='button' class='w-tab' role='tab' data-tabknop='bevindingen' aria-selected='false'>Bevindingen</button>
+<button type='button' class='w-tab' role='tab' data-tabknop='tra' aria-selected='false'>TRA-toetsing</button>
+<button type='button' class='w-tab' role='tab' data-tabknop='acties' aria-selected='false'>Acties</button>
+</nav>
+
+<div class='w-filterbar w-card' id='filters' hidden>
+<div class='w-filters'>
+<label>Periode van<select class='dash-select' data-draw='f-van' data-source='wpis' aria-label='Periode van'></select></label>
+<label>Periode tot en met<select class='dash-select' data-draw='f-tot' data-source='wpis' aria-label='Periode tot en met'></select></label>
+<label>Product<select class='dash-select' data-draw='f-product' data-source='wpis' aria-label='Product'></select></label>
+<label>Inspecteur<select class='dash-select' data-draw='f-inspecteur' data-source='wpis' aria-label='Inspecteur'></select></label>
+<label>Classificatie<select class='dash-select' data-draw='f-classificatie' data-source='regels' aria-label='Classificatie'></select></label>
+<button type='button' class='w-btn' data-act='reset'>Filters wissen</button>
+</div>
+<p class='w-sm w-mut' data-draw='f-actief' data-source='wpis regels'>—</p>
+</div>
+
+<section class='w-sec' id='overzicht'>
+<div class='w-card w-boodschap' id='boodschappen'>
+<h2>In twee minuten <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<div class='w-msgs'>
+<div class='w-msg w-goed'><span class='w-msgl'>✓ Wat gaat goed</span>
+<p><b data-draw='k' data-source='kern' data-field='toon' data-where='k=conf_pct'>—</b>% van de regels met een eigen waarneming was Conform (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=conform'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=waar'>—</b>). <b data-draw='k' data-source='kern' data-field='toon' data-where='k=uitgevoerd'>—</b> van de <b data-draw='k' data-source='kern' data-field='toon' data-where='k=gepland'>—</b> geplande WPI’s zijn uitgevoerd; de directie inspecteerde in <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_ok'>—</b> van de <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_tot'>—</b> kwartalen.</p></div>
+<div class='w-msg w-risico'><span class='w-msgl'>✕ Grootste risico</span>
+<p>Hoogste aandeel afwijkingen en verbeterpunten: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=risk_a'>—</b> (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=risk_a'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=risk_a_y'>—</b> waargenomen regels). Meeste in aantal: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=risk_c'>—</b> (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=risk_c'>—</b>).</p></div>
+<div class='w-msg w-nu'><span class='w-msgl'>→ Wat moet er nu gebeuren</span>
+<p><b data-draw='k' data-source='kern' data-field='toon' data-where='k=over'>—</b> acties staan over de termijn (oudste <b data-draw='k' data-source='kern' data-field='toon' data-where='k=over_oudste'>—</b> dagen). Stel in het coördinatorenoverleg van <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=overleg'>—</b> de trendacties <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=trend_eerste'>—</b> t/m <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=trend_laatste'>—</b> vast.</p></div>
+</div>
+<p class='w-let'><b>Kleine aantallen.</b> Dit zijn <b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpis'>—</b> WPI’s in <b data-draw='k' data-source='kern' data-field='toon' data-where='k=maanden'>—</b> maanden (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpm_min'>—</b> tot <b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpm_max'>—</b> per maand). Verschillen tussen maanden, inspecteurs en klassen zijn een signaal om op te letten, geen bewezen trend.</p>
+</div>
+
+<div class='w-card' id='trendacties' data-host>
+<h2>Acties uit de trendanalyse <span class='w-vca'>VCA 7.2</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<p class='w-kader w-sm'>VCA 7.2, minimumeis: “Er wordt een jaarlijkse trendanalyse gemaakt, inclusief te ondernemen acties en follow-up.”</p>
+<table class='w-tbl w-cards w-trendt' data-source='trendacties' data-row-key='nr'>
+<thead><tr><th data-field='nr'>Nummer</th><th data-field='wat'>Wat</th><th data-field='actiehouder'>Actiehouder</th><th data-field='toetser'>Toetser</th><th data-field='termijn'>Termijn</th><th data-field='status'>Status</th></tr></thead>
+<tbody data-draw='trendrijen'></tbody>
+</table>
+<p class='w-kader w-o w-sm'><b>Follow-up (Noardling-keuze).</b> <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=trend_eerste'>—</b> t/m <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=trend_laatste'>—</b> staan elke maandag op de agenda van het coördinatorenoverleg; het verslag noemt per nummer de nieuwe status. Actiehouders en termijnen hierboven zijn een fictief voorbeeld; het Hoofd Service &amp; Montage stelt ze vast.</p>
+</div>
+
+<details class='w-card w-concl' id='conclusie'>
+<summary>Volledige conclusie en onderbouwing</summary>
+<p class='w-sm w-mut'>Over de hele periode, zonder filters. Elk getal komt uit de berekening “Kerncijfers hele periode”.</p>
+<ul>
+<li><b>Gegevens.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpis'>—</b> WPI’s met <b data-draw='k' data-source='kern' data-field='toon' data-where='k=regels'>—</b> beoordeelde regels, waarvan <b data-draw='k' data-source='kern' data-field='toon' data-where='k=waar'>—</b> met een eigen waarneming (Conform <b data-draw='k' data-source='kern' data-field='toon' data-where='k=conform'>—</b>, Afwijking <b data-draw='k' data-source='kern' data-field='toon' data-where='k=afw'>—</b>, Verbeterpunt <b data-draw='k' data-source='kern' data-field='toon' data-where='k=verb'>—</b>), <b data-draw='k' data-source='kern' data-field='toon' data-where='k=ab'>—</b> alleen bevestigd via de afsluitvraag en <b data-draw='k' data-source='kern' data-field='toon' data-where='k=nee'>—</b> niet beoordeeld of niet van toepassing.</li>
+<li><b>Kleine aantallen.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpm_min'>—</b> tot <b data-draw='k' data-source='kern' data-field='toon' data-where='k=wpm_max'>—</b> WPI’s per maand, <b data-draw='k' data-source='kern' data-field='toon' data-where='k=d_wpis'>—</b> directie-inspecties. Klassen met minder dan <b data-draw='k' data-source='kern' data-field='toon' data-where='k=min_n'>—</b> waargenomen regels zijn te klein voor een conclusie: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=klein'>—</b>.</li>
+<li><b>Per kwartaal</b> (afwijkingen en verbeterpunten per WPI): <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=kw_lijst'>—</b>. <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=richting'>—</b></li>
+<li><b>Programma.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=uitgevoerd'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=gepland'>—</b> geplande WPI’s uitgevoerd; niet uitgevoerd: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=gemist'>—</b>. Directie-inspectie in <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_ok'>—</b> van de <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_tot'>—</b> kwartalen.</li>
+<li><b>Zwaartepunt.</b> Meeste afwijkingen en verbeterpunten in aantal: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=top_aantal'>—</b>. Hoogste aandeel van de waargenomen regels in de klasse (bij minstens <b data-draw='k' data-source='kern' data-field='toon' data-where='k=min_n'>—</b> waargenomen regels): <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=top_aandeel'>—</b>.</li>
+<li><b>TRA-toetsing.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=tra_toets'>—</b> waargenomen toetsingen van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=tra_uniek'>—</b> unieke TRA-regels. Daarvan <b data-draw='k' data-source='kern' data-field='toon' data-where='k=tra_neg'>—</b> toetsingen met een afwijking of verbeterpunt, verdeeld over <b data-draw='k' data-source='kern' data-field='toon' data-where='k=tra_neg_uniek'>—</b> unieke regels. In meer dan één WPI afwijkend (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=tra_herh'>—</b> regels, gelijke stand): <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=tra_herh'>—</b>.</li>
+<li><b>Dekking.</b> Eigen waarneming bij <b data-draw='k' data-source='kern' data-field='toon' data-where='k=waar_pct'>—</b>% van de regels; per inspecteur van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=ins_laag'>—</b>% (<b data-draw='k' data-source='kern' data-field='tekst' data-where='k=ins_laag'>—</b>) tot <b data-draw='k' data-source='kern' data-field='toon' data-where='k=ins_hoog'>—</b>% (<b data-draw='k' data-source='kern' data-field='tekst' data-where='k=ins_hoog'>—</b>). Vaakst zonder eigen waarneming: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=zonder'>—</b> (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=zonder'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=zonder_y'>—</b>). <b data-draw='k' data-source='kern' data-field='toon' data-where='k=prod_niet'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=prod_tot'>—</b> producten nog nooit geïnspecteerd; <b data-draw='k' data-source='kern' data-field='toon' data-where='k=kb_gezien'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=kb_regels'>—</b> kennisbankregels ooit waargenomen.</li>
+<li><b>Buiten TRA.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=buiten'>—</b> waarnemingen over <b data-draw='k' data-source='kern' data-field='toon' data-where='k=buiten_ond'>—</b> onderwerpen, het vaakst: <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=buiten_top'>—</b> (<b data-draw='k' data-source='kern' data-field='toon' data-where='k=buiten_top'>—</b>). Elke waarneming heeft een actie om de TRA aan te vullen.</li>
+<li><b>Acties.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=acties'>—</b> acties: <b data-draw='k' data-source='kern' data-field='toon' data-where='k=open'>—</b> open, waarvan <b data-draw='k' data-source='kern' data-field='toon' data-where='k=over'>—</b> over de termijn (oudste <b data-draw='k' data-source='kern' data-field='toon' data-where='k=over_oudste'>—</b> dagen, <b data-draw='k' data-source='kern' data-field='tekst' data-where='k=over_oudste'>—</b>); <b data-draw='k' data-source='kern' data-field='toon' data-where='k=afgerond'>—</b> afgerond na toetsing, waarvan <b data-draw='k' data-source='kern' data-field='toon' data-where='k=telaat'>—</b> na de termijn. Tegenover de norm: direct <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_norm_ok'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=dir_norm_n'>—</b> dezelfde dag; kort (norm <b data-draw='k' data-source='kern' data-field='toon' data-where='k=norm_kort'>—</b> dagen) gemiddeld <b data-draw='k' data-source='kern' data-field='toon' data-where='k=kort_gem'>—</b> dagen, <b data-draw='k' data-source='kern' data-field='toon' data-where='k=kort_ok'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=kort_n'>—</b> binnen de norm; planmatig <b data-draw='k' data-source='kern' data-field='toon' data-where='k=plan_ok'>—</b> van <b data-draw='k' data-source='kern' data-field='toon' data-where='k=plan_n'>—</b> binnen de eigen termijn. Bron: <b data-draw='k' data-source='kern' data-field='toon' data-where='k=bron_insp'>—</b> inspectie, <b data-draw='k' data-source='kern' data-field='toon' data-where='k=bron_buiten'>—</b> buiten de TRA, <b data-draw='k' data-source='kern' data-field='toon' data-where='k=bron_idee'>—</b> idee van monteurs.</li>
+<li><b>Coördinator tegenover directie.</b> <b data-draw='k' data-source='kern' data-field='toon' data-where='k=c_neg'>—</b> tegenover <b data-draw='k' data-source='kern' data-field='toon' data-where='k=d_neg'>—</b> afwijkingen en verbeterpunten per WPI; eigen waarneming <b data-draw='k' data-source='kern' data-field='toon' data-where='k=c_ja'>—</b>% tegenover <b data-draw='k' data-source='kern' data-field='toon' data-where='k=d_ja'>—</b>%, alleen bevestigd <b data-draw='k' data-source='kern' data-field='toon' data-where='k=c_ab'>—</b>% tegenover <b data-draw='k' data-source='kern' data-field='toon' data-where='k=d_ab'>—</b>%. Bij <b data-draw='k' data-source='kern' data-field='toon' data-where='k=d_wpis'>—</b> directie-inspecties bepaalt één WPI het gemiddelde sterk.</li>
+</ul>
+</details>
+
+<details class='w-card' id='definities'><summary>Definities en rekenregels</summary>
+<ul class='w-sm'>
+<li><b>Positieve bevinding</b>: oordeel Conform. <b>Negatieve bevinding</b>: Afwijking of Verbeterpunt. Conform, Afwijking en Verbeterpunt bestaan alleen met een eigen waarneming van de inspecteur.</li>
+<li><b>Waarneming</b> (afgeleid van het oordeel, geen apart oordeel): ● Waargenomen = Conform, Afwijking of Verbeterpunt; ○ Alleen bevestigd = “Geen afwijking waargenomen”, alleen via de afsluitvraag; ? Niet beoordeeld; – niet van toepassing.</li>
+<li><b>Toetsing</b>: één waargenomen beoordeling van een TRA-regel in één WPI. <b>Unieke regel</b>: een TRA-regel uit de kennisbank, ongeacht hoe vaak getoetst.</li>
+<li><b>Over de termijn</b>: status Open en termijn vóór de peildatum. Een actie is pas <b>Afgerond</b> nadat de toetser heeft vastgesteld dat de verbeteractie is uitgevoerd. <b>Doorlooptijd</b>: dagen van de WPI tot afgerond.</li>
+<li><b>Kwartaal onvolledig</b>: de periode begint of eindigt binnen het kwartaal. Een richting wordt pas genoemd vanaf vier volledige kwartalen.</li>
+<li>Alle gegevens zijn fictief en gaan alleen over eigen monteurs; namen van monteurs komen niet voor.</li>
+</ul></details>
+</section>
+
+<section class='w-sec' id='programma' hidden>
+<div class='w-card' id='progr-kaart' data-host>
+<h2>Programma en uitvoering <span class='w-vca'>VCA 7.1</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<p class='w-kader w-sm'>VCA 7.1, minimumeisen: “Inspecties worden ten minste eenmaal per maand per operationele werkplek uitgevoerd door operationeel leidinggevenden.” Voetnoot 10: “Bij werkzaamheden van korte duur werkt het bedrijf een programma uit waarbij de bovenstaande frequentie naar verhouding wordt behaald, rekening houdend met de risico’s.” En: “De (operationele) directieleden nemen minimaal eenmaal per kwartaal deel aan een werkplekinspectie op een werklocatie.”</p>
+<div class='w-kader w-o w-sm'><b>Invulling door Noardling (voorstel uit de procedure).</b> Een project dat langer dan een maand loopt krijgt elke maand een WPI. Elk kort project met hijsen, een besloten ruimte of werk bij open water krijgt ten minste één WPI. Van de overige korte projecten wordt per kwartaal één op de vier geïnspecteerd. Daarnaast doet elke Montage Coördinator ten minste 1 WPI per maand en een directielid ten minste 1 per kwartaal. <b>De noemer</b> (lopende projecten per maand) komt uit de projectplanning en zit niet in deze voorbeelddata; de tabel toont daarom alleen het programma per inspecteur.</div>
+<h3>Uitgevoerd: <span data-draw='m' data-m='progr'>—</span></h3>
+<div class='w-scroll w-rel' data-draw='progr' data-source='programma wpis'></div>
+<h3>Directie-inspectie <span data-draw='m' data-m='dir'>—</span></h3>
+<div class='w-chips w-rel' data-draw='kwart' data-source='wpis'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='progr-kaart' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='soort' data-host>
+<h2>Coördinator tegenover directie <span class='w-vca'>VCA 7.1</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3><span data-draw='m' data-m='cvd'>—</span></h3>
+<div class='w-scroll'>
+<table class='w-tbl w-sticky' data-source='wpis regels acties'>
+<thead><tr><th>Kengetal</th><th class='w-num'>Coördinator</th><th class='w-num'>Directie</th></tr></thead>
+<tbody>
+<tr><td>WPI’s</td><td class='w-num'><b data-draw='t' data-t='c_wpis'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_wpis'>—</b></td></tr>
+<tr><td>Regels per WPI</td><td class='w-num'><b data-draw='t' data-t='c_rpw'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_rpw'>—</b></td></tr>
+<tr><td>Eigen waarneming</td><td class='w-num'><b data-draw='t' data-t='c_ja'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_ja'>—</b></td></tr>
+<tr><td>Alleen bevestigd</td><td class='w-num'><b data-draw='t' data-t='c_ab'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_ab'>—</b></td></tr>
+<tr><td>Afwijking + verbeterpunt per WPI</td><td class='w-num'><b data-draw='t' data-t='c_neg'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_neg'>—</b></td></tr>
+<tr><td>Waarnemingen buiten de TRA</td><td class='w-num'><b data-draw='t' data-t='c_buiten'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_buiten'>—</b></td></tr>
+<tr><td>Acties direct gecorrigeerd</td><td class='w-num'><b data-draw='t' data-t='c_direct'>—</b></td><td class='w-num'><b data-draw='t' data-t='d_direct'>—</b></td></tr>
+</tbody></table></div>
+<p class='w-sm w-mut'>Weinig directie-inspecties: één WPI bepaalt het gemiddelde sterk.</p>
+<div class='w-det w-rel' data-draw='detail' data-slot='soort' data-source='wpis regels acties'></div>
+</div>
+</section>
+
+<section class='w-sec' id='bevindingen' hidden>
+<div class='w-tilebox' id='bev-tegels' data-host>
+<div class='w-tilehead'>Bevindingen binnen de filters <span class='w-vb'>VOORBEELD — fictieve data</span></div>
+<div class='w-tiles' data-source='regels'>
+<div class='w-tile'><span>Beoordeelde regels</span><b data-draw='t' data-t='regels'>—</b><small>waarvan <span data-draw='t' data-t='waar'>—</span> met eigen waarneming</small></div>
+<div class='w-tile'><span>Positief (Conform)</span><b data-draw='t' data-t='pos'>—</b><small><span data-draw='t' data-t='pos_pct'>—</span> van de waargenomen regels</small></div>
+<div class='w-tile'><span>Afwijking + verbeterpunt</span><b data-draw='t' data-t='neg'>—</b><small>✕ <span data-draw='t' data-t='afw'>—</span> · △ <span data-draw='t' data-t='verb'>—</span></small></div>
+<div class='w-tile'><span>Zonder eigen waarneming</span><b data-draw='t' data-t='zonder'>—</b><small>○ <span data-draw='t' data-t='ab'>—</span> alleen bevestigd · ? <span data-draw='t' data-t='nee'>—</span> niet beoordeeld of n.v.t.</small></div>
+</div>
+<div class='w-det w-rel' data-draw='detail' data-slot='bev-tegels' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='oordelen' data-host>
+<h2>Oordelen per maand <span class='w-vca'>VCA 7.2</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<p class='w-kader w-sm'>VCA 7.2, vraag: “Vindt er een trendanalyse plaats van bij inspecties geconstateerde bevindingen (positieve en negatieve)?”</p>
+<h3><span data-draw='m' data-m='maand'>—</span></h3>
+<div class='w-leg'><span><i class='w-sw o-con'></i>✓ Conform</span><span><i class='w-sw o-ver'></i>△ Verbeterpunt</span><span><i class='w-sw o-afw'></i>✕ Afwijking</span><span><i class='w-sw o-gee'></i>○ Alleen bevestigd</span><span><i class='w-sw o-nb'></i>? Niet beoordeeld</span><span><i class='w-sw o-nvt'></i>– N.v.t.</span></div>
+<div class='w-two'>
+<div><p class='w-sm w-mut'>Aantal regels per oordeel</p><div class='w-rel' data-draw='maand' data-source='regels' style='min-height:16em'></div></div>
+<div><p class='w-sm w-mut'>Aandeel van de waargenomen regels: lijn ✓ Conform, streep ✕△ afwijking + verbeterpunt</p><div class='w-rel' data-draw='trend' data-source='regels' style='min-height:12em'></div></div>
+</div>
+<div class='w-det w-rel' data-draw='detail' data-slot='oordelen' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='classificatie' data-host>
+<h2>Bevindingen per klasse <span class='w-vca'>VCA 7.2</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<p class='w-kader w-sm'>VCA 7.2, minimumeis: “Bevindingen worden geclassificeerd.”</p>
+<h3><span data-draw='m' data-m='klasse'>—</span></h3>
+<div class='w-leg'><span><i class='w-sw o-afw'></i>✕ Afwijking</span><span><i class='w-sw o-ver'></i>△ Verbeterpunt</span><span><i class='w-sw o-con'></i>✓ Conform</span><span class='w-mut'>balk = alle waargenomen regels van de klasse</span></div>
+<div class='w-rel' data-draw='klasse' data-source='regels'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='classificatie' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='dekking' data-host>
+<h2>Waar is feitelijk gekeken? <span class='w-own'>Noardling-keuze</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3>Eigen waarneming bij <span data-draw='m' data-m='dek'>—</span></h3>
+<div class='w-leg'><span><i class='w-sw o-ja'></i>● Waargenomen</span><span><i class='w-sw o-ab'></i>○ Alleen bevestigd</span><span><i class='w-sw o-nb'></i>? Niet beoordeeld of n.v.t.</span></div>
+<div class='w-two'>
+<div><p class='w-sm w-mut'>Per inspecteur</p><div class='w-rel' data-draw='diep' data-by='inspecteur' data-source='regels'></div></div>
+<div><p class='w-sm w-mut'>Per maand</p><div class='w-rel' data-draw='diep' data-by='maand' data-source='regels'></div></div>
+</div>
+<div class='w-det w-rel' data-draw='detail' data-slot='dekking' data-source='wpis regels acties'></div>
+</div>
+</section>
+
+<section class='w-sec' id='tra' hidden>
+<div class='w-card' id='tra-rang' data-host>
+<h2>Vaakst afwijkende TRA-maatregelen <span class='w-own'>Noardling · koppeling met product-TRA</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3><span data-draw='m' data-m='tra'>—</span></h3>
+<div class='w-rel' data-draw='tra' data-source='regels kennisbank'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='tra-rang' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='tra-dim' data-host>
+<h2>Waar zitten de afwijkingen? <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3>Meeste afwijkingen en verbeterpunten: <span data-draw='mdim'>—</span></h3>
+<div class='w-tabs' role='group' aria-label='Indeling'>
+<button type='button' class='w-btn' data-dim='product' aria-pressed='true'>Per product</button>
+<button type='button' class='w-btn' data-dim='fase' aria-pressed='false'>Per fase</button>
+<button type='button' class='w-btn' data-dim='taak' aria-pressed='false'>Per taak</button>
+</div>
+<div class='w-rel' data-draw='dim' data-source='regels'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='tra-dim' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='buitentra' data-host>
+<h2>Buiten de TRA <span class='w-own'>Noardling · signaal dat een TRA een risico mist</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3><span data-draw='m' data-m='buiten'>—</span></h3>
+<div class='w-rel' data-draw='buiten' data-source='regels acties'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='buitentra' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='blind' data-host>
+<h2>Blinde vlekken <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3>Vaakst zonder eigen waarneming: <span data-draw='mnb'>—</span></h3>
+<div class='w-leg'><span><i class='w-sw o-ab'></i>○ Alleen bevestigd</span><span><i class='w-sw o-nb'></i>? Niet beoordeeld</span><span class='w-mut'>balk = alle keren dat het onderwerp voorkwam</span></div>
+<div class='w-rel' data-draw='nb' data-source='regels'></div>
+<h3><span data-draw='mkb'>—</span></h3>
+<p class='w-sm w-mut'>Per klasse: unieke kennisbankregels die minstens één keer zijn waargenomen. Product- en classificatiefilter gelden hier niet.</p>
+<div class='w-rel' data-draw='kbk' data-source='regels kennisbank'></div>
+<div class='w-rel' data-draw='prod' data-source='wpis regels kennisbank'></div>
+<div class='w-det w-rel' data-draw='detail' data-slot='blind' data-source='wpis regels acties'></div>
+</div>
+</section>
+
+<section class='w-sec' id='acties' hidden>
+<div class='w-tilebox' id='act-tegels' data-host>
+<div class='w-tilehead'>Acties binnen de filters <span class='w-vca'>VCA 7.1</span> <span class='w-vb'>VOORBEELD — fictieve data</span></div>
+<div class='w-tiles' data-source='acties'>
+<div class='w-tile'><span>Open</span><b data-draw='t' data-t='open'>—</b><small>waarvan <span data-draw='t' data-t='over'>—</span> over de termijn</small></div>
+<div class='w-tile'><span>Over de termijn</span><b data-draw='t' data-t='over'>—</b><small>oudste <span data-draw='t' data-t='oudste'>—</span> dagen</small></div>
+<div class='w-tile'><span>Afgerond na toetsing</span><b data-draw='t' data-t='afgerond'>—</b><small>waarvan <span data-draw='t' data-t='telaat'>—</span> na de termijn</small></div>
+<div class='w-tile'><span>Prioriteit kort: dagen</span><b data-draw='t' data-t='kort_gem'>—</b><small>norm <span data-draw='t' data-t='norm_kort'>—</span>; <span data-draw='t' data-t='kort_ok'>—</span> van <span data-draw='t' data-t='kort_n'>—</span> binnen norm</small></div>
+</div>
+<p class='w-sm w-mut'>Bron: <span data-draw='t' data-t='bron_insp'>—</span> inspectie · <span data-draw='t' data-t='bron_buiten'>—</span> buiten de TRA · <span data-draw='t' data-t='bron_idee'>—</span> idee van monteurs</p>
+<div class='w-det w-rel' data-draw='detail' data-slot='act-tegels' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='openacties' data-host>
+<h2>Open acties <span class='w-vca'>VCA 7.1</span> <span class='w-vca'>VCA 7.2</span> <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<p class='w-kader w-sm'>VCA 7.1, minimumeis: “Er is een actieplan met daarin: actiepunten, voortkomende uit de inspecties; de verantwoordelijken voor de uitvoering en toetsing; tijdsplanning.” VCA 7.2, document: “Overzicht verbeteracties”.</p>
+<h3><span data-draw='m' data-m='open'>—</span></h3>
+<table class='w-tbl w-cards w-actt' data-source='acties' data-row-key='actie'>
+<thead><tr><th data-field='actie'>Actienummer</th><th data-field='termijn'>Termijn</th><th>Status</th><th data-field='bevinding'>Bevinding</th><th data-field='verbeteractie'>Verbeteractie</th><th data-field='actiehouder'>Actiehouder</th><th data-field='toetser'>Toetser</th></tr></thead>
+<tbody data-draw='openrijen'></tbody>
+</table>
+<details class='w-sub2'><summary>Afgeronde acties (<span data-draw='nklaar'>—</span>), met datum van toetsing</summary>
+<table class='w-tbl w-cards w-klaart' data-source='acties' data-row-key='actie'>
+<thead><tr><th data-field='actie'>Actienummer</th><th data-field='bevinding'>Bevinding</th><th data-field='verbeteractie'>Verbeteractie</th><th data-field='actiehouder'>Actiehouder</th><th data-field='afgerond_op'>Afgerond op</th><th data-field='getoetst_op'>Getoetst op</th><th data-field='toetser'>Toetser</th></tr></thead>
+<tbody data-draw='klaarrijen'></tbody>
+</table>
+</details>
+<div class='w-det w-rel' data-draw='detail' data-slot='openacties' data-source='wpis regels acties'></div>
+</div>
+<div class='w-card' id='doorlooptijd' data-host>
+<h2>Doorlooptijd en verdeling <span class='w-vb'>VOORBEELD — fictieve data</span></h2>
+<h3>Prioriteit <span data-draw='m' data-m='prio'>—</span></h3>
+<table class='w-tbl w-cards w-normt' data-source='acties'>
+<thead><tr><th>Prioriteit</th><th>Norm</th><th>Afgerond</th><th class='w-num'>Gemiddeld</th><th>Binnen norm</th><th class='w-num'>Nog open</th></tr></thead>
+<tbody data-draw='normrijen'></tbody>
+</table>
+<div class='w-leg'><span><i class='w-sw o-con'></i>✓ Afgerond</span><span><i class='w-sw o-ver'></i>△ Open, binnen termijn</span><span><i class='w-sw o-afw'></i>✕ Over de termijn</span></div>
+<div class='w-two'>
+<div><p class='w-sm w-mut'>Per prioriteit</p><div class='w-rel' data-draw='act' data-by='prioriteit' data-source='acties'></div></div>
+<div><p class='w-sm w-mut'>Per actiehouder (functie)</p><div class='w-rel' data-draw='act' data-by='actiehouder' data-source='acties'></div></div>
+</div>
+<div class='w-det w-rel' data-draw='detail' data-slot='doorlooptijd' data-source='wpis regels acties'></div>
+</div>
+</section>
+
+<div class='w-ban w-ban2'>VOORBEELD — fictieve data</div>
+</div></div>
+<script src='app.js'></script>

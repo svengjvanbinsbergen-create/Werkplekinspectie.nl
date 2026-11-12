@@ -1,0 +1,15 @@
+# Voorstel nieuwe methode werkplekinspecties — opdracht ronde 5 (aansluiting op dataset v7)
+
+Je neemt het werk over van een eerdere bouwer. Zijn bouwopzet: `/home/claude/wpi/build/bouw_v4.py`, inhoud in `deel_v4.py`, samenvoegen met `samen.py`, bouwen met `TAB=17 bash run_v4.sh toc4.json` (twee keer, voor de paginanummers in de inhoudsopgave). Het lettertype Muli (Mulish) staat al in ~/.fonts. Huidige uitvoer: `/home/claude/wpi/run/out/Voorstel nieuwe methode werkplekinspecties.docx` en `.pdf` (hoofddocument 20 pagina's, bijlage A 6 pagina's). Lees eerst `/home/claude/wpi/run/brief.md`, dan de bouwbestanden, en render de huidige PDF om te zien wat er staat. Werk de inhoud bij; begin niet opnieuw. Huisstijl: skill `anthropic-skills:noardling-docx-bouwer`.
+
+## Wat er moet veranderen
+De dataset is versie 7 (`/home/claude/wpi/run/data/voorbeelddata.json`), op aanwijzing van de criticus van het voorbeeldrapport. Voor WPI-20261105-DAM-C2:
+- Ref A is nu een Afwijking (verouderde TRA op een lopende klus = maatregel niet goed toegepast). Telling: 9 Conform, 4 Afwijking (A, G, DAM-2.06, DAM-2.07), 0 Verbeterpunt, 2 alleen bevestigd (F, H), 2 niet beoordeeld (DAM-2.02, DAM-2.08); dekking 13 / 2 / 2.
+- Zeven acties: -1 (A, TRA vervangen, kort, 12-11-2026, Werkvoorbereider), -2 (G), -3 (DAM-2.06, vooraf reinigen, Werkvoorbereider), -4 (DAM-2.07, direct, ter plaatse gecorrigeerd en getoetst, afgerond), -5 (DAM-2.07, idee monteurs), nieuw -6 (A, LMRA-hijsvoorstel, planmatig, 31-12-2026, Coördinator 2), nieuw -7 (DAM-2.06, toolbox hygiëne, kort, 19-11-2026, Coördinator 2). Haal de details uit de data.
+- Nieuwe regel: het oordeel van een actie is altijd gelijk aan het oordeel van de regel waar ze bij hoort. Een idee van de monteurs bij een regel met oordeel Afwijking is dus ook een actie met oordeel Afwijking (bron "Idee monteurs"). Pas de voorbeelddialoog aan: Claude vraagt bij het idee niet om een apart oordeel, maar bevestigt: "Ik noteer het idee als extra actie bij DAM-2.07, bron idee monteurs. Wie pakt het op en wanneer?" Neem de regel op in 5.3/5.8 en bijlage A waar het oordeel van een actie staat.
+- Nieuw veld per actie: "Direct genomen maatregel" (wat ter plaatse is gedaan om het lopende werk veilig te maken; de actie kan dan toch open blijven). Neem het op in bijlage A bij de actievelden en in 5.8 in één zin: "direct gecorrigeerd" betekent dat de bevinding volledig is opgelost; een direct genomen maatregel maakt alleen het lopende werk veilig.
+- Pas alle tellingen en voorbeelden in de samenvatting, de dialoog en hoofdstuk 3 aan. Zoek in de hele tekst naar oude aantallen ("5 acties", "1 verbeterpunt", "3 afwijkingen" e.d.) en naar de oude prioriteit/termijn van -1.
+- Zet de inleidende tekst van hoofdstuk 1 bij haar tabel (nu staat de inleiding op pagina 3 en de tabel op pagina 4).
+- Houd het hoofddocument op maximaal 20 pagina's; geen pagina meer dan een kwart leeg; geen afgebroken woorden of codes.
+
+Controleer opnieuw alle PDF-pagina's als afbeelding. Lever op hetzelfde pad.

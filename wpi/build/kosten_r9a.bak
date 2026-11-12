@@ -1,0 +1,80 @@
+"""Voorbeeldberekening programma en kosten uit de fictieve projectplanning (voorbeelddata.json).
+Alle getallen in het voorstel over programma en kosten komen hieruit; niets met de hand."""
+import json, math, datetime as dt
+D = json.load(open("/home/claude/wpi/run/data/voorbeelddata.json", encoding="utf-8"))
+MAANDEN = ["2026-%02d" % m for m in range(5, 11)]          # mei t/m okt: zes volledige maanden vóór de peildatum 11-11-2026
+KW = {"Q2": ["2026-05", "2026-06"], "Q3": ["2026-07", "2026-08", "2026-09"], "Q4": ["2026-10"]}
+MIN_WD = 10   # zoals het dashboard: een maand telt bij een lang project pas vanaf tien werkdagen op het project
+def d(s): return dt.date.fromisoformat(s)
+def kenmerk(p): return p["hijsen_mobiele_kraan"] or p["besloten_ruimte_vergunning"] or p["open_water"]
+def lang(p): return (d(p["eind"]) - d(p["start"])).days + 1 > 31
+def maanden_van(p):
+    s, e = d(p["start"]), d(p["eind"]); out = []
+    for m in MAANDEN:
+        y, mm = map(int, m.split("-")); b = dt.date(y, mm, 1)
+        nb = dt.date(y + (mm == 12), mm % 12 + 1, 1)
+        if s < nb and e >= b:
+            b2, e2 = max(s, b), min(e, nb - dt.timedelta(days=1))
+            wd = sum(1 for i in range((e2 - b2).days + 1) if (b2 + dt.timedelta(days=i)).weekday() < 5)
+            if wd >= MIN_WD: out.append(m)
+    return out
+def kw_van(m): return next(k for k, v in KW.items() if m in v)
+start_m = lambda p: max(p["start"][:7], MAANDEN[0])
+P = D["projecten"]
+R = {k: {"a": 0, "b": 0, "c": 0} for k in KW}
+per_maand = {m: 0 for m in MAANDEN}
+for p in P:
+    if lang(p):
+        for m in maanden_van(p): R[kw_van(m)]["a"] += 1; per_maand[m] += 1
+    elif p["eind"][:7] > MAANDEN[-1]:
+        continue          # kort project dat na oktober eindigt: valt buiten de zes maanden (zoals het dashboard: maand van het einde)
+    elif kenmerk(p):
+        m = max(p["eind"][:7], MAANDEN[0]); R[kw_van(m)]["b"] += 1; per_maand[m] += 1
+    else:
+        if p["eind"][:7] <= MAANDEN[-1]: R[kw_van(max(p["eind"][:7], MAANDEN[0]))]["c"] += 1
+for k in KW:
+    c4 = math.ceil(R[k]["c"] / 4); R[k]["c4"] = c4; R[k]["tot"] = R[k]["a"] + R[k]["b"] + c4
+    # steekproef c4 toerekenen aan de eerste maand van het kwartaal
+    per_maand[KW[k][0]] += c4
+TOT7 = sum(R[k]["tot"] for k in KW)
+assert TOT7 == sum(per_maand.values())
+v = [per_maand[m] for m in MAANDEN]
+drie = [sum(v[i:i + 3]) for i in range(len(v) - 2)]
+JAAR_LAAG, JAAR_HOOG = min(drie) * 4, max(drie) * 4
+JAAR_MID = round(TOT7 * 12 / len(MAANDEN))
+NM = len(MAANDEN)
+UITGEV = {m: sum(r['uitgevoerd'] for r in D['programma'] if r['maand'] == m and r['inspecteur'].startswith('Co')) for m in MAANDEN}
+# aannames (expliciet in het voorstel genoemd)
+MIN_LOC_L, MIN_LOC_H, MIN_AF = 45, 70, 15   # korte WPI 45 min; voorbeeld-WPI DAM-C2 09:40-10:50 = 70 min; afronden: proefnorm 8.2
+MIN_L, MIN_H = MIN_LOC_L + MIN_AF, MIN_LOC_H + MIN_AF
+N_COORD, N_DIR, NORM_COORD, NORM_DIR = 2, 1, 24, 4
+def coord_per_jaar(benodigd): return max(benodigd - N_DIR * NORM_DIR, N_COORD * NORM_COORD)
+CJ_L, CJ_H = coord_per_jaar(JAAR_LAAG), coord_per_jaar(JAAR_HOOG)
+WPM_L, WPM_H = CJ_L / N_COORD / 12, CJ_H / N_COORD / 12          # WPI's per coördinator per maand
+UPM_L, UPM_H = WPM_L * MIN_L / 60, WPM_H * MIN_H / 60            # uren per coördinator per maand
+UPJ_L, UPJ_H = UPM_L * 12, UPM_H * 12
+UDIR_L, UDIR_H = NORM_DIR * MIN_L / 60, NORM_DIR * MIN_H / 60     # uren per directielid per jaar
+GEDAAN = sum(UITGEV.values())
+INRICHTING = [  # (onderdeel, uren, wie) -- aannames
+    ("Skill: proefvelden toevoegen en testen", 8, "Opsteller"),
+    ("Actieoverzicht in de projectmap", 4, "Opsteller"),
+    ("Terugvalformulier", 4, "Opsteller"),
+    ("Instructie inspecteurs, opstellen", 4, "Opsteller"),
+    ("Uitleg aan drie inspecteurs (een kwartier elk)", 0.75, "Opsteller, inspecteurs"),
+    ("QMS-map voor WPI-rapporten", 2, "QHSE-Manager"),
+    ("Nulmeting: AMS-WPI's 2026 in klassen", 16, "QHSE-Manager"),
+    ("Word-sjabloon en kennisbank-PDF's", 12, "Opsteller"),
+    ("Dashboard koppelen aan echte rapporten", 8, "Opsteller"),
+]
+INR_TOT = sum(u for _, u, _ in INRICHTING)
+def nl(x, n=1):
+    s = f"{x:.{n}f}".replace(".", ",")
+    return s[:-2] if s.endswith(",0") else s
+if __name__ == "__main__":
+    print("per kwartaal", R); print("per maand", per_maand, "3-mnd", drie)
+    print("6 mnd", TOT7, "jaar", JAAR_LAAG, JAAR_MID, JAAR_HOOG, "coord gedaan", GEDAAN)
+    print("coord/jaar", CJ_L, CJ_H, "wpi pc pm", WPM_L, WPM_H, "min", MIN_L, MIN_H)
+    print("uur pc pm", UPM_L, UPM_H, "pj", UPJ_L, UPJ_H, "dir", UDIR_L, UDIR_H, "inrichting", INR_TOT)
+INR_OPST = sum(u for _, u, w in INRICHTING if w.startswith("Opsteller"))
+INR_QHSE = sum(u for _, u, w in INRICHTING if w.startswith("QHSE"))
+assert INR_OPST + INR_QHSE == INR_TOT

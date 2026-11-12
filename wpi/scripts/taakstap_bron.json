@@ -1,0 +1,4664 @@
+{
+ "DAM-1.01": {
+  "taakstap": "Damwand (indien gemotoriseerd/geautomatiseerd) uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "DAM-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: bij gemotoriseerde/geautomatiseerde damwand kan ontbreken of negeren van LOTOTO-slot leiden tot onverwachte beweging van de damwand tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "DAM-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "DAM-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "DAM-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "DAM-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (damwand); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "DAM-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "DAM-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "DAM-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "DAM-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van het inlaatkanaal/de put; verlies van balans of uitglijden leidt tot val met risico op ernstig letsel.",
+  "taak_bron": "Verwijderen damwand"
+ },
+ "DAM-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "DAM-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "DAM-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "DAM-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "DAM-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "DAM-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in het inlaatkanaal/de put zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "DAM-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de damwand plotseling verschuiven wanneer de damwand niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "DAM-3.01": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van het inlaatkanaal/de put; verlies van balans of uitglijden leidt tot val met risico op ernstig letsel.",
+  "taak_bron": "Plaatsen damwand"
+ },
+ "DAM-3.02": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "DAM-3.03": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "DAM-3.04": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "DAM-3.05": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende damwand tijdens hijsen: onvoldoende beheersing van de damwand en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de damwand tegen de geleiding, kanaalwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "DAM-3.06": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "DAM-3.07": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen damwand uit store rack of beknelling bij plaatsen: damwand wordt na test in store rack opgeslagen op dek; bij niet-correcte plaatsing of beschadigde rack kan damwand verschuiven of vallen;",
+  "taak_bron": ""
+ },
+ "DAM-3.08": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de damwand kan tegen de geleiding, kanaalwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "DAM-3.09": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op damwandonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "DAM-3.10": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "DAM-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 42,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "DAM-5.01": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de damwand (indien gemotoriseerd/geautomatiseerd)"
+ },
+ "DAM-5.02": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "DAM-5.03": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door bewegende damwand (bij gemotoriseerde/geautomatiseerde uitvoering)",
+  "taak_bron": ""
+ },
+ "CPV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "CPV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "CPV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "CPV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "CPV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "CPV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "CPV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "CPV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "CPV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "CPV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren (compactvijzel)"
+ },
+ "CPV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "CPV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "CPV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "CPV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "CPV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "CPV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "CPV-3.01": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (Compactvijzel)"
+ },
+ "CPV-3.02": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "CPV-3.03": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "CPV-3.04": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "CPV-3.05": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "CPV-3.06": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "CPV-3.07": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "CPV-3.08": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "CPV-3.09": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "CPV-3.10": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "CPV-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 42,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "CPV-5.01": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Compact-Vijzelinstallatie"
+ },
+ "CPV-5.02": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "CPV-5.03": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ },
+ "SLI-1.01": {
+  "taakstap": "Slibindikker uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "SLI-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de slibindikker tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "SLI-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "SLI-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "SLI-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "SLI-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (slibindikkerunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "SLI-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "SLI-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "SLI-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "SLI-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de slibindikkerput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren (slibindikkerafdekking, stuwkant, slibindikkerlichaam, aandrijving, bovenlager)"
+ },
+ "SLI-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SLI-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SLI-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SLI-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SLI-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op slibindikkeronderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SLI-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de slibindikkerput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "SLI-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de slibindikker plotseling verschuiven wanneer de slibindikker niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "SLI-2.09": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van rand bezinktank of in tank: monteur valt in tank met als gevolg breuken, dodelijk letsel of verdrinking in slibresten/restwater.",
+  "taak_bron": ""
+ },
+ "SLI-2.10": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van ladder bij afdalen in tank of beklimmen brug-niveau: met als gevolg val van enkele meters en breuken of zwaar letsel;",
+  "taak_bron": ""
+ },
+ "SLI-3.01": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de slibindikkerput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (bovenlager, slibindikkerlichaam, onderlager, aandrijving)"
+ },
+ "SLI-3.02": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SLI-3.03": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SLI-3.04": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SLI-3.05": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende slibindikker tijdens hijsen: onvoldoende beheersing van de slibindikkerhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de slibindikker tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "SLI-3.06": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SLI-3.07": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de slibindikker kan tegen de slibindikkerwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "SLI-3.08": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op slibindikkeronderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SLI-3.09": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "SLI-3.10": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van rand bezinktank of in tank: monteur valt in tank met als gevolg breuken, dodelijk letsel of verdrinking in slibresten/restwater.",
+  "taak_bron": ""
+ },
+ "SLI-3.11": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van ladder bij afdalen in tank of beklimmen brug-niveau: met als gevolg val van enkele meters en breuken of zwaar letsel;",
+  "taak_bron": ""
+ },
+ "SLI-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 45,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "SLI-5.01": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Slibindikkerinstallatie"
+ },
+ "SLI-5.02": {
+  "taakstap": null,
+  "rij": 50,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "KET-1.01": {
+  "taakstap": "Kettingreiniger uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Automatische bediening niet uitgeschakeld: kettingreiniger werkt op tijd- of niveau-sturing en kan tijdens werk plotseling inschakelen, met als gevolg dat monteur in werkzone door bewegende ketting/tandbalken bekneld raakt of meegetrokken wordt met ernstig of dodelijk letsel.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) Kettingreiniger"
+ },
+ "KET-1.02": {
+  "taakstap": "Beluchter uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": ""
+ },
+ "KET-1.03": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de kettingreiniger tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "KET-1.04": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "KET-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "KET-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "KET-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "KET-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "KET-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "KET-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van het bassin; verlies van balans of uitglijden leidt tot val in het bassin met risico op ernstig letsel.",
+  "taak_bron": "Monteren kettingreiniger"
+ },
+ "KET-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "KET-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "KET-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Opgeslagen veerkracht in spanmechanisme van de ketting komt plotseling vrij, waardoor de ketting mogelijk kan wegswiepen",
+  "taak_bron": ""
+ },
+ "KET-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende kettingreiniger tijdens hijsen: onvoldoende beheersing en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de kettingreiniger tegen de bassinwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel.",
+  "taak_bron": ""
+ },
+ "KET-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "KET-3.01": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van het bassin; verlies van balans of uitglijden leidt tot val in het bassin met risico op ernstig letsel.",
+  "taak_bron": "Monteren kettingreiniger"
+ },
+ "KET-3.02": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "KET-3.03": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "KET-3.04": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Opgeslagen veerkracht in spanmechanisme van de ketting komt plotseling vrij, waardoor de ketting mogelijk kan wegswiepen",
+  "taak_bron": ""
+ },
+ "KET-3.05": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende kettingreiniger tijdens hijsen: onvoldoende beheersing en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de kettingreiniger tegen de bassinwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel.",
+  "taak_bron": ""
+ },
+ "KET-3.06": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "KET-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 36,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "KET-5.01": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Kettingreiniger"
+ },
+ "KET-5.02": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling werkende Kettingreiniger",
+  "taak_bron": ""
+ },
+ "KET-5.03": {
+  "taakstap": null,
+  "rij": 42,
+  "bron": "leeg",
+  "risico_bron": "Bij vrijgave van de installatie kan de bandscreen direct opstarten via tijd-, niveau- of drukverschil-sturing zonder dat de monteur of omstanders dit verwachten, met risico op beknelling door bewegende transportketting/zeefpanelen.",
+  "taak_bron": ""
+ },
+ "LDX-1.01": {
+  "taakstap": "Flowbooster uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) bestaande flowbooster"
+ },
+ "LDX-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de flowbooster tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "LDX-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "LDX-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "LDX-1.05": {
+  "taakstap": null,
+  "rij": 10,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "LDX-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "LDX-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "LDX-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "LDX-2.01": {
+  "taakstap": null,
+  "rij": 17,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Demonteren aandrijving, tandwielkast en flowbooster"
+ },
+ "LDX-2.02": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "LDX-2.03": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "LDX-2.04": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "LDX-2.05": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "LDX-2.06": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+  "taak_bron": ""
+ },
+ "LDX-3.01": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Monteren flowbooster, tandwielkast en aandrijving"
+ },
+ "LDX-3.02": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "LDX-3.03": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "LDX-3.04": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "LDX-3.05": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "LDX-3.06": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+  "taak_bron": ""
+ },
+ "LDX-3.07": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "LDX-4.01": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte in droog bassin: monteur werkt vanaf de bassinrand, via een ladder of op de bodem van het droge bassin om het stromingsprofiel te positioneren; val van of in het bassin kan leiden tot ernstig letsel.",
+  "taak_bron": "Monteren stromingsprofiel rondom FlowBooster (in droge put)"
+ },
+ "LDX-4.02": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling bij positioneren stromingsprofiel: handen, vingers of voeten kunnen bekneld raken tussen het profiel en de bassinwand.",
+  "taak_bron": ""
+ },
+ "LDX-4.03": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last bij hijsen stromingsprofiel in het bassin: onjuist aanslaan of onverwachte beweging tijdens het neerlaten in het droge bassin;",
+  "taak_bron": ""
+ },
+ "LDX-4.04": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting bij montage in geforceerde houding.",
+  "taak_bron": ""
+ },
+ "LDX-5.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 43,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "LDX-6.01": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de flowbooster"
+ },
+ "LDX-6.02": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "TRF-1.01": {
+  "taakstap": "Drumscreen uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "TRF-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van het drumscreen tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "TRF-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "TRF-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "TRF-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "TRF-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (trommelfilter); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "TRF-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "TRF-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "TRF-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "TRF-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwachte draaibeweging trommel tijdens demontage: gedeeltelijk gedemonteerde trommel kan door zwaartekracht onverwacht roteren wanneer aandrijving al losgekoppeld is en borging onvoldoende.",
+  "taak_bron": "Demonteren van trommelfilter"
+ },
+ "TRF-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van hoogte tijdens steigeropbouw in koelwaterput: monteur bouwt rolsteiger of tijdelijke werkvloer op vanaf dek tot werkniveau (hoogteverschil ~12,5m);",
+  "taak_bron": ""
+ },
+ "TRF-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "TRF-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "TRF-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "TRF-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiend trommelfilter tijdens hijsen: onvoldoende beheersing van de trommelpositie en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van het trommelfilter tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "TRF-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "TRF-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, het trommelfilter kan tegen de putwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "TRF-3.01": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwachte draaibeweging trommel tijdens montage: gedeeltelijk samengestelde trommel kan door zwaartekracht onverwacht roteren wanneer aandrijving nog niet aangesloten is en borging onvoldoende.",
+  "taak_bron": "Monteren van trommelfilter"
+ },
+ "TRF-3.02": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Val van hoogte tijdens steigeropbouw in koelwaterput: monteur bouwt rolsteiger of tijdelijke werkvloer op vanaf dek tot werkniveau (hoogteverschil ~12,5m);",
+  "taak_bron": ""
+ },
+ "TRF-3.03": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "TRF-3.04": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "TRF-3.05": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "TRF-3.06": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiend trommelfilter tijdens hijsen: onvoldoende beheersing van de trommelpositie en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van het trommelfilter tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "TRF-3.07": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "TRF-3.08": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, het trommelfilter kan tegen de putwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "TRF-3.09": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "TRF-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 41,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "TRF-5.01": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van het Drumscreen"
+ },
+ "TRF-5.02": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen aandrijving",
+  "taak_bron": ""
+ },
+ "TRF-5.03": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiend trommelfilter",
+  "taak_bron": ""
+ },
+ "BEL-1.01": {
+  "taakstap": "Beluchter uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) bestaande beluchter"
+ },
+ "BEL-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de beluchter tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "BEL-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "BEL-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "BEL-1.05": {
+  "taakstap": null,
+  "rij": 10,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "BEL-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "BEL-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "BEL-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "BEL-2.01": {
+  "taakstap": null,
+  "rij": 17,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Hand-arm trillingen en gehoorschade bij langdurig gebruik slagmoersleutel; wegspringen van bouten/moeren.",
+  "taak_bron": "Demonteren bestaande beluchter"
+ },
+ "BEL-2.02": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "BEL-2.03": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging tijdens hijswerken; risico voor monteurs en omstanders.",
+  "taak_bron": ""
+ },
+ "BEL-2.04": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische agentia bij contact met afvalwater/slib: aerosolen en spatten, risico op infectie.",
+  "taak_bron": ""
+ },
+ "BEL-2.05": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": ""
+ },
+ "BEL-3.01": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": "Monteren nieuwe beluchter"
+ },
+ "BEL-3.02": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BEL-3.03": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische agentia bij contact met afvalwater/slib: aerosolen en spatten, risico op infectie.",
+  "taak_bron": ""
+ },
+ "BEL-3.04": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij uitlijnen en monteren tandwielkast op flens: bij nauwkeurig positioneren van zwevende last kunnen handen bekneld raken.",
+  "taak_bron": ""
+ },
+ "BEL-3.05": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": ""
+ },
+ "BEL-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 33,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "BEL-5.01": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Beluchter"
+ },
+ "SHV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "SHV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "SHV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "SHV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "SHV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "SHV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "SHV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "SHV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "SHV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "SHV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren Semi Hydrovijzel"
+ },
+ "SHV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SHV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SHV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden.",
+  "taak_bron": ""
+ },
+ "SHV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "SHV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SHV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "SHV-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SHV-2.09": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Uit de trog glijden van vijzel bij het hijsen.",
+  "taak_bron": ""
+ },
+ "SHV-3.01": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren Sem Hydrovijzel"
+ },
+ "SHV-3.02": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SHV-3.03": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SHV-3.04": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SHV-3.05": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "SHV-3.06": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SHV-3.07": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "SHV-3.08": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SHV-3.09": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Uit de trog glijden van vijzel bij het hijsen.",
+  "taak_bron": ""
+ },
+ "SHV-3.10": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "SHV-4.01": {
+  "taakstap": null,
+  "rij": 44,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+ },
+ "SHV-4.02": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+  "taak_bron": ""
+ },
+ "SHV-4.03": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SHV-4.04": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "SHV-5.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 51,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "SHV-6.01": {
+  "taakstap": null,
+  "rij": 55,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Vijzelinstallatie"
+ },
+ "SHV-6.02": {
+  "taakstap": null,
+  "rij": 56,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "SHV-6.03": {
+  "taakstap": null,
+  "rij": 57,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ },
+ "BBL-1.01": {
+  "taakstap": "borstelbeluchter uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "BBL-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de borstelbeluchter tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "BBL-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "BBL-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "BBL-1.05": {
+  "taakstap": null,
+  "rij": 10,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (borstelbeluchter); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "BBL-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "BBL-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "BBL-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "BBL-2.01": {
+  "taakstap": null,
+  "rij": 17,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Demonteren aandrijving, tandwielkast en borstelbeluchter"
+ },
+ "BBL-2.02": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BBL-2.03": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "BBL-2.04": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "BBL-2.05": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "BBL-2.06": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+  "taak_bron": ""
+ },
+ "BBL-3.01": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Monteren borstelbeluchter, tandwielkast en aandrijving"
+ },
+ "BBL-3.02": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BBL-3.03": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "BBL-3.04": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "BBL-3.05": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "BBL-3.06": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op de werkplek.",
+  "taak_bron": ""
+ },
+ "BBL-3.07": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "BBL-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 36,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "BBL-5.01": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Borstelbeluchter"
+ },
+ "BBL-5.02": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "DBL-1.01": {
+  "taakstap": "Beluchter uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) bestaande beluchter"
+ },
+ "DBL-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de beluchter tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "DBL-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "DBL-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "DBL-1.05": {
+  "taakstap": null,
+  "rij": 10,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "DBL-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "DBL-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "DBL-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "DBL-2.01": {
+  "taakstap": null,
+  "rij": 17,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Demonteren bestaande drijvende beluchter uit water"
+ },
+ "DBL-2.02": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen bij losmaken zware verankeringskettingen: handen kunnen bekneld raken tussen ketting en bevestigingspunt.",
+  "taak_bron": ""
+ },
+ "DBL-2.03": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Monteur kan door instabiliteit, misstap, golfslag of natte/gladde oppervlakken in water vallen.",
+  "taak_bron": ""
+ },
+ "DBL-2.04": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "DBL-2.05": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende last boven water bij wind: installatie kan pendelen en tegen oever of infrastructuur botsen; biologische agentia in waterspatten.",
+  "taak_bron": ""
+ },
+ "DBL-2.06": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische agentia bij contact met afvalwater/algen op drijvers en beluchter: aerosolen en spatten, risico op infectie.",
+  "taak_bron": ""
+ },
+ "DBL-3.01": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in bassin via open gat in dek; verlies van balans of uitglijden op nat dek leidt tot val in bassin.",
+  "taak_bron": "Aankomst, lossen en assemblage"
+ },
+ "DBL-3.02": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "DBL-3.03": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij bevestigen hijsmiddelen en positioneren componenten.",
+  "taak_bron": ""
+ },
+ "DBL-3.04": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "DBL-3.05": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken onder hangende last bij plaatsen bouten van onderaf.",
+  "taak_bron": ""
+ },
+ "DBL-3.06": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "DBL-4.01": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": "Tewaterlating, betreden platform en verankering"
+ },
+ "DBL-4.02": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "monteur kan door instabiliteit, misstap, natte/gladde oppervlakken in water vallen.",
+  "taak_bron": ""
+ },
+ "DBL-4.03": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen bij bevestigen verankeringskettingen aan ankerpunten: handen kunnen bekneld raken tussen ketting en bevestigingspunt. Overboord vallen tijdens verplaatsen.",
+  "taak_bron": ""
+ },
+ "DBL-5.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 41,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "DBL-6.01": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Drijvende Beluchter"
+ },
+ "SCV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "SCV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "SCV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "SCV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "SCV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "SCV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "SCV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "SCV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "SCV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "SCV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren (Aandrijving, Tandwielkast & Vijzelunit)"
+ },
+ "SCV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SCV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SCV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SCV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SCV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SCV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "SCV-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "SCV-3.01": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (Vijzelunit, Tandwielkas & Aandrijving)"
+ },
+ "SCV-3.02": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SCV-3.03": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SCV-3.04": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SCV-3.05": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "SCV-3.06": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SCV-3.07": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "SCV-3.08": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SCV-3.09": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof bij eventueel boren.",
+  "taak_bron": ""
+ },
+ "SCV-3.10": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Uit de trog glijden van vijzel bij het hijsen.",
+  "taak_bron": ""
+ },
+ "SCV-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 43,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "SCV-5.01": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie bij het inschakelen.",
+  "taak_bron": "Inbedrijfstelling van de Semi-Compact-Vijzelinstallatie"
+ },
+ "SCV-5.02": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen bij onverwachte rotatie van de vijzel.",
+  "taak_bron": ""
+ },
+ "SCV-5.03": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Persoon bevindt zich nog in de gevarenzone van de draaiende vijzel.",
+  "taak_bron": ""
+ },
+ "ITV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "ITV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "ITV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "ITV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "ITV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "ITV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "ITV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "ITV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "ITV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "ITV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen zware componenten tijdens het samenstellen, positioneren en vastzetten.",
+  "taak_bron": "Monteren instorttrog-vijzel-combinatie (voorbereiding, hijsen, uitlijning)"
+ },
+ "ITV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "ITV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": ""
+ },
+ "ITV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "ITV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "ITV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "ITV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "ITV-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "ITV-3.01": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+ },
+ "ITV-3.02": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+  "taak_bron": ""
+ },
+ "ITV-3.03": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "ITV-3.04": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "ITV-4.01": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": "Afmonteren (stuwkant, vijzelafdekking)"
+ },
+ "ITV-4.02": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "ITV-4.03": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op de rand van de vijzelput om vijzelonderdelen te begeleiden; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": ""
+ },
+ "ITV-4.04": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "ITV-4.05": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "ITV-5.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 45,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "ITV-6.01": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Vijzelinstallatie"
+ },
+ "ITV-6.02": {
+  "taakstap": null,
+  "rij": 50,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "ITV-6.03": {
+  "taakstap": null,
+  "rij": 51,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ },
+ "ROO-1.01": {
+  "taakstap": "Bedieningsmodus uitschakelen",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen door automatische bediening: de loopwagen of grijper kan tijdens onderhoud onverwacht starten, met als gevolg ernstig door beknelling.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) Roosterreiniger"
+ },
+ "ROO-1.02": {
+  "taakstap": "Roosterreiniger uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen tijdens uitschakelhandeling: foutieve volgorde of overslaan van schakelstap leidt tot draaiende installatie waarbij monteur in de buurt van bewegende delen staat.",
+  "taak_bron": ""
+ },
+ "ROO-1.03": {
+  "taakstap": "Roosterreiniger uitschakelen via schakelkast (handmatig commando)",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": ""
+ },
+ "ROO-1.04": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de roosterreiniger tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "ROO-1.05": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "ROO-1.06": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "ROO-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "ROO-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "ROO-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "ROO-1.10": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "ROO-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij losmaken van rails, grippers en bordessen: losdraaien bout- of penverbindingen in nauwe constructie.",
+  "taak_bron": "Demontage Roosterreiniger installatie"
+ },
+ "ROO-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij losnemen grippers en werkbordessen boven het inlaatkanaal; verlies van balans of uitglijden leidt tot val met letsel.",
+  "taak_bron": ""
+ },
+ "ROO-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: uithijsen van grippers, rails en draagkolommen; onjuist aanslaan, complex zwaartepunt of onverwachte beweging tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "ROO-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan / beschadiging kabeltracé: ondergrond onvoldoende draagkrachtig of kraan op ondergronds kabeltracé.",
+  "taak_bron": ""
+ },
+ "ROO-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte of omvallen van steiger/hoogwerker bij toegang tot demontagepositie boven dek/inlaatkanaal.",
+  "taak_bron": ""
+ },
+ "ROO-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Snijgevaar door scherpe randen van versleten roosterdelen, harken, tanden of grippers bij hanteren afgedankt materiaal.",
+  "taak_bron": ""
+ },
+ "ROO-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: tillen en manoeuvreren van zware gedemonteerde onderdelen in ongemakkelijke houding bij afvoer.",
+  "taak_bron": ""
+ },
+ "ROO-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken in besloten ruimte (inlaatkanaal/put): tekort aan zuurstof, ophoping H2S/CO/methaan, beperkte vluchtweg tijdens demontage in de put.",
+  "taak_bron": ""
+ },
+ "ROO-2.09": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in inlaatkanaal/put: verlies van balans of uitglijden op nat dek/steiger leidt tot val in het kanaal.",
+  "taak_bron": ""
+ },
+ "ROO-3.01": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: tillen en manoeuvreren van zware onderdelen in ongemakkelijke houding.",
+  "taak_bron": "Montage roosterreiniger-installatie"
+ },
+ "ROO-3.02": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van kwartsstof en gehoorschade bij boren in beton voor ankerbouten in galmende betonnen ruimte.",
+  "taak_bron": ""
+ },
+ "ROO-3.03": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Huidirritatie en chemische verbranding bij contact met natte cementmortel/grout bij aanstorten van ankers.",
+  "taak_bron": ""
+ },
+ "ROO-3.04": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij opbouwen steiger of werken vanuit hoogwerker boven dek/inlaatkanaal.",
+  "taak_bron": ""
+ },
+ "ROO-3.05": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Omvallen of instabiliteit van steiger of hoogwerker door onvoldoende draagkrachtige of ongelijke ondergrond.",
+  "taak_bron": ""
+ },
+ "ROO-3.06": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan / beschadiging kabeltracé: ondergrond onvoldoende draagkrachtig of kraan op ondergronds kabeltracé.",
+  "taak_bron": ""
+ },
+ "ROO-3.07": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van draagkolom tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "ROO-3.08": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij stellen en uitlijnen van draagkolommen tussen kolom en betonconstructie.",
+  "taak_bron": ""
+ },
+ "ROO-3.09": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken in besloten ruimte (inlaatkanaal/put): tekort aan zuurstof, ophoping H2S/CO/methaan, beperkte vluchtweg bij montage in de put.",
+  "taak_bron": ""
+ },
+ "ROO-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 43,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "ROO-5.01": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Roosterreiniger"
+ },
+ "ROO-5.02": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling werkende Roosterreiniger",
+  "taak_bron": ""
+ },
+ "ROO-5.03": {
+  "taakstap": null,
+  "rij": 50,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onmiddellijke activering door automatische bediening na inschakelen: bij vrijgave van de installatie kan de loopwagen of grijper direct opstarten via niveau- of tijd-sturing zonder dat de monteur of omstanders dit verwachten, met risico op beknelling.",
+  "taak_bron": ""
+ },
+ "CHV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "CHV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "CHV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "CHV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "CHV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "CHV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "CHV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "CHV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "CHV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "CHV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren van de compactvijzel"
+ },
+ "CHV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "CHV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "CHV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "CHV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "CHV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "CHV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "CHV-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "CHV-2.09": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "CHV-3.01": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren van de compactvijzel"
+ },
+ "CHV-3.02": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "CHV-3.03": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "CHV-3.04": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "CHV-3.05": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "CHV-3.06": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "CHV-3.07": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "CHV-3.08": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "CHV-3.09": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "CHV-3.10": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "CHV-4.01": {
+  "taakstap": null,
+  "rij": 44,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+ },
+ "CHV-4.02": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+  "taak_bron": ""
+ },
+ "CHV-4.03": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "CHV-4.04": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "CHV-5.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 51,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "CHV-6.01": {
+  "taakstap": null,
+  "rij": 55,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Vijzelinstallatie"
+ },
+ "CHV-6.02": {
+  "taakstap": null,
+  "rij": 56,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "CHV-6.03": {
+  "taakstap": null,
+  "rij": 57,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ },
+ "BAN-1.01": {
+  "taakstap": "Bandscreen uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Automatische bediening niet uitgeschakeld: bandscreen werkt op tijd-, niveau- of drukverschil-sturing en kan tijdens werk plotseling inschakelen, met als gevolg dat monteur in werkzone door bewegende transportketting/zeefpanelen bekneld raakt of meegetrokken wordt met ernstig of dodelijk letsel.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO) Bandscreen"
+ },
+ "BAN-1.02": {
+  "taakstap": "Bandscreen uitschakelen via schakelkast (handmatig commando)",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": ""
+ },
+ "BAN-1.03": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de bandscreen tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "BAN-1.04": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "BAN-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "BAN-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "BAN-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "BAN-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "BAN-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "BAN-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij demonteren transportketting en zeefpanelen: losmaken van verbindingspennen en bouten in nauwe constructie.",
+  "taak_bron": "Demonteren bestaande bandscreen (transportketting, zeefpanelen, hoofdframe, geleiders)"
+ },
+ "BAN-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting bij uitnemen en verplaatsen van zware kettingsecties, zeefpanelen en hoofdframe in ongemakkelijke houding.",
+  "taak_bron": ""
+ },
+ "BAN-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onverwachte beweging tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BAN-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij werken op steigers/randen van het kanaal tijdens demontage; verlies van balans of uitglijden leidt tot val in kanaal of bassin.",
+  "taak_bron": ""
+ },
+ "BAN-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Snijgevaar door scherpe randen van versleten zeefpanelen en kettingdelen: handen/armen kunnen scherpe randen of bramen raken.",
+  "taak_bron": ""
+ },
+ "BAN-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in water/kanaal: verlies van balans of uitglijden op nat dek/steiger leidt tot val in het inlaatkanaal.",
+  "taak_bron": ""
+ },
+ "BAN-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen in water/kanaal: verlies van balans of uitglijden op nat dek/steiger leidt tot val in het inlaatkanaal.",
+  "taak_bron": ""
+ },
+ "BAN-3.01": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: hijsen van hoofdframe, kettingdelen en geleiders uit het kanaal; onjuist aanslaan of onverwachte beweging tijdens hijswerken.",
+  "taak_bron": "Installatie bandscreen (geleiders, hoofdframe, transportketting, zeefpanelen, grouting)"
+ },
+ "BAN-3.02": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij werken op steigers in het diepe kanaal van bodem tot dekniveau, bij uitlijnen geleiders en aandraaien ankerbouten.",
+  "taak_bron": ""
+ },
+ "BAN-3.03": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij demonteren transportketting en zeefpanelen: losmaken van verbindingspennen en bouten in nauwe constructie.",
+  "taak_bron": ""
+ },
+ "BAN-3.04": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Brandgevaar, verbrandingen en inademen lasrook bij lassen ankerbouten aan ingestorte platen: vonken en spetters kunnen brand veroorzaken; lasrookgassen schaden de longen in slecht geventileerde ruimte.",
+  "taak_bron": ""
+ },
+ "BAN-3.05": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van kwartsstof en gehoorschade bij boren in beton voor ankerbouten met boorhamers in galmende betonnen ruimte.",
+  "taak_bron": ""
+ },
+ "BAN-3.06": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Huidirritatie en chemische verbranding bij contact met natte cementmortel/grout bij grouting van ingegoten delen; misalignment van geleiders bij overschrijden maximale giethoogte (2,5 m/dag).",
+  "taak_bron": ""
+ },
+ "BAN-3.07": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Grijpgevaar door draaiende delen bij invoeren transportketting via aangedreven tandwielen tijdens montage (machine kortstondig in proefdraai).",
+  "taak_bron": ""
+ },
+ "BAN-3.08": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onbalans transportketting door ongelijkmatig verdelen van zeefpanelen: kan leiden tot scheefloop van ketting, blokkering, breuk of schade aan installatie.",
+  "taak_bron": ""
+ },
+ "BAN-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 39,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "BAN-5.01": {
+  "taakstap": null,
+  "rij": 43,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Bandscreen"
+ },
+ "BAN-5.02": {
+  "taakstap": null,
+  "rij": 44,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door bewegende transportketting en zeefpanelen tijdens proefdraai",
+  "taak_bron": ""
+ },
+ "BAN-5.03": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "leeg",
+  "risico_bron": "Bij vrijgave van de installatie kan de bandscreen direct opstarten via tijd-, niveau- of drukverschil-sturing zonder dat de monteur of omstanders dit verwachten, met risico op beknelling door bewegende transportketting/zeefpanelen.",
+  "taak_bron": ""
+ },
+ "MIC-1.01": {
+  "taakstap": "Microfilter uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "MIC-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen.",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van het microfilter tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "MIC-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "MIC-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "MIC-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "MIC-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (microfilterunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "MIC-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "MIC-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "MIC-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "MIC-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de microfilterput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren Microfilter"
+ },
+ "MIC-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "MIC-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "MIC-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "MIC-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "MIC-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op microfilteronderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "MIC-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de microfilterput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "MIC-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan het microfilter plotseling verschuiven wanneer het microfilter niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "MIC-2.09": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "leeg",
+  "risico_bron": "Onverwacht draaien trommelzeef tijdens montage: bij plaatsen zeeframen of bouten kan trommel onverwacht draaien door zwaartekracht (onbalans), externe trilling of foutieve onderbreking LOTOTO, met als gevolg meegetrokken worden of beknelling tussen trommel en frame.",
+  "taak_bron": ""
+ },
+ "MIC-3.01": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de microfilterput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren Microfilter"
+ },
+ "MIC-3.02": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "MIC-3.03": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "MIC-3.04": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "MIC-3.05": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiend microfilter tijdens hijsen: onvoldoende beheersing van de positie en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van het microfilter tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "MIC-3.06": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "MIC-3.07": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, het microfilter kan tegen de putwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "MIC-3.08": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op microfilteronderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "MIC-3.09": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwacht draaien trommelzeef tijdens montage: bij plaatsen zeeframen of bouten kan trommel onverwacht draaien.",
+  "taak_bron": ""
+ },
+ "MIC-3.10": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "MIC-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 43,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "MIC-5.01": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van het Microfilter"
+ },
+ "MIC-5.02": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "MIC-5.03": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende trommel",
+  "taak_bron": ""
+ },
+ "IDV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "IDV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "IDV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "IDV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "IDV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 10,
+  "bron": "samengevoegd (rij 9)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "IDV-1.06": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "IDV-1.07": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "IDV-1.08": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "IDV-1.09": {
+  "taakstap": null,
+  "rij": 15,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "IDV-2.01": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren (vijzelafdekking, stuwkant, vijzellichaam, aandrijving, bovenlager)"
+ },
+ "IDV-2.02": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "IDV-2.03": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "IDV-2.04": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "IDV-2.05": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "IDV-2.06": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "IDV-2.07": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "IDV-2.08": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "IDV-3.01": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)"
+ },
+ "IDV-3.02": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "IDV-3.03": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "IDV-3.04": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "IDV-3.05": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "IDV-3.06": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "IDV-3.07": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "IDV-3.08": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "IDV-3.09": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof bij eventueel boren.",
+  "taak_bron": ""
+ },
+ "IDV-4.01": {
+  "taakstap": "Indraaireductor hijsen en positioneren",
+  "rij": 42,
+  "bron": "eigen cel",
+  "risico_bron": "Vallen van de last tijdens het hijsen",
+  "taak_bron": "Indraaireductor monteren en vijzel indraaien"
+ },
+ "IDV-4.02": {
+  "taakstap": "Indraaireductor hijsen en positioneren",
+  "rij": 43,
+  "bron": "samengevoegd (rij 42)",
+  "risico_bron": "Beknellen, handen/vingers tussen de last en omgeving",
+  "taak_bron": ""
+ },
+ "IDV-4.03": {
+  "taakstap": "Installeren aan de aandrijving",
+  "rij": 44,
+  "bron": "eigen cel",
+  "risico_bron": "handen/vingers beknellen tijdens het koppelen van de V-snaar aan de aandrijving",
+  "taak_bron": ""
+ },
+ "IDV-4.04": {
+  "taakstap": "Indraaireductor testen",
+  "rij": 45,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht draaien van de vijzel wanneer iemand op de vijzel staat of in de put staat.",
+  "taak_bron": ""
+ },
+ "IDV-4.05": {
+  "taakstap": "Indraaireductor testen",
+  "rij": 46,
+  "bron": "samengevoegd (rij 45)",
+  "risico_bron": "handen/vingers beknellen tussen de draaiende V-snaar (als deze niet afgedekt is)",
+  "taak_bron": ""
+ },
+ "IDV-4.06": {
+  "taakstap": "Indraaien betonbed",
+  "rij": 47,
+  "bron": "eigen cel",
+  "risico_bron": "Twee partijen op één werkplek: onduidelijke bediening of communicatie tussen Noardling en aannemer (wild risico).",
+  "taak_bron": ""
+ },
+ "IDV-4.07": {
+  "taakstap": "Indraaien betonbed",
+  "rij": 48,
+  "bron": "samengevoegd (rij 47)",
+  "risico_bron": "Noodstop niet bereikbaar of niet deugdelijk: vijzel kan bij noodsituatie niet direct worden gestopt.",
+  "taak_bron": ""
+ },
+ "IDV-4.08": {
+  "taakstap": "Indraaien betonbed",
+  "rij": 49,
+  "bron": "samengevoegd (rij 47)",
+  "risico_bron": "Vijzel niet vergrendeld bij benaderen: beknelling door (rest)beweging van de vijzel.",
+  "taak_bron": ""
+ },
+ "IDV-4.09": {
+  "taakstap": "Indraaireductor ontkoppelen en afvoeren",
+  "rij": 50,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht draaien van de vijzel tijdens het ontkoppelen van de indraaireductor.",
+  "taak_bron": ""
+ },
+ "IDV-4.10": {
+  "taakstap": "Indraaireductor ontkoppelen en afvoeren",
+  "rij": 51,
+  "bron": "samengevoegd (rij 50)",
+  "risico_bron": "Vallen van de last bij het afvoeren van de indraaireductor.",
+  "taak_bron": ""
+ },
+ "IDV-5.01": {
+  "taakstap": null,
+  "rij": 55,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": "Afmonteren (stuwkant, vijzelafdekking)"
+ },
+ "IDV-5.02": {
+  "taakstap": null,
+  "rij": 56,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "IDV-5.03": {
+  "taakstap": null,
+  "rij": 57,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op de rand van de vijzelput om vijzelonderdelen te begeleiden; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": ""
+ },
+ "IDV-5.04": {
+  "taakstap": null,
+  "rij": 58,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "IDV-5.05": {
+  "taakstap": null,
+  "rij": 59,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "IDV-6.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 63,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "IDV-7.01": {
+  "taakstap": null,
+  "rij": 67,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Vijzelinstallatie"
+ },
+ "IDV-7.02": {
+  "taakstap": null,
+  "rij": 68,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "IDV-7.03": {
+  "taakstap": null,
+  "rij": 69,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ },
+ "POM-1.01": {
+  "taakstap": "Hoofd-/werkschakelaar uitschakelen en vergrendelen, zekeringen verwijderen, noodstroom (UPS/aggregaat) uitschakelen, spanningsvrij controleren met duspol en waarschuwingsbord aanbrengen bij pompput",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen door automatische bediening of niveauschakelaar: dompelpomp wordt standaard automatisch geschakeld door niveauschakelaar of besturingskast.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "POM-1.02": {
+  "taakstap": "Landustrie Pomp uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": ""
+ },
+ "POM-1.03": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de Landustrie Pomp tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "POM-1.04": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "POM-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "POM-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (trommelfilter); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "POM-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "POM-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "POM-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "POM-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Demontage van de pomp"
+ },
+ "POM-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "POM-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "POM-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op pomponderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "POM-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de pompput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "POM-3.01": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Montage van de Pomp"
+ },
+ "POM-3.02": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "POM-3.03": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "POM-3.04": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "POM-3.05": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de Landustrie Pomp kan tegen de putwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "POM-3.06": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op pomponderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "POM-3.07": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "POM-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 36,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "POM-5.01": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Landustrie Pomp"
+ },
+ "POM-5.02": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "POM-5.03": {
+  "taakstap": null,
+  "rij": 42,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "onverwacht aanslaan pomp",
+  "taak_bron": ""
+ },
+ "POM-5.04": {
+  "taakstap": null,
+  "rij": 43,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onmiddellijke activering door niveauschakelaar of automatische bediening na inschakelen: bij vrijgave van de installatie kan de dompelpomp direct opstarten via niveauschakelaar zonder dat de monteur of omstanders dit verwachten.",
+  "taak_bron": ""
+ },
+ "BUV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "BUV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "BUV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "BUV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "BUV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "BUV-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "BUV-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "BUV-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "BUV-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "BUV-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Demonteren (Aandrijving, Tandwielkast & Vijzelunit)"
+ },
+ "BUV-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "BUV-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BUV-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "BUV-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "BUV-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "BUV-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "BUV-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "BUV-3.01": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (Buisvijzel, Tandwielkast & Aandrijving)"
+ },
+ "BUV-3.02": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "BUV-3.03": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "BUV-3.04": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "BUV-3.05": {
+  "taakstap": null,
+  "rij": 33,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "BUV-3.06": {
+  "taakstap": null,
+  "rij": 34,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "BUV-3.07": {
+  "taakstap": null,
+  "rij": 35,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "BUV-3.08": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "BUV-3.09": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof bij eventueel boren.",
+  "taak_bron": ""
+ },
+ "BUV-3.10": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Uit de buis glijden van vijzel bij het hijsen/invoeren.",
+  "taak_bron": ""
+ },
+ "BUV-4.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 42,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "BUV-5.01": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie bij het inschakelen.",
+  "taak_bron": "Inbedrijfstelling van de Semi-Compact-Vijzelinstallatie"
+ },
+ "BUV-5.02": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen bij onverwachte rotatie van de vijzel.",
+  "taak_bron": ""
+ },
+ "BUV-5.03": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Persoon bevindt zich nog in de gevarenzone van de draaiende vijzel.",
+  "taak_bron": ""
+ },
+ "NBT-1.01": {
+  "taakstap": null,
+  "rij": 5,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan gevaarlijke gassen (H2S, CH4) bij betreden van onvoldoende gereinigde nabezinktank: restanten van slib en biologisch materiaal kunnen giftige of explosieve gassen produceren, wat kan leiden tot bewusteloosheid, verstikking of explosie.",
+  "taak_bron": "Controleren of nabezinktank schoon en droog is opgeleverd door aannemer"
+ },
+ "NBT-1.02": {
+  "taakstap": null,
+  "rij": 6,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Uitglijden of vallen door natte of gladde bodem in de nabezinktank: restanten van slib of water op de tankbodem verhogen het risico op uitglijden, vallen en letsel.",
+  "taak_bron": ""
+ },
+ "NBT-2.01": {
+  "taakstap": null,
+  "rij": 10,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "NBT-2.02": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de nabezinktank-installatie tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "NBT-2.03": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Elektrisch gevaar: onjuist gebruik of defecte spanningsmeter; monteur gaat ervan uit dat installatie spanningsvrij is terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "NBT-2.04": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "NBT-2.05": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "NBT-2.06": {
+  "taakstap": null,
+  "rij": 16,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component; bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "NBT-2.07": {
+  "taakstap": null,
+  "rij": 17,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "NBT-2.08": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "NBT-2.09": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied.",
+  "taak_bron": ""
+ },
+ "NBT-3.01": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op steiger, rolsteiger of werkbordes in de tank.",
+  "taak_bron": "Demonteren onderwaterwerk (schraperarmen, inlooptrommel, deflectieplaat, drijflaagafvoerput)"
+ },
+ "NBT-3.02": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij het losmaken en hanteren van zware onderdelen (schraperarmen, inlooptrommel, deflectieplaat).",
+  "taak_bron": ""
+ },
+ "NBT-3.03": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Ongecontroleerd vallen van last bij hijsen met handtakel/kettingtakel: bezwijken van takel of strop tijdens het neerlaten van onderdelen kan leiden tot vallende last.",
+  "taak_bron": ""
+ },
+ "NBT-3.04": {
+  "taakstap": null,
+  "rij": 26,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Oog- en gezichtsletsel door vonken en metaaldeeltjes bij slijpen van onderdelen voor afvoer.",
+  "taak_bron": ""
+ },
+ "NBT-3.05": {
+  "taakstap": null,
+  "rij": 27,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan gevaarlijk stof bij slijpen van bestaande constructies met coatings: stof kan verontreinigd zijn met corrosiemiddelen, lood, chroom of biologische residuen.",
+  "taak_bron": ""
+ },
+ "NBT-3.06": {
+  "taakstap": null,
+  "rij": 28,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op onderdelen en op de werkplek in de tank.",
+  "taak_bron": ""
+ },
+ "NBT-3.07": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwachte beweging van last bij positioneren of neerlaten: zware onderdelen kunnen slingeren, rollen of kantelen waardoor personen in de tank kunnen worden geraakt.",
+  "taak_bron": ""
+ },
+ "NBT-3.08": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan giftige gassen (H2S, ammoniak) bij slijpen van onvoldoende gereinigde drijflaagafvoerput.",
+  "taak_bron": ""
+ },
+ "NBT-3.09": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke overbelasting bij het losdraaien van vastgeroeste bouten aan de betonpoer in ongemakkelijke werkhouding.",
+  "taak_bron": ""
+ },
+ "NBT-3.10": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan restanten afvalwater bij losmaken flensverbinding van de afvoerbuis: restanten kunnen vrijkomen en in contact komen met huid of ogen.",
+  "taak_bron": ""
+ },
+ "NBT-4.01": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit of kantelen van de hijskraan door onvoldoende draagkrachtige ondergrond of overbelasting: ondergrond bij de RWZI kan onvoldoende draagkrachtig zijn, of de kraancapaciteit kan onvoldoende zijn voor de zwaarste component.",
+  "taak_bron": "Verwijderen ruimerbrug (incl. middendraaipunt, loopwagen, verankering)"
+ },
+ "NBT-4.02": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte nabij de tank.",
+  "taak_bron": ""
+ },
+ "NBT-4.03": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwachte beweging van de ruimerbrug tijdens stutten.",
+  "taak_bron": ""
+ },
+ "NBT-4.04": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling bij optillen van de ruimerbrug: bij het hijsen/optillen van de brug om eronder te kunnen werken (lager loskoppelen, middendraaipunt vrijmaken) kunnen handen, vingers of voeten bekneld raken tussen de brug en het draagvlak of de loopwagen.",
+  "taak_bron": ""
+ },
+ "NBT-4.05": {
+  "taakstap": null,
+  "rij": 40,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Terugzakken van opgetilde ruimerbrug door onvoldoende fixatie: na het optillen van de brug om werkzaamheden onder de brug uit te voeren (lager, middendraaipunt, loopwagen) kan de brug terugzakken als deze niet correct gefixeerd is, met verplettingsgevaar voor monteurs onder de brug.",
+  "taak_bron": ""
+ },
+ "NBT-4.06": {
+  "taakstap": null,
+  "rij": 41,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij werken op werkbordes t.p.v. middenkolom: tijdelijke werkbordes kan onstabiel zijn, met risico op val.",
+  "taak_bron": ""
+ },
+ "NBT-4.07": {
+  "taakstap": null,
+  "rij": 42,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij demontage lager en losmaken zware componenten: bij het losmaken kunnen componenten onverwacht bewegen en handen of vingers beknellen.",
+  "taak_bron": ""
+ },
+ "NBT-4.08": {
+  "taakstap": null,
+  "rij": 43,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "NBT-4.09": {
+  "taakstap": null,
+  "rij": 44,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan betonstof en oogletsel bij verwijderen van oude verankering en grouting: betonstof (kwartsstof) kan longschade veroorzaken; wegspringende deeltjes kunnen oogletsel veroorzaken.",
+  "taak_bron": ""
+ },
+ "NBT-5.01": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Oog- en gezichtsletsel en blootstelling aan kwartsstof bij boren van ankergaten in beton: betondeeltjes en stof worden weggeslingerd en langdurige inademing kan silicose veroorzaken.",
+  "taak_bron": "Plaatsen nieuwe ruimerbrug (incl. ankers, middendraaipunt, loopwagen, toegangstrap)"
+ },
+ "NBT-5.02": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke overbelasting bij boren met zware boorhamer in ongemakkelijke werkhouding in de besloten ruimte van de tank.",
+  "taak_bron": ""
+ },
+ "NBT-5.03": {
+  "taakstap": null,
+  "rij": 50,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan chemische stoffen (lijm/epoxy, grouting/cement) bij verankering en aanvullen middendraaipunt: irriterende en sensibiliserende stoffen kunnen huid- of oogletsel veroorzaken.",
+  "taak_bron": ""
+ },
+ "NBT-5.04": {
+  "taakstap": null,
+  "rij": 51,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij montage en positioneren van loopwagen, ruimerbrug op verankering en middendraaipunt.",
+  "taak_bron": ""
+ },
+ "NBT-5.05": {
+  "taakstap": null,
+  "rij": 52,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "NBT-5.06": {
+  "taakstap": null,
+  "rij": 53,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij werken op werkbordes t.p.v. middenkolom bij vastzetten boutverbindingen en afstellen middendraaipunt.",
+  "taak_bron": ""
+ },
+ "NBT-5.07": {
+  "taakstap": null,
+  "rij": 54,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onverwachte beweging van loopwagen of toegangstrap bij montage of hijsen: onvoldoende ondersteuning tijdens montage of slingerbeweging bij hijsen kan personen raken.",
+  "taak_bron": ""
+ },
+ "NBT-5.08": {
+  "taakstap": null,
+  "rij": 55,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling bij neerlaten en positioneren van de nieuwe ruimerbrug: bij het laten zakken van de brug op de loopwagen en middendraaipunt kunnen handen, vingers of voeten bekneld raken tussen de brug en de draagpunten.",
+  "taak_bron": ""
+ },
+ "NBT-5.09": {
+  "taakstap": null,
+  "rij": 56,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Onvoldoende fixatie van de nieuwe ruimerbrug tijdens montagewerkzaamheden: tijdens uitlijnen, vastzetten boutverbindingen en afstellen van het middendraaipunt kan de brug verschuiven of terugzakken indien deze niet correct gefixeerd is, met letselrisico voor monteurs onder of naast de brug.",
+  "taak_bron": ""
+ },
+ "NBT-6.01": {
+  "taakstap": null,
+  "rij": 60,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte bij werken op steiger, rolsteiger of werkbordes voor montage ophangstrip, ophangen inlooptrommel en afstellen deflectieplaat in de tank.",
+  "taak_bron": "Monteren onderwaterwerk (inlooptrommel, deflectieplaat, slibzakschraper, hangend schraperwerk, drijflaagafvoerput, drijflaagafstrijkers)"
+ },
+ "NBT-6.02": {
+  "taakstap": null,
+  "rij": 61,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling handen/vingers bij assemblage en koppelen van inlooptrommel-delen en deflectieplaat-secties.",
+  "taak_bron": ""
+ },
+ "NBT-6.03": {
+  "taakstap": null,
+  "rij": 62,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "NBT-6.04": {
+  "taakstap": null,
+  "rij": 63,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Omvallen van inlooptrommel of deflectieplaat tijdens assemblage naast de tank: hoge cilindrische of grote vlakke constructie kan tijdens montage omvallen, met letsel voor omstanders.",
+  "taak_bron": ""
+ },
+ "NBT-6.05": {
+  "taakstap": null,
+  "rij": 64,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last bij ophangen via handtakel/kettingtakel: bezwijken van takel of strop kan leiden tot val van inlooptrommel of deflectieplaat op tankbodem of personen.",
+  "taak_bron": ""
+ },
+ "NBT-6.06": {
+  "taakstap": null,
+  "rij": 65,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Ongecontroleerde beweging bij positioneren: grote en zware elementen kunnen slingeren of kantelen bij plaatsing, waardoor personen in de tank kunnen worden geraakt.",
+  "taak_bron": ""
+ },
+ "NBT-6.07": {
+  "taakstap": null,
+  "rij": 66,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke overbelasting bij montage in nauwe ruimtes (slibafvoergoot, onder de brug): werken in lage of geforceerde werkhouding kan leiden tot overbelasting van rug en knieën.",
+  "taak_bron": ""
+ },
+ "NBT-6.08": {
+  "taakstap": null,
+  "rij": 67,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van schraperarmen of bodemschraper-delen bij bevestiging aan de ruimerbrug: bij onvoldoende ondersteuning tijdens bevestiging kunnen onderdelen vallen op personen of tankbodem.",
+  "taak_bron": ""
+ },
+ "NBT-6.09": {
+  "taakstap": null,
+  "rij": 68,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Oog- en gezichtsletsel door vonken en metaaldeeltjes bij inkorten van afvoerbuis of bijwerken van onderdelen met slijptol.",
+  "taak_bron": ""
+ },
+ "NBT-6.10": {
+  "taakstap": null,
+  "rij": 69,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan lasrook en -dampen bij lassen van flenzen aan afvoerbuis: lasrook bevat mangaan, chroom en nikkel met risico op longschade.",
+  "taak_bron": ""
+ },
+ "NBT-6.11": {
+  "taakstap": null,
+  "rij": 70,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Brand-, explosie- en oogletselgevaar bij laswerk: vonken en spatten kunnen brandbare materialen ontsteken;",
+  "taak_bron": ""
+ },
+ "NBT-6.12": {
+  "taakstap": null,
+  "rij": 71,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Blootstelling aan restanten afvalwater bij aankoppelen flensverbinding aan muurdoorvoer/afvoerbuis: restanten kunnen vrijkomen en in contact komen met huid of ogen.",
+  "taak_bron": ""
+ },
+ "NBT-7.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 75,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "NBT-8.01": {
+  "taakstap": null,
+  "rij": 79,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Nabezinktank"
+ },
+ "NBT-8.02": {
+  "taakstap": null,
+  "rij": 80,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "SMV-1.01": {
+  "taakstap": "Vijzel uitschakelen via schakelkast conform afschakelprotocol",
+  "rij": 5,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: contact met onder spanning staande onderdelen bij bediening schakelkast zonder juiste PBM of procedure.",
+  "taak_bron": "Afschakelprotocol en Veiligstelling (LOTOTO)"
+ },
+ "SMV-1.02": {
+  "taakstap": "Sloten plaatsen op schakelkast door opdrachtgever én aannemer (LOTOTO); bij ontbrekende schakelaar: LOTOTO-dummy plaatsen",
+  "rij": 6,
+  "bron": "eigen cel",
+  "risico_bron": "Onverwacht inschakelen installatie door derden: ontbreken of negeren van LOTOTO-slot leidt tot onverwachte aanloop van de vijzel tijdens werkzaamheden.",
+  "taak_bron": ""
+ },
+ "SMV-1.03": {
+  "taakstap": "Spanningsvrij controleren met duspol",
+  "rij": 7,
+  "bron": "eigen cel",
+  "risico_bron": "Elektrisch gevaar: monteur gaat ervan uit dat installatie spanningsvrij is, terwijl dit niet het geval is.",
+  "taak_bron": ""
+ },
+ "SMV-1.04": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 8,
+  "bron": "eigen cel",
+  "risico_bron": "Restspanning op kabel: installatie niet correct vrijgeschakeld en geverifieerd; elektrische schok bij aanraking kabeluiteinde.",
+  "taak_bron": ""
+ },
+ "SMV-1.05": {
+  "taakstap": "Voedingskabel elektromotor demonteren",
+  "rij": 9,
+  "bron": "samengevoegd (rij 8)",
+  "risico_bron": "Struikelgevaar: losliggende kabels op de werkvloer.",
+  "taak_bron": ""
+ },
+ "SMV-1.06": {
+  "taakstap": null,
+  "rij": 11,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Overbelasting kraan: kraancapaciteit onvoldoende voor zwaarste component (vijzelunit); bezwijken hijsmiddel of kraanarm.",
+  "taak_bron": "Situatie Kraanopstelling"
+ },
+ "SMV-1.07": {
+  "taakstap": null,
+  "rij": 12,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beschadiging kabeltracé door kraanopstelling of hijsbewegingen: de kraan wordt gepositioneerd op of nabij een ondergronds kabeltracé, waardoor bij het stempelen of rijden met de kraan kabels beschadigd raken.",
+  "taak_bron": ""
+ },
+ "SMV-1.08": {
+  "taakstap": null,
+  "rij": 13,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Instabiliteit kraan: ondergrond onvoldoende draagkrachtig voor kraanopstelling; kantelen kraan.",
+  "taak_bron": ""
+ },
+ "SMV-1.09": {
+  "taakstap": null,
+  "rij": 14,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Aanrijding of beknelling door kraanbeweging in beperkte ruimte op het werkgebied",
+  "taak_bron": ""
+ },
+ "SMV-2.01": {
+  "taakstap": null,
+  "rij": 18,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen zware componenten tijdens het samenstellen, positioneren en vastzetten.",
+  "taak_bron": "Monteren stortmal-vijzel-combinatie (voorbereiding, hijsen, uitlijning)"
+ },
+ "SMV-2.02": {
+  "taakstap": null,
+  "rij": 19,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SMV-2.03": {
+  "taakstap": null,
+  "rij": 20,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": ""
+ },
+ "SMV-2.04": {
+  "taakstap": null,
+  "rij": 21,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SMV-2.05": {
+  "taakstap": null,
+  "rij": 22,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "SMV-2.06": {
+  "taakstap": null,
+  "rij": 23,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SMV-2.07": {
+  "taakstap": null,
+  "rij": 24,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Wanneer de bevestigingsmiddelen worden losgekoppeld kan de vijzel plotseling verschuiven wanneer de vijzel niet goed is ingezekerd.",
+  "taak_bron": ""
+ },
+ "SMV-2.08": {
+  "taakstap": null,
+  "rij": 25,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SMV-3.01": {
+  "taakstap": null,
+  "rij": 29,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": "Betonwerkzaamheden (storten, verdichten, afwerken, uitharding)"
+ },
+ "SMV-3.02": {
+  "taakstap": null,
+  "rij": 30,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Chemisch gevaar: huidcontact met beton; cement veroorzaakt chemische brandwonden bij langdurig huidcontact.",
+  "taak_bron": ""
+ },
+ "SMV-3.03": {
+  "taakstap": null,
+  "rij": 31,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SMV-3.04": {
+  "taakstap": null,
+  "rij": 32,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Besloten ruimte; aanwezigheid in de vijzelput zonder adequate ventilatie en gasbewaking; ophoping van toxische of brandbare gassen of zuurstoftekort leidt tot bewusteloosheid, vergiftiging of verstikking.",
+  "taak_bron": ""
+ },
+ "SMV-4.01": {
+  "taakstap": null,
+  "rij": 36,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": "Demonteren (vijzel uit trog, stortmal verwijderen)"
+ },
+ "SMV-4.02": {
+  "taakstap": null,
+  "rij": 37,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SMV-4.03": {
+  "taakstap": null,
+  "rij": 38,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen zware componenten tijdens het samenstellen, positioneren en vastzetten.",
+  "taak_bron": ""
+ },
+ "SMV-4.04": {
+  "taakstap": null,
+  "rij": 39,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SMV-5.01": {
+  "taakstap": null,
+  "rij": 43,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van hoogte: werken op of rond de rand van de vijzelput; verlies van balans of uitglijden leidt tot val in de put met risico op ernstig letsel.",
+  "taak_bron": "Monteren (bovenlager, vijzellichaam, onderlager, aandrijving)"
+ },
+ "SMV-5.02": {
+  "taakstap": null,
+  "rij": 44,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Fysieke belasting: ongemakkelijke werkhouding en/of manoeuvreren van zware objecten leidt tot spier- en gewrichtsbelasting.",
+  "taak_bron": ""
+ },
+ "SMV-5.03": {
+  "taakstap": null,
+  "rij": 45,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vallen van de last: onjuist aanslaan, complex zwaartepunt of onverwachte beweging van de last tijdens hijswerken.",
+  "taak_bron": ""
+ },
+ "SMV-5.04": {
+  "taakstap": null,
+  "rij": 46,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling en pletten: handen/vingers bekneld raken tussen hijsmiddelen, last en/of constructie tijdens het begeleiden of positioneren.",
+  "taak_bron": ""
+ },
+ "SMV-5.05": {
+  "taakstap": null,
+  "rij": 47,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Zwaaiende vijzel tijdens hijsen: onvoldoende beheersing van de vijzelhelling en afwezigheid van stuurlijnen leidt tot ongecontroleerd zwaaien van de vijzel tegen de putwand of nabijgelegen objecten, met risico op beschadiging van installatie en letsel aan personeel in de nabijheid.",
+  "taak_bron": ""
+ },
+ "SMV-5.06": {
+  "taakstap": null,
+  "rij": 48,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Werken op de vijzel: ongewenst draaien van de vijzel tijdens werkzaamheden in de vijzelput leidt tot beknelling of val.",
+  "taak_bron": ""
+ },
+ "SMV-5.07": {
+  "taakstap": null,
+  "rij": 49,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Begeleiden van de last vanaf een onveilige positie/ Lopen over gladde oppervlakken tijdens het begeleiden van de last.",
+  "taak_bron": ""
+ },
+ "SMV-5.08": {
+  "taakstap": null,
+  "rij": 50,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Botsen/Beschadigen, de vijzel kan tegen de vijzelwand of andere objecten aanslaan",
+  "taak_bron": ""
+ },
+ "SMV-5.09": {
+  "taakstap": null,
+  "rij": 51,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Biologische Agentia: contact met afvalwater, slib of andere biologische verontreinigingen op vijzelonderdelen en op de werkplek.",
+  "taak_bron": ""
+ },
+ "SMV-5.10": {
+  "taakstap": null,
+  "rij": 52,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Vrijkomen van stof: bij boren in beton voor bevestiging van vijzelonderdelen.",
+  "taak_bron": ""
+ },
+ "SMV-6.01": {
+  "taakstap": "Elektrische aansluiting",
+  "rij": 56,
+  "bron": "eigen cel",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inschakelen"
+ },
+ "SMV-7.01": {
+  "taakstap": null,
+  "rij": 60,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Gevaar voor elektrocutie.",
+  "taak_bron": "Inbedrijfstelling van de Vijzelinstallatie"
+ },
+ "SMV-7.02": {
+  "taakstap": null,
+  "rij": 61,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende delen",
+  "taak_bron": ""
+ },
+ "SMV-7.03": {
+  "taakstap": null,
+  "rij": 62,
+  "bron": "samengevoegd met Taak",
+  "risico_bron": "Beknelling door draaiende vijzel",
+  "taak_bron": ""
+ }
+}

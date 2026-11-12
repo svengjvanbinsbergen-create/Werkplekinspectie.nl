@@ -1,0 +1,606 @@
+# ============================================================ velden en trends (één bron, wederkerig)
+V = " (voorgesteld)"
+# code: (titel, waarden, waarom, verplicht, vca, kost, voorgesteld)
+VELDEN = {
+ "A.1 Kop en start": [
+  ("K1", "WPI-nummer", "WPI + datum + productcode + initialen", "Eén sleutel voor rapport, foto's, acties en de chatnaam", "Automatisch", "7.1d, 7.1e", "Niets", False),
+  ("K2", "Inspecteur en functie", "", "Toont wie inspecteert; nodig omdat iedereen hetzelfde account gebruikt", "Ja", "7.1b, 7.1f", "Naam noemen", False),
+  ("K3", "Soort inspectie", "WPI coördinator / WPI Hoofd S&M / WPI monteur / VGM-inspectie directie", "Scheidt de normen per inspecteur; 'WPI monteur' en 'WPI Hoofd S&M' zijn nieuw", "Ja", "7.1b, 7.1c, 7.1f", "Eén woord", False),
+  ("K4", "Verantwoordelijke coördinator", "", "Bij een WPI door een monteur: onder wiens verantwoordelijkheid", "Bij WPI monteur", "7.1c", "Eén naam", True),
+  ("K5", "Deelnemend directielid", "", "Loopt een directielid mee, dan telt de WPI voor de maandnorm van de coördinator én voor de kwartaalnorm van de directie", "Als het speelt", "7.1f", "Eén naam", True),
+  ("K6", "Datum, begin- en eindtijd", "", "Datum voor het programma; de duur laat zien wat een WPI kost", "Automatisch", "7.1b", "Niets", False),
+  ("K7", "Opdrachtgever, locatie, projectnummer", "", "Welke werkplek is geïnspecteerd; koppeling met het inspectieprogramma", "Ja", "7.1b", "Inspreken", False),
+  ("K8", "Werk van korte duur", "ja / nee", "Bepaalt welke regel van het programma geldt", "Ja", "7.1b voetnoot 10", "Eén woord", True),
+  ("K9", "Risicokenmerk van het geplande werk", "mobiele kraan / besloten ruimte met vergunning / open water zonder vaste randbeveiliging / geen", "Onderbouwt het programma voor korte projecten (5.5)", "Ja", "7.1b voetnoot 10", "Eén woord", True),
+  ("K10", "Aangekondigd of niet", "", "De procedure vraagt dat het rapport het vermeldt (5.6). Geen trend: de aantallen zijn te klein", "Ja", "", "Eén woord", True),
+  ("K11", "Aanwezige monteurs", "", "Aantal, en namen voor de terugkoppeling. Namen staan alleen hier", "Ja (aantal)", "7.1d", "Inspreken", False),
+  ("K12", "Omstandigheden", "", "Context bij bevindingen, bijvoorbeeld een nat dek", "Nee", "", "Eén zin", False),
+  ("K13", "Invoerwijze", "op locatie / achteraf vanaf terugvalformulier", "Laat zien hoe vaak de terugvaloptie nodig is", "Ja", "", "Eén woord", True),
+  ("E1", "Eerdere acties en afwijkingen opnieuw bekeken", "", "Claude toont open acties en eerdere afwijkingen op dit product of deze locatie; levert verificatie en herhaalde bevindingen op", "Als er iets openstaat", "7.1e", "Per punt: bekeken ja / nee en wat hij zag", True),
+ ],
+ "A.2 Product, taak en voorbereiding": [
+  ("P1", "Product", "", "Bepaalt welke TRA geldt", "Ja", "7.1a-4", "Product noemen", False),
+  ("P2", "Fase en taak", "", "Bepaalt welke risicoregels de checklist vormen", "Ja", "7.1a-4", "Kiezen uit wat Claude toont", False),
+  ("P3", "Versie van de kennisbank", "", "Toont tegen welke versie van de TRA is getoetst", "Automatisch", "7.1a-4", "Niets", True),
+  ("V1", "VGM-projectplan op locatie en bekend", "ja / nee / n.v.t.", "Vaste vraag onder onderwerp A; in het voorbeeldrapport staat dit in de vrije waarneming", "Ja", "", "Eén woord", True),
+  ("V2", "TRA van dit product beschikbaar", "ja / nee", "Een TRA die de monteurs niet kennen, werkt niet", "Ja", "", "Eén woord", True),
+  ("V3", "Werkvergunning aanwezig en geldig", "ja / nee / niet vereist", "Controle op de voorbereiding", "Ja", "", "Eén woord", True),
+  ("V4", "LMRA gedaan vóór aanvang", "ja / nee", "De WPI is het moment waarop we zien of de LMRA gebeurt", "Ja", "", "Navragen bij de monteurs", True),
+ ],
+ "A.3 Algemene observatie en taakgerichte toetsing": [
+  ("O1", "Oordeel per onderwerp A t/m I", "", "Elk onderwerp krijgt een oordeel volgens 5.3", "Ja; desnoods via de afsluitvraag", "7.1d", "Eén woord per onderwerp", False),
+  ("O2", "Waarneming per onderwerp", "", "Wat de inspecteur zag, in zijn woorden", "Bij Conform, Afwijking, Verbeterpunt", "7.1d", "Eén of twee zinnen", False),
+  ("R1", "TRA-regel", "", "Vast nummer, bijvoorbeeld DAM-2.03, met de vaste klasse uit de kennisbank", "Automatisch", "7.1a-4, 7.2a", "Niets", False),
+  ("R2", "Oordeel per regel", "", "Komt van de inspecteur; Claude vraagt ernaar", "Ja, voor elke regel van de taak", "7.1d, 7.2a", "Eén woord, of de afsluitvraag", False),
+  ("R3", "Waarneming per regel", "", "Wat de inspecteur zag", "Bij Conform, Afwijking, Verbeterpunt", "7.1d", "Eén of twee zinnen", False),
+  ("R4", "Betrokken maatregel en niveau", "collectief / individueel / PBM", "Welke maatregel uit de regel ontbrak; het niveau staat in de TRA", "Bij Afwijking en Verbeterpunt", "", "Aanwijzen welke maatregel", True),
+  ("R5", "Oorzaak (vanaf de proef)", "niet bekend / middel niet beschikbaar / maatregel hier niet werkbaar / niet geregeld in de voorbereiding / tijdsdruk / gewoonte", "De oorzaak bepaalt de soort actie; bron voor de basisoorzaken in de trendanalyse", "Bij Afwijking", "7.2-doel", "Eén antwoord op één vraag", True),
+  ("R6", "Waarneming buiten de TRA", "", "Vlag naast een gewone klasse; signaal dat de TRA een risico mist", "Als het speelt", "", "Eén of twee zinnen", False),
+ ],
+ "A.4 Foto's en gesprek": [
+  ("F1", "Fotonummer", "", "Verwijzing in het rapport", "Automatisch", "7.1d", "Niets", False),
+  ("F2", "Toelichting", "", "Een foto zonder uitleg bewijst niets", "Ja, per foto", "7.1d", "Eén zin per foto", False),
+  ("F3", "Koppeling aan onderwerp of regel", "", "De foto staat bij de bevinding", "Ja; Claude stelt voor", "7.1d", "Bevestigen", False),
+  ("F4", "Herkenbare personen in beeld", "", "Claude meldt een herkenbaar gezicht; de inspecteur beslist of de foto blijft", "Automatisch", "", "Alleen bij een melding", True),
+  ("G1", "Wat is besproken en de reactie", "", "Laat zien dat de bevindingen met de monteurs zijn besproken", "Ja", "7.1a-1", "Twee of drie zinnen", False),
+  ("G2", "Ideeën van de monteurs", "", "Verbetervoorstellen van de werkvloer", "Nee", "", "Eén zin per idee", False),
+  ("G3", "Idee opnemen als actie", "ja / nee", "Een idee dat actie wordt krijgt bron 'Idee monteurs'", "Als G2 is ingevuld", "7.1e", "Eén woord", False),
+ ],
+ "A.5 Bevindingen en acties": [
+  ("B1", "Actienummer", "WPI-nummer plus volgnummer", "Terug te vinden in rapport, dashboard en overleg", "Automatisch", "7.1e", "Niets", False),
+  ("B2", "Bevinding", "", "Wat er aan de hand is; apart van de verbeteractie", "Ja", "7.1d", "Niets extra", False),
+  ("B3", "Classificatie", "", "Vaste klasse van de regel, of door Claude voorgesteld bij een algemeen onderwerp of buiten de TRA", "Ja", "7.2a", "Niets of bevestigen", False),
+  ("B4", "Prioriteit", "direct / kort / planmatig (definities in 5.8)", "Bepaalt de termijn; 'direct' betekent dat het werk stopt tot het is opgelost", "Ja", "7.1d", "Eén woord", False),
+  ("B5", "Direct gecorrigeerd", "ja / nee", "Opgelost tijdens de inspectie of nog te doen", "Ja", "7.1d", "Eén woord", False),
+  ("B6", "Verbeteractie", "", "Wat er moet gebeuren, of wat ter plaatse is gedaan", "Ja", "7.1d, 7.1e", "Eén zin", False),
+  ("B7", "Actiehouder (functie)", "", "Wie de actie uitvoert; nooit de QHSE-Manager", "Ja", "7.1d, 7.1e", "Eén functie", False),
+  ("B8", "Toetser", "", "Stelt vast dat de verbeteractie is uitgevoerd; regels in 5.8. Nooit de actiehouder", "Ja", "7.1e", "Niets, of een andere functie", False),
+  ("B9", "Termijn (datum)", "", "Wanneer het klaar moet zijn", "Ja", "7.1d, 7.1e", "Eén datum", False),
+  ("B10", "Status", "open / in behandeling / afgerond / vervallen", "Follow-up; afgerond pas na toetsing", "Automatisch 'open'", "7.1e", "Niets tijdens de WPI", False),
+  ("B11", "Bron", "Inspectie / Idee monteurs / Buiten TRA", "Onderscheidt bevindingen, ideeën en risico's die de TRA niet noemt", "Automatisch", "", "Niets", False),
+  ("B12", "Getoetst op (datum)", "", "Datum waarop de toetser vaststelde dat de verbeteractie is uitgevoerd", "Bij afronden", "7.1e", "Alleen bij direct gecorrigeerd", False),
+  ("B13", "Wijze van verificatie", "foto / document / gezien bij volgende WPI", "Regel uit 5.8; nog niet als veld in het voorbeeldrapport", "Bij afronden", "7.1e", "Niets tijdens de WPI", True),
+  ("B14", "Wat ging opvallend goed", "", "Positieve bevinding die niet aan één regel hangt", "Ja: minimaal één, of 'niets'", "7.1a-2, 7.1d", "Eén zin", False),
+ ],
+ "A.6 Afsluiting en afgeleide gegevens": [
+  ("S1", "Antwoord op de afsluitvraag", "", "Geeft elke overgebleven regel 'Geen afwijking waargenomen' of 'Niet beoordeeld'", "Ja", "7.1d", "Eén antwoord", False),
+  ("S2", "Bevestiging door de inspecteur", "naam, datum, tijd", "De inspecteur staat in voor de inhoud; vastgelegd in het rapport. Het voorbeeldrapport vermeldt naam en datum, nog geen tijd", "Ja", "7.1d", "Eén woord", False),
+  ("S3", "Opmerking over de methode", "", "Wat hield op: spraak, volgorde, vragen. Alleen in de proef", "In de proef", "", "Eén zin", True),
+  ("A1", "Niveau per regel", "waargenomen / alleen bevestigd / niet beoordeeld", "Afgeleid van het oordeel, geen apart veld", "Automatisch", "7.1d", "Niets", False),
+  ("A2", "Aantallen per oordeel en per niveau", "", "Kopcijfers in de samenvatting van het rapport", "Automatisch", "7.2", "Niets", False),
+  ("A3", "Herhaalde bevinding", "", "Zelfde regel of klasse eerder afwijkend op dit product of deze locatie", "Automatisch", "7.2-doel", "Niets", True),
+  ("A4", "Risicoscore van de regel (later)", "", "Om blinde vlekken te wegen. De kennisbank bevat de scores nu niet", "Automatisch", "", "Niets", True),
+ ],
+}
+TRENDS = [
+ ("T1", "Uitvoering van het programma", ["K2", "K3", "K5", "K6", "K7"], "Elk lang project elke maand een WPI? Elke coördinator elke maand, de directie elk kwartaal?", "Coördinatorenoverleg, auditor"),
+ ("T2", "Dekking van korte projecten", ["K7", "K8", "K9"], "Alle korte projecten met kenmerk bezocht, en welk deel van de overige? Alleen met planningcijfers", "Hoofd S&M, auditor"),
+ ("T3", "Bevindingen per classificatie", ["O1", "R2", "B3", "A2"], "Waar zitten de afwijkingen en de positieve bevindingen?", "Directiebeoordeling, auditor"),
+ ("T4", "Oordelen per algemeen onderwerp", ["O1", "A2"], "Welke van de negen onderwerpen scoren goed of slecht?", "Coördinatorenoverleg, toolbox"),
+ ("T5", "Meest afwijkende TRA-regels", ["P2", "R1", "R2"], "Welke maatregelen worden het vaakst niet nageleefd?", "TRA-beheer"),
+ ("T6", "Afwijkingen per maatregelniveau", ["R4"], "Telling van afwijkingen: collectief, individueel of PBM; geen maat voor naleving", "Hoofd S&M"),
+ ("T7", "Oorzaken", ["R5"], "Onbekendheid, ontbrekende middelen, voorbereiding of een onwerkbare maatregel?", "Hoofd S&M, directiebeoordeling"),
+ ("T8", "Waarnemingen buiten de TRA", ["R6", "B11"], "Welke risico's ziet de inspecteur die de TRA niet noemt?", "TRA-beheer"),
+ ("T9", "Opvolging van acties", ["E1", "B1", "B4", "B7", "B8", "B9", "B10", "B11", "B12", "B13"], "Open en te laat; doorlooptijd; bij welke functie blijft het liggen?", "Coördinatorenoverleg, auditor"),
+ ("T10", "Direct gecorrigeerd", ["B4", "B5"], "Welk deel is tijdens de inspectie opgelost; hoe vaak stopte het werk?", "Directiebeoordeling"),
+ ("T11", "Herhaalde bevindingen", ["E1", "R1", "B3", "A3"], "Komt dezelfde afwijking terug nadat de actie is gesloten?", "Hoofd S&M, auditor"),
+ ("T12", "Positieve bevindingen", ["O2", "R2", "R3", "B14"], "Wat gaat aantoonbaar goed?", "Toolbox, auditor"),
+ ("T13", "Diepgang", ["K6", "K13", "S1", "A1"], "Deel waargenomen, alleen bevestigd, niet beoordeeld; duur van een WPI", "Hoofd S&M, auditor, proef"),
+ ("T14", "Per product en fase", ["P1", "P2", "R2"], "Bij welk product of in welke fase zitten de afwijkingen?", "TRA-beheer, werkvoorbereiding"),
+ ("T15", "Blinde vlekken", ["R1", "S1", "A1", "A4"], "Welke TRA-maatregelen zijn nooit waargenomen? Later gewogen met de risicoscore", "Hoofd S&M, TRA-beheer, auditor"),
+ ("T16", "Inbreng van de monteurs", ["G2", "G3", "B11"], "Welke ideeën kwamen van de werkvloer en wat is ermee gedaan?", "Coördinatorenoverleg"),
+ ("T17", "Voorbereiding op orde", ["V1", "V2", "V3", "V4"], "Hoe vaak ontbreken projectplan, TRA, vergunning of LMRA?", "Hoofd S&M, werkvoorbereiding"),
+]
+ALLE = {v[0]: v for groep in VELDEN.values() for v in groep}
+VOORG = {c for c, v in ALLE.items() if v[7]}
+for t in TRENDS:
+    for f in t[2]:
+        assert f in ALLE, (t[0], f)
+TREND_VAN = {c: [t[0] for t in TRENDS if c in t[2]] for c in ALLE}
+VOL = [t[0] for t in TRENDS if all(f in VOORG for f in t[2])]
+DEELS = [t[0] for t in TRENDS if any(f in VOORG for f in t[2]) and t[0] not in VOL]
+
+
+def nlijst(xs):
+    return ", ".join(xs[:-1]) + " en " + xs[-1] if len(xs) > 1 else "".join(xs)
+
+
+def wpinr(xml):
+    """WPI-nummers en actienummers niet laten afbreken: vaste koppeltekens."""
+    def sub(m):
+        return m.group(0).replace("-", '</w:t><w:noBreakHyphen/><w:t xml:space="preserve">')
+    xml = re.sub(r"WPI-\d{8}-[A-Z]+-[A-Z0-9]+(?:-\d)?", sub, xml)
+    # weduwen en wezen voorkomen (het sjabloon zet dit uit)
+    return re.sub(r'(<w:pStyle w:val="[^"]+"/>(?:<w:keepNext/>)?(?:<w:keepLines/>)?(?:<w:pageBreakBefore/>)?)', r'\1<w:widowControl/>', xml)
+
+
+# ============================================================ voorwerk + samenvatting
+add(pagebreak())
+rijen = [["Document", "Voorstel nieuwe methode werkplekinspecties, met concept-procedure versie 2.0"],
+         ["Versie en datum", "0.4 concept, 11-11-2026, ter bespreking op 12-11-2026"],
+         ["Opgesteld door", ""],
+         ["Goedgekeurd door", ""],
+         ["Bijlagen", "A Vast te leggen gegevens per WPI (achterin). B Voorbeeldrapport WPI-20261105-DAM-C2 en C WPI-dashboard: afzonderlijke bestanden, beide VOORBEELD — fictieve data"]]
+t = table([[[para(a, bold=True, size=TAB, space_after=0)],
+            [para(b, size=TAB, space_after=0) if b else para("in te vullen", italic=True, color=GRIJS, size=TAB, space_after=0)]]
+           for a, b in rijen], widths=[2000, 7064], header=False)
+add(t[:t.rfind("<w:p ")] + para("", space_after=40, size=6))
+
+h1("Samenvatting")
+lab("Probleem en voorstel")
+p("De auditor oordeelde dat onze werkplekinspecties (WPI's) hun doel missen: de checklist in AMS zegt niets over het "
+  "werk dat de monteurs doen, en een trendanalyse (VCA 7.2) ontbreekt. Voorstel: de WPI koppelen aan onze 21 "
+  "product-TRA's (666 risicoregels). De inspecteur spreekt op zijn telefoon in de Claude-app in wat hij ziet; Claude "
+  "noemt de maatregelen van de taak, vraagt naar oordeel, actie en termijn en maakt een rapport. Oordeel en "
+  "waarneming komen altijd van de inspecteur, en het rapport laat zien waar hij feitelijk heeft gekeken. Een dashboard "
+  "maakt er actieoverzicht en trendanalyse van; het inspectieprogramma wordt per werkplek opgezet.", space_after=60)
+lab("Wat het vraagt en kost")
+p("We verwachten dat inspreken niet meer tijd kost dan AMS; de proef meet het. De proef vraagt per coördinator een "
+  "kwartier uitleg, drie WPI's (één boven de maandnorm), het nalezen van elk rapport en een half uur evaluatie. We "
+  "gebruiken het bestaande Noardling Claude-account, zonder extra licentiekosten; persoonlijke accounts kosten geld en "
+  "zijn een apart besluit. Het programma per werkplek kan meer WPI's vragen dan de 28 per jaar van de "
+  "inspecteurnormen; hoeveel, weten we pas als de projectplanning 2026 is geteld.", space_after=60)
+lab("De grootste risico's en wat we eraan doen")
+bl("Eén gedeeld account: de inspecteur is niet herleidbaar en rapporten zijn wijzigbaar. Daarom bevestiging met naam, datum en tijd en dezelfde dag een PDF in het QMS (7.2).")
+bl("Terugvalformulier, Word-sjabloon en de koppeling van het dashboard aan echte rapporten bestaan nog niet; de proef start pas als het minimum klaar is (7.1).")
+bl("Te veel taken bij het Hoofd S&M; we verdelen ze (7.3).")
+bl("Spraak en foto's zijn op locatie niet getest; de proef doet dat bij slecht weer en zwak bereik.")
+lab("Nu nodig")
+p("Besluiten over de proef (23 november 2026 tot en met 15 januari 2027, twee Montage Coördinatoren en één "
+  "directielid, zeven WPI's, evaluatie op 18 januari 2027), wie de projectaantallen 2026 levert, en de regels voor "
+  "opslag, toetsing en taakverdeling. De overige besluiten in 8.1 vallen na de proef.", space_after=0)
+
+add(pagebreak())
+add(_kn(para("Inhoud", bold=True, color=BLAUW, size=24, space_after=60)))
+toc()
+gap(80)
+vca("Bevat wat de VCA-checklist 2026/6.1 eist, in de woorden van de checklist; opsommingen staan op één regel.", "Blauw kader: VCA-eis")
+keuze("Bevat wat Noardling zelf kiest binnen de ruimte die de VCA laat. Elk oranje kader en elke verwijzing als "
+      "(besluit 8) hoort bij een regel in 8.1. Tot daarover is beslist, is het een voorstel.", "Oranje kader: keuze Noardling")
+
+# ============================================================ 1
+h1("1. Aanleiding en wat er verandert")
+p("We hebben 21 productspecifieke TRA's waarin per taak staat welk risico er speelt en welke maatregelen we hebben "
+  "afgesproken. Bij de WPI gebruiken we die nu niet. De nieuwe methode hangt de inspectie daaraan op.")
+tbl([
+    ["", "Nu (AMS)", "Nieuwe methode"],
+    ["Waar toetsen we op", "Vaste checklist, gelijk voor elk werk", "Negen algemene onderwerpen plus de risicoregels uit de TRA van de taak die wordt uitgevoerd"],
+    ["Positieve bevindingen en acties", "Positief niet zichtbaar; acties los van de bevinding", "Elke beschreven maatregel die in orde is; genummerde acties met actiehouder, toetser en termijn"],
+    ["Programma", "Per inspecteur", "Per werkplek, met een regel voor korte projecten"],
+    ["Trendanalyse", "Ontbreekt", "Elke regel heeft een classificatie; het dashboard telt over alle rapporten"],
+], [2100, 2800, 4164], first_bold=True)
+
+# ============================================================ 2
+h1("2. Zo verloopt een WPI")
+p("De skill wpi-begeleider leidt de inspecteur door negen stappen (0–8): 0 kop, 1 product en taak, 2 algemene "
+  "observatie, 3 taakgerichte toetsing, 4 foto's, 5 gesprek met de monteurs, 6 bevindingen en acties, 7 afsluiten, "
+  "8 rapport. De volledige beschrijving staat in de procedure (5.6). De volgorde is vrij en een korte WPI is geldig.")
+h2("Voorbeeld van de dialoog")
+add(_kn(para("VOORBEELD — fictieve data", bold=True, color=ROOD, size=BODY, space_after=40)))
+p("Fragmenten uit de inspectie waarvan het volledige rapport bijlage B is (WPI-20261105-DAM-C2). Locatie, project en "
+  "personen zijn verzonnen; de risicoregels komen uit de TRA Damwand.", italic=True, space_after=60)
+
+
+def dialoog(regels):
+    tblpr = ('<w:tblPr><w:tblW w:w="9064" w:type="dxa"/><w:tblLayout w:type="fixed"/>'
+             '<w:tblLook w:val="04A0" w:firstRow="0" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/></w:tblPr>')
+    trs = []
+    for wie, tekst in regels:
+        fill = "F4F7FB" if wie == "Claude" else None
+        c1 = _cel([para(wie, bold=True, size=TAB, space_after=0, color=BLAUW if wie == "Claude" else None)], 1200, fill=fill, valign="top")
+        c2 = _cel([para(tekst, size=TAB, space_after=0, italic=(wie == "Inspecteur"))], 7864, fill=fill, valign="top")
+        trs.append(f"<w:tr><w:trPr><w:cantSplit/></w:trPr>{c1}{c2}</w:tr>")
+    add(f'<w:tbl>{tblpr}<w:tblGrid><w:gridCol w:w="1200"/><w:gridCol w:w="7864"/></w:tblGrid>{"".join(trs)}</w:tbl>'
+        + para("", space_after=60, size=6))
+
+
+dialoog([
+    ("Inspecteur", "Start WPI. Coördinator 2, RWZI Voorbeeldstad, project P26-168. Twee monteurs, ze halen de damwand eruit. Droog, weinig wind, het betondek is nat."),
+    ("Claude", "Product Damwand, fase Demontage, taak 'Verwijderen damwand': klopt dat? Dan is het nummer WPI-20261105-DAM-C2. Acht risicoregels. DAM-2.05, last begeleiden; maatregel: veilige afstand en stuurlijnen. Wat zie je?"),
+    ("Inspecteur", "Klopt. Ze begeleiden met een stuurlijn, vanaf een droge plek buiten de draaicirkel. Foto erbij."),
+    ("Claude", "Welk oordeel geef je: conform, afwijking of verbeterpunt?"),
+    ("Inspecteur", "Conform."),
+    ("Claude", "Genoteerd met jouw waarneming; foto 3 hangt aan DAM-2.05. DAM-2.06, afvalwater en slib; maatregelen: vooraf reinigen door de opdrachtgever, handen wassen, niet eten of drinken in de werkzone. Wat zie je?"),
+    ("Inspecteur", "De delen komen onder het slib omhoog, er is niet vooraf gereinigd. En er wordt gedronken in de werkzone. Foto."),
+    ("Claude", "Welk oordeel geef je? Is het ter plaatse opgelost? Welke verbeteractie hoort erbij, wie voert die uit, wanneer, en welke prioriteit: direct, kort of planmatig?"),
+    ("Inspecteur", "Afwijking. Niet opgelost. Reiniging vooraf door de opdrachtgever vast opnemen in de werkvoorbereiding en het VGM-projectplan. Werkvoorbereider, binnen twee weken, kort."),
+    ("Claude", "Actie WPI-20261105-DAM-C2-3, klasse 'Gevaarlijke stoffen en hygiëne', foto 4. Bevinding: niet vooraf gereinigd; drinken in de werkzone. Verbeteractie: reiniging vooraf vast opnemen. Actiehouder Werkvoorbereider, termijn 19-11-2026, kort. Toetser is standaard het Hoofd Service & Montage. Akkoord?"),
+    ("Inspecteur", "Akkoord. DAM-2.07: de gasmeter hangt boven aan de ladder, niet bij de monteur in het kanaal. Ik heb ze hem laten omhangen; hij hangt nu op borsthoogte."),
+    ("Claude", "Welk oordeel en welke prioriteit geef je? En wie is actiehouder van deze actie?"),
+    ("Inspecteur", "Afwijking, direct. Actiehouder: de monteurs ter plaatse, zij hebben hem omgehangen."),
+    ("Claude", "Actie -4, direct gecorrigeerd. Omdat de monteurs het ter plaatse hebben gecorrigeerd, toets jij ter plaatse. Heb je gezien dat de gasmeter nu bij de monteur hangt?"),
+    ("Inspecteur", "Ja, gezien. De monteurs zeggen dat hij bij het afdalen in de weg zit. Hun idee: een klem of karabijn om hem op borsthoogte te dragen."),
+    ("Claude", "Je hebt als toetser vastgesteld dat de meter nu bij de monteur hangt; ik zet -4 op Afgerond, getoetst 05-11-2026. Klopt dat? En wil je het idee als actie opnemen? Zo ja: welk oordeel hoort erbij, en welke verbeteractie, actiehouder, termijn en prioriteit?"),
+    ("Inspecteur", "Klopt. Ja: verbeterpunt. Klem of karabijn bij elke gasmeter in de wagens. Dat doe ik zelf, eind december, planmatig. Dat was het."),
+    ("Claude", "Actie -5 bij DAM-2.07, bron 'Idee monteurs', actiehouder jij, toetser het Hoofd Service & Montage. Over F, H, DAM-2.02 en DAM-2.08 heb je niets gezegd. Is daar niets op aan te merken, of heb je ze niet gezien?"),
+    ("Inspecteur", "F en H niets op aan te merken. 2.02 en 2.08 niet gezien, de bevestiging was al los toen ik kwam."),
+    ("Claude", "Dan krijgen F en H 'Geen afwijking waargenomen' en DAM-2.02 en 2.08 'Niet beoordeeld'. Samenvatting: van de 17 regels 13 waargenomen, 2 alleen bevestigd, 2 niet beoordeeld; 9 conform, 3 afwijkingen, 1 verbeterpunt, 5 acties. Bevestig je dit?"),
+    ("Inspecteur", "Bevestigd."),
+])
+p("Claude sluit niets af en legt geen oordeel vast zonder dat de inspecteur het zegt of bevestigt. Wat het rapport per regel en per actie bevat en wat wij daaraan willen toevoegen, staat in hoofdstuk 3.")
+
+# ============================================================ 3
+h1("3. Wat we per WPI vastleggen")
+p("De volledige lijst staat in bijlage A, met per veld het waarom, de verplichting, de VCA-eis en trends die het "
+  "bedient en de kosten voor de inspecteur. De oordelen en hun betekenis staan in 5.3. De rechterkolom hieronder is "
+  "ons voorstel voor uitbreiding (besluit 2).")
+tbl([
+    ["Onderdeel", "In het voorbeeldrapport (bijlage B)", "Voorgesteld, nog niet in het voorbeeldrapport"],
+    ["Kop", "WPI-nummer, inspecteur en functie, soort inspectie, datum en tijd, opdrachtgever, locatie, project, monteurs, omstandigheden", "Verantwoordelijke coördinator, deelnemend directielid, korte duur, risicokenmerk, aangekondigd, invoerwijze; twee extra soorten inspectie"],
+    ["Start, product en taak", "Product, fase, taak", "Eerdere acties en afwijkingen tonen (E1); versie van de kennisbank; vier ja/nee-vragen over de voorbereiding"],
+    ["Per onderwerp en regel", "Oordeel, waarneming, classificatie; afgeleid: waargenomen, alleen bevestigd of niet beoordeeld", "Bij een afwijking: welke maatregel ontbrak en de oorzaak (vanaf de proef). Later: de risicoscore"],
+    ["Foto's en gesprek", "Nummer, toelichting, koppeling; besproken, reactie, ideeën", "Melding als een persoon herkenbaar in beeld is"],
+    ["Acties", "Nummer, bevinding, verbeteractie, prioriteit, direct gecorrigeerd, actiehouder, toetser, termijn, status, getoetst op, bron", "Wijze van verificatie"],
+    ["Afsluiting", "Afsluitvraag; bevestiging met naam en datum; aantallen", "Tijd bij de bevestiging; opmerking over de methode (proef)"],
+], [1800, 3600, 3664], first_bold=True)
+
+# ============================================================ 4
+h1("4. Welke trenddata dit oplevert")
+p("Elk rapport eindigt met een gegevenstabel; het dashboard (bijlage C, in aanbouw) telt die op. Hoeveel WPI's er "
+  "komen, volgt uit het programma per werkplek (5.5) en is onbekend tot de planning 2026 is geteld; de inspecteurnormen "
+  "geven een ondergrens van 28 per jaar. Bij zulke aantallen zeggen alleen T1 en T9 per maand of kwartaal iets; de "
+  "andere trends lezen we op jaarbasis en in aantallen.")
+tbl([["Trend", "Uit velden (bijlage A)", "Welke vraag beantwoordt hij", "Voor wie"]] +
+    [[f"{c} {n}", ", ".join(fs), v, w] for c, n, fs, v, w in TRENDS],
+    [2100, 1300, 3364, 2300], first_bold=True)
+p(f"T1, T3, T9 en T12 zijn nodig voor VCA 7.1 en 7.2. T5, T8, T14 en T15 bestaan alleen doordat de WPI aan de TRA "
+  f"hangt. Geheel op voorgestelde velden rusten {nlijst(VOL)}; deels {nlijst(DEELS)}.")
+
+# ============================================================ 5
+h1("5. Procedure Werkplekinspecties, versie 2.0 concept")
+p("Herziening van versie 1.0. Eigenaar: Hoofd Service, Montage & Aftersales (hierna Hoofd Service & Montage). "
+  "Reviewfrequentie: jaarlijks. Na de proef wordt dit hoofdstuk een afzonderlijk document in het QMS, met bijlage A. "
+  "Wat is gewijzigd ten opzichte van versie 1.0 staat in 5.12.", italic=True, color=BLAUW)
+
+h2("5.1 Eisen uit de VCA")
+vca("7.1 Worden periodiek werkplekinspecties uitgevoerd door operationeel leidinggevenden? (*/**/P)\n"
+    "Doelstelling: Het in stand houden dan wel bevorderen van een veilige werkomgeving en werkwijze.\n"
+    "Minimumeisen:\n"
+    "• Er is een procedure, waarin de volgende zaken staan beschreven: – de uitvoering van de inspecties; – de positieve "
+    "bevindingen van de inspecties; – de opvolging van waargenomen verbeterpunten; – gebruik van de checklist.\n"
+    "• Inspecties worden ten minste eenmaal per maand per operationele werkplek uitgevoerd door operationeel "
+    "leidinggevenden.(10)\n"
+    "• Bovenstaand punt kan ook ingevuld worden door operationele medewerkers onder verantwoordelijkheid van een "
+    "operationeel leidinggevende.\n"
+    "• Er worden inspectieverslagen gemaakt, waarin opgenomen positieve bevindingen, geconstateerde afwijkingen, uit te "
+    "voeren verbeteracties, uitvoeringsverantwoordelijken en de bepaling van de tijdsduur voor de uitvoering.\n"
+    "• Er is een actieplan met daarin: – actiepunten, voortkomende uit de inspecties; – de verantwoordelijken voor de "
+    "uitvoering en toetsing; – tijdsplanning.\n"
+    "• De (operationele) directieleden nemen minimaal eenmaal per kwartaal deel aan een werkplekinspectie op een "
+    "werklocatie.\n"
+    "Documenten: • Procedure met betrekking tot de uitvoering van de werkplekinspecties en het inspectieprogramma "
+    "• Verslagen van de uitgevoerde inspecties en de follow-up hiervan\n"
+    "(10) Bij werkzaamheden van korte duur werkt het bedrijf een programma uit waarbij de bovenstaande frequentie naar "
+    "verhouding wordt behaald, rekening houdend met de risico's.",
+    "VCA 2026/6.1, vraag 7.1")
+vca("7.2 Vindt er een trendanalyse plaats van bij inspecties geconstateerde bevindingen (positieve en negatieve)? (-/□/P)\n"
+    "Doelstelling: Het identificeren van basisoorzaken van structurele verbetermogelijkheden.\n"
+    "Minimumeisen: • Bevindingen worden geclassificeerd. • Er wordt een jaarlijkse trendanalyse gemaakt, inclusief te "
+    "ondernemen acties en follow-up.\n"
+    "Documenten: • Trendanalyse • Overzicht verbeteracties",
+    "VCA 2026/6.1, vraag 7.2")
+
+h2("5.2 Doel en toepassingsgebied")
+p("Deze procedure beschrijft hoe Noardling B.V. werkplekinspecties uitvoert binnen Service & Montage. Zij waarborgt dat "
+  "VGM-risico's tijdig worden gesignaleerd en gecorrigeerd, dat leidinggevenden en directie aantoonbaar betrokken zijn "
+  "bij het toezicht, en dat bevindingen worden opgevolgd en gebruikt voor verbetering van het VGM-beheersysteem. Zij "
+  "geldt voor alle werkzaamheden die door of namens Service & Montage worden uitgevoerd, uitsluitend op projectlocaties.")
+keuze("Het WPI-rapport legt alleen bevindingen vast over het werk van onze eigen monteurs; er is geen veld voor "
+      "onderaannemers of derden. Versie 1.0 liet de inspecteur waarnemingen ook bespreken met de leidinggevende van de "
+      "onderaannemer. Dat blijft bij direct gevaar: de inspecteur laat het stoppen, spreekt de betrokkene of diens "
+      "leidinggevende aan en meldt het volgens de procedure incidentenrapportage. Onderaannemers worden beoordeeld via "
+      "de Procedure Inkoop van Diensten.", "Keuze Noardling · besluit 3: alleen eigen monteurs")
+
+h2("5.3 Definities en oordelen")
+tbl([
+    ["Begrip", "Betekenis in deze procedure (besluit 7)"],
+    ["WPI", "Geplande, vastgelegde inspectie van een werkplek, gericht op de naleving van VGM-afspraken: een algemene observatie plus een toetsing van het lopende werk aan de maatregelen uit de TRA"],
+    ["VGM-inspectie directie", "WPI waaraan een directielid deelneemt of die een directielid uitvoert, conform VCA 7.1"],
+    ["Operationele werkplek", "Een project op één locatie waar monteurs van Service & Montage aan het werk zijn"],
+    ["Werk van korte duur", "Een project dat korter dan een maand op dezelfde locatie loopt"],
+    ["Risicokenmerk", "Gepland werk met hijsen met een mobiele kraan, betreden van een besloten ruimte met vergunning, of werken boven of naast open water zonder vaste randbeveiliging. Vastgesteld uit de planning en het VGM-projectplan, niet uit de TRA-klassen"],
+    ["Operationeel leidinggevende", "De Montage Coördinator en het Hoofd Service & Montage"],
+    ["Checklist", "De negen algemene onderwerpen A t/m I (5.6) plus de risicoregels uit de kennisbank die horen bij de taak die wordt uitgevoerd. Kennisbank: de 21 product-TRA's met per risicoregel een vast nummer, de maatregelen en een vaste klasse"],
+    ["Bevinding", "Positief: oordeel Conform of 'wat ging opvallend goed'. Afwijking en verbeterpunt: zie hieronder. Buiten TRA: vlag bij een risico dat de TRA niet noemt, naast een gewone klasse"],
+    ["Actieoverzicht", "Alle acties uit WPI's met actiehouder, toetser, termijn, status en bron (Inspectie, Idee monteurs of Buiten TRA), in het WPI-dashboard; dit is het actieplan uit VCA 7.1"],
+    ["Toetser", "Degene die vaststelt dat de verbeteractie is uitgevoerd; nooit dezelfde als de actiehouder (5.8)"],
+], [2300, 6764], first_bold=True)
+add(_kn(para("De oordelen (besluit 4). Het niveau volgt uit het oordeel en is geen apart veld.", bold=True, size=BODY, space_after=40)))
+tbl([
+    ["Oordeel", "Wanneer", "Niveau", "Telt als"],
+    ["Conform", "De inspecteur beschrijft wat hij zag en heeft niets aan te merken", "Waargenomen", "Positieve bevinding"],
+    ["Afwijking", "De inspecteur beschrijft dat een afgesproken maatregel ontbreekt of niet wordt nageleefd", "Waargenomen", "Negatieve bevinding, met actie"],
+    ["Verbeterpunt", "De inspecteur beschrijft iets dat voldoet maar veiliger kan", "Waargenomen", "Negatieve bevinding, met actie"],
+    ["Geen afwijking waargenomen", "Alleen via de afsluitvraag, zonder eigen waarneming", "Alleen bevestigd", "Neutraal"],
+    ["Niet beoordeeld", "Niet gezien", "Niet beoordeeld", "Blinde vlek"],
+    ["Niet van toepassing", "De regel speelt niet bij dit werk", "–", "Telt niet mee"],
+], [2100, 4064, 1500, 1400], first_bold=True)
+
+h2("5.4 Verantwoordelijkheden")
+tbl([
+    ["Functie", "Verantwoordelijkheid"],
+    ["Directielid", "Neemt minimaal eenmaal per kwartaal deel aan een WPI op een projectlocatie, zelfstandig of met een coördinator. Ziet toe op de opvolging van bevindingen"],
+    ["Hoofd Service & Montage", "Eigenaar van de procedure. Stelt elke maand het inspectieprogramma vast. Leidt de bespreking van acties in het coördinatorenoverleg. Is standaard toetser van acties en mag per actie een andere coördinator aanwijzen. Stelt de jaarlijkse trendanalyse op. Voert aanvullend WPI's uit"],
+    ["Montage Coördinator", "Voert minimaal 1 WPI per maand uit, volgens het programma. Bespreekt waarnemingen ter plaatse met de monteurs. Zet het rapport van zijn WPI dezelfde dag als PDF in het QMS. Geeft in het overleg de status door van de acties uit zijn WPI's. Is verantwoordelijk voor WPI's die een monteur onder zijn naam uitvoert"],
+    ["Monteur", "Werkt mee aan inspecties; signaleert en meldt onveilige situaties; voert toegewezen acties uit. Kan onder voorwaarden zelf een WPI uitvoeren (5.7)"],
+    ["QHSE-Manager", "Ondersteunend: beheert de kennisbank namens het Hoofd Service & Montage en helpt bij de trendanalyse. Niet verantwoordelijk voor uitvoering of opvolging van inspecties en geen actiehouder (besluit 16)"],
+], [2300, 6764], first_bold=True)
+
+h2("5.5 Inspectieprogramma per werkplek")
+vca("• Inspecties worden ten minste eenmaal per maand per operationele werkplek uitgevoerd door operationeel "
+    "leidinggevenden.(10)\n(10) Bij werkzaamheden van korte duur werkt het bedrijf een programma uit waarbij de "
+    "bovenstaande frequentie naar verhouding wordt behaald, rekening houdend met de risico's.", "VCA 7.1, tweede minimumeis en voetnoot 10")
+p("Hoofdregel. Elk project dat langer dan een maand op één locatie loopt, krijgt elke kalendermaand ten minste één "
+  "WPI. Die WPI doet een Montage Coördinator of het Hoofd Service & Montage, of een monteur onder hun "
+  "verantwoordelijkheid (5.7).")
+p("Normen per inspecteur. Daarnaast doet elke Montage Coördinator minimaal 1 WPI per maand en neemt de directie minimaal "
+  "eenmaal per kwartaal deel. Een WPI met een deelnemend directielid telt voor beide normen en voor de werkplek "
+  "(besluit 12). De normen per inspecteur zijn een ondergrens; het benodigde aantal volgt uit het programma per "
+  "werkplek.")
+keuze("Een kort project met ten minste één risicokenmerk (5.3) krijgt ten minste één WPI, op een dag waarop het "
+      "kenmerkende werk gepland is. Van de overige korte projecten die in een kwartaal starten, krijgt voorlopig één op de "
+      "vier een WPI. Het risicokenmerk wordt bij de planning vastgesteld, niet uit de TRA-klassen: die raken vrijwel elk "
+      "project. Het aandeel van één op de vier is niet onderbouwd en wordt vastgesteld als de aantallen uit de "
+      "projectplanning bekend zijn.", "Keuze Noardling · besluit 8: voetnoot 10 bij werk van korte duur")
+add(_kn(para("Rekenregel per kwartaal (cijfers in te vullen uit de planning 2026; besluit 9)", bold=True, size=BODY, space_after=40)))
+IV = "In te vullen uit de planning 2026"
+tbl([
+    ["Regel", "Telling", "Aantal", "Benodigde WPI's"],
+    ["a", "Lopende projecten langer dan een maand, opgeteld over de drie maanden (projectmaanden)", IV, "a"],
+    ["b", "Korte projecten met risicokenmerk, gestart in het kwartaal", IV, "b"],
+    ["c", "Overige korte projecten, gestart in het kwartaal", IV, "c ÷ 4, naar boven afgerond (voorlopig)"],
+    ["Totaal", "Benodigd", "", "a + b + c ÷ 4"],
+    ["Capaciteit", "Montage Coördinatoren: 2 × 3 per kwartaal als ondergrens; aanvullend Hoofd S&M en monteurs onder verantwoordelijkheid", "6 per kwartaal of meer", "Is benodigd groter dan 6, dan meer WPI's per coördinator of inzet van monteurs"],
+], [1100, 3864, 1900, 2200], first_bold=True)
+p("Het Hoofd Service & Montage stelt in het eerste coördinatorenoverleg van elke maand het document 'Inspectieprogramma "
+  "[maand]' vast: de lopende projecten langer dan een maand, de korte projecten met risicokenmerk, de steekproef uit "
+  "de overige korte projecten, en per project de inspecteur. Na de maand staat bij elk project het WPI-nummer of de "
+  "reden waarom het niet is gelukt. Een gemiste WPI wordt in het volgende overleg besproken en ingehaald zolang het "
+  "project loopt (besluit 10). Het document staat als PDF in het QMS (5.11).")
+
+h2("5.6 Uitvoering in negen stappen")
+p("De inspecteur selecteert een werkplek uit het programma en kondigt het bezoek bij voorkeur niet (of slechts kort) "
+  "van tevoren aan, zodat een representatief beeld ontstaat; minimaal een derde van de WPI's is onaangekondigd en het "
+  "rapport vermeldt het (besluit 11). Hij opent de WPI-projectmap in de Claude-app. De skill wpi-begeleider leidt hem "
+  "door negen stappen (0–8); de volgorde is vrij. Claude vraagt naar waarneming en oordeel en vult ze nooit zelf in.")
+tbl([
+    ["Stap", "Wat de inspecteur doet", "Wat Claude doet"],
+    ["0. Kop", "Noemt naam en functie, soort inspectie, opdrachtgever, locatie, project, monteurs, omstandigheden", "Vraagt naar wat ontbreekt; noteert datum en tijd; toont open acties en eerdere afwijkingen op dit product of deze locatie"],
+    ["1. Product en taak", "Noemt het product en waar de monteurs mee bezig zijn", "Toont fasen en taken uit de TRA; maakt het WPI-nummer en geeft de chat die naam"],
+    ["2. Algemene observatie", "Beschrijft wat hij ziet bij de onderwerpen A t/m I en geeft per onderwerp een oordeel", "Noemt de onderwerpen die nog niet aan bod kwamen"],
+    ["3. Taakgerichte toetsing", "Beschrijft per risicoregel wat hij ziet en geeft een oordeel; bij een afwijking ook de oorzaak", "Noemt per regel de maatregelen uit de TRA en vraagt naar het oordeel"],
+    ["4. Foto's", "Maakt foto's, zonder herkenbare personen, en zegt wat erop staat", "Nummert en koppelt de foto aan een onderwerp of regel"],
+    ["5. Gesprek", "Bespreekt de waarnemingen, ook de positieve, ter plaatse met de monteurs", "Legt reactie en ideeën vast; vraagt of een idee een actie wordt"],
+    ["6. Bevindingen en acties", "Noemt per afwijking of verbeterpunt de verbeteractie, actiehouder, termijn en prioriteit, en minimaal één ding dat opvallend goed ging of uitdrukkelijk 'niets'", "Nummert de actie, noemt de toetser volgens 5.8 en vraagt naar wat ontbreekt"],
+    ["7. Afsluiten", "Beantwoordt de afsluitvraag over regels waar hij niets over zei en bevestigt de samenvatting", "Geeft 'Geen afwijking waargenomen' of 'Niet beoordeeld'; legt naam, datum en tijd van de bevestiging vast"],
+    ["8. Rapport", "Leest het rapport na en zet het dezelfde dag als PDF in het QMS", "Maakt het Word-rapport met negen vaste onderdelen"],
+], [1900, 3700, 3464], first_bold=True)
+add(_kn(para("De negen algemene onderwerpen (de vaste helft van de checklist)", bold=True, size=BODY, space_after=40)))
+tbl([
+    ["", "Onderwerp", "", "Onderwerp"],
+    ["A", "Voorbereiding en documenten: VGM-projectplan, TRA, werkvergunning, LMRA", "F", "Werkplek en omgeving"],
+    ["B", "Veiligstellen (LOTOTO)", "G", "Gevaarlijke stoffen, hygiëne en milieu"],
+    ["C", "PBM", "H", "Noodvoorzieningen"],
+    ["D", "Arbeidsmiddelen en gereedschap: staat, keuring", "I", "Gedrag en samenwerking"],
+    ["E", "Hijsen en kraan", "", ""],
+], [500, 4532, 500, 3532], zebra=False)
+p("Direct gevaarlijke situaties worden ter plaatse gestopt en, indien nodig, gemeld conform de procedure "
+  "incidentenrapportage. Een korte WPI is geldig; het rapport laat zien hoeveel regels zijn waargenomen. Namen van "
+  "monteurs staan alleen in de kop.")
+
+h2("5.7 Inspectie door een monteur")
+keuze("Een monteur mag een WPI uitvoeren als hij VOL-VCA heeft, minstens twee jaar bij Service & Montage werkt en door "
+      "een Montage Coördinator in de methode is geïnstrueerd (vastgelegd), en als hij zelf niet op die werkplek werkt. "
+      "Soort inspectie is dan 'WPI monteur'; in de kop staat de verantwoordelijke coördinator, die het rapport naleest en "
+      "mee bevestigt. Zo'n WPI telt voor de werkplek, niet voor de maandnorm van de coördinator.",
+      "Keuze Noardling · besluit 13: inspectie door een monteur (VCA 7.1, derde minimumeis)")
+
+h2("5.8 Inspectieverslag en opvolging van acties")
+p("Na de bevestiging maakt Claude het inspectieverslag (WPI-rapport) met negen vaste onderdelen: 1 Kop, 2 Samenvatting, "
+  "3 Algemene observatie, 4 Taakgerichte toetsing, 5 Positieve bevindingen, 6 Bevindingen en acties, 7 Gesprek met de "
+  "monteurs, 8 Foto's met toelichting, 9 Gegevenstabel. Elke afwijking en elk verbeterpunt, ook buiten de TRA, krijgt "
+  "een actie met bevinding en verbeteractie apart, actiehouder, toetser, termijn, prioriteit en bron: Inspectie, Idee "
+  "monteurs of Buiten TRA (besluit 5). Prioriteit: direct (het werk stopt tot het ter plaatse is opgelost), kort (binnen "
+  "twee weken) of planmatig (uiterlijk einde volgend kwartaal).")
+bl("De inspecteur zet het rapport dezelfde dag als PDF in het QMS; die PDF is het bewijsstuk. Een latere wijziging wordt een nieuwe versie met reden (besluit 17).")
+bl("In het coördinatorenoverleg op maandag geeft de inspecteur per actienummer uit zijn WPI's de nieuwe status door in de WPI-projectmap; Claude werkt het actieoverzicht bij. Het verslag van het overleg vermeldt de besproken actienummers (besluit 15).")
+bl("Status: open, in behandeling, afgerond of vervallen (met reden). Een actie is pas Afgerond nadat de toetser heeft vastgesteld dat de verbeteractie is uitgevoerd; hij legt de datum (getoetst op) en de wijze vast: foto, document of waarneming bij een volgende WPI.")
+bl("Toetser (besluit 14): standaard het Hoofd Service & Montage, of een coördinator die hij per actie aanwijst. Is het Hoofd S&M actiehouder, dan toetst de inspecteur. Is het Hoofd S&M zowel inspecteur als actiehouder, of heeft de inspecteur de afwijking zelf gecorrigeerd, dan toetst een Montage Coördinator die geen actiehouder is, of het directielid. Corrigeren de monteurs een afwijking direct, dan toetst de inspecteur ter plaatse. Toetser en actiehouder zijn nooit dezelfde; de QHSE-Manager is geen actiehouder.")
+bl("Is een actie meer dan twee weken te laat, dan beslist het Hoofd Service & Montage over een nieuwe termijn of een andere actiehouder.")
+
+h2("5.9 Classificatie en trendanalyse")
+p("Elke beoordeelde regel heeft een van veertien klassen (besluit 6): PBM, Veiligstellen-LOTOTO, Hijsen, Werken op "
+  "hoogte of bij water, Arbeidsmiddelen en keuring, Orde en netheid, Gevaarlijke stoffen en hygiëne, Besloten ruimte en "
+  "gas, Fysieke belasting, Noodvoorzieningen, Documenten en voorbereiding, Gedrag en werkwijze, Omgeving en afzetting, "
+  "Milieu. Een risicoregel heeft een vaste klasse in de kennisbank; bij de algemene onderwerpen en buiten de TRA stelt "
+  "Claude een klasse voor en bevestigt de inspecteur.")
+p("Het Hoofd Service & Montage maakt in januari, met ondersteuning van de QHSE-Manager, de trendanalyse over het "
+  "afgelopen kalenderjaar (besluit 18): aantal WPI's tegenover het programma, per werkplek; bevindingen per klasse, "
+  "positief en negatief; meest afwijkende TRA-maatregelen; waargenomen, alleen bevestigd en niet beoordeeld; "
+  "doorlooptijd van acties; de te ondernemen acties met actiehouder en termijn; en de stand van de acties uit de "
+  "vorige analyse.")
+p("Basisoorzaken. Vanaf de proef vraagt Claude bij elke afwijking de oorzaak (veld R5). Wijkt een klasse of TRA-regel "
+  "in het jaar meer dan eens af, dan benoemt de trendanalyse de basisoorzaak, op basis van R5 en de herhaalde "
+  "bevindingen, en stelt een structurele actie voor. Die oorzaken worden besproken in het coördinatorenoverleg en "
+  "vastgesteld in de directiebeoordeling. De resultaten zijn input voor de directiebeoordeling en het volgende "
+  "inspectieprogramma.")
+
+h2("5.10 Als Claude niet beschikbaar is")
+p("Geen bereik of een storing is geen reden om een WPI over te slaan. De inspecteur gebruikt dan het terugvalformulier "
+  "WPI (één A4, op papier in de bus en als PDF op de telefoon) en voert de inspectie binnen twee werkdagen zelf in via "
+  "de skill; het rapport vermeldt 'achteraf ingevoerd'. Is Claude langer dan twee weken niet bruikbaar, dan maakt hij "
+  "het rapport met het Word-sjabloon WPI-rapport en de PDF van de kennisbank uit het QMS, en houdt het Hoofd Service & "
+  "Montage het actieoverzicht bij in het verslag van het coördinatorenoverleg (besluit 19; stand van deze onderdelen "
+  "in 7.1).")
+
+h2("5.11 Registraties")
+tbl([
+    ["Registratie", "Omschrijving en plaats", "Beheer", "Bewaren"],
+    ["Inspectieprogramma [maand]", "Per maand de werkplekken uit 5.5 met inspecteur en, achteraf, WPI-nummer of reden. PDF in het QMS", "Hoofd S&M", "5 jaar"],
+    ["WPI-rapport", "Per inspectie, met bevindingen, foto's, acties en de bevestiging van de inspecteur. Dezelfde dag als PDF in het QMS; de PDF is het bewijsstuk", "Inspecteur", "5 jaar"],
+    ["Actieoverzicht", "Alle acties met actiehouder, toetser, termijn, status, bron en verificatie. WPI-dashboard; wekelijks bijgewerkt; elk kwartaal als PDF in het QMS", "Hoofd S&M", "5 jaar"],
+    ["Verslag coördinatorenoverleg", "Bespreking en opvolging, met de besproken actienummers", "Hoofd S&M", "Volgens QMS"],
+    ["Trendanalyse WPI's", "Jaarrapportage met aantallen, klassen, oorzaken, acties en follow-up. QMS", "Hoofd S&M", "5 jaar"],
+    ["Kennisbank", "TRA's per product met versiedatum; bijgewerkt binnen twee weken na wijziging van een TRA; regelnummers blijven vast. WPI-projectmap en PDF per product in het QMS", "QHSE-Manager namens Hoofd S&M", "Actuele en vorige versie"],
+], [2100, 4164, 1500, 1300], first_bold=True)
+p("De bewaartermijn van vijf jaar is een voorstel (besluit 20). Gerelateerde documenten in het QMS: Methodiek TRA, de "
+  "product-TRA's, Procedure VGM-projectplan, LMRA-procedure, Verslagformulier coördinatorenoverleg, procedure "
+  "incidentenrapportage, Procedure Inkoop van Diensten.")
+
+h2("5.12 Gewijzigd ten opzichte van versie 1.0")
+tbl([
+    ["Onderdeel", "Versie 1.0", "Versie 2.0", "Waarom"],
+    ["Hulpmiddel en checklist", "Vaste checklist in AMS, stapsgewijs", "Claude-app; onderwerpen A–I plus TRA-regels; negen stappen, volgorde vrij", "Oordeel auditor"],
+    ["Programma", "Per inspecteur", "Per werkplek; rekenregel korte projecten; maanddocument; inhalen", "VCA 7.1, voetnoot 10"],
+    ["Directie", "4 per jaar, uitgevoerd door een directielid; 'VCA 7.2'; ook werkplaats", "Eén per kwartaal, deelneemt of uitvoert; VCA 7.1; projectlocatie", "VCA 7.1: per kwartaal, werklocatie"],
+    ["Aankondigen", "Bij voorkeur niet of kort van tevoren", "Minimaal een derde onaangekondigd, vermeld in rapport", "Toetsbaar"],
+    ["Positief en prioriteiten", "Positief niet beschreven; prioriteit zonder definitie", "Conform met waarneming, 'opvallend goed'; prioriteiten met termijn", "VCA 7.1"],
+    ["Acties en verificatie", "Actiehouder, termijn; afgerond na verificatie", "Nummer, toetser (nooit actiehouder), getoetst op, wijze, bron; Vervallen; escalatie", "VCA 7.1: toetsing"],
+    ["Opslag", "In AMS", "Dezelfde dag als PDF in het QMS, bevestigd door de inspecteur", "Herleidbaarheid"],
+    ["Rollen", "Directielid, Hoofd S&M, coördinator, monteur", "Herverdeeld (7.3); QHSE-Manager ondersteunend; monteur kan inspecteren", "VCA 7.1"],
+    ["Onderaannemers", "Bespreken met hun leidinggevende", "Vastlegging alleen over eigen monteurs", "Keuze nieuwe methode"],
+    ["Trendanalyse en overig", "Jaarlijks, per categorie", "Januari; veertien klassen; basisoorzaken; follow-up. Nieuw: definities, niveau per regel, terugvaloptie, bewaartermijn", "VCA 7.2"],
+    ["Ongewijzigd", "1 WPI per coördinator per maand; direct gevaar stoppen en melden; maandagoverleg; trendanalyse als input", "Overgenomen", "Voldoet"],
+], [1800, 2500, 3264, 1500], first_bold=True)
+
+# ============================================================ 6
+h1("6. Dekking van de VCA-eisen 7.1 en 7.2")
+p("De eerste kolom geeft de eis verkort weer, met onze eigen letters; de volledige tekst staat in 5.1. 'Rapport' zijn "
+  "de negen onderdelen van het WPI-rapport (bijlage B), 'dashboard' de onderdelen van het WPI-dashboard (bijlage C, in "
+  "aanbouw).")
+tbl([
+    ["Minimumeis (verkort; volledige tekst in 5.1)", "Procedure", "Waar zichtbaar", "Bewijsstuk voor de auditor"],
+    ["7.1a-1 Procedure beschrijft de uitvoering van de inspecties", "5.6, 5.10", "Rapport: volgt de negen onderdelen", "Procedure; rapporten die de werkwijze volgen"],
+    ["7.1a-2 Procedure beschrijft de positieve bevindingen", "5.3, 5.6", "Rapport: onderdeel 5. Dashboard: oordelen", "Procedure; onderdeel 5 van elk rapport"],
+    ["7.1a-3 Procedure beschrijft de opvolging van waargenomen verbeterpunten", "5.8", "Rapport: onderdeel 6. Dashboard: acties", "Procedure; actieoverzicht; overlegverslagen"],
+    ["7.1a-4 Procedure beschrijft het gebruik van de checklist", "5.3, 5.6", "Rapport: onderdelen 3 en 4. Dashboard: TRA-maatregelen", "Procedure; kennisbank; onderdelen 3 en 4"],
+    ["7.1b Ten minste eenmaal per maand per operationele werkplek door operationeel leidinggevenden", "5.5", "Rapport: onderdeel 1. Dashboard: programma", "Inspectieprogramma per maand met per werkplek het WPI-nummer"],
+    ["7.1b voetnoot 10 Programma voor korte duur, naar verhouding, met de risico's", "5.5", "Inspectieprogramma per maand; rekenregel per kwartaal", "Programma's met korte projecten en risicokenmerk; planningcijfers"],
+    ["7.1c Door operationele medewerkers onder verantwoordelijkheid van een leidinggevende", "5.7", "Rapport: onderdeel 1, soort 'WPI monteur' en verantwoordelijke coördinator (voorgesteld)", "Rapport met beide namen, als het is toegepast; instructie vastgelegd"],
+    ["7.1d Verslag met positieve bevindingen, afwijkingen, verbeteracties, uitvoeringsverantwoordelijken en tijdsduur", "5.6, 5.8", "Rapport: onderdeel 5; onderdelen 3, 4 en 6 met verbeteractie, actiehouder, prioriteit en termijn", "Elk WPI-rapport (PDF in het QMS)"],
+    ["7.1e-1 Actieplan met actiepunten uit de inspecties", "5.8", "Rapport: onderdelen 6 en 9. Dashboard: acties", "Actieoverzicht (kwartaal-PDF)"],
+    ["7.1e-2 Actieplan met verantwoordelijken voor uitvoering en toetsing", "5.8", "Rapport: actiehouder en toetser. Dashboard: acties", "Actieoverzicht met toetser en getoetst op"],
+    ["7.1e-3 Actieplan met tijdsplanning", "5.8", "Dashboard: acties (termijn, status, te laat)", "Actieoverzicht; overlegverslagen met actienummers"],
+    ["7.1f Directieleden minimaal eenmaal per kwartaal bij een WPI op een werklocatie", "5.4, 5.5", "Rapport: soort inspectie, deelnemend directielid. Dashboard: programma", "Per kwartaal een rapport met een directielid"],
+    ["7.1 Document: procedure en inspectieprogramma", "Geheel; 5.5, 5.11", "Dashboard: programma", "Procedure 2.0 en de maandprogramma's in het QMS"],
+    ["7.1 Document: verslagen en de follow-up", "5.8, 5.11", "Rapport zelf. Dashboard: acties", "Rapporten, actieoverzicht, overlegverslagen"],
+    ["7.2 Trendanalyse van positieve en negatieve bevindingen", "5.9", "Rapport: onderdeel 9 (bron). Dashboard: oordelen, classificatie", "Trendanalyse WPI's [jaar]"],
+    ["7.2 Doelstelling: basisoorzaken van structurele verbetermogelijkheden", "5.9", "Veld oorzaak (vanaf de proef); dashboard: TRA-maatregelen", "Trendanalyse met basisoorzaken bij herhaalde afwijkingen"],
+    ["7.2a Bevindingen worden geclassificeerd", "5.9", "Rapport: klasse bij elke regel. Dashboard: classificatie", "Elk rapport; de veertien klassen"],
+    ["7.2b Jaarlijkse trendanalyse, inclusief te ondernemen acties en follow-up", "5.9", "Dashboard: alle onderdelen; acties uit de analyse", "Trendanalyse met acties en stand van vorig jaar; directiebeoordeling"],
+    ["7.2 Documenten: trendanalyse; overzicht verbeteracties", "5.9, 5.11", "Dashboard: acties", "Trendanalyse en actieoverzicht in het QMS"],
+], [2700, 1100, 2764, 2500])
+p("Nog niet hard: 7.1c en de oorzaak rusten op velden die nog niet gebouwd zijn, voetnoot 10 op planningcijfers die "
+  "nog niet geteld zijn, en een trendanalyse over een heel jaar met follow-up bestaat pas in januari 2028.")
+
+# ============================================================ 7
+h1("7. Risico's, open punten en wat nog moet worden gemaakt")
+
+h2("7.1 Wat bestaat en wat nog moet worden gemaakt")
+O = "Opsteller van dit voorstel"
+tbl([
+    ["Onderdeel", "Stand op 11-11-2026", "Wie maakt het", "Klaar", "Nodig voor de proef"],
+    ["Kennisbank", "Bestaat: 21 producten, 666 regels, klasse per regel", "–; beheer QHSE-Manager", "Klaar", "Ja"],
+    ["Skill wpi-begeleider", "Bestaat; getest met fictieve data, niet op locatie", O, "Aanpassingen (oorzaak, tijd, toetser, chatnaam): 20-11-2026", "Ja"],
+    ["Voorbeeldrapport (bijlage B)", "Bestaat, op fictieve data", "–", "Klaar", "Ja, als uitleg"],
+    ["Dashboard (bijlage C)", "Bestaat op voorbeelddata; nog niet op echte rapporten", O, "Actieoverzicht 20-11-2026; rest vóór de evaluatie", "Alleen acties"],
+    ["Terugvalformulier", "Bestaat niet", O, "20-11-2026", "Ja"],
+    ["Instructie inspecteurs", "Bestaat niet", O, "20-11-2026", "Ja"],
+    ["QMS-map voor WPI-rapporten", "Bestaat niet", "QHSE-Manager", "20-11-2026", "Ja"],
+    ["Word-sjabloon en kennisbank-PDF's", "Bestaan niet", O, "Vóór vaststelling van de procedure", "Nee"],
+], [1900, 2500, 1600, 1800, 1264], first_bold=True)
+p("De proef start pas als alles met 'Ja' klaar is; is dat op 20 november 2026 niet zo, dan schuift de start per week op.")
+h2("7.2 Eén gedeeld account")
+p("Iedere inspecteur gebruikt hetzelfde Noardling Claude-account. Daardoor is niet technisch vast te stellen wie een "
+  "rapport maakte, en kan iedereen een rapport wijzigen tot het is opgeslagen. Voorstel (besluit 17): elk rapport "
+  "krijgt bij afronding de bevestiging van de inspecteur met naam, datum en tijd; de chat krijgt het WPI-nummer als "
+  "naam; de inspecteur zet het rapport dezelfde dag als PDF in het QMS. Die PDF is het bewijsstuk; een wijziging wordt "
+  "een nieuwe versie met reden. Alternatief: persoonlijke accounts. Die maken de inspecteur technisch herleidbaar, "
+  "maar kosten per account geld en moeten passen in het AI-beleid van Noardling (besluit 21).")
+h2("7.3 Taken van het Hoofd Service & Montage")
+p("Toetsing, statusbeheer, opslag, programma en trendanalyse kwamen eerst allemaal bij het Hoofd Service & Montage. "
+  "Voorstel (besluit 16): de inspecteur zet zijn rapport in het QMS en geeft in het overleg de status van zijn acties "
+  "door; het Hoofd S&M blijft standaard toetser maar wijst per actie een andere coördinator aan als dat sneller is; "
+  "programma en trendanalyse blijven bij het Hoofd S&M, met ondersteuning van de QHSE-Manager.")
+h2("7.4 Overige risico's")
+tbl([
+    ["Onderwerp", "Wat er mis kan gaan", "Wat we eraan doen", "Nog open"],
+    ["AI en leverancier", "Claude koppelt aan de verkeerde regel; app of voorwaarden veranderen; dienst valt uit", "Inspecteur geeft elk oordeel en bevestigt; terugvaloptie (5.10); PDF's in het QMS", "Correcties tellen in de proef; Word-sjabloon (7.1)"],
+    ["AVG", "Herkenbare personen op foto's; locatiefoto's bij een externe dienst; afwijking herleidbaar in een kleine ploeg", "Geen gezichten; namen alleen in de kop; acties op functie", "Fotograferen per opdrachtgever navragen; voorwaarden toetsen; monteurs en zo nodig OR informeren"],
+    ["Weinig inspreken", "Vooral 'Geen afwijking waargenomen'", "Rapport toont het niveau per regel", "Ondergrens na de proef"],
+    ["Telefoon", "Spraak bij wind en vaktermen; uploaden bij zwak bereik; lange chats", "Terugvalformulier; achteraf invoeren", "Niet getest; zie de drie bijzondere WPI's in 8.2"],
+    ["Kennisbank en TRA", "Kennisbank loopt achter op een TRA; sommige maatregelen zijn nauwelijks toetsbaar", "Bijwerken binnen twee weken; versie van de kennisbank in het rapport", "Opnemen in de Methodiek TRA; lijst van regels zonder toetsbare maatregel"],
+], [1500, 2600, 2564, 2400], first_bold=True)
+
+# ============================================================ 8
+h1("8. Te nemen besluiten en de proef")
+h2("8.1 Te nemen besluiten")
+p("Alles in deze tabel is een voorstel. De nummers komen terug in de tekst als (besluit n).")
+NU, NA = "Nu", "Na de proef"
+tbl([
+    ["Nr", "Besluit", "Voorstel", "Wie beslist", "Wanneer"],
+    ["1", "Proef", "23-11-2026 t/m 15-01-2027 als het minimum uit 7.1 klaar is; twee coördinatoren (elk drie WPI's) en één directielid (één)", "Hoofd S&M; directie", NU],
+    ["2", "Vast te leggen gegevens", "Bijlage A; na de proef schrappen wat niet werkt", "Hoofd S&M met coördinatoren", NA],
+    ["3", "Onderaannemers", "Alleen bevindingen over eigen monteurs (5.2)", "Hoofd S&M", NU],
+    ["4", "Oordelen", "Model in 5.3", "Hoofd S&M", NU],
+    ["5", "Acties", "Elke afwijking en elk verbeterpunt krijgt een actie; minimaal één 'opvallend goed'", "Hoofd S&M", NU],
+    ["6", "Classificatie", "Veertien klassen; vaste klasse per regel; Buiten TRA als vlag", "Hoofd S&M", NA],
+    ["7", "Definities", "5.3, waaronder korte duur, risicokenmerk en operationeel leidinggevende", "Hoofd S&M", NA],
+    ["8", "Voetnoot 10", "Kenmerken op gepland werk; kort project met kenmerk één WPI; overige voorlopig één op vier", "Hoofd S&M", NA],
+    ["9", "Planningcijfers", "Aantallen projecten 2026 per kwartaal (lang, kort met en zonder kenmerk) uit de planning", "Hoofd S&M; werkvoorbereiding levert vóór 11-12-2026", NU],
+    ["10", "Programma per maand", "Maanddocument; gemiste WPI inhalen; directie alleen op projectlocatie", "Hoofd S&M; directie", NA],
+    ["11", "Aankondigen", "Minimaal een derde onaangekondigd", "Hoofd S&M", NA],
+    ["12", "Telling", "WPI met directielid telt voor coördinator, directie en werkplek", "Hoofd S&M met directie", NA],
+    ["13", "Inspectie door een monteur", "Voorwaarden uit 5.7", "Hoofd S&M", NA],
+    ["14", "Toetser", "Regels in 5.8", "Hoofd S&M met directie", NU],
+    ["15", "Actiestatus", "De inspecteur geeft de status door in het overleg op maandag", "Hoofd S&M", NU],
+    ["16", "Taakverdeling", "Verdeling uit 7.3; QHSE-Manager ondersteunend, geen actiehouder", "Hoofd S&M met QHSE-Manager", NU],
+    ["17", "Bevestiging en opslag", "Maatregelen uit 7.2", "Hoofd S&M", NU],
+    ["18", "Trendanalyse", "In januari; basisoorzaken bij herhaalde afwijkingen", "Hoofd S&M; directie", NA],
+    ["19", "Terugvaloptie", "Formulier vóór de proef; achteraf invoeren binnen twee werkdagen", "Hoofd S&M", NU],
+    ["20", "Bewaartermijn", "Vijf jaar (langer dan één certificatieperiode)", "Hoofd S&M met QHSE-Manager", NA],
+    ["21", "Account en AVG", "Persoonlijke accounts (kosten) of gedeeld account met 7.2; AVG laten toetsen", "Directie", NA],
+    ["22", "Evaluatie en AMS", "Evaluatie 18-01-2027; bij positieve uitkomst vervalt AMS voor WPI's per 01-02-2027 en wordt de procedure vastgesteld", "Hoofd S&M", NA],
+], [520, 1650, 3794, 1900, 1200])
+
+h2("8.2 De proef: waar we op letten")
+p("Zeven WPI's over minimaal vier producten, waarvan drie bewust bijzonder: buiten bij slecht weer, bij zwak bereik "
+  "(met het terugvalformulier) en bij een lange taak met veel foto's. Vooraf nemen we bij twee WPI's in AMS de tijd op. "
+  "Voorstel na een goede evaluatie: twee rapporten met de procedure voorleggen aan de certificerende instelling.")
+tbl([
+    ["Vraag", "Hoe we het meten", "Tevreden als"],
+    ["Kost het de inspecteur meer moeite?", "Duur naast twee gemeten WPI's in AMS; tijd voor nalezen en opslaan; oordeel van de inspecteur", "Niet langer op locatie; nalezen en opslaan binnen een kwartier"],
+    ["Gaat het dieper en voldoet het aan VCA 7.1?", "Niveau per regel per rapport; de vijf elementen van het verslag", "Elk rapport een positieve bevinding, een waargenomen TRA-regel en alle vijf elementen"],
+    ["Klopt wat Claude vastlegt?", "Aantal correcties per rapport", "Nergens een oordeel dat de inspecteur niet gaf"],
+    ["Werkt het op de telefoon?", "Opmerkingen; gebruik van het terugvalformulier", "Spraak is buiten bruikbaar, of het formulier vangt het op"],
+], [2400, 3864, 2800], first_bold=True)
+
+
+# ============================================================ Bijlage A
+B[-1] = B[-1][:B[-1].rfind("<w:p ")]  # geen lege alinea na de laatste tabel
+KOPPEN.append("Bijlage A. Vast te leggen gegevens per WPI")
+add(_kn(para("Bijlage A. Vast te leggen gegevens per WPI", style="Kop1", size=24, space_after=80)).replace("<w:keepNext/>", "<w:keepNext/><w:pageBreakBefore/>", 1))
+p("'(voorgesteld)' betekent: nog niet in het voorbeeldrapport (bijlage B); onderdeel van besluit 2. 'Verplicht' betekent "
+  "dat Claude het rapport niet afrondt voordat het veld een waarde heeft. 'Bedient' noemt de VCA-eis (letters zoals in "
+  "hoofdstuk 6) en de trends uit hoofdstuk 4 die het veld gebruiken. Er zijn geen velden over onderaannemers of derden. "
+  "Tegenover het voorbeeldrapport vragen de voorgestelde velden van de inspecteur vier woorden in de kop (K8, K9, K10, "
+  "K13), vier keer ja of nee (V1–V4) en bij elke afwijking twee korte antwoorden (R4, R5); dat is een verwachting, de "
+  "proef meet de duur.")
+VW = [2400, 2600, 1500, 1300, 1264]
+for titel, groep in VELDEN.items():
+    rows = [["Veld", "Waarom", "Verplicht", "Bedient", "Kost de inspecteur"]]
+    for c, n, w, wr, vp, vca_, kost, vg in groep:
+        naam = f"{c} {n}" + (V if vg else "") + (f"\n{w}" if w else "")
+        bed = "; ".join(x for x in [vca_, ", ".join(TREND_VAN[c])] if x) or "–"
+        rows.append([naam, wr, vp, bed, kost])
+    add(_kn(para(titel, bold=True, size=20, space_after=40)))
+    tbl(rows, VW, size=18)
+
+
+# ============================================================ build
+UIT = "/home/claude/wpi/run/out/Voorstel nieuwe methode werkplekinspecties.docx"
+TPL = f"{BW}/sjabloon_v3.docx"
+maak_sjabloon()
+body = "\n".join(B).replace('<w:top w:w="60" w:type="dxa"/>', '<w:top w:w="35" w:type="dxa"/>').replace('<w:bottom w:w="60" w:type="dxa"/>', '<w:bottom w:w="35" w:type="dxa"/>')
+build(template=TPL, title="Nieuwe methode\nwerkplekinspecties", subtitle="Voorstel voor een proef",
+      body_xml=wpinr(body), output=UIT, cover_size=56, work=f"{BW}/_nb_build")

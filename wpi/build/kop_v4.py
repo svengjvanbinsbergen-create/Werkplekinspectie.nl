@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+# Voorstel nieuwe methode werkplekinspecties, ronde 4. Gebruik: bouw_v4.py [toc.json]
+import sys, os, json, re, shutil, subprocess
+S = "/root/.claude/skills/synced/134f4af9-00ba-492e-80f4-f185b433f298_fafc370e-ca1f-402c-83bc-47a084adb998/noardling-docx-bouwer/scripts"
+sys.path.insert(0, S)
+from noardling_docx import *
+from noardling_docx import _cel, _runs, _rpr, _next_id, _esc
+
+W = 9064
+BODY = 18      # 9 pt
+TAB = int(os.environ.get("TAB", "18"))   # 9 pt; 17 = 8,5 pt
+ROOD = "B03A2E"
+BW = "/home/claude/wpi/build"
+TOCNR = json.load(open(sys.argv[1])) if len(sys.argv) > 1 else {}
+
+B = []
+add = B.append
+KOPPEN = []
+
+
+def _kn(x):
+    return x.replace('"/>', '"/><w:keepNext/>', 1)
+
+
+def h1(t):
+    KOPPEN.append(t)
+    add(_kn(para(t, style="Kop1", size=24, space_after=80)))
+
+
+def h2(t):
+    add(_kn(para(t, style="Kop2", size=20, indent_left=0, space_after=60)))
+
+
+def lab(t):
+    add(_kn(para(t, bold=True, size=BODY, space_after=40)))
+
+
+def p(t, **kw):
+    kw.setdefault("space_after", 80)
+    kw.setdefault("size", BODY)
+    add(para(t, **kw))
+
+
+def bl(t):
+    ppr = (f'<w:pStyle w:val="{STIJL_BODY}"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>'
+           '<w:spacing w:after="30"/><w:ind w:left="400" w:hanging="260"/>')
+    add(f'<w:p w14:paraId="{_next_id()}" w14:textId="77777777"><w:pPr>{ppr}</w:pPr>{_runs(t, size=BODY)}</w:p>')
+
+
+def gap(n=80):
+    add(para("", space_after=n, size=4))
+
+
+def tbl(rows, widths, size=TAB, zebra=True, first_bold=False):
+    assert abs(sum(widths) - W) < 5, sum(widths)
+    uit = []
+    for i, r in enumerate(rows):
+        assert len(r) == len(widths), r
+        rij = []
+        for j, c in enumerate(r):
+            if i == 0:
+                rij.append([para(c, bold=True, color="FFFFFF", size=size, space_after=0)])
+            else:
+                rij.append([para(c, size=size, space_after=0, bold=(first_bold and j == 0))])
+        uit.append(rij)
+    t = table(uit, widths=widths, zebra=zebra)
+    # de lege alinea na de tabel klein houden
+    add(t[:t.rfind("<w:p ")] + para("", space_after=60, size=6))
+
+
+def kader(text, lijn, vulling, label, heel=True, inline=False):
+    kl = "<w:keepLines/>" if heel else ""
+    ppr = (f'<w:pStyle w:val="{STIJL_BODY}"/>{kl}<w:pBdr>'
+           f'<w:top w:val="single" w:sz="4" w:space="4" w:color="{lijn}"/>'
+           f'<w:left w:val="single" w:sz="18" w:space="8" w:color="{lijn}"/>'
+           f'<w:bottom w:val="single" w:sz="4" w:space="4" w:color="{lijn}"/>'
+           f'<w:right w:val="single" w:sz="4" w:space="4" w:color="{lijn}"/></w:pBdr>'
+           f'<w:shd w:val="clear" w:color="auto" w:fill="{vulling}"/>'
+           f'<w:spacing w:before="40" w:after="100"/><w:ind w:left="140" w:right="140"/>')
+    sep = _runs(" ", size=BODY) if inline else f'<w:r>{_rpr()}<w:br/></w:r>'
+    runs = _runs(label, bold=True, color=lijn, size=BODY) + sep + _runs(text, size=BODY)
+    add(f'<w:p w14:paraId="{_next_id()}" w14:textId="77777777"><w:pPr>{ppr}</w:pPr>{runs}</w:p>')
+
+
+def vca(t, label, inline=False, heel=True):
+    kader(t, BLAUW, VULLING_BLAUW, label, heel=heel, inline=inline)
+
+
+def keuze(t, label, inline=False):
+    kader(t, LIJN_ORANJE, VULLING_ORANJE, label, heel=True, inline=inline)
+
+
+def toc():
+    """Echt TOC-veld met vooraf ingevulde regels; paginanummers uit de vorige render."""
+    regels = [(k, TOCNR.get(k, "")) for k in TOC_KOPPEN]
+    sub = set(TOC_SUB)
+    out = []
+    for i, (k, nr) in enumerate(regels):
+        ppr = (f'<w:pPr><w:pStyle w:val="{STIJL_BODY}"/><w:tabs><w:tab w:val="right" w:leader="dot" w:pos="{W}"/></w:tabs>'
+               '<w:spacing w:after="10"/>' + ('<w:ind w:left="300"/>' if k in sub else '') + '</w:pPr>')
+        begin = ""
+        if i == 0:
+            begin = ('<w:r><w:fldChar w:fldCharType="begin"/></w:r>'
+                     '<w:r><w:instrText xml:space="preserve"> TOC \\o "1-2" \\h \\z \\u </w:instrText></w:r>'
+                     '<w:r><w:fldChar w:fldCharType="separate"/></w:r>')
+        eind = '<w:r><w:fldChar w:fldCharType="end"/></w:r>' if i == len(regels) - 1 else ""
+        run = (f'<w:r>{_rpr(size=18)}<w:t xml:space="preserve">{_esc(k)}</w:t></w:r>'
+               f'<w:r>{_rpr(size=18)}<w:tab/><w:t>{nr}</w:t></w:r>')
+        out.append(f'<w:p w14:paraId="{_next_id()}" w14:textId="77777777">{ppr}{begin}{run}{eind}</w:p>')
+    add("".join(out))
+
+
+TOC_SUB = ["5.1 Eisen uit de VCA", "5.2 Doel en toepassingsgebied", "5.3 Definities en oordelen",
+           "5.4 Verantwoordelijkheden", "5.5 Inspectieprogramma per werkplek", "5.6 Uitvoering in negen stappen",
+           "5.7 Inspectie door een monteur", "5.8 Inspectieverslag en opvolging van acties",
+           "5.9 Classificatie en trendanalyse", "5.10 Als Claude niet beschikbaar is", "5.11 Registraties",
+           "5.12 Gewijzigd ten opzichte van versie 1.0"]
+TOC_KOPPEN = (["Samenvatting", "1. Aanleiding en wat er verandert", "2. Zo verloopt een WPI",
+               "3. Wat we per WPI vastleggen", "4. Welke trenddata dit oplevert",
+               "5. Procedure Werkplekinspecties, versie 2.0 concept"] + TOC_SUB +
+              ["6. Dekking van de VCA-eisen 7.1 en 7.2", "7. Risico's en randvoorwaarden",
+               "8. Te nemen besluiten en de proef", "Bijlage A. Vast te leggen gegevens per WPI"])
+json.dump(TOC_KOPPEN, open(f"{BW}/toc_keys.json", "w"), ensure_ascii=False)
+
