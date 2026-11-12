@@ -17,6 +17,7 @@
     plus: '<path d="M12 5v14M5 12h14"/>', cam: '<rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.2"/><path d="M8 7l1.5-2h5L16 7"/>',
     mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
     warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+    doc: '<path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   };
@@ -71,6 +72,7 @@
     { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"], web: true },   // alleen webversie (computer)
+    { id: "kwartaal", lab: "Rapportage", ic: "doc", rollen: ["hoofd", "coordinator"], web: true },
   ];
   const staf = () => App.user && (App.user.role === "hoofd" || App.user.role === "coordinator");
   // webversie = groot scherm (computer/tablet liggend); telefoon = de veld-app zonder dashboard en trendanalyse
@@ -1098,6 +1100,8 @@
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
+      if (!isWeb()) v.appendChild(el(`<button class="btn primary" style="margin:0 0 14px" onclick="App.nieuweActie()">${svg("plus", 18)} Nieuwe actie</button>`));
+      if (isWeb() && lijst.length) { v.appendChild(el(this.actieTabel(lijst))); return; }
       v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
         : `<div class="leeg"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
     },
@@ -1113,6 +1117,42 @@
         <div class="onder"><span class="mini-av">${h ? esc(h.full_name[0]) : "?"}</span><span>${h ? esc(h.full_name) : "nog geen actiehouder"}</span><span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
     },
     actieRij(a) { return this.actieKaart(a); },
+    // computer: overzicht als tabel
+    actieTabel(lijst) {
+      const plan = (a) => { const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
+        return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip warm">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : dagLabel(a.plandatum); };
+      const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers"><span class="mini-av">${esc(u.full_name[0])}</span>${esc(u.full_name)}</span>` : `<span class="s">–</span>`; };
+      return `<div class="card tabelkaart"><div class="tablewrap"><table class="atabel"><thead><tr><th>Status</th><th>Actie</th><th>Actiehouder</th><th>Toetser</th><th>Plandatum</th><th>Herkomst</th></tr></thead><tbody>
+        ${lijst.map((a) => `<tr onclick="App.openActie('${a.id}')"><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}</div></td>
+          <td>${persoon(a.houder)}</td><td>${persoon(a.toetser)}</td><td>${plan(a)}</td><td class="s">${esc(a.handmatig ? "Handmatig" : (a.inspectie_titel || "").replace(/^Voorbeeld · /, "").split(" · ")[0])}${a.demo ? " · voorbeeld" : ""}</td></tr>`).join("")}
+      </tbody></table></div></div>`;
+    },
+    // telefoon: zelf een actie aanmaken (los van een inspectie)
+    nieuweActie() {
+      const opts = `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse").map((u) => `<option value="${u.id}">${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
+      this.openModal("Nieuwe actie", "Bijvoorbeeld uit een melding, toolbox of overleg.",
+        `${veld("Wat moet er gebeuren?", `<textarea id="na-tekst" class="fin" rows="3" placeholder="Bijv. hijsbanden in de bus vervangen"></textarea>`)}
+         ${veld("Aanleiding (optioneel)", `<textarea id="na-aanl" class="fin" rows="2" placeholder="Wat zag of hoorde je?"></textarea>`)}
+         ${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts}</select>`)}
+         ${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts}</select>`)}
+         ${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen(14)}">`)}
+         <div id="ai-fout" class="fout"></div>
+         <button class="btn primary" style="margin-top:10px" onclick="App.maakActie()">Actie aanmaken</button>`);
+    },
+    async maakActie() {
+      const tekst = $("na-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
+      if (!tekst) return this.fout("Beschrijf wat er moet gebeuren.");
+      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.");
+      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.");
+      if (!plan) return this.fout("Kies een plandatum.");
+      await this.laadActies();
+      const a = { id: "ACT-" + Date.now(), handmatig: true, inspectie_titel: "Handmatig aangemaakt", ref: "Handmatig", oordeel: "–", waarneming: $("na-aanl").value.trim(),
+        foto: null, tekst, prio: null, status: "Open", houder, toetser, plandatum: plan, log: [] };
+      this.acties.push(a);
+      await this.bewaarActie(a, `Handmatig aangemaakt: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);
+      tril(30); this.closeModal(); this.actFilter = "gepland"; this.route();
+    },
     openActie(id) {
       const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
       const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
@@ -1278,6 +1318,76 @@
         ${leg([[PAL.A, "Afwijking"], [PAL.V, "Verbeterpunt"]])}</div>`));
       v.appendChild(chartCard);
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Klik op een maand, een stuk van de ring of een klasse voor de details. Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen.</div>`));
+    },
+    // ---------------- KWARTAALRAPPORTAGE (directie, webversie) ----------------
+    kwartaal: null,
+    KW: { "Q2 2026": ["2026-04", "2026-05", "2026-06"], "Q3 2026": ["2026-07", "2026-08", "2026-09"], "Q4 2026": ["2026-10", "2026-11", "2026-12"] },
+    kwCijfers(q) {
+      const vd = this.data.voorbeelddata, c = this.data.cijfers, mnd = this.KW[q], inQ = (d) => mnd.includes(String(d || "").slice(0, 7));
+      const wpis = vd.wpis.filter((w) => inQ(w.datum)), regels = vd.regels.filter((r) => inQ(r.datum)), acties = vd.acties.filter((a) => inQ(a.datum));
+      const o = { Conform: 0, Afwijking: 0, Verbeterpunt: 0, "Niet van toepassing": 0 }; regels.forEach((r) => { if (o[r.oordeel] !== undefined) o[r.oordeel]++; });
+      const beo = o.Conform + o.Afwijking + o.Verbeterpunt;
+      const prog = mnd.reduce((t, m) => { const d = c.vp_maand[m] || {}; t.ok += d.ok || 0; t.y += d.y || 0; t.lopend += d.lopend || 0; return t; }, { ok: 0, y: 0, lopend: 0 });
+      const klasse = {}; regels.forEach((r) => { const k = r.classificatie || "—"; (klasse[k] = klasse[k] || { C: 0, AV: 0 }); if (r.oordeel === "Conform") klasse[k].C++; if (r.oordeel === "Afwijking" || r.oordeel === "Verbeterpunt") klasse[k].AV++; });
+      const peil = vd.peildatum || isoDag(new Date());
+      const af = acties.filter((a) => a.status === "Afgerond"), optijd = af.filter((a) => a.afgerond_op && a.termijn && a.afgerond_op <= a.termijn);
+      const open = acties.filter((a) => a.status !== "Afgerond"), over = open.filter((a) => a.termijn && a.termijn < peil);
+      const wset = new Set(wpis.map((w) => w.nr));
+      const themas = (c.thema || []).map((t) => ({ ...t, nq: t.wpis.filter((x) => wset.has(x)).length })).filter((t) => t.nq).sort((a, b) => b.nq - a.nq).slice(0, 3);
+      const om = {}; regels.forEach((r) => { const m = r.datum.slice(0, 7); (om[m] = om[m] || {}); om[m][r.oordeel] = (om[m][r.oordeel] || 0) + 1; });
+      return { q, mnd, wpis, regels, o, beo, pct: beo >= 5 ? Math.round(100 * o.Conform / beo) : null, prog, progPct: prog.y ? Math.round(100 * prog.ok / prog.y) : null,
+        klasse, acties, af, optijd, open, over, themas, om, maanden: Object.keys(om).sort(), producten: [...new Set(wpis.map((w) => w.product))] };
+    },
+    view_kwartaal() {
+      const qs = Object.keys(this.KW); if (!this.kwartaal) this.kwartaal = qs[qs.length - 1];
+      const K = this.kwCijfers(this.kwartaal), qi = qs.indexOf(this.kwartaal), V = qi > 0 ? this.kwCijfers(qs[qi - 1]) : null, P = this.PAL, v = $("view");
+      const delta = (nu, toen, eenheid) => nu == null || toen == null ? "" : nu === toen ? `<span class="delta">= gelijk aan ${V.q}</span>` : `<span class="delta ${nu > toen ? "op" : "neer"}">${nu > toen ? "▲" : "▼"} ${Math.abs(nu - toen)}${eenheid} t.o.v. ${V.q}</span>`;
+      const lopend = K.mnd.some((m) => m >= isoDag(new Date()).slice(0, 7));
+      v.appendChild(el(`<div class="noprint"><div class="hi">Voor de directie · VCA 7.1 en 7.2</div><h1 class="groot">Kwartaalrapportage</h1>
+        <div class="tabs" style="margin-bottom:16px">${qs.map((q) => `<button class="tabp${q === this.kwartaal ? " on" : ""}" onclick="App.kwartaal='${q}';App.route()">${q}</button>`).join("")}
+        <button class="tabp" style="margin-left:auto" onclick="window.print()">${svg("doc", 16)} Opslaan als PDF</button></div></div>`));
+      const top3 = Object.entries(K.klasse).filter(([, x]) => x.AV).sort((a, b) => b[1].AV - a[1].AV).slice(0, 3);
+      const goed = Object.entries(K.klasse).filter(([, x]) => x.C >= 3).sort((a, b) => (b[1].C / (b[1].C + b[1].AV)) - (a[1].C / (a[1].C + a[1].AV)) || b[1].C - a[1].C).slice(0, 3);
+      const zin = [];
+      zin.push(`In ${K.q} zijn <b>${K.wpis.length} werkplekinspecties</b> uitgevoerd${K.producten.length ? ` bij ${K.producten.length} producten` : ""}, met <b>${K.regels.length} waarnemingen</b>.`);
+      if (K.pct != null) zin.push(`<b>${K.pct}%</b> van de beoordeelde waarnemingen was conform${V && V.pct != null ? (K.pct > V.pct ? `, ${K.pct - V.pct} procentpunt hoger dan in ${V.q}` : K.pct < V.pct ? `, ${V.pct - K.pct} procentpunt lager dan in ${V.q}` : `, gelijk aan ${V.q}`) : ""}.`);
+      if (K.progPct != null) zin.push(`Van het verplichte inspectieprogramma is <b>${K.prog.ok} van ${K.prog.y}</b> (${K.progPct}%) uitgevoerd${K.progPct < 90 ? "; het doel van 90% is niet gehaald" : "; het doel van 90% is gehaald"}.`);
+      if (top3.length) zin.push(`De meeste aandachtspunten zaten bij <b>${esc(top3[0][0].toLowerCase())}</b>${top3[1] ? ` en ${esc(top3[1][0].toLowerCase())}` : ""}.`);
+      v.appendChild(el(`<div id="kwrap" class="kwrap">
+        <div class="kwkop"><div><div class="hi">Werkplekinspecties · Noardling</div><div class="kwtitel">Kwartaalrapportage ${K.q}</div>
+          <div class="s">Peildatum ${esc(this.data.voorbeelddata.peildatum || "")} · ${lopend ? "kwartaal loopt nog" : "afgesloten kwartaal"} · voorbeelddata (fictief)</div></div><span class="logo groot">N</span></div>
+
+        <div class="card kwverhaal"><h3>In het kort</h3><p>${zin.join(" ")}</p></div>
+
+        <div class="grid kpis kwkpis">
+          <div class="tile sage"><div class="lab">Conform</div><div class="n">${K.pct != null ? K.pct + "%" : "n=" + K.beo}</div><div class="sub">${delta(K.pct, V && V.pct, " pp")}</div></div>
+          <div class="tile ${K.progPct >= 90 ? "sage" : "blush"}"><div class="lab">Programma</div><div class="n">${K.progPct != null ? K.progPct + "%" : "–"}</div><div class="sub">${K.prog.ok}/${K.prog.y} · doel 90% ${delta(K.progPct, V && V.progPct, " pp")}</div></div>
+          <div class="tile sky"><div class="lab">Inspecties</div><div class="n">${K.wpis.length}</div><div class="sub">${delta(K.wpis.length, V && V.wpis.length, "")}</div></div>
+          <div class="tile ${K.over.length ? "blush" : "sage"}"><div class="lab">Acties op tijd afgerond</div><div class="n">${K.af.length ? Math.round(100 * K.optijd.length / K.af.length) + "%" : "–"}</div><div class="sub">${K.optijd.length} van ${K.af.length} afgerond · ${K.over.length} over termijn</div></div>
+        </div>
+
+        <div class="grid dashgrid kwgrid">
+          <div class="card grafiek breed"><h3>1 · Hoe ontwikkelt het zich? <span class="sub">% conform per maand</span></h3>${this.chartTrend(K.maanden, K.om)}</div>
+          <div class="card"><h3>2 · Wat ging goed</h3>
+            <p class="s" style="margin-bottom:10px">${K.o.Conform} conforme waarnemingen. Waar het het beste ging:</p>
+            ${goed.length ? goed.map(([k, x]) => `<div class="kwrij"><span class="bolletje" style="background:${P.C}"></span><span class="grow">${esc(k)}</span><b>${Math.round(100 * x.C / (x.C + x.AV))}% conform</b></div>`).join("") : `<div class="s">Te weinig waarnemingen per klasse.</div>`}</div>
+          <div class="card"><h3>3 · Waar moet aandacht naartoe</h3>
+            ${top3.length ? top3.map(([k, x], i) => `<div class="kwrij"><span class="nr">${i + 1}</span><span class="grow">${esc(k)}</span><b>${x.AV}×</b></div>`).join("") : `<div class="s">Geen afwijkingen of verbeterpunten. 🌿</div>`}
+            ${K.themas.length ? `<div class="s" style="margin:12px 0 6px;font-weight:800">Terugkerende thema's</div>${K.themas.map((t) => `<div class="kwthema">“${esc(t.thema)}” <span class="s">· ${t.nq}× dit kwartaal</span></div>`).join("")}` : ""}</div>
+          <div class="card"><h3>4 · Acties</h3>
+            <div class="kwrij"><span class="grow">Aangemaakt</span><b>${K.acties.length}</b></div>
+            <div class="kwrij"><span class="grow">Afgerond na toetsing</span><b>${K.af.length}</b></div>
+            <div class="kwrij"><span class="grow">Daarvan op tijd</span><b>${K.optijd.length}</b></div>
+            <div class="kwrij"><span class="grow">Nog open</span><b>${K.open.length}</b></div>
+            <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#A3610F" : "inherit"}">${K.over.length}</b></div></div>
+          <div class="card"><h3>5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h3>
+            ${this.data.trendacties.slice(0, 5).map((t) => `<div class="kwrij"><span class="grow">${esc(t.onderwerp)}</span>${stBadge(t.status === "Open" ? "Open" : "Afgerond")}</div>`).join("")}
+            <div class="s noprint" style="margin-top:8px"><a href="javascript:App.drill('acties')" style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
+        </div>
+
+        <div class="card kwnoot"><h3>Methode</h3><p class="s">Werkplekinspecties zijn momentopnames: alleen wat de inspecteur zelf zag telt (VCA 2026/6.1 eis 7.1). Conform-% is berekend over beoordeelde waarnemingen (C, A, V), zonder ‘niet van toepassing’. Bij minder dan 5 waarnemingen tonen we geen percentage. Een afwijking zegt iets over de situatie op dat moment, niet over personen. Acties zijn pas afgerond na toetsing door een ander dan de actiehouder.</p>
+          <div class="kwteken"><div><div class="s">Opgesteld door</div><b>${esc(this.user.full_name)}</b><div class="s">${esc(this.user.functie)}</div></div><div><div class="s">Datum</div><b>${new Date().toLocaleDateString("nl-NL")}</b></div><div><div class="s">Besproken met directie op</div><div class="lijntje"></div></div></div></div>
+      </div>`));
     },
     // zachte, warme kleuren die bij de app passen
     PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#8B7F72" },

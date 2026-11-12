@@ -382,3 +382,53 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
   .dashgrid .breed{grid-column:1/-1}
   .dashgrid svg.svgchart{max-height:none}
 }
+
+/* ---- acties-tabel (computer) ---- */
+.tabelkaart{padding:6px 8px!important}
+.atabel{font-size:14px}
+.atabel th{font-size:12.5px;font-weight:800;color:var(--soft);padding:12px 12px;border-bottom:1px solid #F4EDE3}
+.atabel td{padding:12px;border-bottom:1px solid #F4EDE3;vertical-align:middle}
+.atabel tr:last-child td{border-bottom:0}
+.atabel tbody tr{cursor:pointer}.atabel tbody tr:hover td{background:#FCF9F4}
+.atabel .at{font-weight:800;line-height:1.3}
+.pers{display:inline-flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap}
+
+/* ---- kwartaalrapportage ---- */
+.kwrap{display:flex;flex-direction:column;gap:14px}
+.kwkop{display:flex;justify-content:space-between;align-items:flex-start;background:var(--accent-bg);border-radius:28px;padding:22px 24px;position:relative;overflow:hidden}
+.kwkop::after{content:"";position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:#C6DFD2}
+.kwkop>*{position:relative;z-index:1}
+.kwtitel{font-size:28px;font-weight:800;margin:2px 0 4px}
+.logo.groot{width:52px;height:52px;border-radius:16px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:22px}
+.kwverhaal p{font-size:16px;line-height:1.6}
+.kwkpis .sub{min-height:18px}
+.delta{display:inline-block;font-weight:800;font-size:12.5px;margin-left:2px}
+.delta.op{color:#2F7A5F}.delta.neer{color:#B4562F}
+.kwrij{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F4EDE3;font-weight:700}
+.kwrij:last-child{border-bottom:0}
+.kwrij .nr{width:26px;height:26px;border-radius:50%;background:var(--warm);color:var(--warm-ink);display:grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.bolletje{width:12px;height:12px;border-radius:50%;flex:none}
+.kwthema{font-size:14px;font-weight:700;padding:4px 0}
+.kwnoot p{line-height:1.6}
+.kwteken{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;padding-top:14px;border-top:1px dashed #E8DDCD}
+.lijntje{border-bottom:1.5px solid #CFC2B0;height:26px}
+@media(min-width:900px){.view[data-page=kwartaal]{max-width:1100px}
+  #app:not(.nonav):not([data-page=dashboard]):not([data-page=kwartaal]) .topbar{max-width:820px}
+  #app:not(.nonav):not(.x)[data-page=kwartaal] .topbar,#app:not(.nonav):not(.x)[data-page=kwartaal] .alertbar{max-width:1100px}
+  .view[data-page=acties]{max-width:1100px}
+  #app:not(.nonav):not(.x)[data-page=acties] .topbar,#app:not(.nonav):not(.x)[data-page=acties] .alertbar{max-width:1100px}
+  .kwgrid{grid-template-columns:1fr 1fr}}
+@media print{
+  .tabbar,.topbar,.alertbar,.noprint{display:none!important}
+  #app{padding-left:0!important}
+  body{background:#fff}
+  .kwrap .card,.kwrap .tile,.kwkop{box-shadow:0 0 0 1px #EFE6DA!important;break-inside:avoid}
+  .view{max-width:none!important;padding:0!important}
+  .dashgrid{grid-template-columns:1fr 1fr!important}.dashgrid .breed{grid-column:1/-1}
+  .kpis{grid-template-columns:repeat(4,1fr)!important}
+  @page{size:A4;margin:14mm}
+}
+.kwrij .grow{flex:1;min-width:0}
+.tabp{white-space:nowrap}
+.btn svg,.tabp svg,.chip svg,.rondknop svg{width:auto;flex:none;display:inline-block}
+.dchip{white-space:nowrap}
