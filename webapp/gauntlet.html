@@ -1,0 +1,40 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gauntlet · voortgang</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,sans-serif}
+body{background:#F6F7F9;color:#141A22;padding:28px 22px 60px;max-width:900px;margin:0 auto}
+h1{font-size:26px;font-weight:700}.k{color:#4A5565;font-size:14px;font-weight:600}
+.card{background:#fff;border-radius:18px;box-shadow:0 0 0 1px #E7E9ED;padding:16px 18px;margin:12px 0}
+.row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #E7E9ED}
+.row:last-child{border-bottom:0}.grow{flex:1}.t{font-weight:600}.s{font-size:13px;color:#4A5565}
+.b{display:inline-flex;align-items:center;height:26px;padding:0 11px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.todo{background:#F3F4F6;color:#4A5565}.run{background:#FFF1DC;color:#8A4B00}.win{background:#E6F4EC;color:#1E7A4C}.block{background:#FDECEA;color:#B42318}
+.bar{height:8px;border-radius:999px;background:#E7E9ED;overflow:hidden;margin-top:4px}.bar i{display:block;height:8px;background:#1E7A4C}
+</style></head><body>
+<div class="k">Gauntlet-loop · doel: WPI-app die SafetyCulture/iAuditor verslaat op rust, snelheid en bruikbaarheid op locatie</div>
+<h1>Voortgang</h1>
+<div class="s" id="upd">Laatst bijgewerkt: 12-11-2026 · ronde 1 · referentie opgehaald, backend-onderzoek + schema klaar</div>
+
+<div class="card">
+<div class="t" style="margin-bottom:6px">Stukken (elk: bouwer → harde criticus → blind vs SafetyCulture → loop tot winst)</div>
+<div class="row"><span class="grow"><span class="t">Inspectie-flow</span><div class="s">start → taak → toetsen C/A/V → acties → afronden</div></span><span class="b run">bouwt · ronde 1</span></div>
+<div class="row"><span class="grow"><span class="t">Rapport (WPI)</span><div class="s">momentopname, Getoetst tijdens bezoek, acties</div></span><span class="b todo">wacht</span></div>
+<div class="row"><span class="grow"><span class="t">Dashboard / trendanalyse</span><div class="s">KPI's + drill-down (al werkend)</div></span><span class="b win">voorsprong</span></div>
+<div class="row"><span class="grow"><span class="t">Accounts &amp; rollen</span><div class="s">schema + rollen klaar (hoofd/coordinator/inspecteur); seed voor Björn, Winfred, Douwe</div></span><span class="b win">schema klaar</span></div>
+<div class="row"><span class="grow"><span class="t">Opslag / backend</span><div class="s">Supabase-schema + RLS gebouwd; live project vraagt jouw keys</div></span><span class="b win">schema klaar</span></div>
+<div class="row"><span class="grow"><span class="t">Offline vastleggen</span><div class="s">aanpak onderzocht (service worker + IndexedDB + sync-queue)</div></span><span class="b todo">bouwen later</span></div>
+</div>
+
+<div class="card">
+<div class="t" style="margin-bottom:6px">Klaar deze ronde</div>
+<div class="row"><span class="grow"><span class="t">Referentie opgehaald</span><div class="s">SafetyCulture/Mitti-helpdocs via curl — template-model, flagged items, acties, foto-annotatie (docs/safetyculture-referentie.md)</div></span><span class="b win">gereed</span></div>
+<div class="row"><span class="grow"><span class="t">Backend-onderzoek (DeepSeek-harnas)</span><div class="s">Supabase auth+RLS · AVG/EU-checklist · offline-sync · PDF (docs/backend-onderzoek.md)</div></span><span class="b win">gereed</span></div>
+<div class="row"><span class="grow"><span class="t">Supabase-schema + seed</span><div class="s">profiles/inspecties/waarnemingen/acties + RLS + rollen (supabase/schema.sql, seed.sql)</div></span><span class="b win">gereed</span></div>
+</div>
+
+<div class="card s">
+Werkwijze: DeepSeek doet het onderzoeks-/bouwvolume, Claude bewaakt methode/VCA en beoordeelt. Exit per stuk = de criticus kiest blind voor ons, niet een vast aantal rondes. Fictieve/echte data volgens afspraak.
+</div>
+</body></html>
