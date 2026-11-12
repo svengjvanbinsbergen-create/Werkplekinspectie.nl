@@ -1,0 +1,456 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verbeteronderzoek WPI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#141A22;--soft:#4A5565;--line:#E7E9ED;--dark:#16191F;--bg:#F6F7F9;--green:#1E7A4C;--green-bg:#E6F4EC;--red:#B42318;--red-bg:#FDECEA;--amber:#8A4B00;--amber-bg:#FFF1DC;--sky:#EAF1FA;--butter:#FBF5DE;--sage:#EDF5E4;--lilac:#F1EDFC;--blush:#FBECEA;--mist:#F3F4F6;--vs:#5a3ea8}
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 16px 90px}
+.k{color:var(--soft);font-size:13px;font-weight:650;letter-spacing:.02em}
+h1{font-size:30px;font-weight:800;line-height:1.15;margin:4px 0 10px}
+h2{font-size:22px;font-weight:750;margin:44px 0 6px;scroll-margin-top:70px}
+h3{font-size:17px;font-weight:700;margin:0 0 6px}
+h4{font-size:14px;font-weight:700;margin:14px 0 4px}
+p{margin:6px 0}
+.lead{color:var(--soft);max-width:760px}
+.toc{position:sticky;top:0;z-index:5;background:rgba(246,247,249,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);margin:18px -16px 0;padding:10px 16px;display:flex;gap:6px;overflow-x:auto;white-space:nowrap}
+.toc a{font-size:13px;font-weight:650;color:var(--soft);text-decoration:none;padding:6px 10px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1px var(--line)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:#fff;border-radius:20px;box-shadow:0 0 0 1px var(--line);padding:18px 20px}
+.tile{border-radius:20px;padding:16px 18px}
+.sky{background:var(--sky)}.butter{background:var(--butter)}.sage{background:var(--sage)}.lilac{background:var(--lilac)}.blush{background:var(--blush)}.mist{background:var(--mist)}
+.n{font-size:32px;font-weight:750;line-height:1}
+.lab{font-size:13px;color:var(--soft);font-weight:600}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;margin:2px 4px 2px 0}
+.t-hoog{background:var(--green-bg);color:var(--green)}.t-mid{background:var(--amber-bg);color:var(--amber)}.t-laag{background:var(--mist);color:var(--soft)}
+.t-nu{background:var(--dark);color:#fff}.t-volg{background:var(--sky);color:#1d4f8f}.t-later{background:var(--lilac);color:var(--vs)}
+.t-nee{background:var(--red-bg);color:var(--red)}
+.src{font-size:12.5px;color:var(--soft);font-weight:600}
+.idea{border-top:1px solid var(--line);padding:14px 0}
+.idea:first-of-type{border-top:0}
+.idea .hd{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.idea .tt{font-weight:700;font-size:16px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 18px;margin-top:8px}
+.cols div b{display:block;font-size:12px;color:var(--soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.flag{background:var(--butter);color:#5E4500;border-radius:12px;padding:10px 12px;font-size:14px;margin-top:10px}
+.flag.r{background:var(--red-bg);color:#7a1b12}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;color:var(--soft);font-weight:650;font-size:12.5px;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tablewrap{overflow-x:auto}
+ol.top{counter-reset:t;list-style:none;padding:0}
+ol.top li{counter-increment:t;position:relative;padding:14px 0 14px 46px;border-top:1px solid var(--line)}
+ol.top li:first-child{border-top:0}
+ol.top li::before{content:counter(t);position:absolute;left:0;top:14px;width:32px;height:32px;border-radius:10px;background:var(--dark);color:#fff;display:grid;place-items:center;font-weight:750;font-size:14px}
+/* telefoon-schetsen */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:12px}
+.ph{background:#fff;border-radius:30px;box-shadow:0 0 0 8px #1b1f26,0 14px 40px rgba(20,26,34,.18);padding:16px 14px 18px;min-height:440px;display:flex;flex-direction:column;gap:9px;margin:8px}
+.ph .bar{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--soft)}
+.ph .q{font-size:17px;font-weight:750;line-height:1.25}
+.ph .s{font-size:12.5px;color:var(--soft)}
+.ph .box{border-radius:14px;box-shadow:inset 0 0 0 1px var(--line);padding:10px;font-size:13px}
+.ph .vs{background:var(--lilac);border-radius:14px;padding:10px;font-size:13px}
+.ph .vs .l{display:inline-block;background:#fff;color:var(--vs);font-size:10.5px;font-weight:800;border-radius:999px;padding:1px 7px;margin-bottom:4px}
+.ph .row{display:flex;gap:6px}
+.ph .b{flex:1;border-radius:12px;padding:10px 6px;text-align:center;font-weight:750;font-size:13px;background:var(--dark);color:#fff}
+.ph .b.g{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1px #C9CED6}
+.ph .b.C{background:var(--green-bg);color:var(--green)}.ph .b.A{background:var(--red-bg);color:var(--red)}.ph .b.V{background:var(--amber-bg);color:var(--amber)}
+.ph .mic{margin:auto auto 0;width:86px;height:86px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px;text-align:center;box-shadow:0 0 0 10px rgba(180,35,24,.15)}
+.ph .chip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--sage);color:var(--green)}
+.ph .chip.q2{background:var(--butter);color:var(--amber)}
+.ph .photo{height:120px;border-radius:14px;background:linear-gradient(135deg,#9aa6b4,#5d6875);position:relative;overflow:hidden}
+.ph .photo .ring{position:absolute;left:52%;top:28%;width:58px;height:44px;border:3px solid #ff4d3d;border-radius:50%}
+.ph .photo .arrow{position:absolute;left:20%;top:62%;color:#ff4d3d;font-weight:900;font-size:22px}
+.ph .photo .meta{position:absolute;left:6px;bottom:6px;font-size:10px;color:#fff;background:rgba(0,0,0,.45);padding:2px 6px;border-radius:6px}
+.ph .red{background:var(--red);color:#fff;border-radius:14px;padding:12px;font-weight:750}
+.ph .li{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line)}
+.ph .sub{font-size:11px;font-weight:800;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.cap{font-size:13px;color:var(--soft);text-align:center;margin-top:6px}
+details{background:#fff;border-radius:16px;box-shadow:0 0 0 1px var(--line);padding:12px 16px;margin-top:10px}
+summary{cursor:pointer;font-weight:700}
+#ruw{font-size:14px}
+#ruw h1,#ruw h2{font-size:17px;margin:20px 0 6px}#ruw h3{font-size:15px;margin:14px 0 4px}
+#ruw .sec{font-size:13px;font-weight:800;color:#fff;background:var(--dark);display:inline-block;border-radius:8px;padding:3px 10px;margin-top:26px}
+#ruw li{margin-left:20px}
+.foot{margin-top:50px;color:var(--soft);font-size:13px}
+@media print{.toc{display:none}.card,.ph{break-inside:avoid}}
+</style></head><body><div class="wrap">
+
+<div class="k">Werkplekinspectie.nl · verbeteronderzoek · november 2026</div>
+<h1>Wat kunnen we van andere apps leren?</h1>
+<p class="lead">Twintig parallelle deelonderzoeken door het DeepSeek-harnas, samen ruim 16.000 woorden over ruim 120 bestaande apps: inspectie-apps, maar juist ook apps uit de luchtvaart, de zorg, pakketbezorging, taakbeheer, fitness, banken en AI-notulisten. Ik heb alles kritisch nagelezen. Waar DeepSeek iets beweerde dat technisch niet kan in een web-app, of dat botst met de WPI-methode of de AVG, staat dat er hieronder eerlijk bij. Het ruwe onderzoek staat onderaan volledig, zodat je zelf kunt nalezen wat er per app gezegd is.</p>
+
+<nav class="toc">
+<a href="#kern">Kern</a><a href="#top">Top 15</a><a href="#schermen">Hoe het eruitziet</a><a href="#t1">Gesprek & spraak</a><a href="#t2">Foto</a><a href="#t3">Veld & ergonomie</a><a href="#t4">Acties</a><a href="#t5">AI-Voorstel</a><a href="#t6">Offline</a><a href="#t7">Dashboard & rapport</a><a href="#t8">Bewijs & audit</a><a href="#t9">Melden & locatie</a><a href="#t10">Samenwerken & leren</a><a href="#tech">Wat kan technisch</a><a href="#niet">Bewust niet</a><a href="#roadmap">Roadmap</a><a href="#vragen">Jouw beslissingen</a><a href="#bijlage">Ruw onderzoek</a>
+</nav>
+
+<h2 id="kern">De kern in één alinea</h2>
+<div class="card">
+<p>Bijna alle twintig onderzoeken komen op hetzelfde uit, vanuit totaal verschillende hoeken: <b>de beste veld-apps laten de gebruiker nooit twijfelen over drie dingen</b> — <i>wat moet ik nu doen</i> (één vraag tegelijk, zoals TurboTax en de Airbus-checklist), <i>is het vastgelegd</i> (de WhatsApp-vinkjes, "Veilig op dit toestel"), en <i>wie is nu aan zet</i> (Linear, PlanRadar: een actie heeft altijd één eigenaar en een duidelijke status). Onze app doet het eerste al redelijk goed sinds de ombouw naar het begeleide gesprek. Het tweede en derde ontbreken nog grotendeels: er is geen zichtbare opslagstatus, en een actie kent geen echte toetsingsstap. Daarnaast is het grootste verschil met SafetyCulture de <b>foto</b>: daar is de foto met een rode cirkel erop hét bewijs; bij ons is de foto nu een bijlage. Wie die drie dingen plus de foto oplost, heeft een app die op locatie wint van iAuditor — niet door meer functies, maar door rust.</p>
+</div>
+
+<div class="grid g3" style="margin-top:14px">
+<div class="tile sky"><div class="lab">Deelonderzoeken</div><div class="n">20</div><div class="lab">elk ±800 woorden</div></div>
+<div class="tile sage"><div class="lab">Apps bekeken</div><div class="n">120+</div><div class="lab">de meeste buiten onze branche</div></div>
+<div class="tile butter"><div class="lab">Uitgewerkte ideeën</div><div class="n">45</div><div class="lab">na kritische schifting</div></div>
+<div class="tile blush"><div class="lab">Bewust afgewezen</div><div class="n">14</div><div class="lab">methode, AVG of techniek</div></div>
+</div>
+
+<h2 id="top">Top 15 — wat ik als eerste zou bouwen</h2>
+<p class="lead">Gerangschikt op impact op locatie, gecorrigeerd voor moeite. "Nu" kan in de huidige app zonder backend; "Volgende" heeft Supabase nodig.</p>
+<div class="card"><ol class="top">
+<li><b>Foto met markering als kern van de waarneming.</b> Na de foto direct een cirkel, pijl of korte tekst erop tekenen met je duim; het origineel blijft bewaard. Onderaan de foto een badge met tijd, werkplek en inspecteur.<br><span class="src">Uit: SafetyCulture, Apple Markup, CompanyCam, Fieldwire, Snagmaster</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Echt statusmodel voor acties met een toetsknop.</b> Open → In uitvoering → Klaar voor toetsing → Afgerond (of Afgewezen, terug naar actiehouder). Alleen de toetser ziet de knop "Akkoord na toetsing", en de app weigert het als toetser = actiehouder. Dit ís de actieregel uit de methode, nu afgedwongen door de software.<br><span class="src">Uit: Linear, Jira, PlanRadar, Qualio (CAPA), Procore</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>"Mijn acties" met drie bakjes: Vandaag · Te laat · Wacht op mijn toetsing.</b> Eén scherm waar Winfred of Douwe 's ochtends ziet wat er van hen verwacht wordt, zonder filteren.<br><span class="src">Uit: Things 3 (Vandaag), Todoist, Apple Herinneringen</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>Opslagstatus die je altijd kunt zien.</b> Een kleine chip per inspectie en per foto: "Veilig op dit toestel" → "In wachtrij" → "Verzonden" → "Mislukt — tik om opnieuw". Nooit "opgeslagen" zeggen voordat het echt op schijf staat.<br><span class="src">Uit: WhatsApp-vinkjes, Things Cloud, Google Docs offline, Linear</span><br><span class="tag t-nu">Nu (lokaal deel)</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>Inspreken met ingedrukt houden (push-to-talk).</b> Een grote rode knop van 80+ pixels onderaan het scherm: indrukken = opnemen, loslaten = klaar, omhoog vegen = vastzetten voor lang inspreken, naar links vegen = weggooien. Werkt met handschoenen veel beter dan "tik aan, tik uit".<br><span class="src">Uit: WhatsApp-spraakberichten, Zello, Wispr Flow</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>Controlescherm vóór de handtekening.</b> Eén overzicht: X conform, Y afwijkingen, Z verbeterpunten, alle acties met houder/toetser/termijn, en rood gemarkeerd wat nog ontbreekt (bijv. "afwijking zonder foto", "actie zonder termijn"). Pas als alles klopt wordt de tekenknop actief.<br><span class="src">Uit: TurboTax "Review", Belastingdienst-aangifte, DocuSign</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>Eén vaste Voorstel-component voor álle AI-hulp.</b> Paars kaartje met: het voorstel, <i>waarom</i> (bron: "TRA IDV, regel 7, maatregel 2", "uit je ingesproken tekst: 'geen hekwerk'"), en drie knoppen: Gebruik · Andere · Zelf kiezen. Elke keuze wordt gelogd (geaccepteerd/aangepast/afgewezen) — dat is meteen je bewijs richting auditor dat de mens beslist.<br><span class="src">Uit: GitHub Copilot, Grammarly, Gmail Smart Compose, Notion AI, Abridge</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Veldmodus: grotere knoppen + zonmodus.</b> Eén schakelaar die alle tikdoelen naar 56–64 px brengt, de C/A/V-knoppen onderaan in duimbereik zet, en een hoog-contrastthema geeft (puur zwart op wit, dikkere randen, geen pasteltinten) voor fel zonlicht.<br><span class="src">Uit: Samsung XCover, CAT S-serie, Garmin Instinct, Material 3, iOS Verhoogd contrast</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>Direct-gevaar-knop.</b> Altijd zichtbaar tijdens de inspectie. Eén tik: rode banner "Werk stilleggen en veiligstellen", foto, één zin inspreken, en het wordt meteen een Afwijking met hoogste prioriteit en melding aan de coördinator. Daarna gaat het gesprek gewoon verder.<br><span class="src">Uit: Airbus ECAM, Boeing EICAS, Pulsara, SafetyCulture Heads Up</span><br><span class="tag t-nu">Nu (melding: Volgende)</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Kleine-aantallenregel in het dashboard.</b> Bij minder dan 5 waarnemingen geen percentages tonen, maar "n = 3 — te weinig voor een trend". Voorkomt dat de directie conclusies trekt uit 2 inspecties.<br><span class="src">Uit: Our World in Data, Apple Gezondheid, statistiekpraktijk</span><br><span class="tag t-nu">Nu</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+<li><b>QR-sticker per installatie als startpunt.</b> Scan bij de vijzel → "Is dit Gemaal 2 – Vijzel B?" → Ja → taak en TRA worden als Voorstel klaargezet. Elke inspectie is daarmee herleidbaar aan een installatie, en het dashboard kan per installatie filteren.<br><span class="src">Uit: UpKeep, Fiix, Uber (bevestig ophaalpunt)</span><br><span class="tag t-volg">Volgende</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Auditor-weergave: bewijsmap per VCA-eis.</b> Een alleen-lezen rol die per eis 7.1 en 7.2 ziet: programma vs. uitgevoerd, positieve bevindingen, afwijkingen met foto, acties met toetsing, trendanalyse — alles doorklikbaar tot de originele waarneming.<br><span class="src">Uit: Vanta, Drata, Box</span><br><span class="tag t-volg">Volgende</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Onuitwisbaar logboek.</b> Niets wordt overschreven; elke wijziging is een nieuwe regel ("Oordeel C → A gewijzigd door W. Loerts, 10:42, reden: …"). De auditor ziet de tijdlijn, de inspecteur merkt er niets van.<br><span class="src">Uit: GitHub, Google Docs versiegeschiedenis, Qualio</span><br><span class="tag t-volg">Volgende</span><span class="tag t-hoog">impact hoog</span><span class="tag t-mid">moeite midden</span></li>
+<li><b>Gesprek met monteurs opnemen (met toestemming) → Voorstel-verslag.</b> Expliciete start ("Iedereen akkoord met opname?"), daarna maakt AI een conceptverslag waarin elke zin terugverwijst naar het stukje audio. Inspecteur leest, past aan, bevestigt. Audio wordt na X dagen gewist.<br><span class="src">Uit: Abridge, Nuance DAX, Otter, Granola</span><br><span class="tag t-later">Later</span><span class="tag t-hoog">impact hoog</span><span class="tag t-hoog" style="background:var(--red-bg);color:var(--red)">moeite hoog + DPIA</span></li>
+<li><b>Wekelijks overzicht per mail/Teams.</b> Maandagochtend: open acties per persoon, wat te laat is, wat op toetsing wacht, positieve bevindingen van vorige week. Niemand hoeft de app te openen om bij te blijven.<br><span class="src">Uit: Linear digest, Slack, Basecamp, Strava weekoverzicht</span><br><span class="tag t-volg">Volgende</span><span class="tag t-hoog">impact hoog</span><span class="tag t-laag">moeite laag</span></li>
+</ol></div>
+
+<h2 id="schermen">Hoe het eruit zou zien</h2>
+<p class="lead">Schetsen van zes schermen, in onze huidige stijl. Geen definitief ontwerp, wel concreet genoeg om op te reageren.</p>
+<div class="phones">
+<div><div class="ph">
+<div class="bar"><span>Inspectie · IDV</span><span class="chip">Veilig op dit toestel</span></div>
+<div class="q">Wat zie je?</div><div class="s">Houd de knop ingedrukt en vertel wat je ziet. Loslaten = klaar.</div>
+<div class="box">"De leuning bij het bordes is weggehaald, monteur staat op 2 meter zonder lijn…"</div>
+<div class="s">Omhoog vegen = vastzetten · Links = weggooien</div>
+<div class="mic">HOUD<br>VAST</div>
+</div><div class="cap">1 · Push-to-talk inspreken</div></div>
+
+<div><div class="ph">
+<div class="bar"><span>Foto 2 van 3</span><span>Ongedaan · Klaar</span></div>
+<div class="photo"><div class="ring"></div><div class="arrow">➜</div><div class="meta">12 nov 10:14 · Gemaal 2 · S. vB</div></div>
+<div class="row"><div class="b g">◯ Cirkel</div><div class="b g">➜ Pijl</div><div class="b g">Aa Tekst</div></div>
+<div class="s">Origineel blijft bewaard. Gezichten? <b>Vervagen</b></div>
+<div class="row" style="margin-top:auto"><div class="b g">Nog een foto</div><div class="b">Verder</div></div>
+</div><div class="cap">2 · Foto markeren, metadata-badge</div></div>
+
+<div><div class="ph">
+<div class="bar"><span>Waar hoort dit bij?</span><span></span></div>
+<div class="vs"><span class="l">VOORSTEL</span><br><b>Valgevaar bij werken op hoogte</b><br><span class="s">Waarom: je zei "2 meter zonder lijn". TRA IDV · regel 7 · maatregel "valbeveiliging aanlijnen".</span></div>
+<div class="row"><div class="b">Gebruik</div><div class="b g">Andere</div><div class="b g">Zelf</div></div>
+<div class="sub">Jouw oordeel</div>
+<div class="row"><div class="b C">C</div><div class="b A">A</div><div class="b V">V</div></div>
+<div class="s">Het oordeel kies jij. AI stelt alleen de regel voor.</div>
+</div><div class="cap">3 · Eén Voorstel-component</div></div>
+
+<div><div class="ph">
+<div class="bar"><span>Mijn acties</span><span>Winfred</span></div>
+<div class="sub">Te laat · 1</div>
+<div class="li"><span>Leuning bordes herstellen</span><span class="chip q2" style="background:var(--red-bg);color:var(--red)">2 d te laat</span></div>
+<div class="sub">Vandaag · 2</div>
+<div class="li"><span>Afzetting vijzelput</span><span class="chip q2">In uitvoering</span></div>
+<div class="li"><span>LMRA-kaart aanvullen</span><span class="chip q2">Open</span></div>
+<div class="sub">Wacht op mijn toetsing · 1</div>
+<div class="li"><span>Kabelgoot afgedekt</span><span class="chip" style="background:var(--sky);color:#1d4f8f">Toetsen</span></div>
+</div><div class="cap">4 · Vandaag · Te laat · Toetsen</div></div>
+
+<div><div class="ph">
+<div class="bar"><span>Controle vóór ondertekenen</span><span></span></div>
+<div class="row"><div class="b C">9 C</div><div class="b A">2 A</div><div class="b V">1 V</div></div>
+<div class="box" style="background:var(--red-bg);box-shadow:none;color:#7a1b12"><b>Nog 2 dingen</b><br>• Afwijking "afzetting" heeft geen foto<br>• Actie "leuning" heeft geen termijn</div>
+<div class="box">Positief: "Ploeg had LMRA-kaart ingevuld en besproken."</div>
+<div class="b g" style="margin-top:auto;opacity:.45">Ondertekenen</div>
+</div><div class="cap">5 · Controlescherm</div></div>
+
+<div><div class="ph">
+<div class="red">⚠ Direct gevaar<br><span style="font-weight:500;font-size:13px">Laat het werk stilleggen en veiligstellen.</span></div>
+<div class="row"><div class="b g">📷 Foto</div><div class="b g">🎙 Inspreken</div></div>
+<div class="box">"Monteur in vijzelgoot, vijzel niet vergrendeld."</div>
+<div class="s">Wordt: Afwijking · prioriteit hoogst · coördinator krijgt direct bericht</div>
+<div class="row" style="margin-top:auto"><div class="b">Veiliggesteld</div></div>
+</div><div class="cap">6 · Direct-gevaar-modus</div></div>
+</div>
+
+<!-- =============== THEMA'S =============== -->
+<h2 id="t1">1 · Het begeleide gesprek en inspreken</h2>
+<p class="lead">Onderzoeken 02, 03, 04. Gekeken naar AI-notulisten in de zorg (Abridge, DAX, Suki), spraakassistenten (Siri, CarPlay, Android Auto), dicteer-apps (Wispr Flow, Whisper), walkietalkie-apps (Zello) en begeleide formulieren (TurboTax, Typeform, aangifte Belastingdienst, Intercom Fin).</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Push-to-talk in plaats van tik-aan/tik-uit</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Waar het vandaan komt</b>WhatsApp-spraakbericht, Zello: knop vasthouden = praten.</div><div><b>Waarom het werkt</b>Je hoeft niet naar het scherm te kijken om te weten of je opneemt: je voelt het aan je duim. Geen "is hij nou aan?".</div><div><b>Bij ons</b>De huidige ronde mic-knop in het tekstvak wordt een grote knop onderaan het scherm. Vasthouden = opnemen met golflijn en tijdteller; loslaten = tekst verschijnt in het vak. Omhoog vegen zet hem vast voor een langer verhaal.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Eén vraag per scherm, met altijd Terug en N.v.t.</div><div><span class="tag t-nu">Nu (deels al)</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>TurboTax, Typeform, aangifte Belastingdienst.</div><div><b>Waarom</b>Iemand onder druk kan één beslissing tegelijk aan. Voortgangsbalk + "je kunt altijd terug" haalt angst weg.</div><div><b>Bij ons</b>Hebben we grotendeels. Ontbreekt: een dunne voortgangsbalk bovenin ("Taak · Wat zie je · Regel · Oordeel · Actie") en een vaste "Hervatten waar je was" na onderbreking (telefoon gaat, app wordt gesloten).</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Slimme vertakking: C kort, A/V doorvragen</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>GoCanvas, TurboTax.</div><div><b>Waarom</b>Elke vraag die niet nodig is, kost vertrouwen.</div><div><b>Bij ons</b>Bij C: één tik, korte bevestiging ("Vastgelegd als conform"), terug naar "Nog iets gezien?". Alleen bij A/V komen de vervolgvragen (foto verplicht bij A, actie, houder, toetser, termijn). Dit zit er al deels in; aanscherpen dat C écht in één tik klaar is.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Gesprek met monteurs opnemen met toestemming → conceptverslag met bronverwijzing</div><div><span class="tag t-later">Later</span><span class="tag t-hoog">hoog</span><span class="tag t-nee">hoog + DPIA</span></div></div>
+<div class="cols"><div><b>Bron</b>Abridge en Nuance DAX (arts-patiëntgesprek → verslag), Otter, Granola.</div><div><b>Waarom</b>Abridge's sterkste punt is niet het samenvatten maar dat je op elke zin kunt tikken en het stukje audio hoort waar het vandaan komt. Dat maakt AI controleerbaar.</div><div><b>Bij ons</b>Stap "Gesprek met monteurs": knop "Start opname" met verplichte vraag "Iedereen akkoord?". Na afloop een Voorstel-verslag: "Ploeg gaf aan dat de LMRA mondeling is gedaan [▶ 01:42]". Inspecteur streept door, past aan, bevestigt.</div></div>
+<div class="flag r"><b>Kritische noot:</b> dit is de mooiste en de gevaarlijkste functie. Audio van monteurs is persoonsgegeven, stem kan biometrisch zijn, en de ondernemingsraad heeft instemmingsrecht bij systemen die gedrag van werknemers kunnen volgen (art. 27 WOR). Vereist DPIA, korte bewaartermijn (bijv. 30 dagen), EU-spraakdienst, en nooit "altijd aan". Niet bouwen voordat dat is afgetikt.</div></div>
+<div class="idea"><div class="hd"><div class="tt">Spraakgestuurde actie-invoer</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Siri-herinneringen, Todoist "quick add" met natuurlijke taal.</div><div><b>Waarom</b>"Winfred moet vóór vrijdag de leuning herstellen, Douwe toetst" is sneller gezegd dan in vier velden getikt.</div><div><b>Bij ons</b>Inspreken → Voorstel-kaart met de velden al ingevuld (houder Winfred, toetser Douwe, termijn vr 15 nov). App controleert de actieregels (toetser ≠ houder, nooit QHSE-manager) vóór de inspecteur bevestigt.</div></div></div>
+</div>
+
+<h2 id="t2">2 · Foto als bewijs</h2>
+<p class="lead">Onderzoek 05 (+01). Google Lens, Apple Live Text en Markup, Adobe Scan, CamScanner, Lemonade en Tractable (schade-apps), CompanyCam, Fieldwire.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Markeren op de foto, origineel bewaard</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Apple Markup, CompanyCam, SafetyCulture.</div><div><b>Waarom</b>Een foto van een installatie zegt niets; een foto met een rode cirkel rond de ontbrekende afscherming zegt alles. Monteur, coördinator en auditor zien direct hetzelfde.</div><div><b>Bij ons</b>Na de foto opent een tekenlaag (canvas) met drie gereedschappen: cirkel, pijl, tekst — dik en rood, met de duim te zetten. We bewaren origineel én gemarkeerde versie; het rapport toont de gemarkeerde.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Metadata-badge op elke foto</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>CompanyCam, Fieldwire, Timestamp Camera-apps.</div><div><b>Waarom</b>Een auditor vraagt: wanneer en waar is dit genomen? Met een badge is dat beantwoord zonder zoeken.</div><div><b>Bij ons</b>Klein label onderin: datum/tijd · werkplek · initialen inspecteur. Wordt in de foto "gebrand" in het rapport, maar staat ook als echte data in het record.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Voor/na-foto bij het afronden van een actie</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>CompanyCam, Lemonade, Snagmaster.</div><div><b>Waarom</b>De actiehouder bewijst dat het opgelost is; de toetser ziet voor en na naast elkaar en hoeft niet altijd ter plaatse te gaan.</div><div><b>Bij ons</b>"Klaar voor toetsing" vraagt om een na-foto. Toetsscherm: links voor, rechts na, knoppen "Akkoord" / "Niet akkoord + reden".</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Gezichten vervagen (AVG)</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Google Street View, CompanyCam privacy-opties.</div><div><b>Waarom</b>Dataminimalisatie: je inspecteert de situatie, niet de persoon.</div><div><b>Bij ons</b>Knop "Vervagen" in de tekenlaag: met je vinger over een gezicht vegen. Automatische gezichtsherkenning kan in de browser (lokaal, er gaat niets naar buiten), maar handmatig is eenvoudiger en betrouwbaarder om mee te beginnen.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Foto-kwaliteitsfeedback en typeplaatje lezen</div><div><span class="tag t-later">Later</span><span class="tag t-mid">midden</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Adobe Scan (randen detecteren), Live Text (tekst uit foto), Google Lens.</div><div><b>Waarom</b>Een onscherpe foto ontdek je pas op kantoor. Een typeplaatje overtypen is foutgevoelig.</div><div><b>Bij ons</b>"Foto is erg donker — nog een keer?" en "Voorstel: serienummer VZ-2231-B gelezen van typeplaatje". Altijd als Voorstel.</div></div>
+<div class="flag r"><b>Afgewezen deel:</b> Tractable en Lemonade beoordelen schade automatisch uit een foto. DeepSeek stelt het voor als "Voorstel: dit lijkt een afwijking". Dat doen we niet: een oordeel uit een foto is precies wat de WPI-methode verbiedt. Beeldherkenning mag hooguit helpen de juiste TRA-regel te vinden, nooit C/A/V suggereren.</div></div>
+</div>
+
+<h2 id="t3">3 · Werken in het veld: handschoenen, zon, lawaai, stress</h2>
+<p class="lead">Onderzoeken 06, 07, 12. Luchtvaart (ForeFlight, Garmin Pilot, Boeing- en Airbus-checklists), zorg (WHO-chirurgische checklist, Pulsara, Handtevy), bezorging (PostNL-scanner, UPS DIAD, Uber/Bolt Driver), buitentoestellen (Samsung XCover, CAT, Zebra, Garmin Instinct).</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Veldmodus en zonmodus</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Material 3 (48 dp minimum), robuuste toestellen (56–64 dp in de praktijk), iOS Verhoogd contrast, Garmin Instinct (zwart-wit, enorme cijfers).</div><div><b>Waarom</b>Onze pastelkleuren zijn rustig binnen, maar verdwijnen in fel zonlicht. Een vinger in een werkhandschoen is ±2 cm breed.</div><div><b>Bij ons</b>Schakelaar in het accountmenu (en automatisch voorgesteld bij eerste inspectie): knoppen 60 px, C/A/V onderaan in duimzone, zonthema met witte achtergrond, zwarte tekst, dikke gekleurde randen in plaats van pastelvlakken. Kleur nooit als enige signaal: altijd letter + woord + icoon.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Direct-gevaar-modus</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Airbus ECAM / Boeing EICAS: bij een storing verschijnt bovenaan één rode melding met de eerste handeling; alles wat niet urgent is verdwijnt.</div><div><b>Waarom</b>In paniek kun je niet zoeken. Eén scherm, één handeling.</div><div><b>Bij ons</b>Een kleine rode knop "Direct gevaar" altijd rechtsboven in de inspectie. Volledig scherm (zie schets 6). De bestaande "direct gevaar"-logica in de app gaat hierin op.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Hardop-teamcheck in het monteursgesprek</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>WHO Surgical Safety Checklist: het team zegt drie dingen hardop voordat de operatie begint.</div><div><b>Waarom</b>Hardop zeggen dwingt bewustzijn af en maakt het een gesprek, geen controle.</div><div><b>Bij ons</b>De stap "Gesprek met monteurs" krijgt drie vaste vragen die de inspecteur voorleest: <i>Wat is vandaag het grootste risico? Wat doen jullie daartegen? Wat zou je stilleggen?</i> Antwoorden inspreken. Geen oordeel, wel waardevol voor de trend (7.2) en voor de positieve bevindingen.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Haptische bevestiging</div><div><span class="tag t-nu">Nu (Android)</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>PostNL-scanner (piep + tril bij gelukte scan), Apple Watch.</div><div><b>Waarom</b>Bij lawaai hoor je niets en kijk je niet: je voelt het.</div><div><b>Bij ons</b>Korte tril bij oordeel vastgelegd, dubbele tril bij Voorstel bevestigd, lange bij fout.</div></div>
+<div class="flag"><b>Techniek:</b> trillen vanuit een web-app werkt op Android (Chrome), <b>niet op iPhone</b>. Op iPhone vangen we het op met een duidelijke visuele flits.</div></div>
+<div class="idea"><div class="hd"><div class="tt">Onderste actiebalk voor één hand</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Uber Driver, UPS DIAD: alle hoofdknoppen onderaan, inhoud bovenaan.</div><div><b>Waarom</b>Met de andere hand houd je een leuning, een tablet of een TRA vast.</div><div><b>Bij ons</b>"Verder", "Foto", "Inspreken" en C/A/V komen in een vaste balk onderaan tijdens de inspectie (de tabbalk is daar al verborgen, die ruimte is vrij).</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Scherm blijft aan</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>ForeFlight, navigatie-apps.</div><div><b>Waarom</b>Telefoon die na 30 sec op zwart gaat terwijl je met handschoenen staat = ontgrendelen = frustratie.</div><div><b>Bij ons</b>Tijdens een inspectie houdt de app het scherm wakker (Screen Wake Lock — werkt in Chrome én Safari).</div></div></div>
+</div>
+
+<h2 id="t4">4 · Acties: van afwijking tot getoetst</h2>
+<p class="lead">Onderzoek 08 (+01, 17, 18). Linear, Things 3, Todoist, Asana, Jira, Apple Herinneringen, PlanRadar, Procore, Qualio.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Statusmodel dat de actieregels afdwingt</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Linear/Jira-workflows, Qualio CAPA.</div><div><b>Waarom</b>De methode zegt "afgerond pas na toetsing", maar nu kan de app dat niet afdwingen. Software die de regel bewaakt is sterker bewijs dan een procedure op papier.</div><div><b>Bij ons</b>Open → In uitvoering (houder) → Klaar voor toetsing (houder, met na-foto) → Afgerond (alleen toetser) of Afgewezen → terug naar In uitvoering met reden. Elke overgang: wie, wanneer. Knoppen alleen zichtbaar voor wie ze mag gebruiken.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Mijn acties: Vandaag · Te laat · Te toetsen</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Things 3 "Vandaag", Todoist "Vandaag/Verlopen".</div><div><b>Waarom</b>Een coördinator wil niet filteren, maar weten wat er vandaag van hem verwacht wordt.</div><div><b>Bij ons</b>Het huidige tabblad Acties krijgt bovenaan deze drie bakjes voor de ingelogde persoon; de volledige lijst met filters blijft eronder voor het hoofd.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Gesprek per actie</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Slack-threads, Linear-comments, Figma-opmerkingen.</div><div><b>Waarom</b>Nu gaat "hoe wil je dat ik dit oplos?" via WhatsApp en is het daarna weg. In de actie blijft het bij het bewijs.</div><div><b>Bij ons</b>Onder elke actie een korte tijdlijn: statuswijzigingen + berichten + foto's, met @naam voor een melding.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Herinneringen zonder zeuren</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Apple Herinneringen, Asana.</div><div><b>Waarom</b>Termijnen worden gemist omdat niemand eraan herinnert, niet omdat niemand wil.</div><div><b>Bij ons</b>Eén melding 2 dagen voor de termijn, één op de dag zelf, daarna alleen nog in het weekoverzicht. Pushmeldingen vanuit een web-app werken op Android en, sinds iOS 16.4, op iPhone als de app op het beginscherm staat.</div></div></div>
+</div>
+
+<h2 id="t5">5 · AI-hulp waar mensen op vertrouwen</h2>
+<p class="lead">Onderzoek 14 (+02, 04). ChatGPT, GitHub Copilot, Notion AI, Gmail Smart Compose, Grammarly, Apple Intelligence, Intercom Fin.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Eén Voorstel-component, overal hetzelfde</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Copilot (grijze tekst, Tab = accepteren), Grammarly (kaartje met uitleg), Smart Compose.</div><div><b>Waarom</b>Vertrouwen komt van voorspelbaarheid: AI-hulp ziet er altijd hetzelfde uit, zegt altijd waaróm, en is altijd met één tik weg te klikken.</div><div><b>Bij ons</b>We hebben nu labels "Voorstel", "Standaard", "Jij" — goed begin. Uitbreiden tot één component met: wat · waarom (bron) · Gebruik / Andere / Zelf. Gebruikt bij taak, TRA-regel, maatregel, actietekst, actiehouder.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Logboek van AI-beslissingen</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Abridge (bewerkingen geregistreerd), EU AI Act-praktijk.</div><div><b>Waarom</b>Als een auditor vraagt "beslist de AI?", laat je zien: 64% van de voorstellen geaccepteerd, 28% aangepast, 8% afgewezen — de mens kiest.</div><div><b>Bij ons</b>Elke Voorstel-kaart slaat op: wat voorgesteld, wat gekozen. Klein, onzichtbaar voor de inspecteur, zichtbaar voor hoofd/auditor.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Uitlegkaart bij een vage waarneming</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Grammarly ("dit is vaag — bedoel je…?").</div><div><b>Waarom</b>"Monteur onveilig" is een oordeel, geen waarneming. De app kan helpen dat onderscheid te maken.</div><div><b>Bij ons</b>Bij "Wat zie je?" een zachte hint: "Dit klinkt als een oordeel. Wat zag je precies?" Nooit blokkeren, alleen hinten.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Kleine pilot meten</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Standaardpraktijk bij AI-uitrol.</div><div><b>Waarom</b>Je wilt weten of het tijd scheelt voordat je het iedereen geeft.</div><div><b>Bij ons</b>Twee inspecteurs, vier weken. Meten: tijd per inspectie, aantal waarnemingen, acceptatie van voorstellen, aantal teruggestuurde acties.</div></div></div>
+</div>
+
+<h2 id="t6">6 · Offline en nooit iets kwijt</h2>
+<p class="lead">Onderzoek 13 (+07). Notion offline, Figma, Things Cloud, Google Docs offline, WhatsApp-wachtrij, Linear sync-engine.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Wachtrij met status per item</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>WhatsApp (klokje → vinkje → twee vinkjes → rood uitroepteken).</div><div><b>Waarom</b>Iedereen kent het. Je hoeft niet te weten wat "sync" is.</div><div><b>Bij ons</b>Elke waarneming, foto en handtekening wordt lokaal bewaard (doen we al, IndexedDB) en komt in een wachtrij naar Supabase. Per item een icoontje; bij openen van de app een melding "3 items wachten op bereik".</div></div>
+<div class="flag"><b>Techniek:</b> "achtergrond-sync" (doorsturen terwijl de app dicht is) werkt alleen in Chrome/Android, niet op iPhone. Op iPhone versturen we zodra de app weer geopend wordt. Daarom is de zichtbare status zo belangrijk.</div></div>
+<div class="idea"><div class="hd"><div class="tt">Voorbereiden vóór vertrek</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>ForeFlight (kaarten downloaden vóór de vlucht), Notion "offline beschikbaar".</div><div><b>Waarom</b>Op een gemaal in een weiland heb je geen bereik. Je wilt weten dát je alles hebt vóór je in de auto stapt.</div><div><b>Bij ons</b>Vandaag-scherm: "Klaar voor offline ✓ 21 TRA's · kennisbank · jouw open acties". Nu zitten de TRA's al in de cache; dit maakt het zichtbaar.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Conflicten zichtbaar oplossen</div><div><span class="tag t-later">Later</span><span class="tag t-mid">midden</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Google Docs (conflictkopie), Linear.</div><div><b>Waarom</b>Als Winfred en Douwe allebei offline dezelfde actie aanpassen.</div><div><b>Bij ons</b>Inspecties zijn van één inspecteur, dus geen conflict. Alleen bij acties: "Deze actie is op twee toestellen gewijzigd — kies". Kleine kans bij 4 gebruikers; later.</div></div></div>
+</div>
+
+<h2 id="t7">7 · Dashboard, trendanalyse en rapporten</h2>
+<p class="lead">Onderzoeken 09, 10, 11, 19. Power BI, Tableau, Stripe, Linear Insights, Apple Gezondheid, Garmin Connect, Our World in Data; Canva, Pitch, Notion, Pages, PandaDoc, Strava Year in Review, Spotify Wrapped; Duolingo, Apple-ringen, Forest; Apple HIG, Material 3, Linear, Things, Revolut, Arc.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Kleine-aantallenregel en methodenoot</div><div><span class="tag t-nu">Nu</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Our World in Data (bij elke grafiek: bron en methode).</div><div><b>Waarom</b>"50% afwijkingen" bij 2 waarnemingen is misleidend. Een auditor waardeert eerlijkheid over de data.</div><div><b>Bij ons</b>Onder n=5: geen percentage, wel "n=3". Onder elke grafiek een regel: "Momentopnames, alleen eigen waarneming. Een A betekent: op dat moment niet op orde."</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Kwartaal- en jaarverhaal</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Strava Year in Review, Spotify Wrapped, Pitch.</div><div><b>Waarom</b>De directie leest geen dashboards. Een verhaal van 6 kaarten in vaste volgorde wel — en het is meteen je 7.2-trendanalyse.</div><div><b>Bij ons</b>Vaste volgorde: 1 programma gehaald? · 2 wat ging goed · 3 top-3 afwijkingen · 4 acties op tijd getoetst · 5 wat verandert er · 6 methodenoot. Te printen als PDF of te presenteren schermvullend.</div></div>
+<div class="flag"><b>Toon:</b> niet de Spotify-feestsfeer. Geen confetti, geen "jouw top-monteur". Rustig, zakelijk, zoals een goed jaarverslag.</div></div>
+<div class="idea"><div class="hd"><div class="tt">Dekkingskalender</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>GitHub-bijdragegrafiek, Garmin trainingskalender.</div><div><b>Waarom</b>Besluit 8: "elke maand waarin gewerkt wordt". Een raster maanden × locaties/ploegen laat in één blik zien waar een gat zit.</div><div><b>Bij ons</b>Groen vakje = inspectie gedaan, grijs = niet gewerkt, rood = gewerkt maar niet geïnspecteerd. Klik = de inspectie.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Privé voortgang zonder ranglijst</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Apple Fitness-ringen, Todoist Karma.</div><div><b>Waarom</b>Mensen willen zien dat ze op koers zijn. Ranglijsten maken van veiligheid een wedstrijd — en dan worden inspecties snel en oppervlakkig.</div><div><b>Bij ons</b>Op "Vandaag" voor de inspecteur drie ringen: programma deze maand · positieve bevindingen vastgelegd · acties getoetst. Alleen voor jezelf.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Rapport-PDF in vaste huisstijl, "goed" eerst</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Apple Pages-sjablonen, PandaDoc.</div><div><b>Waarom</b>Een monteur die het rapport leest en eerst ziet wat goed ging, leest de rest met een open houding.</div><div><b>Bij ons</b>Onze rapportpagina krijgt: samenvattingsblok bovenaan (C/A/V-tellers + positieve bevinding), afwijkingen met gemarkeerde foto groot, acties als tabel, onderaan handtekeningen + logboekverwijzing.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Ontwerptokens en zoekpalet</div><div><span class="tag t-nu">Nu (tokens) / Volgende (palet)</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Linear (Cmd+K), Material 3 tokens, Revolut KPI-tegels.</div><div><b>Waarom</b>Op desktop wil Björn snel "acties Gemaal 2" of "inspecties oktober" typen.</div><div><b>Bij ons</b>Tokens hebben we al in styles.css. Het zoekveld bovenin uitbouwen tot een palet (Ctrl+K) met springen naar inspectie, actie, TRA, persoon.</div></div></div>
+</div>
+
+<h2 id="t8">8 · Bewijs en audit (VCA 7.1 en 7.2)</h2>
+<p class="lead">Onderzoek 17. Vanta, Drata, DocuSign, Adobe Sign, Qualio, GitHub, Box.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Auditor-rol met bewijsmap</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Vanta/Drata: per eis een kaart met bewijs, status en datum.</div><div><b>Waarom</b>Bij de VCA-audit sta je niet meer te zoeken: je geeft de auditor een tijdelijke login.</div><div><b>Bij ons</b>Rol "Auditor" (alleen lezen, tijdelijk). Startscherm: eis 7.1 (programma, uitgevoerd, inspecties, acties) en 7.2 (trendanalyse, maatregelen). Doorklikbaar tot foto en logboek.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Onuitwisbaar logboek</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>GitHub-commitgeschiedenis.</div><div><b>Waarom</b>Een auditor vertrouwt data meer als hij weet dat niets stil kan worden aangepast.</div><div><b>Bij ons</b>Supabase-tabel waar alleen bijgeschreven kan worden (rechten: geen update/delete). Een hash-keten zoals DeepSeek voorstelt is mooi, maar voor vier gebruikers overbodig; database-rechten volstaan.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Ondertekenen met samenvatting en certificaat</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>DocuSign "certificate of completion".</div><div><b>Waarom</b>Wie heeft wanneer wat ondertekend, op welk toestel.</div><div><b>Bij ons</b>Onze vingerhandtekening blijft. Erbij: naam, rol, tijdstip, en een korte "vingerafdruk" van de inhoud op het rapport, zodat een later gewijzigd rapport aantoonbaar afwijkt.</div></div>
+<div class="flag"><b>Kritische noot:</b> DeepSeek noemt DocuSign/Adobe Sign als leverancier. Niet nodig: een eenvoudige elektronische handtekening met goede registratie is voor een intern inspectierapport ruim voldoende (eIDAS art. 25). Scheelt kosten en een extra verwerker.</div></div>
+</div>
+
+<h2 id="t9">9 · Melden, LMRA en locatie</h2>
+<p class="lead">Onderzoeken 15, 20. SafetyCulture Heads Up, EcoOnline, Intelex, Donesafe, 112NL, NL-Alert; Google Maps, what3words, Uber, UpKeep, Fiix, Apple Find My.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">"Gevaar melden" voor iedereen</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>SafetyCulture Heads Up, Donesafe.</div><div><b>Waarom</b>Monteurs zien meer dan inspecteurs. Een melding in 20 seconden (foto + inspreken) verlaagt de drempel.</div><div><b>Bij ons</b>Knop op Vandaag: foto, inspreken, werkplek. De melder krijgt status terug: Ontvangen → In behandeling → Actie → Afgerond na toetsing. Een inspecteur kan een melding aan een inspectie koppelen.</div></div>
+<div class="flag"><b>Afbakening:</b> een melding is géén waarneming in de momentopname — de inspecteur heeft het niet zelf gezien. Apart houden in rapport en trend, anders vervuil je de 7.1-data.</div></div>
+<div class="idea"><div class="hd"><div class="tt">LMRA-vraag in het gesprek</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Gangbare LMRA-apps; SafetyCulture-sjablonen.</div><div><b>Waarom</b>Of een LMRA is gedaan, is een waarneembaar feit en een sterke trendindicator.</div><div><b>Bij ons</b>In "Gesprek met monteurs": "Is er voor deze taak een LMRA gedaan?" Ja / Nee / N.v.t. Bij Nee: inspecteur beoordeelt zelf of het A of V is (koppelen aan de TRA-maatregel als die er is).</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">QR per installatie + platte installatielijst</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>UpKeep, Fiix (klant → locatie → installatie).</div><div><b>Waarom</b>Herleidbaarheid en trend per installatie ("bij Vijzel B steeds afzettingsproblemen").</div><div><b>Bij ons</b>Maximaal drie niveaus: klant · locatie · installatie. QR-sticker met link; scannen kan met de gewone camera-app (opent de app op de juiste plek) — dat werkt op elke telefoon.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Locatie vastleggen, met bevestiging</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Uber "Is dit de juiste plek?", Google Maps.</div><div><b>Waarom</b>Coördinaat in het rapport, zonder dat de app je volgt.</div><div><b>Bij ons</b>Eén keer bij start van de inspectie: locatie ophalen, tonen, inspecteur bevestigt. Niet continu.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Noodkaart</div><div><span class="tag t-nu">Nu</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>112NL-app.</div><div><b>Waarom</b>In nood moet je niet zoeken naar adres en contactpersoon.</div><div><b>Bij ons</b>Op het inspectiescherm via het menu: "Bel 112" (gewone telefoonlink), adres van de locatie, contactpersoon van de klant, BHV'er van de ploeg.</div></div></div>
+</div>
+
+<h2 id="t10">10 · Samenwerken, leren en inwerken</h2>
+<p class="lead">Onderzoeken 16, 18. Slack, Teams, WhatsApp, Basecamp, Loom, Figma; Duolingo, Headspace, Khan Academy, Appcues, Quizlet.</p>
+<div class="card">
+<div class="idea"><div class="hd"><div class="tt">Weekoverzicht maandagochtend</div><div><span class="tag t-volg">Volgende</span><span class="tag t-hoog">hoog</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Linear/Slack-digest, Basecamp check-ins.</div><div><b>Waarom</b>Mensen openen geen extra app voor overzicht. Een mail of Teams-bericht lezen ze wel.</div><div><b>Bij ons</b>Per persoon: jouw open acties, te laat, te toetsen. Voor Björn: totaal + programma-voortgang. Met directe links.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Delen via link, WhatsApp alleen als belletje</div><div><span class="tag t-volg">Volgende</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>WhatsApp, Teams-deeplinks.</div><div><b>Waarom</b>WhatsApp wordt toch gebruikt. Zorg dat er alleen een link in staat, geen foto's of namen.</div><div><b>Bij ons</b>Knop "Herinner via WhatsApp": opent WhatsApp met tekst "Er staat een actie voor je klaar: [link]". De inhoud blijft in de app.</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Eerste inspectie met rondleiding + oefencasus</div><div><span class="tag t-later">Later</span><span class="tag t-mid">midden</span><span class="tag t-mid">midden</span></div></div>
+<div class="cols"><div><b>Bron</b>Appcues-tours, Duolingo, Khan Academy.</div><div><b>Waarom</b>De lastigste stap voor een nieuwe inspecteur is het verschil tussen waarnemen en oordelen.</div><div><b>Bij ons</b>Oefeninspectie op een fictieve werkplek (met de voorbeelddata die we al hebben), 5 minuten, met tips per stap. Eén keer, overslaanbaar, terug te vinden via "?".</div></div></div>
+<div class="idea"><div class="hd"><div class="tt">Toolbox-kaartjes voor monteurs</div><div><span class="tag t-later">Later</span><span class="tag t-mid">midden</span><span class="tag t-laag">laag</span></div></div>
+<div class="cols"><div><b>Bron</b>Quizlet, Loom.</div><div><b>Waarom</b>Een toolbox-meeting over "wat is een momentopname" landt beter met 3 kaartjes dan met een PowerPoint.</div><div><b>Bij ons</b>Een paar kaartjes in de kennisbank: C/A/V/NVT, wie mag toetsen, waarom positief vastleggen. Geen scores per persoon.</div></div></div>
+</div>
+
+<h2 id="tech">Wat kan technisch wel en niet in een web-app</h2>
+<p class="lead">DeepSeek ging er soms van uit dat alles kan wat een "echte" app kan. Onze app is een web-app (PWA). Dit is de nuchtere stand, november 2026:</p>
+<div class="card tablewrap"><table>
+<tr><th>Functie</th><th>Android / Chrome</th><th>iPhone / Safari</th><th>Conclusie</th></tr>
+<tr><td>Spraak naar tekst (Web Speech)</td><td>Ja</td><td>Ja, vanaf iOS 14.5; soms haperend</td><td>Werkt op eigen URL. Robuust: audio opnemen + EU-spraakdienst via backend.</td></tr>
+<tr><td>Push-to-talk (vasthouden)</td><td>Ja</td><td>Ja</td><td>Gewoon te bouwen.</td></tr>
+<tr><td>Camera + foto-markering</td><td>Ja</td><td>Ja</td><td>Gewoon te bouwen.</td></tr>
+<tr><td>Trillen (haptiek)</td><td>Ja</td><td><b>Nee</b></td><td>Op iPhone visuele flits als vervanging.</td></tr>
+<tr><td>Volumeknop als sluiter / PTT</td><td><b>Nee</b></td><td><b>Nee</b></td><td>Afgewezen: browsers geven de volumeknoppen niet vrij. Alleen in een native app.</td></tr>
+<tr><td>Scherm wakker houden</td><td>Ja</td><td>Ja (iOS 16.4+)</td><td>Bouwen.</td></tr>
+<tr><td>QR scannen in de app</td><td>Ja (ingebouwd)</td><td>Met kleine bibliotheek</td><td>Of: QR met link, gewone camera opent de app. Werkt overal.</td></tr>
+<tr><td>NFC-tags lezen</td><td>Ja (Chrome)</td><td><b>Nee</b></td><td>Niet doen; QR volstaat.</td></tr>
+<tr><td>Pushmeldingen</td><td>Ja</td><td>Ja, mits op beginscherm gezet</td><td>Bouwen met backend.</td></tr>
+<tr><td>Sync terwijl app dicht is</td><td>Ja</td><td><b>Nee</b></td><td>Daarom zichtbare wachtrij en sync bij openen.</td></tr>
+<tr><td>Offline spraakherkenning</td><td>Beperkt</td><td>Beperkt</td><td>Audio offline opnemen, later omzetten. Whisper op het toestel is te zwaar voor een web-app.</td></tr>
+</table>
+<div class="flag" style="margin-top:12px">Als later blijkt dat volumeknop, NFC of achtergrond-sync echt onmisbaar zijn, kunnen we dezelfde app in een dun native jasje verpakken (Capacitor). Dat is een aparte stap; nu niet nodig.</div>
+</div>
+
+<h2 id="niet">Wat we bewust níet overnemen</h2>
+<div class="card tablewrap"><table>
+<tr><th>Idee uit het onderzoek</th><th>Bron</th><th>Waarom niet</th></tr>
+<tr><td>AI beoordeelt de foto ("dit lijkt een afwijking")</td><td>Tractable, Lemonade, Google Lens</td><td>Botst met de kern van de methode: alleen eigen waarneming en eigen oordeel.</td></tr>
+<tr><td>Locatie delen / "aangekomen"-melding</td><td>Apple Find My</td><td>Volgen van werknemers: AVG-risico en OR-instemming; weinig winst. Eén bevestigde locatie bij de start is genoeg.</td></tr>
+<tr><td>Ranglijsten en streaks met druk</td><td>Duolingo, Strava, Todoist Karma</td><td>Maakt van veiligheid een wedstrijd: snellere, oppervlakkigere inspecties.</td></tr>
+<tr><td>Spotify Wrapped-toon en confetti</td><td>Spotify, Strava</td><td>Trivialiseert afwijkingen. Wel het format (kaarten), niet de toon.</td></tr>
+<tr><td>Altijd-aan meeluisteren</td><td>Nuance DAX ambient</td><td>Disproportioneel; alleen expliciete, toegestemde opname.</td></tr>
+<tr><td>DocuSign/Adobe Sign</td><td>17-audit</td><td>Extra kosten en verwerker; eigen handtekening + registratie volstaat.</td></tr>
+<tr><td>Hash-keten (blockchain-achtig)</td><td>GitHub-patroon</td><td>Overkill voor 4 gebruikers; alleen-bijschrijven-rechten in de database volstaan.</td></tr>
+<tr><td>what3words</td><td>15-locatie</td><td>Licentie, onbekend bij monteurs; coördinaat + installatienaam is duidelijker.</td></tr>
+<tr><td>Volumeknop, NFC</td><td>12, 15</td><td>Technisch niet (betrouwbaar) mogelijk in een web-app.</td></tr>
+<tr><td>Slack, Basecamp, Notion als systeem ernaast</td><td>18, 19</td><td>Dubbel werk, data buiten de app. Hooguit Teams-link als Noardling op Microsoft 365 zit.</td></tr>
+<tr><td>Anoniem melden zonder grenzen</td><td>20-melden</td><td>Kan, maar doorvragen wordt dan onmogelijk. Liever: naam optioneel, standaard zichtbaar alleen voor hoofd.</td></tr>
+<tr><td>Canva/Pitch als rapportgereedschap</td><td>19</td><td>Inspectiedata hoort niet in losse ontwerptools. Wel de les: vaste huisstijl, rustige opmaak.</td></tr>
+<tr><td>Live "wie kijkt mee"-cursors</td><td>Figma</td><td>Afleidend, geen waarde bij 4 gebruikers.</td></tr>
+<tr><td>Positief/negatief laten voorstellen door AI uit melding</td><td>20 (Heads Up)</td><td>Ook dat is een oordeel; de melder of inspecteur kiest zelf.</td></tr>
+</table></div>
+
+<h2 id="roadmap">Roadmap</h2>
+<div class="grid g3">
+<div class="card"><h3><span class="tag t-nu">Nu</span> zonder backend · ±1–2 weken</h3>
+<p class="src">Alles in de huidige webapp, lokaal opgeslagen.</p>
+<ol style="padding-left:18px;margin-top:8px">
+<li>Foto-markering + metadata-badge</li>
+<li>Actie-statusmodel + toetsknop + na-foto</li>
+<li>Mijn acties (Vandaag/Te laat/Toetsen)</li>
+<li>Push-to-talk-knop onderaan</li>
+<li>Controlescherm vóór ondertekenen</li>
+<li>Voorstel-component + keuzelog</li>
+<li>Veldmodus + zonmodus + scherm-wakker</li>
+<li>Direct-gevaar-modus</li>
+<li>Opslagstatus-chip</li>
+<li>n&lt;5-regel + methodenoot</li>
+<li>Teamcheck 3 vragen + LMRA-vraag</li>
+<li>Noodkaart</li>
+</ol></div>
+<div class="card"><h3><span class="tag t-volg">Volgende</span> met Supabase (EU)</h3>
+<p class="src">Echte accounts, data tussen telefoons.</p>
+<ol style="padding-left:18px;margin-top:8px">
+<li>Wachtrij-sync met status per item</li>
+<li>Onuitwisbaar logboek</li>
+<li>Pushmeldingen + herinneringen</li>
+<li>Weekoverzicht mail/Teams</li>
+<li>Gesprek per actie met @naam</li>
+<li>Auditor-rol + bewijsmap 7.1/7.2</li>
+<li>QR per installatie + installatielijst</li>
+<li>Gevaar melden + status terug</li>
+<li>Spraak via EU-dienst (robuust)</li>
+<li>Kwartaalverhaal + dekkingskalender</li>
+<li>Gezichten vervagen</li>
+<li>Pilot meten (2 inspecteurs, 4 weken)</li>
+</ol></div>
+<div class="card"><h3><span class="tag t-later">Later</span> na DPIA / pilot</h3>
+<p class="src">Waardevol, maar eerst randvoorwaarden.</p>
+<ol style="padding-left:18px;margin-top:8px">
+<li>Gesprek opnemen → Voorstel-verslag met bron</li>
+<li>Spraak-actie-invoer</li>
+<li>Oefeninspectie + rondleiding</li>
+<li>Toolbox-kaartjes</li>
+<li>Foto-kwaliteitsfeedback, typeplaatje lezen</li>
+<li>Zoekpalet Ctrl+K</li>
+<li>Conflictscherm acties</li>
+<li>Eventueel native jasje (Capacitor)</li>
+</ol></div>
+</div>
+
+<h2 id="vragen">Beslissingen die bij jou liggen</h2>
+<p class="lead">Opgespaard zoals afgesproken. Niets hiervan blokkeert de "Nu"-kolom; ik kan daar meteen mee beginnen.</p>
+<div class="card"><ol style="padding-left:20px">
+<li style="margin:8px 0"><b>Beginnen met de "Nu"-kolom?</b> Mijn advies: ja, in de volgorde hierboven, foto-markering en acties eerst.</li>
+<li style="margin:8px 0"><b>Melding ≠ waarneming.</b> Eens dat meldingen van monteurs apart blijven van de momentopname-data (niet meetellen in C/A/V-trend)?</li>
+<li style="margin:8px 0"><b>LMRA-vraag:</b> vaste vraag in elk gesprek, of alleen als de TRA een LMRA-maatregel bevat?</li>
+<li style="margin:8px 0"><b>Teamcheck 3 vragen:</b> zijn dit de goede drie (grootste risico · wat doen jullie ertegen · wanneer leg je stil), of heeft Noardling al vaste vragen?</li>
+<li style="margin:8px 0"><b>Gesprek opnemen:</b> wil je dat we dit onderzoeken met de OR/privacy-kant, of laten we het voorlopig liggen?</li>
+<li style="margin:8px 0"><b>Microsoft 365 / Teams:</b> zit Noardling op Teams? Dan gaat het weekoverzicht daarheen, anders per mail.</li>
+<li style="margin:8px 0"><b>Telefoons:</b> welke toestellen gebruiken de inspecteurs (iPhone of Android, robuust model)? Dat bepaalt trillen, achtergrond-sync en of een native jasje ooit nodig is.</li>
+<li style="margin:8px 0"><b>QR-stickers:</b> wie beheert de installatielijst en plakt de stickers (of is dat te veel gedoe voor nu)?</li>
+<li style="margin:8px 0"><b>Auditor-toegang:</b> mag een externe auditor een tijdelijke login krijgen, of liever een export-PDF?</li>
+<li style="margin:8px 0"><b>Supabase-project:</b> wanneer zetten we het op (account op naam van Noardling, regio Frankfurt/EU)?</li>
+</ol></div>
+
+<h2 id="bijlage">Bijlage — het volledige ruwe onderzoek</h2>
+<p class="lead">De twintig deelonderzoeken zoals DeepSeek ze opleverde, ongewijzigd (16.371 woorden). Let op: dit is ongefilterd. Bij een aantal apps gaf DeepSeek zelf al aan dat het details niet zeker wist; mijn correcties staan hierboven. Ook als bestand: <code>webapp/docs/onderzoek-diep-ruw.md</code>.</p>
+<details><summary>Toon alle twintig deelonderzoeken</summary><div id="ruw"><p class="muted">Laden…</p></div></details>
+
+<p class="foot">Onderzoek uitgevoerd met het DeepSeek-harnas (20 parallelle opdrachten), kritisch nagelezen en samengevat door Claude. Bronnen zijn bestaande, publiek bekende apps; specifieke schermdetails van externe apps kunnen afwijken van hun huidige versie.</p>
+</div>
+<script>
+(function(){
+  var el=document.getElementById('ruw');
+  function esc(s){return s.replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+  function inl(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/`(.+?)`/g,'<code>$1</code>')}
+  function md(t){var out=[],inList=false,inTable=false;
+    t.split('\n').forEach(function(l){
+      var m;
+      if(/^\|/.test(l)){ if(/^\|[\s\-|:]+\|$/.test(l))return; if(!inTable){out.push('<div class="tablewrap"><table>');inTable=true}
+        out.push('<tr>'+l.replace(/^\||\|$/g,'').split('|').map(function(c){return '<td>'+inl(c.trim())+'</td>'}).join('')+'</tr>');return}
+      if(inTable){out.push('</table></div>');inTable=false}
+      if((m=l.match(/^===== (.+) =====$/))){out.push('<div class="sec">'+esc(m[1])+'</div>');return}
+      if((m=l.match(/^(#{1,3}) (.+)/))){out.push('<h'+m[1].length+'>'+inl(m[2])+'</h'+m[1].length+'>');return}
+      if((m=l.match(/^\s*(?:[-*]|\d+\.) (.+)/))){out.push('<li>'+inl(m[1])+'</li>');return}
+      if(l.trim())out.push('<p>'+inl(l)+'</p>');
+    });
+    if(inTable)out.push('</table></div>');
+    return out.join('\n')}
+  fetch('docs/onderzoek-diep-ruw.md').then(function(r){if(!r.ok)throw 0;return r.text()})
+    .then(function(t){el.innerHTML=md(t)})
+    .catch(function(){el.innerHTML='<p>Kon het ruwe bestand niet laden. Open <code>webapp/docs/onderzoek-diep-ruw.md</code> rechtstreeks.</p>'});
+})();
+</script>
+</body></html>
