@@ -99,3 +99,10 @@ svg{display:block;width:100%}
   .view{padding:8px 24px 40px}
   h1{font-size:32px}
 }
+@media print{
+  .topbar,.tabbar,.noprint{display:none!important}
+  body{background:#fff}
+  .view{padding:0}
+  .card,.listcard{box-shadow:0 0 0 1px #E7E9ED;break-inside:avoid}
+  h1{font-size:24px}
+}

@@ -20,6 +20,35 @@
   };
   const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
 
+  // ---- lokale opslag (IndexedDB): inspecties blijven bewaard tot er een backend is ----
+  const DB = {
+    _db: null,
+    open() {
+      if (this._db) return Promise.resolve(this._db);
+      return new Promise((res, rej) => {
+        const r = indexedDB.open("wpi", 1);
+        r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("inspecties")) r.result.createObjectStore("inspecties", { keyPath: "id" }); };
+        r.onsuccess = () => { this._db = r.result; res(this._db); };
+        r.onerror = () => rej(r.error);
+      });
+    },
+    async save(obj) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction("inspecties", "readwrite"); t.objectStore("inspecties").put(obj); t.oncomplete = res; t.onerror = () => rej(t.error); }); },
+    async all() { const db = await this.open(); return new Promise((res, rej) => { const r = db.transaction("inspecties").objectStore("inspecties").getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); },
+  };
+  // kleine helper: afbeelding verkleinen naar dataURL (bespaart opslag)
+  function fotoDataURL(file, max = 1000) {
+    return new Promise((res) => {
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement("canvas"); c.width = img.width * sc; c.height = img.height * sc;
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = () => res(null); img.src = url;
+    });
+  }
+
   // Demo-gebruikers (spiegelt supabase/seed.sql; later te vervangen door Supabase Auth)
   const USERS = [
     { id: "u-bjorn", full_name: "Björn Sloos", role: "hoofd", functie: "Hoofd Service & Montage" },
@@ -149,9 +178,14 @@
 
     // ---------------- INSPECTIE-FLOW ----------------
     startInspectie(code, project, titel) {
-      const taken = [...new Set(this.data.kennisbank[code].regels.map((r) => r.taak))];
-      this.state.inspectie = { code, project, titel, taak: null, oordelen: {}, acties: [] };
+      this.state.inspectie = { code, project, titel, taak: null, oordelen: {}, acties: [], fotos: {}, handtekening: null };
       this.go("inspectie/taak");
+    },
+    addFoto(regelId) {
+      const inp = document.createElement("input");
+      inp.type = "file"; inp.accept = "image/*"; inp.capture = "environment";
+      inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; const d = await fotoDataURL(f); if (d) { this.state.inspectie.fotos[regelId] = d; this.route(); } };
+      inp.click();
     },
     view_inspectie(parts) {
       const step = parts[0] || "taak";
@@ -199,7 +233,11 @@
           <div style="font-size:12px;color:#4A5565;font-weight:600">${esc(r.id)} · ${esc(r.klasse || "")}</div>
           <div class="t" style="margin:3px 0 8px;font-size:16px">${esc(r.risico || "")}</div>
           ${maatr ? `<details style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--soft);font-size:13px;font-weight:600;list-style:none">Maatregelen tonen</summary><div class="s" style="margin-top:6px">${esc(maatr)}</div></details>` : ""}
-          <div class="seg" data-id="${esc(r.id)}">${["C", "A", "V"].map(btn).join("")}</div></div>`));
+          <div class="seg" data-id="${esc(r.id)}">${["C", "A", "V"].map(btn).join("")}</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+            <button class="btn ghost sm" onclick="App.addFoto('${esc(r.id)}')">${svg("cam", 16)} ${ins.fotos[r.id] ? "Foto vervangen" : "Foto"}</button>
+            ${ins.fotos[r.id] ? `<img src="${ins.fotos[r.id]}" alt="foto" style="height:40px;border-radius:8px;box-shadow:inset 0 0 0 1px var(--line)">` : ""}
+          </div></div>`));
       });
       v.appendChild(wrap);
       const act = ins.acties.length ? ` · ${ins.acties.length} ${ins.acties.length === 1 ? "actie" : "acties"}` : "";
@@ -227,34 +265,93 @@
         v.appendChild(el(`<div class="listcard">${ins.acties.map((a) =>
           `<div class="row"><span class="grow"><span class="t">${esc(a.rid)}</span><div class="s">Standaard: Hoofd S&amp;M · termijn kort</div></span><span class="badge b-${a.oordeel}">[${a.oordeel}]</span></div>`).join("")}</div>`));
       }
+      const nFoto = Object.keys(ins.fotos || {}).length;
       v.appendChild(el(`<div class="card" style="margin-top:16px"><div class="t">Getoetst tijdens bezoek</div>
-        <div class="s">${esc(ins.titel)} · taak ${esc(ins.taak)} · ${vals.length} regels beoordeeld</div></div>`));
+        <div class="s">${esc(ins.titel)} · taak ${esc(ins.taak)} · ${vals.length} regels beoordeeld · ${nFoto} foto${nFoto === 1 ? "" : "'s"}</div></div>`));
+      v.appendChild(el(`<h2>Handtekening inspecteur</h2>`));
+      v.appendChild(el(`<div class="card">
+        <canvas id="sig" width="640" height="200" style="width:100%;height:160px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);touch-action:none;background:#fff;display:block"></canvas>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span class="s" id="sigstat">${ins.handtekening ? "Ondertekend ✓ · " + new Date().toLocaleString("nl-NL") : "Teken in het vak"}</span>
+          <button class="btn ghost sm" onclick="App.clearSig()">Wissen</button></div></div>`));
       v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.bewaarInspectie()">Inspectie vastleggen</button>`));
       v.appendChild(el(`<button class="btn ghost" style="margin-top:10px" onclick="App.go('vandaag')">Later afmaken</button>`));
+      this.setupSignature();
     },
-    bewaarInspectie() {
-      this.state.extra.push(this.state.inspectie);
+    setupSignature() {
+      const cv = $("sig"); if (!cv) return;
+      const ins = this.state.inspectie, ctx = cv.getContext("2d");
+      ctx.lineWidth = 2.5; ctx.lineCap = "round"; ctx.strokeStyle = "#141A22";
+      if (ins.handtekening) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, cv.width, cv.height); im.src = ins.handtekening; }
+      let drawing = false, last = null;
+      const pos = (e) => { const r = cv.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: (t.clientX - r.left) * cv.width / r.width, y: (t.clientY - r.top) * cv.height / r.height }; };
+      const start = (e) => { e.preventDefault(); drawing = true; last = pos(e); };
+      const move = (e) => { if (!drawing) return; e.preventDefault(); const p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; };
+      const end = () => { if (!drawing) return; drawing = false; ins.handtekening = cv.toDataURL("image/png"); const s = $("sigstat"); if (s) s.textContent = "Ondertekend ✓ · " + new Date().toLocaleString("nl-NL"); };
+      cv.onpointerdown = start; cv.onpointermove = move; cv.onpointerup = end; cv.onpointerleave = end;
+    },
+    clearSig() { const cv = $("sig"); if (cv) cv.getContext("2d").clearRect(0, 0, cv.width, cv.height); if (this.state.inspectie) this.state.inspectie.handtekening = null; const s = $("sigstat"); if (s) s.textContent = "Teken in het vak"; },
+    async bewaarInspectie() {
+      const ins = this.state.inspectie;
+      const rec = { id: "WPI-" + Date.now(), titel: ins.titel, code: ins.code, taak: ins.taak,
+        oordelen: ins.oordelen, acties: ins.acties, fotos: ins.fotos || {}, handtekening: ins.handtekening,
+        inspecteur: this.user.full_name, inspecteur_id: this.user.id, opgeslagen: new Date().toISOString() };
+      try { await DB.save(rec); } catch (e) {}
       this.state.inspectie = null;
-      this.openModal("Vastgelegd", "De inspectie is opgeslagen in deze sessie (voorbeeld, geen echte opslag).",
-        `<button class="btn primary" onclick="App.closeModal();App.go('vandaag')">Naar Vandaag</button>`);
+      this.openModal("Vastgelegd", "De inspectie is lokaal bewaard op dit toestel (nog geen cloud-opslag).",
+        `<button class="btn primary" onclick="App.closeModal();location.hash='#/rapport/${rec.id}'">Bekijk rapport</button>
+         <button class="btn ghost" style="margin-top:10px" onclick="App.closeModal();App.go('inspecties')">Naar inspecties</button>`);
     },
 
     // ---------------- INSPECTIES ----------------
-    view_inspecties() {
+    async view_inspecties() {
       const wpis = this.data.voorbeelddata.wpis || [];
       const v = $("view");
-      const extra = this.state.extra.map((e) => `<div class="row"><span class="grow"><span class="t">${esc(e.titel)}</span><div class="s">Zojuist · taak ${esc(e.taak)} · ${esc(this.user.full_name.split(" ")[0])}</div></span><span class="badge b-done">Nieuw</span></div>`).join("");
-      if (!staf()) {
-        v.appendChild(el(`<div><div class="kicker">Jouw inspecties</div><h1>Inspecties</h1></div>`));
-        v.appendChild(el(`<div class="listcard">${extra || `<div class="row"><span class="grow s">Nog geen eigen inspecties. Start er een via Vandaag.</span></div>`}</div>`));
-        return;
-      }
-      v.appendChild(el(`<div><div class="kicker">${wpis.length} inspecties · alle inspecteurs · mei–nov 2026</div><h1>Inspecties</h1></div>`));
-      const rows = wpis.slice().reverse().map((w) => {
+      const mine = !staf();
+      v.appendChild(el(`<div><div class="kicker">${mine ? "Jouw inspecties" : wpis.length + " voorbeeld-inspecties · alle inspecteurs"}</div><h1>Inspecties</h1></div>`));
+      const box = el(`<div class="listcard"><div class="row"><span class="grow s">Laden…</span></div></div>`);
+      v.appendChild(box);
+      let saved = [];
+      try { saved = await DB.all(); } catch (e) {}
+      saved = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).sort((a, b) => b.opgeslagen.localeCompare(a.opgeslagen));
+      const savedRows = saved.map((r) => {
+        const n = Object.values(r.oordelen || {}).filter(Boolean).length;
+        return `<div class="row" style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'">
+          <span class="grow"><span class="t">${esc(r.titel)}</span><div class="s">${new Date(r.opgeslagen).toLocaleString("nl-NL")} · ${esc(r.inspecteur.split(" ")[0])} · ${n} regels${r.handtekening ? " · ondertekend" : ""}</div></span>
+          <span class="badge b-done">eigen</span></div>`;
+      }).join("");
+      const vbRows = mine ? "" : wpis.slice().reverse().map((w) => {
         const dam = (w.nr || "").split("-")[1] || "";
         return `<div class="row"><span class="grow"><span class="t">${esc(w.product || w.nr)}</span><div class="s">${esc(w.nr)} · ${esc(w.ingang || "")}</div></span><span class="s">${dam ? dam.slice(6, 8) + "-" + dam.slice(4, 6) : ""}</span></div>`;
       }).join("");
-      v.appendChild(el(`<div class="listcard">${extra}${rows}</div>`));
+      box.innerHTML = (savedRows || (mine ? `<div class="row"><span class="grow s">Nog geen eigen inspecties. Start er een via Vandaag.</span></div>` : "")) + vbRows;
+    },
+    async view_rapport(parts) {
+      const id = parts[0];
+      const v = $("view");
+      let saved = []; try { saved = await DB.all(); } catch (e) {}
+      const r = saved.find((x) => x.id === id);
+      if (!r) { v.appendChild(el(`<div><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
+      const regels = this.data.kennisbank[r.code].regels.filter((x) => x.taak === r.taak);
+      const ob = { C: "Conform", A: "Afwijking", V: "Verbeterpunt" };
+      const rows = regels.filter((x) => r.oordelen[x.id]).map((x) => {
+        const o = r.oordelen[x.id];
+        return `<div class="row"><span class="grow"><span class="t">${esc(x.id)} · ${esc(x.risico || "").slice(0, 70)}</span>${r.fotos[x.id] ? `<div class="s">met foto</div>` : ""}</span><span class="badge b-${o}">[${o}] ${ob[o]}</span></div>`;
+      }).join("");
+      const fotos = Object.entries(r.fotos || {});
+      v.appendChild(el(`<div class="noprint"><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button></div>`));
+      v.appendChild(el(`<div id="rap">
+        <div class="kicker">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
+        <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
+        <div class="s" style="margin-bottom:14px">Getoetst tijdens bezoek · taak ${esc(r.taak)} · inspecteur ${esc(r.inspecteur)}</div>
+        <div class="card"><div class="t" style="margin-bottom:6px">Getoetste regels</div>${rows || '<div class="s">Geen</div>'}</div>
+        ${r.acties.length ? `<h2>Acties</h2><div class="listcard">${r.acties.map((a) => `<div class="row"><span class="grow"><span class="t">${esc(a.rid)}</span><div class="s">Standaard: Hoofd S&amp;M · termijn kort</div></span><span class="badge b-${a.oordeel}">[${a.oordeel}]</span></div>`).join("")}</div>` : ""}
+        ${fotos.length ? `<h2>Foto's</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map(([rid, d]) => `<figure style="margin:0"><img src="${d}" style="width:180px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line)"><figcaption class="s">${esc(rid)}</figcaption></figure>`).join("")}</div>` : ""}
+        <h2>Ondertekening</h2>
+        <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
+          ${r.handtekening ? `<img src="${r.handtekening}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
+      </div>`));
+      v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px" onclick="window.print()">${svg("list", 18)} Opslaan als PDF / printen</button>`));
     },
 
     // ---------------- ACTIES ----------------
