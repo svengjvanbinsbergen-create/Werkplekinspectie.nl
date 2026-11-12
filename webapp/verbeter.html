@@ -1,0 +1,86 @@
+<!doctype html><html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verbeteropties</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,sans-serif}
+body{background:#F6F7F9;color:#141A22;padding:28px 20px 70px;max-width:1100px;margin:0 auto}
+.k{color:#4A5565;font-size:14px;font-weight:600}h1{font-size:28px;font-weight:700;margin:2px 0 6px}
+.lead{color:#4A5565;font-size:14px;max-width:720px;margin-bottom:18px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px;font-size:13px;color:#4A5565}
+.t{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.done{background:#E6F4EC;color:#1E7A4C}.rec{background:#EAF1FA;color:#1b4e86}.fit{background:#F1EDFC;color:#5a3ea8}.care{background:#FFF1DC;color:#8A4B00}.later{background:#F3F4F6;color:#4A5565}
+h2{font-size:17px;font-weight:650;margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:#fff;border-radius:16px;box-shadow:0 0 0 1px #E7E9ED;padding:14px 16px}
+.card .h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.card .n{font-weight:650;font-size:15px}.card .d{font-size:13px;color:#4A5565;margin-top:4px;line-height:1.45}
+</style></head><body>
+<div class="k">Werkplekinspectie · onderzoek door DeepSeek-harnas, gecureerd door Claude</div>
+<h1>Verbeteropties</h1>
+<div class="lead">Mogelijkheden voor de app, het dashboard en het platform. Gefilterd op wat past bij de momentopname-methode (alleen wat je ziet; AI stelt alleen voor) en VCA. Volledige bron: docs/design-mogelijkheden.md.</div>
+<div class="legend">
+  <span><span class="t done">AL IN DE APP</span> gebouwd</span>
+  <span><span class="t rec">AANRADER</span> hoge waarde, past goed</span>
+  <span><span class="t fit">PAST BIJ METHODE</span> versterkt momentopname</span>
+  <span><span class="t care">LET OP</span> AVG / VCA-grens</span>
+  <span><span class="t later">LATER</span> nice-to-have</span>
+</div>
+
+<h2>Inspectie-app (op locatie)</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Snelle C/A/V + gekozen-staat</span><span class="t done">AL IN DE APP</span></div><div class="d">Gekleurde knoppen, voortgang, kaart lost op naar één kleur. Won van SafetyCulture.</div></div>
+  <div class="card"><div class="h"><span class="n">Automatische acties bij A/V</span><span class="t done">AL IN DE APP</span></div><div class="d">Elke afwijking/verbeterpunt krijgt actie met standaard houder + termijn.</div></div>
+  <div class="card"><div class="h"><span class="n">Foto + annotatie bij waarneming</span><span class="t rec">AANRADER</span></div><div class="d">Foto met pijlen/markering legt een afwijking ondubbelzinnig vast — sterk bewijs voor de audit.</div></div>
+  <div class="card"><div class="h"><span class="n">Spraak-naar-tekst waarneming</span><span class="t fit">PAST BIJ METHODE</span></div><div class="d">Handen vrij op locatie; inspecteur spreekt in, bevestigt de tekst. Web Speech API beperkt op iOS.</div></div>
+  <div class="card"><div class="h"><span class="n">Herinspectie / verificatie actie</span><span class="t rec">AANRADER</span></div><div class="d">Toetser bevestigt dat een actie is uitgevoerd (voor/na) — sluit de VCA-actielus.</div></div>
+  <div class="card"><div class="h"><span class="n">Digitale handtekening + tijdstempel</span><span class="t rec">AANRADER</span></div><div class="d">Formele sign-off door inspecteur; maakt het rapport controleerbaar bewijs.</div></div>
+  <div class="card"><div class="h"><span class="n">QR/NFC om inspectie te starten</span><span class="t later">LATER</span></div><div class="d">Scan op installatie koppelt direct aan het juiste project/werkplek. Nice-to-have.</div></div>
+  <div class="card"><div class="h"><span class="n">GPS/locatie-tag</span><span class="t care">LET OP</span></div><div class="d">Bewijst wáár de momentopname is gemaakt. AVG: locatie van medewerkers = extra grondslag/transparantie.</div></div>
+</div>
+
+<h2>Dashboard / trendanalyse</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">KPI's + drill-down modals</span><span class="t done">AL IN DE APP</span></div><div class="d">Klik op tegel/grafiek toont achterliggende regels. Power BI-stijl.</div></div>
+  <div class="card"><div class="h"><span class="n">Filters/slicers (periode, product, locatie)</span><span class="t rec">AANRADER</span></div><div class="d">Scope snel beperken zodat elk beeld relevant blijft — grootste dashboard-winst.</div></div>
+  <div class="card"><div class="h"><span class="n">Cross-filter tussen grafieken</span><span class="t rec">AANRADER</span></div><div class="d">Klik op een klasse filtert alle visuals — verbanden direct zichtbaar.</div></div>
+  <div class="card"><div class="h"><span class="n">Doelen/drempels + alerts</span><span class="t fit">PAST BIJ METHODE</span></div><div class="d">Bv. "90% programma gehaald" of "actie >14 dagen over termijn" springt eruit. Sluit op VCA-doelen aan.</div></div>
+  <div class="card"><div class="h"><span class="n">Tijdsvergelijking (dit kwartaal vs vorig)</span><span class="t later">LATER</span></div><div class="d">Trend duiden. Let op: kleine aantallen — blijft een signaal, geen bewezen trend.</div></div>
+  <div class="card"><div class="h"><span class="n">Gepland rapport / abonnement</span><span class="t rec">AANRADER</span></div><div class="d">Maandelijkse samenvatting automatisch naar directie/coördinatoren.</div></div>
+</div>
+
+<h2>Techniek (PWA — native gevoel)</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Installeren op beginscherm</span><span class="t rec">AANRADER</span></div><div class="d">Manifest + icoon; voelt als een echte app. Breed ondersteund (iOS handmatig via Safari).</div></div>
+  <div class="card"><div class="h"><span class="n">Offline-first + achtergrond-sync</span><span class="t rec">AANRADER</span></div><div class="d">Inspecteren zonder bereik, later syncen. Service worker + IndexedDB (onderzocht).</div></div>
+  <div class="card"><div class="h"><span class="n">Camera / foto</span><span class="t rec">AANRADER</span></div><div class="d">Breed ondersteund op mobiel; basis voor foto-bewijs.</div></div>
+  <div class="card"><div class="h"><span class="n">Push-notificaties (acties/herinneringen)</span><span class="t later">LATER</span></div><div class="d">Android breed; iOS alleen als geïnstalleerde PWA (16.4+).</div></div>
+  <div class="card"><div class="h"><span class="n">Biometrisch inloggen (WebAuthn/passkey)</span><span class="t later">LATER</span></div><div class="d">Snel en veilig inloggen op de telefoon. Breed ondersteund.</div></div>
+</div>
+
+<h2>AI (stelt voor — inspecteur oordeelt)</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Voorstel taak/risico uit kennisbank</span><span class="t fit">PAST BIJ METHODE</span></div><div class="d">AI stelt de taak/stap voor; inspecteur bevestigt. Herkomstlabel "Voorstel". Nooit automatisch classificeren.</div></div>
+  <div class="card"><div class="h"><span class="n">Concept-actietekst uit transcript</span><span class="t fit">PAST BIJ METHODE</span></div><div class="d">Eerste formulering van de maatregel; inspecteur bevestigt tekst, houder en termijn.</div></div>
+  <div class="card"><div class="h"><span class="n">Rapportconcept opstellen</span><span class="t care">LET OP</span></div><div class="d">Gestructureerd concept uit bevestigde invoer. Grens: geen weglaten/hallucineren; eindcontrole bij inspecteur.</div></div>
+  <div class="card"><div class="h"><span class="n">Foto-onderschrift/labeling</span><span class="t care">LET OP</span></div><div class="d">Foto's vindbaar maken. AI mag géén ernst of overtreding concluderen.</div></div>
+</div>
+
+<h2>Web-platform & adoptie</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">Rolgebaseerde weergave</span><span class="t done">AL IN DE APP</span></div><div class="d">Inspecteur / coördinator / hoofd zien elk het relevante deel.</div></div>
+  <div class="card"><div class="h"><span class="n">Globaal zoeken</span><span class="t rec">AANRADER</span></div><div class="d">Inspecties, acties, producten en instellingen direct vindbaar.</div></div>
+  <div class="card"><div class="h"><span class="n">Audit-trail / herleidbaarheid</span><span class="t rec">AANRADER</span></div><div class="d">Wie-wat-wanneer traceerbaar — kern van de bewijskracht voor VCA.</div></div>
+  <div class="card"><div class="h"><span class="n">Herinneringen openstaande acties</span><span class="t rec">AANRADER</span></div><div class="d">Voorkomt vergeten maatregelen; houdt het proces in beweging.</div></div>
+  <div class="card"><div class="h"><span class="n">Excel-export</span><span class="t rec">AANRADER</span></div><div class="d">Sluit aan op bestaande werkprocessen; verlaagt de adoptiedrempel.</div></div>
+  <div class="card"><div class="h"><span class="n">Dark mode · command palette · undo</span><span class="t later">LATER</span></div><div class="d">Comfort en snelheid voor power-users op desktop.</div></div>
+</div>
+
+<h2>Mijn advies — volgorde</h2>
+<div class="grid">
+  <div class="card"><div class="h"><span class="n">1. Foto + handtekening in de inspectie</span><span class="t rec">AANRADER</span></div><div class="d">Grootste sprong in bewijskracht; past direct in de flow die al wint.</div></div>
+  <div class="card"><div class="h"><span class="n">2. Echte opslag + offline (PWA)</span><span class="t rec">AANRADER</span></div><div class="d">Maakt de app echt bruikbaar op locatie; wacht op jouw Supabase-project.</div></div>
+  <div class="card"><div class="h"><span class="n">3. Dashboard-filters + doelen</span><span class="t rec">AANRADER</span></div><div class="d">Maakt het dashboard een stuurinstrument i.p.v. een plaat.</div></div>
+  <div class="card"><div class="h"><span class="n">4. PDF-rapport + herinspectie</span><span class="t rec">AANRADER</span></div><div class="d">Sluit de VCA-lus: constatering → actie → toetsing → bewijs.</div></div>
+</div>
+</body></html>
