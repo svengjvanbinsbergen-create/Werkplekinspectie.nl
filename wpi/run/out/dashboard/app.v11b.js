@@ -42,14 +42,14 @@ const RISKT = (p) => [p.hijsen_mobiele_kraan && 'hijsen', p.besloten_ruimte_verg
 const mEind = (m) => m + '-' + String(new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)).getUTCDate()).padStart(2, '0');
 const mVolg = (m) => { const y = +m.slice(0, 4), n = +m.slice(5, 7); return n === 12 ? (y + 1) + '-01' : y + '-' + String(n + 1).padStart(2, '0'); };
 const LANG = (p) => days(p.start, p.eind) > 31;
-const MIN_WD = 10;
+const MIN_WD = 1;   /* besluit 8: elke kalendermaand waarin gewerkt wordt telt (voorheen 10 werkdagen) */
 const werkdagen = (a, b) => { let n = 0; for (let d = new Date(a + 'T00:00:00Z'); d.toISOString().slice(0, 10) <= b; d.setUTCDate(d.getUTCDate() + 1)) { const g = d.getUTCDay(); if (g > 0 && g < 6) n++; } return n; };
 const pnorm = (x) => (x || '').toLowerCase().split(' (')[0];
 /* koppeling WPI -> project: projectnummer, en locatie en product moeten passen */
 const past = (w, p) => !!p && w.locatie === p.locatie && (pnorm(p.product).startsWith(pnorm(w.product)) || pnorm(w.product).startsWith(pnorm(p.product)));
 const koppelFout = (wpis, projecten) => { const m = new Map(projecten.map((p) => [p.project, p])); return wpis.filter((w) => !past(w, m.get(w.project))); };
 const geenWpi = (projecten, wpis, peil) => projecten.filter((p) => p.start <= peil && !wpis.some((w) => w.project === p.project && past(w, p)));
-const CAT = {lang: 'langer dan een maand: een WPI in elke kalendermaand met minstens 10 werkdagen projectduur', risico: 'kort, met risicokenmerk: ten minste één WPI', overig: 'kort, zonder risicokenmerk: één op de vier per kwartaal'};
+const CAT = {lang: 'langer dan een maand: een WPI in elke kalendermaand waarin gewerkt wordt', risico: 'kort, met risicokenmerk: ten minste één WPI', overig: 'kort, zonder risicokenmerk: één op de vier per kwartaal'};
 const CATK = {lang: '> 1 maand', risico: 'kort · risico', overig: 'kort'};
 /* Eén verplichting = één WPI die volgens de regel nodig is. telt = de periode van de verplichting is voorbij (maand om, of project afgelopen);
    een verplichting in de lopende maand of van een nog lopend kort project telt pas mee als die periode voorbij is. */

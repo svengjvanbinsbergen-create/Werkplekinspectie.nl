@@ -1120,6 +1120,16 @@
    "wpis": []
   },
   {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
    "project": "P26-528 (fictief)",
    "product": "Roosterreiniger",
    "locatie": "Rioolgemaal Demowijk",
@@ -1254,6 +1264,16 @@
    "product": "Pompen",
    "locatie": "RWZI Voorbeeldstad",
    "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
    "maand": "2026-10",
    "telt": true,
    "ok": true,
@@ -1332,6 +1352,16 @@
    "product": "Bandfilter",
    "locatie": "Gemaal Fictiefpolder",
    "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-156 (fictief)",
+   "product": "Bandfilter",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
    "maand": "2026-11",
    "telt": true,
    "ok": true,
@@ -1342,11 +1372,11 @@
  ],
  "overig": [],
  "vp_x": 15,
- "vp_y": 32,
+ "vp_y": 35,
  "vp_cat": {
   "lang": [
    5,
-   15
+   18
   ],
   "risico": [
    10,
@@ -1446,6 +1476,16 @@
    "wpis": []
   },
   {
+   "project": "P26-379 (fictief)",
+   "product": "Roosterreiniger",
+   "locatie": "Gemaal Fictiefpolder",
+   "cat": "lang",
+   "maand": "2026-11",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
    "project": "P26-528 (fictief)",
    "product": "Roosterreiniger",
    "locatie": "Rioolgemaal Demowijk",
@@ -1516,9 +1556,29 @@
    "wpis": []
   },
   {
+   "project": "P26-436 (fictief)",
+   "product": "Pompen",
+   "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-09",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
    "project": "P26-168 (fictief)",
    "product": "Damwand",
    "locatie": "RWZI Voorbeeldstad",
+   "cat": "lang",
+   "maand": "2026-10",
+   "telt": true,
+   "ok": false,
+   "wpis": []
+  },
+  {
+   "project": "P26-156 (fictief)",
+   "product": "Bandfilter",
+   "locatie": "Gemaal Fictiefpolder",
    "cat": "lang",
    "maand": "2026-10",
    "telt": true,
@@ -1859,10 +1919,20 @@
      "telt": true,
      "ok": false,
      "wpis": []
+    },
+    {
+     "project": "P26-379 (fictief)",
+     "product": "Roosterreiniger",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
+     "maand": "2026-11",
+     "telt": true,
+     "ok": false,
+     "wpis": []
     }
    ],
    "x": 1,
-   "y": 5,
+   "y": 6,
    "wpis": [
     "WPI-20260624-ROO-C1"
    ],
@@ -2297,6 +2367,16 @@
      "product": "Pompen",
      "locatie": "RWZI Voorbeeldstad",
      "cat": "lang",
+     "maand": "2026-09",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-436 (fictief)",
+     "product": "Pompen",
+     "locatie": "RWZI Voorbeeldstad",
+     "cat": "lang",
      "maand": "2026-10",
      "telt": true,
      "ok": true,
@@ -2316,7 +2396,7 @@
     }
    ],
    "x": 1,
-   "y": 1,
+   "y": 2,
    "wpis": [
     "WPI-20261002-POM-C1"
    ],
@@ -2478,6 +2558,16 @@
      "product": "Bandfilter",
      "locatie": "Gemaal Fictiefpolder",
      "cat": "lang",
+     "maand": "2026-10",
+     "telt": true,
+     "ok": false,
+     "wpis": []
+    },
+    {
+     "project": "P26-156 (fictief)",
+     "product": "Bandfilter",
+     "locatie": "Gemaal Fictiefpolder",
+     "cat": "lang",
      "maand": "2026-11",
      "telt": true,
      "ok": true,
@@ -2487,7 +2577,7 @@
     }
    ],
    "x": 1,
-   "y": 1,
+   "y": 2,
    "wpis": [
     "WPI-20261102-BAN-DL"
    ],
@@ -3112,19 +3202,19 @@
   },
   "2026-09": {
    "ok": 3,
-   "y": 8,
+   "y": 9,
    "lopend": 0,
    "lopend_ok": 0
   },
   "2026-10": {
    "ok": 2,
-   "y": 5,
+   "y": 6,
    "lopend": 0,
    "lopend_ok": 0
   },
   "2026-11": {
    "ok": 3,
-   "y": 3,
+   "y": 4,
    "lopend": 2,
    "lopend_ok": 0
   }

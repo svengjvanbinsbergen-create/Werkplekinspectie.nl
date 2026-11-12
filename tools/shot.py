@@ -21,7 +21,8 @@ async def main():
     if len(sys.argv) < 3:
         print(__doc__)
         sys.exit(2)
-    html = Path(sys.argv[1]).resolve()
+    src = sys.argv[1]
+    url = src if src.startswith(("http://", "https://")) else Path(src).resolve().as_uri()
     out = Path(sys.argv[2]).resolve()
     w = int(sys.argv[3]) if len(sys.argv) > 3 else 390
     h = int(sys.argv[4]) if len(sys.argv) > 4 else 844
@@ -33,7 +34,7 @@ async def main():
         )
         pg = await b.new_page(viewport={"width": w, "height": h},
                               device_scale_factor=scale)
-        await pg.goto(html.as_uri())
+        await pg.goto(url)
         await pg.wait_for_timeout(400)
         info = await pg.evaluate(
             """() => ({doc: document.documentElement.scrollHeight,

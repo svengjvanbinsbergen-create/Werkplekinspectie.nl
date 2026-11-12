@@ -57,7 +57,7 @@ for p in v['projecten']:
         yy, mm = s_.year, s_.month; eind = min(e, peil)
         while (yy, mm) <= (eind.year, eind.month):
             a = max(s_, D.date(yy, mm, 1)); b = min(e, mend(yy, mm)); ok = any((q.year, q.month) == (yy, mm) for q in ws)
-            if wdag(a, b) >= 10 and (ok or b <= peil): y += 1; x += ok
+            if wdag(a, b) >= 1 and (ok or b <= peil): y += 1; x += ok   # besluit 8: elke maand waarin gewerkt wordt
             mm += 1
             if mm == 13: yy, mm = yy + 1, 1
     elif risk and (ws or e <= peil): y += 1; x += bool(ws)
@@ -96,7 +96,7 @@ HS, WV, DL, C1, C2 = 'Hoofd Service & Montage', 'Werkvoorbereider', 'Directielid
 ST = '(stand peildatum %s)' % peil.strftime('%d-%m-%Y')
 T = [
  dict(nr='TREND-2026-1', onderwerp='Inspectieprogramma per werkplek (VCA 7.1)',
-  wat='Het Hoofd S&M stelt elke maand vóór de eerste maandag uit de projectplanning het inspectieprogramma op: per lopend project langer dan een maand één WPI in elke kalendermaand met minstens 10 werkdagen, per kort project met hijsen, besloten ruimte of open water ten minste één WPI, van de overige korte projecten één op de vier per kwartaal. Het programma noemt per WPI de inspecteur en een vervanger; projecten zonder WPI en producten zonder WPI krijgen voorrang.',
+  wat='Het Hoofd S&M stelt elke maand vóór de eerste maandag uit de projectplanning het inspectieprogramma op: per lopend project langer dan een maand één WPI in elke kalendermaand waarin gewerkt wordt, per kort project met hijsen, besloten ruimte of open water ten minste één WPI, van de overige korte projecten één op de vier per kwartaal. Het programma noemt per WPI de inspecteur en een vervanger; projecten zonder WPI en producten zonder WPI krijgen voorrang.',
   aanleiding='%d van %d verplichte WPI’s per werkplek uitgevoerd (%d%%); %d projecten kregen geen enkele WPI %s.' % (x, y, pct, geen, ST),
   doel='Eerste programma (december 2026) vastgesteld uiterlijk 30-11-2026. Vanaf het eerste kwartaal 2027 per kwartaal ten minste 90%% van de verplichte WPI’s per werkplek uitgevoerd (nu %d%%).' % pct,
   actiehouder=HS, toetser=DL, termijn='2026-11-30', controledatum='2027-04-05'),

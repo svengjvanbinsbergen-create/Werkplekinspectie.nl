@@ -104,7 +104,7 @@ for p in PR:
         tot=(p['eind'] if p['eind']<PEIL else PEIL)[:7]; m=p['start'][:7]
         while m<=tot:
             w=[x for x in ws if x['maand']==m]; a_=max(p['start'],m+'-01'); b_=min(mEind(m),p['eind'])
-            if WDAG(a_,b_)>=10:
+            if WDAG(a_,b_)>=1:   # besluit 8: elke maand waarin gewerkt wordt telt (voorheen >=10 werkdagen)
                 vp.append(dict(project=p['project'],product=p['product'],locatie=p['locatie'],cat='lang',maand=m,telt=len(w)>0 or b_<=PEIL,ok=len(w)>0,wpis=[x['nr'] for x in w]))
             m=mVolg(m)
     elif RISK(p):
