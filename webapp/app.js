@@ -211,10 +211,13 @@
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
       $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
-        <button class="chip bel" onclick="App.openMeldingen()" title="Meldingen" aria-label="Meldingen" style="width:40px;justify-content:center;padding:0">${svg("bell", 18)}<span id="belnr" class="belnr hidden"></span></button>
-        <button class="chip" onclick="App.openWeergave()" title="Weergave" aria-label="Weergave" style="width:40px;justify-content:center;padding:0">${svg("sun", 18)}</button>
-        <button class="chip" onclick="App.openSearch()" title="Zoeken" aria-label="Zoeken" style="width:40px;justify-content:center;padding:0">${svg("list", 18)}</button>
-        <button class="chip" onclick="App.logout()" title="Uitloggen">${this.user.full_name.split(" ")[0] === ROL[this.user.role] ? esc(ROL[this.user.role]) : `<span>${esc(this.user.full_name.split(" ")[0])}</span><span class="acrol">&nbsp;· ${esc(ROL[this.user.role])}</span>`}&nbsp;×</button></div>`;
+        <button class="rondknop bel" onclick="App.openMeldingen()" title="Meldingen" aria-label="Meldingen">${svg("bell", 19)}<span id="belnr" class="belnr hidden"></span></button>
+        <button class="rondknop avatar" onclick="App.openAccount()" title="${esc(this.user.full_name)}" aria-label="Account">${esc(this.user.full_name[0])}</button></div>`;
+    },
+    openAccount() {
+      const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow" onclick="${on}"><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
+      this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", "App.closeModal();App.openSearch()")}${r("sun", "Weergave", "Veldmodus en zonmodus", "App.openWeergave()")}${r("back", "Uitloggen", "", "App.closeModal();App.logout()")}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
@@ -289,50 +292,39 @@
 
     // ---------------- VANDAAG ----------------
     view_vandaag() {
-      const c = this.data.cijfers;
-      const v = $("view");
-      const vn = this.user.full_name.split(" ")[0];
-      const dl = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
-      v.appendChild(el(`<div><div class="kicker">${esc(dl[0].toUpperCase() + dl.slice(1))} · ${esc(ROL[this.user.role])}</div><h1>Hallo ${esc(vn)}</h1></div>`));
-      const mijn = el(`<div id="mijnact"></div>`); v.appendChild(mijn);
-      this.laadActies().then(() => {
-        if (!document.body.contains(mijn)) return;
-        const B = this.bakjes(), n = B.telaat.length + B.gepland.length + B.toetsen.length + B.instellen.length; if (!n) return;
-        const t = (k, cls, lab) => B[k].length || k === "telaat" ? `<button class="mini ${cls}" onclick="App.actFilter='${k}';App.go('acties')"><b>${B[k].length}</b>${lab}</button>` : "";
-        mijn.innerHTML = `<div class="card" style="margin-bottom:14px"><h3>Acties <a class="s" href="#/acties">alles ›</a></h3>
-          <div class="minis">${t("telaat", B.telaat.length ? "blush" : "mist", "te laat")}${t("gepland", "sky", "gepland")}${t("toetsen", "lilac", "te toetsen")}${t("instellen", "butter", "in te stellen")}</div></div>`;
-      });
-      if (staf()) {
-        v.appendChild(el(`<div class="grid kpis">
-          ${this.tile("sage", c.vp_x + " / " + c.vp_y, "Per werkplek", c.vp_mis.length + " gemist", "App.go('dashboard')")}
-          ${this.tile("sky", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.go('inspecties')")}
-          ${this.tile("blush", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.go('acties')")}
-        </div>`));
-      } else {
-        const eigen = this.state.extra.length;
-        v.appendChild(el(`<div class="grid kpis">
-          ${this.tile("sky", eigen, "Mijn inspecties", eigen ? "vandaag vastgelegd" : "nog geen vandaag", "App.go('inspecties')")}
-          ${this.tile("sage", "1", "Ingepland", "Damwand · P26-168")}
-        </div>`));
-      }
+      const v = $("view"), vn = this.user.full_name.split(" ")[0];
+      const dl = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
+      v.appendChild(el(`<div><div class="kicker">${esc(dl[0].toUpperCase() + dl.slice(1))}</div><h1>Hallo ${esc(vn)}</h1></div>`));
       const lo = this.state.inspectie;
       if (lo) {
         const n = lo.waarnemingen.length;
-        v.appendChild(el(`<h2>Lopende inspectie</h2>`));
-        v.appendChild(el(`<div class="card" style="background:var(--lilac);box-shadow:none"><div class="row" style="border:0">
-          <div class="grow"><div class="t" style="font-size:17px">${esc(lo.titel)}</div><div class="s">${n} waarneming${n === 1 ? "" : "en"}${lo.taak ? " · " + esc(lo.taak) : ""}</div></div></div>
-          <button class="btn primary" onclick="App.goIns()">Verder met de inspectie</button></div>`));
+        v.appendChild(el(`<div class="card kaart"><div class="kop"><span class="cirkel paars">${svg("mic", 20)}</span><div class="grow"><div class="t">${esc(lo.titel)}</div>
+          <div class="s">Loopt nog · ${n} waarneming${n === 1 ? "" : "en"}${lo.taak ? " · " + esc(lo.taak) : ""}</div></div></div>
+          <button class="btn primary" style="margin-top:14px" onclick="App.goIns()">Verder met de inspectie</button></div>`));
       }
-      v.appendChild(el(`<h2>Ingepland vandaag</h2>`));
-      const card = el(`<div class="card"><div class="row" style="border:0">
-        <div class="grow"><div class="s">P26-168 · RWZI Voorbeeldstad · 2 monteurs</div><div class="t" style="font-size:19px;margin-top:2px">Damwand</div></div>
-        <span class="badge b-todo">Ingepland</span></div>
-        <button class="btn primary" style="margin-top:10px" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">${svg("check", 18)} Start inspectie</button>
-        </div>`);
-      v.appendChild(card);
-      v.appendChild(el(`<h2>Of spontaan</h2>`));
-      v.appendChild(el(`<input id="zoek" placeholder="Zoek product…" oninput="App.filterProd(this.value)" autocomplete="off" style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:8px;background:#fff">`));
-      v.appendChild(el(`<div class="listcard" id="prodlist">${this.productKeuzeRows()}</div>`));
+      v.appendChild(el(`<div class="card kaart"><div class="kop"><span class="cirkel groen">${svg("list", 20)}</span><div class="grow"><div class="t">Damwand</div>
+        <div class="s">RWZI Voorbeeldstad · P26-168 · 2 monteurs</div></div><span class="badge b-todo">Vandaag</span></div>
+        <button class="btn primary" style="margin-top:14px" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">Start inspectie</button></div>`));
+      const act = el(`<div id="mijnact"></div>`); v.appendChild(act);
+      this.laadActies().then(() => {
+        if (!document.body.contains(act)) return;
+        const B = this.bakjes();
+        const rij = (k, lab, warn) => `<button class="stat" onclick="App.actFilter='${k}';App.go('acties')"><span>${lab}</span><b class="${warn && B[k].length ? "w" : B[k].length ? "" : "nul"}">${B[k].length}</b></button>`;
+        act.innerHTML = `<div class="card statkaart">${rij("telaat", "Te laat", true)}${rij("instellen", "In te stellen")}${rij("toetsen", "Te toetsen")}${rij("gepland", "Gepland")}</div>`;
+      });
+      if (staf()) {
+        const c = this.data.cijfers;
+        v.appendChild(el(`<button class="card kaart rijkaart" onclick="App.go('dashboard')"><span class="cirkel blauw">${svg("chart", 20)}</span><span class="grow"><span class="t">Dashboard</span>
+          <span class="s" style="display:block">Per werkplek ${c.vp_x}/${c.vp_y} · ${c.n_wpi} inspecties</span></span><span class="s">${svg("chev", 18)}</span></button>`));
+      }
+      if (!this._spontaan) {
+        v.appendChild(el(`<button class="card kaart rijkaart" onclick="App._spontaan=true;App.route()"><span class="cirkel grijs">${svg("plus", 20)}</span><span class="grow t">Andere inspectie starten</span><span class="s">${svg("chev", 18)}</span></button>`));
+      } else {
+        v.appendChild(el(`<h2>Andere inspectie starten</h2>`));
+        v.appendChild(el(`<input id="zoek" class="fin" placeholder="Zoek product…" oninput="App.filterProd(this.value)" autocomplete="off" style="margin-bottom:10px">`));
+        v.appendChild(el(`<div class="listcard" id="prodlist">${this.productKeuzeRows()}</div>`));
+        v.appendChild(el(`<button class="btn ghost sm" style="margin-top:10px" onclick="App._spontaan=false;App.route()">Inklappen</button>`));
+      }
     },
     productKeuzeRows() {
       const kb = this.data.kennisbank;
@@ -1051,7 +1043,7 @@
       const laat = M.filter((m) => m.soort === "laat"), al = $("alert");
       if (al) {
         al.classList.toggle("hidden", !laat.length || this._page === "inspectie");
-        al.innerHTML = laat.length ? `${svg("warn", 16)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum${laat.length === 1 ? ": " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 60)) : ""}</span><b>Bekijk ›</b>` : "";
+        al.innerHTML = laat.length ? `${svg("warn", 16)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum</span><b>Bekijk ›</b>` : "";
       }
       // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
       let nieuw = false;
@@ -1280,7 +1272,7 @@
       const c = this.data.cijfers;
       const tot = mnd.map((m) => Object.values(om[m] || {}).reduce((a, b) => a + b, 0));
       const mx = Math.max(...tot, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
-      const col = { Conform: "#1E7A4C", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
+      const col = { Conform: "#3E7C6B", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
       let g = "";
       mnd.forEach((m, i) => {
         const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
@@ -1303,7 +1295,7 @@
       mnd.forEach((m, i) => {
         const d = vm[m] || {}, ok = d.ok || 0, y_ = d.y || 0, lop = d.lopend || 0, gem = y_ - ok;
         const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
-        [[ok, "#1E7A4C", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
+        [[ok, "#3E7C6B", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
           if (val <= 0) return; const h = val / mx * (H - 50); y -= h;
           p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${cl}" stroke="${ht ? "#9AA2AE" : "none"}" stroke-width="${ht}"/>`;
         });

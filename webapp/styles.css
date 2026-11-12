@@ -1,12 +1,14 @@
 /* Werkplekinspectie.nl — app-stijl (ontleend aan het goedgekeurde ontwerp) */
 :root{
-  --ink:#141A22; --soft:#4A5565; --line:#E7E9ED; --dark:#16191F; --bg:#F6F7F9;
+  --ink:#18202A; --soft:#6B7584; --line:#EDF0F4; --dark:#18202A; --bg:#F5F7FA;
+  --accent:#3E7C6B; --accent-bg:#E3F0EC; --accent-ink:#2F6455;
+  --shadow:0 1px 3px rgba(20,30,50,.05),0 8px 24px rgba(20,30,50,.04);
   --green:#1E7A4C; --green-bg:#E6F4EC; --red:#B42318; --red-bg:#FDECEA;
   --amber:#8A4B00; --amber-bg:#FFF1DC; --grey:#9AA2AE;
   --sky:#EAF1FA; --butter:#FBF5DE; --sage:#EDF5E4; --lilac:#F1EDFC; --blush:#FBECEA; --mist:#F3F4F6;
-  --r:20px;
+  --r:22px;
 }
-*{box-sizing:border-box;margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box;margin:0;font-family:"DM Sans",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-size:15px;line-height:1.4}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
@@ -28,7 +30,7 @@ h2{font-size:18px;font-weight:650;margin:22px 0 12px}
 
 /* tiles / cards */
 .grid{display:grid;gap:14px}
-.kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .tile{border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:2px}
 .tile .n{font-size:34px;font-weight:650;line-height:1.05;margin-top:4px}
 .tile .lab{font-size:13px;color:var(--soft);font-weight:600}
@@ -166,6 +168,79 @@ svg{display:block;width:100%}
 .sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
 .sw.on{background:var(--green)}.sw.on::after{left:23px}
 
+
+/* ================= Stijl C · licht en open ================= */
+body{background:var(--bg);color:var(--ink)}
+.topbar{padding:16px 20px 6px}
+.brand .logo{width:32px;height:32px;border-radius:10px;background:var(--accent);font-size:15px}
+.brand span:not(.logo){font-weight:600;font-size:15px;color:var(--soft)}
+.rondknop{width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(20,30,50,.08);display:grid;place-items:center;color:var(--ink);position:relative}
+.rondknop.avatar{background:var(--accent-bg);color:var(--accent-ink);font-weight:700;font-size:15px}
+.belnr{background:#E59A2F}
+.kicker{font-weight:500;color:var(--soft);font-size:14px}
+h1{font-size:27px;font-weight:700;letter-spacing:-.01em;margin:2px 0 18px}
+h2{font-size:17px;font-weight:700}
+/* kaarten: wit, zachte schaduw, geen lijnen */
+.card,.listcard,.q,#mod{box-shadow:var(--shadow)}
+.card,.listcard,.q{background:#fff;border-radius:22px}
+.card.kaart{margin-bottom:12px;padding:18px}
+.kaart .kop{display:flex;gap:12px;align-items:center}
+.kaart .t{font-weight:700;font-size:16px}.kaart .s{font-size:13px;color:var(--soft);margin-top:1px}
+.rijkaart{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:14px 18px!important}
+.rijkaart .t{font-weight:600}
+.cirkel{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;flex:none;background:var(--mist);color:var(--soft)}
+.cirkel.groen{background:var(--accent-bg);color:var(--accent)}.cirkel.blauw{background:#E6EEF8;color:#3D6699}
+.cirkel.paars{background:#EFEAFB;color:#6B4FC0}.cirkel.grijs{background:#F0F2F5;color:var(--soft)}
+.listcard .cirkel{width:34px;height:34px;border-radius:11px}
+.statkaart{padding:6px 18px!important;margin-bottom:12px}
+.stat{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 0;border-top:1px solid #F0F2F5;font-size:15px;text-align:left}
+.stat:first-child{border-top:0}
+.stat b{font-weight:700;font-size:16px}.stat b.w{color:#C07A1A}.stat b.nul{color:#B5BCC6;font-weight:500}
+.row{border-bottom:1px solid #F0F2F5}
+/* tegels: wit met een klein kleurstipje in plaats van pastelvlakken */
+.tile{background:#fff!important;box-shadow:var(--shadow);border-radius:20px}
+.tile .lab{display:flex;align-items:center;gap:7px;font-weight:500}
+.tile .lab::before{content:"";width:8px;height:8px;border-radius:50%;background:#C9D0D8;flex:none}
+.tile.sage .lab::before{background:var(--accent)}.tile.sky .lab::before{background:#5B87BF}
+.tile.blush .lab::before{background:#E59A2F}.tile.butter .lab::before{background:#E2B33C}
+.tile.lilac .lab::before{background:#8E74D6}
+.tile .n{font-size:30px;font-weight:700}
+.tile.click:hover{transform:translateY(-1px)}
+/* knoppen */
+.btn{border-radius:14px;font-weight:700}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.ghost{background:#fff;box-shadow:0 1px 3px rgba(20,30,50,.08),inset 0 0 0 1px #E3E7EC}
+.btn.sm{border-radius:12px}
+.chip{background:#fff;box-shadow:0 1px 3px rgba(20,30,50,.08);font-weight:600}
+.chipb{border-radius:12px;box-shadow:inset 0 0 0 1px #E3E7EC}
+.chipb.on{background:var(--accent);color:#fff}
+/* badges zachter */
+.badge{font-weight:600;height:24px;font-size:12.5px}
+.b-todo{background:#FFF3E0;color:#A0620E}
+.b-done{background:var(--accent-bg);color:var(--accent-ink)}
+/* gesprek */
+.q{padding:18px}
+.q .qt{font-size:18px}
+.inbox textarea{background:#F8FAFB;box-shadow:inset 0 0 0 1px #E6EAEE;border-radius:16px}
+.inbox textarea:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+.mic{background:var(--accent)}
+.pick{background:#F4F1FB;border-radius:16px}
+.lbl.vs{background:#EFEAFB;color:#6B4FC0}
+.toast{background:var(--accent-bg);color:var(--accent-ink);border-radius:14px}
+.hint{background:#FFF6E8;color:#7A4A0A;border-radius:12px}
+.opslag.ok{background:var(--accent-bg);color:var(--accent-ink)}
+.fin{background:#F8FAFB;box-shadow:inset 0 0 0 1px #E6EAEE}
+.fin:focus{box-shadow:inset 0 0 0 2px var(--accent);background:#fff}
+/* notice */
+.alertbar{background:#FFF6E8;border:0;color:#9A5B10;font-weight:500}
+/* tabbalk */
+.tabbar{border-top:1px solid #EDF0F4;box-shadow:0 -4px 20px rgba(20,30,50,.03)}
+.tabbar a{color:#A2ABB7}
+.tabbar a.on{color:var(--accent)}
+/* modal */
+#mod{border-radius:24px}
+#ov{background:rgba(24,32,42,.32)}
+
 /* ---- Veldmodus: grote tikdoelen voor handschoenen ---- */
 body.veld{font-size:16.5px}
 body.veld .btn{min-height:62px;font-size:17.5px;border-radius:18px}
@@ -208,3 +283,9 @@ body.zon .opslag.ok{background:var(--green);color:#fff}
 .alertbar b{font-weight:650}
 body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 @media(max-width:440px){.acrol{display:none}}
+/* stijl C: laatste woord voor notice en bel-teller */
+.alertbar{background:#FFF6E8;border:0;color:#9A5B10;font-weight:500}
+.belnr{background:#E59A2F;top:-3px;right:-3px}
+body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
+.kpis{gap:12px}.tile{padding:16px}
+@media(max-width:440px){.tile .n{font-size:26px}}
