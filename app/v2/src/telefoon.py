@@ -18,12 +18,13 @@
 # Direct uitvoeren (python3 telefoon.py) schrijft P01-P05 naar screens/phone.
 import os
 
-SRC = open('/home/claude/app/v2/src/gen.py').read().split('\nfiles = {')[0]
+BASE = os.path.dirname(os.path.abspath(__file__))
+SRC = open(os.path.join(BASE, 'gen.py')).read().split('\nfiles = {')[0]
 G = {}
 exec(SRC, G)
 globals().update({k: v for k, v in G.items() if not k.startswith('__')})
 
-OUT = '/home/claude/app/v2/screens/phone'
+OUT = os.path.abspath(os.path.join(BASE, '..', 'screens', 'phone'))
 os.makedirs(OUT, exist_ok=True)
 
 RED = '#B42318'
@@ -392,8 +393,28 @@ def toast(top, tekst):
             f'<button style="height:44px;padding:0 8px;border-radius:12px;font-size:14px;font-weight:600;color:{INK};white-space:nowrap">Ongedaan maken</button></div>')
 
 
-def rtile(ref, naam, st=None, open_punt=''):
-    onder = oc(st, 28) if st else in_orde_btn(naam)
+def bevestigd_inline():
+    # Rustige inline bevestiging ín de kaart; geen zwevende toast (besluit 1).
+    return (f'<div role="status" style="height:44px;border-radius:18px;background:#fff;'
+            f'box-shadow:inset 0 0 0 1px {LINE};display:flex;flex-direction:column;justify-content:center;'
+            f'gap:1px;padding:0 10px;overflow:hidden">'
+            f'<div style="display:flex;align-items:center;gap:6px;min-width:0">'
+            f'<span aria-hidden="true" style="width:16px;height:16px;border-radius:999px;flex:0 0 auto;'
+            f'background:conic-gradient({OORD["C"][1]} 0 75%, {LINE} 75% 100%);display:grid;place-items:center">'
+            f'<span style="width:10px;height:10px;border-radius:999px;background:#fff;display:grid;place-items:center;color:{OORD["C"][1]}">'
+            f'{ico("check", 8, 2.6)}</span></span>'
+            f'<span style="font-size:13px;font-weight:600;color:{INK};white-space:nowrap">Vastgelegd</span>'
+            f'<span style="font-size:12px;color:{SOFT};white-space:nowrap">· 3 s</span>'
+            f'</div>'
+            f'<div style="display:flex;align-items:center;gap:8px;min-width:0">'
+            f'<button style="height:20px;padding:0;border:0;background:transparent;font-size:12px;font-weight:600;color:{INK};white-space:nowrap">Ongedaan maken</button>'
+            f'<span style="font-size:12px;color:{SOFT};white-space:nowrap">tik = nu</span>'
+            f'</div></div>')
+
+
+def rtile(ref, naam, st=None, open_punt='', bevestigd=False):
+    # Zelfde kaarthoogte/breedte; alleen de onderste 44px-staat wisselt.
+    onder = bevestigd_inline() if bevestigd else (oc(st, 28) if st else in_orde_btn(naam))
     op = (f'<div style="display:flex;align-items:center;gap:4px;font-size:14px;line-height:18px;color:{RED};font-weight:500;margin-top:4px;white-space:nowrap">{ico("clock", 16)}{open_punt}</div>' if open_punt else '')
     # hele kaart is het tikvlak naar de sheet; de snelle knop ligt erboven
     return (f'<div style="position:relative;border-radius:18px;background:{TINT};padding:6px 8px 6px 10px;display:flex;flex-direction:column;gap:4px">'
@@ -412,7 +433,8 @@ def p04_body(toast_html=''):
              ('DAM-2.03', 'Vallen van de last', 'V'), ('DAM-2.04', 'Beknelling en pletten', None, 'C1-1 over termijn'),
              ('DAM-2.05', 'Begeleiden van de last …', None), ('DAM-2.06', 'Biologische Agentia', 'A'),
              ('DAM-2.07', 'Besloten ruimte', 'A'), ('DAM-2.08', 'Plotseling verschuiven', None)]
-    grid = ''.join(rtile(*t) for t in tiles)
+    # Alleen de zojuist getikte kaart (Vallen van hoogte) toont de inline bevestiging.
+    grid = rtile('DAM-2.01', 'Vallen van hoogte', 'C', bevestigd=True) + ''.join(rtile(*t) for t in tiles[1:])
     knoppen = (f'<div style="display:flex">{info_btn("Algemene onderwerpen", "list")}{info_btn("Nog een taak of stap toetsen", "plus")}</div>')
     return f'''
 {head(round_btn('back', label='Terug'))}
@@ -424,7 +446,8 @@ def p04_body(toast_html=''):
 
 
 def p04():
-    return phone('P04 · Toetsen', p04_body(toast(124, 'Vallen van hoogte [C]')))
+    # Geen zwevende toast meer: bevestiging zit inline op de kaart zelf (besluit 1).
+    return phone('P04 · Toetsen', p04_body())
 
 
 def mkeuze(naam, selected=False, last=False):
