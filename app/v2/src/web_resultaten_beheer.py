@@ -664,7 +664,7 @@ def w12():
                 + f'<div style="margin-top:8px">{rows}</div>'
                 + f'<div style="display:flex;align-items:center;gap:10px;height:44px;border-top:1px solid {LINE};font-size:13px;color:{SOFT}">'
                   f'{status_chip("spontaan", "sage", GREEN)}Spontane WPI telt mee als werkplek en maand verplicht zijn</div>', 'padding:22px 24px 8px')
-    rules = [('Lang project · langer dan 1 maand', 'Elke maand met ≥ 10 werkdagen 1 WPI'), ('Kort project met risicokenmerk', 'Minstens 1 WPI'),
+    rules = [('Lang project · langer dan 1 maand', 'Elke maand waarin gewerkt wordt 1 WPI'), ('Kort project met risicokenmerk', 'Minstens 1 WPI'),
              ('Overig kort project', '1 op 4 per kwartaal'), ('Directie', '1× per kwartaal')]
     rr = ''.join(kv_row(l, v, '', i == len(rules) - 1, 66) for i, (l, v) in enumerate(rules))
     right = card(card_head('Regels', 'in concept v1.4', info_btn('Bron per regel')) + f'<div style="margin-top:8px">{rr}</div>',
