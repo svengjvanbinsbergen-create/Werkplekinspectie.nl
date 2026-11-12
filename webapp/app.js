@@ -74,6 +74,7 @@
       const got = await Promise.all(names.map((n) => fetch("data/" + n + ".json").then((r) => r.json())));
       names.forEach((n, i) => (this.data[n] = got[i]));
       try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
+      if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("sw.js"); } catch (e) {} }
       window.addEventListener("hashchange", () => this.route());
       this.route();
     },
@@ -82,7 +83,29 @@
     logout() { this.user = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
-      $("acct").innerHTML = `<button class="chip" onclick="App.logout()" title="Uitloggen">${esc(this.user.full_name.split(" ")[0])} · ${ROL[this.user.role]} ×</button>`;
+      $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <button class="chip" onclick="App.openSearch()" title="Zoeken" aria-label="Zoeken" style="width:40px;justify-content:center;padding:0">${svg("list", 18)}</button>
+        <button class="chip" onclick="App.logout()" title="Uitloggen">${esc(this.user.full_name.split(" ")[0])} · ${ROL[this.user.role]} ×</button></div>`;
+    },
+    async openSearch() {
+      let saved = []; try { saved = await DB.all(); } catch (e) {}
+      this._search = { prod: Object.values(this.data.kennisbank).map((p) => p.naam), trend: this.data.trendacties, saved };
+      this.openModal("Zoeken", "Producten, trendacties en je inspecties.",
+        `<input id="zq" placeholder="Typ om te zoeken…" autocomplete="off" oninput="App.doSearch(this.value)" style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
+         <div id="zr"></div>`);
+      const i = $("zq"); if (i) i.focus();
+    },
+    doSearch(q) {
+      q = (q || "").toLowerCase().trim();
+      const out = $("zr"); if (!out) return;
+      if (!q) { out.innerHTML = `<div class="s">Begin met typen…</div>`; return; }
+      const s = this._search, hit = [];
+      s.prod.filter((p) => p.toLowerCase().includes(q)).slice(0, 5).forEach((p) => hit.push(["Product", p, ""]));
+      s.trend.filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
+      s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie", r.titel + " · " + r.taak, "#/rapport/" + r.id]));
+      out.innerHTML = hit.length ? `<div class="listcard">${hit.map(([k, lab, href]) =>
+        `<div class="row"${href ? ` style="cursor:pointer" onclick="App.closeModal();location.hash='${href}'"` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
+        : `<div class="s">Niets gevonden voor “${esc(q)}”.</div>`;
     },
 
     go(h) { location.hash = "#/" + h; },
@@ -363,9 +386,20 @@
         ${this.tile("blush", c.act_status.Open, "Open", c.act_over.length + " over termijn")}
         ${this.tile("sage", c.act_status.Afgerond, "Afgerond", "getoetst")}
         ${this.tile("butter", c.act_prio.direct, "Direct", "hoogste prioriteit")}</div>`));
-      v.appendChild(el(`<h2>Trendacties (VCA 7.2)</h2>`));
+      const head = el(`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`);
+      v.appendChild(head);
       v.appendChild(el(`<div class="listcard">${t.map((a) =>
         `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
+    },
+    exportCSV() {
+      const t = this.data.trendacties;
+      const cols = ["nr", "onderwerp", "actiehouder", "toetser", "termijn", "status"];
+      const q = (s) => `"${String(s == null ? "" : s).replace(/"/g, '""')}"`;
+      const csv = [cols.join(";")].concat(t.map((a) => cols.map((c) => q(a[c])).join(";"))).join("\r\n");
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "trendacties.csv"; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     },
 
     // ---------------- DASHBOARD ----------------
