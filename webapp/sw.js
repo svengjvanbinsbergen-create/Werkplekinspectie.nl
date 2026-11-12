@@ -1,6 +1,6 @@
 /* Service worker — netwerk eerst, cache als terugval wanneer je offline bent.
    Zo zie je na een update altijd de nieuwste versie, en werkt de app zonder bereik. */
-const CACHE = "wpi-v3";
+const CACHE = "wpi-v4";
 const SHELL = [
   "./", "index.html", "styles.css", "app.js", "manifest.json",
   "icon-192.png", "icon-512.png",
@@ -20,4 +20,14 @@ self.addEventListener("fetch", (e) => {
     fetch(req).then((r) => { const cp = r.clone(); caches.open(CACHE).then((c) => c.put(req, cp)); return r; })
       .catch(() => caches.match(req))
   );
+});
+
+// tik op een melding: open (of focus) de app op het actiescherm
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const doel = new URL("index.html" + ((e.notification.data && e.notification.data.hash) || "#/acties"), self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((cs) => {
+    for (const c of cs) { if ("focus" in c) { if ("navigate" in c) c.navigate(doel).catch(() => {}); return c.focus(); } }
+    return self.clients.openWindow(doel);
+  }));
 });

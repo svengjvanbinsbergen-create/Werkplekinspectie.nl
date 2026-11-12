@@ -17,6 +17,7 @@
     plus: '<path d="M12 5v14M5 12h14"/>', cam: '<rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.2"/><path d="M8 7l1.5-2h5L16 7"/>',
     mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
     warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+    bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   };
   const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
@@ -156,6 +157,7 @@
         window.claude.use("sample").then((s) => { this.caps.sample = s || null; }).catch(() => {});
       }
       window.addEventListener("hashchange", () => this.route());
+      setInterval(() => this.checkMeldingen(), 30 * 60 * 1000);   // elk half uur, zolang de app open is
       this.route();
     },
 
@@ -209,9 +211,10 @@
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
       $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <button class="chip bel" onclick="App.openMeldingen()" title="Meldingen" aria-label="Meldingen" style="width:40px;justify-content:center;padding:0">${svg("bell", 18)}<span id="belnr" class="belnr hidden"></span></button>
         <button class="chip" onclick="App.openWeergave()" title="Weergave" aria-label="Weergave" style="width:40px;justify-content:center;padding:0">${svg("sun", 18)}</button>
         <button class="chip" onclick="App.openSearch()" title="Zoeken" aria-label="Zoeken" style="width:40px;justify-content:center;padding:0">${svg("list", 18)}</button>
-        <button class="chip" onclick="App.logout()" title="Uitloggen">${esc(this.user.full_name.split(" ")[0] === ROL[this.user.role] ? ROL[this.user.role] : this.user.full_name.split(" ")[0] + " · " + ROL[this.user.role])} ×</button></div>`;
+        <button class="chip" onclick="App.logout()" title="Uitloggen">${this.user.full_name.split(" ")[0] === ROL[this.user.role] ? esc(ROL[this.user.role]) : `<span>${esc(this.user.full_name.split(" ")[0])}</span><span class="acrol">&nbsp;· ${esc(ROL[this.user.role])}</span>`}&nbsp;×</button></div>`;
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
@@ -237,7 +240,7 @@
     go(h) { location.hash = "#/" + h; },
     route() {
       this.renderAcct();
-      if (!this.user) { $("tabbar").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
+      if (!this.user) { $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
       let parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
       let page = parts[0];
@@ -246,6 +249,7 @@
       this.renderTabs(page);
       $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
       this.wakeLock(page === "inspectie");
+      this._page = page; this.checkMeldingen();
       const fn = this["view_" + page];
       $("view").innerHTML = "";
       if (fn) fn.call(this, parts.slice(1));
@@ -295,7 +299,7 @@
         if (!document.body.contains(mijn)) return;
         const B = this.bakjes(), n = B.telaat.length + B.gepland.length + B.toetsen.length + B.instellen.length; if (!n) return;
         const t = (k, cls, lab) => B[k].length || k === "telaat" ? `<button class="mini ${cls}" onclick="App.actFilter='${k}';App.go('acties')"><b>${B[k].length}</b>${lab}</button>` : "";
-        mijn.innerHTML = `<div class="card" style="margin-bottom:14px"><h3>${this.user.role === "hoofd" ? "Acties van het team" : "Mijn acties"} <a class="s" href="#/acties">alles ›</a></h3>
+        mijn.innerHTML = `<div class="card" style="margin-bottom:14px"><h3>Acties <a class="s" href="#/acties">alles ›</a></h3>
           <div class="minis">${t("telaat", B.telaat.length ? "blush" : "mist", "te laat")}${t("gepland", "sky", "gepland")}${t("toetsen", "lilac", "te toetsen")}${t("instellen", "butter", "in te stellen")}</div></div>`;
       });
       if (staf()) {
@@ -1012,22 +1016,88 @@
       const scope = A.filter((a) => loopt(a) && (hoofd || a.houder === me));
       const opDatum = (x, y) => (x.plandatum || "9").localeCompare(y.plandatum || "9");
       return {
-        telaat: scope.filter((a) => a.plandatum && dagenTot(a.plandatum) < 0).sort(opDatum),
+        telaat: A.filter((a) => loopt(a) && a.plandatum && dagenTot(a.plandatum) < 0).sort(opDatum),   // hele team: iedereen krijgt de meldingen
         gepland: scope.filter((a) => !a.plandatum || dagenTot(a.plandatum) >= 0).sort(opDatum),
         toetsen: A.filter((a) => a.status === "Klaar voor toetsing" && a.toetser === me).sort(opDatum),
-        instellen: staf() ? A.filter((a) => a.status === "Voorstel") : [],
+        instellen: A.filter((a) => a.status === "Voorstel"),   // iedereen mag instellen
         alle: (staf() ? A : A.filter((a) => a.houder === me || a.toetser === me)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
       };
     },
+    // ---- meldingen over plandata: 1× een week vooraf, daarna na verstrijken elke 2 dagen; voor iedereen ----
+    meldingen() {
+      const uit = [];
+      (this.acties || []).filter((a) => (a.status === "Open" || a.status === "In uitvoering") && a.plandatum).forEach((a) => {
+        const d = dagenTot(a.plandatum);
+        if (d < 0) {
+          const k = Math.floor((-d - 1) / 2);   // dag 1, 3, 5 … na de plandatum telt als nieuwe melding
+          uit.push({ id: a.id + ":laat:" + k, actie: a.id, soort: "laat", d, titel: "Te laat: " + kort(a.tekst, 70),
+            tekst: `Plandatum ${dagLabel(a.plandatum)} is ${-d} dag${-d === 1 ? "" : "en"} verstreken · actiehouder ${naam(a.houder)}` });
+        } else if (d <= 7) {
+          uit.push({ id: a.id + ":week", actie: a.id, soort: "week", d, titel: (d === 0 ? "Vandaag" : "Over " + d + " dag" + (d === 1 ? "" : "en")) + ": " + kort(a.tekst, 70),
+            tekst: `Plandatum ${dagLabel(a.plandatum)} · actiehouder ${naam(a.houder)}` });
+        }
+      });
+      return uit.sort((x, y) => x.d - y.d);
+    },
+    _set(k) { try { return new Set(JSON.parse(localStorage.getItem(k + "_" + this.user.id) || "[]")); } catch (e) { return new Set(); } },
+    _bewaarSet(k, set) { try { localStorage.setItem(k + "_" + this.user.id, JSON.stringify([...set].slice(-400))); } catch (e) {} },
+    async checkMeldingen() {
+      if (!this.user) return;
+      await this.laadActies(); if (!this.user) return;
+      const M = this.meldingen(), gelezen = this._set("wpi_gelezen"), getoond = this._set("wpi_getoond");
+      const ongelezen = M.filter((m) => !gelezen.has(m.id));
+      const nr = $("belnr"); if (nr) { nr.textContent = ongelezen.length; nr.classList.toggle("hidden", !ongelezen.length); }
+      // vaste alert in beeld zolang er acties over de plandatum zijn (niet tijdens het inspecteren)
+      const laat = M.filter((m) => m.soort === "laat"), al = $("alert");
+      if (al) {
+        al.classList.toggle("hidden", !laat.length || this._page === "inspectie");
+        al.innerHTML = laat.length ? `${svg("warn", 20)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum${laat.length === 1 ? ": " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 60)) : ""}</span><b>Bekijk ›</b>` : "";
+      }
+      // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
+      let nieuw = false;
+      for (const m of ongelezen) { if (getoond.has(m.id)) continue; if (await this.systeemMelding(m)) { getoond.add(m.id); nieuw = true; } }
+      if (nieuw) this._bewaarSet("wpi_getoond", getoond);
+    },
+    async systeemMelding(m) {
+      try {
+        if (!("Notification" in window) || Notification.permission !== "granted") return false;
+        const opt = { body: m.tekst, icon: "icon-192.png", badge: "icon-192.png", tag: m.id, data: { hash: "#/acties" } };
+        const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+        if (reg) await reg.showNotification(m.titel, opt); else new Notification(m.titel, opt);
+        return true;
+      } catch (e) { return false; }
+    },
+    async meldingenAan() {
+      try { const r = await Notification.requestPermission(); if (r === "granted") { this._bewaarSet("wpi_getoond", new Set()); await this.checkMeldingen(); } } catch (e) {}
+      this.openMeldingen();
+    },
+    async openMeldingen() {
+      await this.laadActies();
+      const M = this.meldingen(), gelezen = this._set("wpi_gelezen");
+      const perm = !("Notification" in window) ? "nee" : Notification.permission;
+      const permHtml = perm === "granted" ? `<div class="s" style="margin-top:12px">✓ Meldingen op dit toestel staan aan.</div>`
+        : perm === "denied" ? `<div class="hint" style="margin-top:12px">Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</div>`
+        : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de rode balk.</div>`
+        : `<button class="btn primary" style="margin-top:14px" onclick="App.meldingenAan()">${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
+      this.openModal("Meldingen", "Een week vóór de plandatum één keer; daarna elke 2 dagen zolang de actie te laat is. Iedereen krijgt ze.",
+        (M.length ? `<div class="listcard">${M.map((m) => `<div class="row" style="cursor:pointer" onclick="App.leesMelding('${m.id}','${m.actie}')">
+            <span style="width:10px;height:10px;border-radius:50%;flex:none;background:${gelezen.has(m.id) ? "transparent" : m.soort === "laat" ? "var(--red)" : "var(--amber)"}"></span>
+            <span class="grow"><span class="t" style="${gelezen.has(m.id) ? "font-weight:500" : ""}">${esc(m.titel)}</span><div class="s">${esc(m.tekst)}</div></span>
+            <span class="badge ${m.soort === "laat" ? "b-A" : "b-V"}">${m.soort === "laat" ? "te laat" : "binnen 7 d"}</span></div>`).join("")}</div>
+            <button class="btn ghost sm" style="margin-top:10px" onclick="App.allesGelezen()">Alles gelezen</button>`
+          : `<div class="s">Geen meldingen. Alle acties liggen op schema.</div>`) + permHtml);
+    },
+    leesMelding(mid, aid) { const g = this._set("wpi_gelezen"); g.add(mid); this._bewaarSet("wpi_gelezen", g); this.checkMeldingen(); this.openActie(aid); },
+    allesGelezen() { const g = this._set("wpi_gelezen"); this.meldingen().forEach((m) => g.add(m.id)); this._bewaarSet("wpi_gelezen", g); this.checkMeldingen(); this.openMeldingen(); },
     async view_acties() {
       await this.laadActies();
       const v = $("view"), B = this.bakjes(), hoofd = this.user.role === "hoofd";
-      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"]].concat(staf() ? [["instellen", "In te stellen"]] : []).concat([["alle", "Alle"]]);
+      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"]].concat([["instellen", "In te stellen"]]).concat([["alle", "Alle"]]);
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="kicker">${hoofd ? "Het hele team" : "Jouw acties"} · peildatum ${dagLabel(isoDag(new Date()))}</div><h1>Acties</h1></div>`));
       v.appendChild(el(`<div class="chips" style="margin-bottom:12px">${tabs.map(([k, l]) => `<button class="chipb${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " laat" : ""}" onclick="App.actFilter='${k}';App.route()">${l} · ${B[k].length}</button>`).join("")}</div>`));
       const LEEG = { telaat: "Niets te laat. 👍", gepland: "Geen geplande acties.", toetsen: "Niets dat op jouw toetsing wacht.", instellen: "Geen actievoorstellen om in te stellen.", alle: "Nog geen acties." };
-      const uitleg = { telaat: "Plandatum verstreken, nog niet klaar voor toetsing.", gepland: "Op volgorde van plandatum.", toetsen: "De actiehouder meldt dat het klaar is. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Stel actiehouder, toetser en plandatum in.", alle: "" }[this.actFilter];
+      const uitleg = { telaat: "Van het hele team: plandatum verstreken, nog niet klaar voor toetsing. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "De actiehouder meldt dat het klaar is. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: actiehouder, toetser en plandatum.", alle: "" }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="muted" style="font-size:13px;margin:-4px 0 10px">${uitleg}</div>`));
       const lijst = B[this.actFilter] || [];
       v.appendChild(el(`<div class="listcard">${lijst.length ? lijst.map((a) => this.actieRij(a)).join("") : `<div class="row"><span class="grow s">${LEEG[this.actFilter]}</span></div>`}</div>`));
@@ -1052,7 +1122,7 @@
       let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
         <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${a.foto ? `<img src="${a.foto}" alt="foto" style="height:64px;border-radius:10px">` : ""}</div>`;
       if (a.status === "Voorstel") {
-        if (staf()) {
+        {
           h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
             <textarea id="ai-tekst" class="fin" rows="3">${esc(a.tekst || "")}</textarea>
             <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
@@ -1065,7 +1135,7 @@
             <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Geen actie nodig?</summary>
               <textarea id="ai-reden" class="fin" rows="2" placeholder="Reden, bijv. al opgelost via trendactie T-04"></textarea>
               <button class="btn ghost sm" style="margin-top:8px" onclick="App.vervalVoorstel('${a.id}')">Voorstel laten vervallen</button></details>`;
-        } else h += `<div class="card" style="background:var(--mist);box-shadow:none"><div class="t">${esc(a.tekst)}</div></div><div class="hint" style="margin-top:10px">Een coördinator stelt dit voorstel in.</div>`;
+        }
       } else {
         h += `<div class="card" style="background:var(--mist);box-shadow:none;margin-bottom:12px"><div class="t" style="font-size:16px">${esc(a.tekst)}</div>
           <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b></div></div>`;
@@ -1092,10 +1162,11 @@
     async bewaarActie(a, wat) {
       a.log = (a.log || []).concat([{ t: new Date().toISOString(), wie: this.user.full_name, wat }]);
       try { await DB.put("acties", a); } catch (e) { alert("Opslaan mislukt op dit toestel."); }
+      this.checkMeldingen();
     },
     fout(t) { const f = $("ai-fout"); if (f) f.textContent = t; tril([40, 40, 40]); },
     async stelIn(id) {
-      const a = this.acties.find((x) => x.id === id); if (!a || !staf()) return;
+      const a = this.acties.find((x) => x.id === id); if (!a) return;
       const tekst = $("ai-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
       if (!tekst) return this.fout("Vul de actietekst in.");
       if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.");

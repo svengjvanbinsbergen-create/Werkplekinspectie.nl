@@ -197,3 +197,12 @@ body.zon .toast{background:#fff;color:var(--green);box-shadow:0 0 0 2px var(--gr
 body.zon .opslag.ok{background:var(--green);color:#fff}
 /* smalle schermen: merknaam inkorten zodat account/zoeken/weergave passen */
 @media(max-width:440px){.brand span:not(.logo){display:none}.topbar{padding:14px 16px 6px}}
+
+/* ---- meldingen ---- */
+.bel{position:relative}
+.belnr{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+.alertbar{position:sticky;top:0;z-index:15;margin:4px 20px 6px;background:var(--red);color:#fff;border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:650;font-size:14px;cursor:pointer;box-shadow:0 6px 18px rgba(180,35,24,.25)}
+.alertbar svg{flex:none;width:20px;height:20px}.alertbar .al-t{flex:1;min-width:0;text-align:left;line-height:1.35}
+.alertbar b{white-space:nowrap}
+@media(min-width:720px){.alertbar{margin:6px 24px 10px;font-size:15px;padding:12px 18px}}
+@media(max-width:440px){.acrol{display:none}}
