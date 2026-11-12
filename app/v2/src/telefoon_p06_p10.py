@@ -2,12 +2,12 @@
 # Kop, Direct gevaar, onderbalk, sheet, labels en oordeelchips komen uit telefoon.py (leidende bouwsteen van P01–P05).
 # Feiten: voorbeelddata.json v10.4 (WPI-20261105-DAM-C2 en acties), kennisbank.json (DAM-2.07). Alles fictief.
 import os, sys
-sys.path.insert(0, '/home/claude/app/v2/src')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import telefoon as T
 from telefoon import (phone, head, titleblock, gevaar, dock, sheet, tabbar, label, standaard_chip, oc, status,
                       round_btn, chip, icotile, online, fictief, P, INK, SOFT, DARK, LINE, ACCENT, CARD, RED)
 
-OUT = '/home/claude/app/v2/screens/phone'
+OUT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'screens', 'phone'))
 GREEN = '#1E7A4C'
 ACTIE = 'Montagewagen van deze ploeg aanvullen met een handenwasset (jerrycan, zeep, papier, desinfectiegel).'  # letterlijk uit voorbeelddata
 ACTIE_ID = 'WPI-20261105-DAM-C2-2'
@@ -181,9 +181,9 @@ def p07_body(offline=False):
     <div style="height:28px;display:flex;align-items:center;gap:8px"><span style="font-size:14px;color:{SOFT};font-weight:500">Prioriteit</span>{label('Jij', 'jij')}</div>
     <div style="display:flex;gap:8px;margin-top:4px">{keuze('Direct')}{keuze('Kort', True)}{keuze('Planmatig')}</div>
   </div>
-  <a aria-label="Wie en wanneer, stap 2" style="display:flex;align-items:center;gap:10px;padding:0 16px;height:60px;{CARD}">
+  <a aria-label="Wie en wanneer, standaard ingevuld" style="display:flex;align-items:center;gap:10px;padding:0 16px;height:60px;{CARD}">
     <span style="color:{SOFT};display:inline-flex">{ico('person', 18)}</span>
-    <div style="flex:1"><div style="font-size:14px;color:{SOFT}">Wie en wanneer · stap 2</div><div style="font-size:16px">Coördinator 2 · do 19 nov</div></div>{chev}</a>
+    <div style="flex:1"><div style="font-size:14px;color:{SOFT}">Wie en wanneer · Standaard</div><div style="font-size:16px">Coördinator 2 · do 19 nov</div></div>{chev}</a>
 </div>
 {gevaar()}
 {onder}'''
@@ -204,15 +204,16 @@ def p07d_body():
         f'<div style="display:flex;align-items:center;gap:10px;min-height:60px;{"" if last else f"border-bottom:1px solid {LINE};"}">'
         f'<span style="color:{SOFT};display:inline-flex">{ico(icon, 18)}</span>'
         f'<div style="flex:1;white-space:nowrap"><div style="font-size:14px;color:{SOFT}">{lab}</div><div style="font-size:16px">{waarde}</div></div>{rechts}</div>')
-    rijen = (rij('person', 'Actiehouder', 'Coördinator 2', label('Voorstel', 'ai') + okknop('Actiehouder bevestigen'))
+    # Besluit 2: geen per-rij bevestiging meer; alles auto-ingevuld met "Standaard" + aanpasbaar via tik.
+    rijen = (rij('person', 'Actiehouder', 'Coördinator 2', standaard_chip() + chev)
              + rij('cal', 'Termijn · kort', 'do 19 nov', standaard_chip() + chev)
-             + rij('shield', 'Toetser', 'Hoofd S&amp;M', standaard_chip(), True))
+             + rij('shield', 'Toetser', 'Hoofd S&amp;M', standaard_chip() + chev, True))
     tp = (f'<div style="padding:8px 16px 12px;background:{P["lilac"][0]};border-radius:22px">'
           f'<div style="display:flex;align-items:center;gap:8px">{label("Voorstel", "ai")}<span style="font-size:14px;color:{SOFT};flex:1">uit jouw transcript</span>{okknop("Maatregel ter plaatse bevestigen")}</div>'
           f'<div style="font-size:16px;line-height:1.4;margin-top:4px">{MAATREGEL}</div></div>')
     return f'''
 {head(round_btn('back', label='Terug'))}
-{titleblock('Nieuwe actie · stap 2 van 2', 'Wie en wanneer')}
+{titleblock('Nieuwe actie · samenvatting', 'Wie en wanneer')}
 <div style="position:absolute;left:24px;right:24px;top:186px;display:flex;flex-direction:column;gap:12px">
   <div style="padding:0 16px;{CARD}">{rijen}</div>
   <div>
