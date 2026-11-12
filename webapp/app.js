@@ -272,29 +272,67 @@
     },
 
     // ---------------- DASHBOARD ----------------
+    dashFilter: { product: "", locatie: "", periode: "", klasse: "" },
+    computeDash() {
+      const f = this.dashFilter, vd = this.data.voorbeelddata, wmap = {};
+      vd.wpis.forEach((w) => (wmap[w.nr] = w));
+      const perMatch = (m) => {
+        if (!f.periode) return true;
+        if (f.periode[0] === "Q") return ({ Q2: ["05", "06"], Q3: ["07", "08", "09"], Q4: ["10", "11"] }[f.periode] || []).includes(m.slice(5, 7));
+        return m === f.periode;
+      };
+      const regels = vd.regels.filter((r) => {
+        const w = wmap[r.wpi] || {}, m = (r.datum || "").slice(0, 7);
+        return perMatch(m) && (!f.product || w.product === f.product) && (!f.locatie || w.locatie === f.locatie) && (!f.klasse || r.classificatie === f.klasse);
+      });
+      const oordeel = { Conform: 0, Afwijking: 0, Verbeterpunt: 0, "Niet van toepassing": 0 };
+      const waarn = { totaal: 0, TRA: 0, Algemeen: 0 }, klasse = {}, om = {}, mset = new Set(), wset = new Set();
+      regels.forEach((r) => {
+        const o = r.oordeel; if (oordeel[o] !== undefined) oordeel[o]++;
+        waarn.totaal++;
+        if (/lgemeen/.test(r.soort || "")) waarn.Algemeen++; else if (r.soort === "TRA") waarn.TRA++;
+        const k = r.classificatie || "—"; (klasse[k] = klasse[k] || { Afwijking: 0, Verbeterpunt: 0, Conform: 0, tot: 0});
+        if (oordeel[o] !== undefined && klasse[k][o] !== undefined) klasse[k][o]++; klasse[k].tot++;
+        const m = (r.datum || "").slice(0, 7); mset.add(m); (om[m] = om[m] || {}); om[m][o] = (om[m][o] || 0) + 1; wset.add(r.wpi);
+      });
+      return { oordeel, waarn, klasse, om, maanden: [...mset].sort(), n_wpi: wset.size };
+    },
+    setFilter(k, val) { this.dashFilter[k] = this.dashFilter[k] === val ? "" : val; this.route(); },
     view_dashboard() {
-      const c = this.data.cijfers, w = c.waarnemingen;
-      const pct = Math.round(100 * c.oordeel.Conform / w.totaal);
+      const c = this.data.cijfers, D = this.computeDash(), f = this.dashFilter;
+      const w = D.waarn, pct = w.totaal ? Math.round(100 * D.oordeel.Conform / w.totaal) : 0;
+      const progPct = Math.round(100 * c.vp_x / c.vp_y), progDoel = 90;
       const v = $("view");
+      const prods = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.product))].sort();
+      const locs = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.locatie))].sort();
+      const sel = (k, opts, lab) => `<select onchange="App.setFilter('${k}',this.value)" style="height:38px;border-radius:12px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 10px;font-size:13px;font-weight:600;background:#fff;color:${f[k] ? "var(--ink)" : "var(--soft)"}">
+        <option value=""${f[k] ? "" : " selected"}>${lab}</option>${opts.map((o) => `<option value="${esc(o.v)}"${f[k] === o.v ? " selected" : ""}>${esc(o.l)}</option>`).join("")}</select>`;
       v.appendChild(el(`<div><div class="kicker">Trendanalyse · mei–nov 2026 · peildatum 11-11-2026</div><h1>Dashboard</h1></div>`));
-      v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Tik op een tegel of staaf voor de achterliggende regels.</div>`));
+      v.appendChild(el(`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        ${sel("product", prods.map((p) => ({ v: p, l: p })), "Alle producten")}
+        ${sel("locatie", locs.map((p) => ({ v: p, l: p })), "Alle locaties")}
+        ${sel("periode", [{ v: "Q2", l: "Q2 (mei–jun)" }, { v: "Q3", l: "Q3 (jul–sep)" }, { v: "Q4", l: "Q4 (okt–nov)" }], "Hele periode")}
+        ${f.klasse ? `<button class="chip" onclick="App.setFilter('klasse','${esc(f.klasse).replace(/'/g, "\\'")}')" style="box-shadow:inset 0 0 0 1px var(--line)">klasse: ${esc(f.klasse)} ×</button>` : ""}
+      </div>`));
+      v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Filters werken op waarnemingen en oordelen. Tik op een tegel, staaf of klasse voor detail / kruis-filter.</div>`));
       v.appendChild(el(`<div class="grid kpis">
-        ${this.tile("sage", pct + "%", "Conform", c.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")}
+        ${this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")}
         ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
-        ${this.tile("blush", c.vp_mis.length, "Programma gemist", c.vp_x + " van " + c.vp_y, "App.drill('programma')")}
-        ${this.tile("butter", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
-        ${this.tile("lilac", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
+        ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, "App.drill('programma')")}
+        ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
+        ${this.tile("lilac", D.n_wpi, "Inspecties", f.product || f.locatie || f.periode ? "in selectie" : c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
       </div>`));
       const chartCard = el(`<div class="grid" style="grid-template-columns:1fr;gap:14px;margin-top:14px"></div>`);
-      chartCard.appendChild(el(`<div class="card"><h3>Oordelen per maand</h3>${this.chartOordeel()}
+      chartCard.appendChild(el(`<div class="card"><h3>Oordelen per maand</h3>${this.chartOordeel(D.maanden, D.om)}
         <div class="legend"><span><i style="background:var(--green)"></i>Conform</span><span><i style="background:var(--amber)"></i>Verbeterpunt</span><span><i style="background:var(--red)"></i>Afwijking</span></div></div>`));
-      chartCard.appendChild(el(`<div class="card"><h3>Verplichte WPI’s per maand</h3>${this.chartProg()}
+      chartCard.appendChild(el(`<div class="card"><h3>Verplichte WPI’s per maand <span class="muted" style="font-size:12px;font-weight:500">· hele periode</span></h3>${this.chartProg()}
         <div class="legend"><span><i style="background:var(--green)"></i>Uitgevoerd</span><span><i style="background:var(--red)"></i>Gemist</span><span><i style="background:var(--grey)"></i>Loopt nog</span></div></div>`));
-      chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars()}</div>`));
+      chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars(D.klasse)}
+        <div class="muted" style="font-size:12px;margin-top:8px">Tik een klasse om alles erop te filteren.</div></div>`));
       v.appendChild(chartCard);
     },
-    chartOordeel() {
-      const c = this.data.cijfers, mnd = c.maanden, om = c.oordeel_maand;
+    chartOordeel(mnd, om) {
+      const c = this.data.cijfers;
       const tot = mnd.map((m) => Object.values(om[m] || {}).reduce((a, b) => a + b, 0));
       const mx = Math.max(...tot, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
       const col = { Conform: "#1E7A4C", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
@@ -331,11 +369,12 @@
       });
       return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
     },
-    klasseBars() {
-      const kg = this.data.cijfers.klasse_gezien;
+    klasseBars(kg) {
+      kg = kg || this.data.cijfers.klasse_gezien;
       const rows = Object.entries(kg).map(([k, v]) => [k, v.Afwijking || 0, v.Verbeterpunt || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2])).slice(0, 7);
+      if (!rows.length) return `<div class="muted" style="font-size:13px">Geen afwijkingen of verbeterpunten in deze selectie.</div>`;
       const mx = Math.max(...rows.map((r) => r[1] + r[2]), 1);
-      return rows.map(([k, a, vv]) => `<div onclick="App.drill('klasse','${esc(k).replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:12px;margin:9px 0;cursor:pointer">
+      return rows.map(([k, a, vv]) => `<div onclick="App.setFilter('klasse','${esc(k).replace(/'/g, "\\'")}')" style="display:flex;align-items:center;gap:12px;margin:9px 0;cursor:pointer">
         <div style="width:190px;font-size:13px;font-weight:500;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</div>
         <div style="flex:1;display:flex;align-items:center;height:16px">
           <div style="width:${(a / mx * 100).toFixed(1)}%;height:16px;background:var(--red);border-radius:3px 0 0 3px"></div>
