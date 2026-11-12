@@ -18,6 +18,7 @@
     mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
     warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
     doc: '<path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+    cal: '<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   };
@@ -30,8 +31,8 @@
     open() {
       if (this._db) return Promise.resolve(this._db);
       return new Promise((res, rej) => {
-        const r = indexedDB.open("wpi", 2);
-        r.onupgradeneeded = () => { ["inspecties", "acties", "concept"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
+        const r = indexedDB.open("wpi", 3);
+        r.onupgradeneeded = () => { ["inspecties", "acties", "concept", "planning"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
         r.onsuccess = () => { this._db = r.result; res(this._db); };
         r.onerror = () => rej(r.error);
       });
@@ -69,6 +70,7 @@
   // Welke tabs mag welke rol zien
   const TABS = [
     { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "inspecteur"] },
+    { id: "planning", lab: "Planning", ic: "cal", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"], web: true },   // alleen webversie (computer)
@@ -166,7 +168,7 @@
       this.route();
     },
 
-    async login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
+    async login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.planning = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
     logout() { this.stopMic(); this.user = null; this.state.inspectie = null; this.acties = null; this.actFilter = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
 
     // ---- weergave: veldmodus (grote knoppen) en zonmodus (hoog contrast) ----
@@ -298,6 +300,90 @@
     closeModal() { $("ov").classList.remove("on"); },
 
     // ---------------- VANDAAG ----------------
+    // ---------------- PLANNING ----------------
+    planning: null,
+    productNaam(code) { return ((this.data.kennisbank || {})[code] || {}).naam || code || "–"; },
+    async laadPlanning() {
+      if (this.planning) return this.planning;
+      let p = []; try { p = await DB.getAll("planning"); } catch (e) {}
+      if (!p.length && !localStorage.getItem("wpi_demo_plan")) {
+        const d = this.demoPlanning(); try { for (const x of d) await DB.put("planning", x); localStorage.setItem("wpi_demo_plan", "1"); } catch (e) {}
+        p = d;
+      }
+      this.planning = p; return p;
+    },
+    demoPlanning() {
+      const b = (o) => Object.assign({ demo: true, status: "gepland", toelichting: "" }, o);
+      return [
+        b({ id: "PL-demo1", datum: plusDagen(0), code: "DAM", project: "P26-168", locatie: "RWZI Voorbeeldstad", inspecteur: "u-insp", monteurs: 2 }),
+        b({ id: "PL-demo2", datum: plusDagen(0), code: "POM", project: "P26-171", locatie: "Gemaal De Hoek", inspecteur: "u-winfred", monteurs: 3 }),
+        b({ id: "PL-demo3", datum: plusDagen(1), code: "ROO", project: "P26-175", locatie: "RWZI Oostdijk", inspecteur: "u-douwe", monteurs: 2 }),
+        b({ id: "PL-demo4", datum: plusDagen(5), code: "IDV", project: "P26-180", locatie: "Gemaal Noordpolder", inspecteur: "u-winfred", monteurs: 4 }),
+        b({ id: "PL-demo5", datum: plusDagen(8), code: "BAN", project: "P26-182", locatie: "RWZI Voorbeeldstad", inspecteur: "u-bjorn", monteurs: 2 }),
+        b({ id: "PL-demo6", datum: plusDagen(-3), code: "ROO", project: "P26-166", locatie: "RWZI Westerkwartier", inspecteur: "u-douwe", monteurs: 2 }),
+      ];
+    },
+    startGepland(id) {
+      const p = (this.planning || []).find((x) => x.id === id); if (!p) return;
+      this.startInspectie(p.code, p.project || "", this.productNaam(p.code) + (p.locatie ? " · " + p.locatie : ""), false, p.id);
+    },
+    planForm(id) {
+      const p = id ? (this.planning || []).find((x) => x.id === id) : null, kb = this.data.kennisbank;
+      const prod = Object.keys(kb).sort((a, b) => kb[a].naam.localeCompare(kb[b].naam)).map((c) => `<option value="${c}"${p && p.code === c ? " selected" : ""}>${esc(kb[c].naam)}</option>`).join("");
+      const mens = USERS.map((u) => `<option value="${u.id}"${(p ? p.inspecteur : this.user.id) === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
+      const snel = [[0, "Vandaag"], [1, "Morgen"], [7, "Over een week"]].map(([n, l]) => `<button class="chipb" onclick="document.getElementById('pl-datum').value='${plusDagen(n)}'">${l}</button>`).join("");
+      this.openModal(p ? "Inspectie wijzigen" : "Inspectie inplannen", "Wie inspecteert wat, waar en wanneer.",
+        `${veld("Product", `<select id="pl-code" class="fin"><option value="">Kies…</option>${prod}</select>`)}
+         <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div>${veld("Project", `<input id="pl-project" class="fin" placeholder="P26-…" value="${esc(p ? p.project : "")}">`)}</div>
+           <div>${veld("Monteurs", `<input id="pl-mont" class="fin" type="number" min="0" placeholder="aantal" value="${p && p.monteurs ? p.monteurs : ""}">`)}</div></div>
+         ${veld("Locatie", `<input id="pl-loc" class="fin" placeholder="Bijv. RWZI Voorbeeldstad" value="${esc(p ? p.locatie : "")}">`)}
+         ${veld("Datum", `<input id="pl-datum" type="date" class="fin" value="${p ? p.datum : plusDagen(1)}"><div class="chips" style="margin-top:8px">${snel}</div>`)}
+         ${veld("Inspecteur", `<select id="pl-insp" class="fin">${mens}</select>`)}
+         ${veld("Toelichting (optioneel)", `<textarea id="pl-toel" class="fin" rows="2" placeholder="Bijv. let op hijswerk met mobiele kraan">${esc(p ? p.toelichting : "")}</textarea>`)}
+         <div id="ai-fout" class="fout"></div>
+         <button class="btn primary" style="margin-top:8px" onclick="App.bewaarPlan(${p ? `'${p.id}'` : "null"})">${p ? "Opslaan" : "Inplannen"}</button>
+         ${p ? `<button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.verwijderPlan('${p.id}')">Uit de planning halen</button>` : ""}`);
+    },
+    async bewaarPlan(id) {
+      const code = $("pl-code").value, datum = $("pl-datum").value, insp = $("pl-insp").value;
+      if (!code) return this.fout("Kies een product.");
+      if (!datum) return this.fout("Kies een datum.");
+      await this.laadPlanning();
+      let p = id ? this.planning.find((x) => x.id === id) : null;
+      if (!p) { p = { id: "PL-" + Date.now(), status: "gepland", gemaakt_door: this.user.id }; this.planning.push(p); }
+      Object.assign(p, { code, datum, inspecteur: insp, project: $("pl-project").value.trim(), locatie: $("pl-loc").value.trim(), monteurs: +$("pl-mont").value || null, toelichting: $("pl-toel").value.trim() });
+      try { await DB.put("planning", p); } catch (e) { return this.fout("Opslaan op dit toestel mislukt."); }
+      tril(30); this.closeModal();
+      this.toast = `Ingepland: ${this.productNaam(code)} · ${dagLabel(datum)} · ${naam(insp)}`; this.route();
+    },
+    async verwijderPlan(id) { this.planning = this.planning.filter((x) => x.id !== id); try { await DB.del("planning", id); } catch (e) {} this.closeModal(); this.route(); },
+    async view_planning() {
+      await this.laadPlanning();
+      const v = $("view"), vandaag = isoDag(new Date()), me = this.user.id, P = this.planning;
+      const zicht = staf() ? P : P.filter((p) => p.inspecteur === me);
+      v.appendChild(el(`<div><div class="hi">${staf() ? "Inspectieprogramma van het team" : "Jouw inspecties"}</div><h1 class="groot">Planning</h1></div>`));
+      if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); this.toast = null; }
+      v.appendChild(el(`<button class="btn primary" style="margin-bottom:16px" onclick="App.planForm()">${svg("plus", 18)} Inspectie inplannen</button>`));
+      const g = (l, lijst, warm) => lijst.length ? `<h2 class="${warm ? "warmkop" : ""}">${l} <span class="s">${lijst.length}</span></h2><div class="pkaarten">${lijst.map((p) => this.planKaart(p, vandaag)).join("")}</div>` : "";
+      const gp = zicht.filter((p) => p.status === "gepland").sort((a, b) => a.datum.localeCompare(b.datum));
+      const html = g("Nog niet gedaan", gp.filter((p) => p.datum < vandaag), true) + g("Vandaag", gp.filter((p) => p.datum === vandaag))
+        + g("Komende 7 dagen", gp.filter((p) => p.datum > vandaag && dagenTot(p.datum) <= 7)) + g("Later", gp.filter((p) => dagenTot(p.datum) > 7))
+        + (zicht.some((p) => p.status === "uitgevoerd") ? g("Uitgevoerd", zicht.filter((p) => p.status === "uitgevoerd").sort((a, b) => b.datum.localeCompare(a.datum)).slice(0, 6)) : "");
+      v.appendChild(el(`<div>${html || `<div class="leeg"><span class="bol">📅</span><div class="t">Nog niets ingepland</div><div class="s">Tik op “Inspectie inplannen”.</div></div>`}</div>`));
+    },
+    planKaart(p, vandaag) {
+      const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum), u = USERS.find((x) => x.id === p.inspecteur);
+      const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
+      return `<div class="pkaart"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}
+          ${p.status === "gepland" ? `<button class="wijzig" onclick="App.planForm('${p.id}')" aria-label="Wijzigen">Wijzig</button>` : ""}</div>
+        <div class="titel">${esc(this.productNaam(p.code))}</div>
+        <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + p.monteurs + " monteurs" : ""}</div>
+        ${p.toelichting ? `<div class="s" style="margin-top:4px">“${esc(p.toelichting)}”</div>` : ""}
+        <div class="onder"><span class="mini-av">${u ? esc(u.full_name[0]) : "?"}</span><span>${u ? esc(u.full_name) : "–"}</span>
+          ${magStarten ? `<button class="btn primary sm" style="margin-left:auto" onclick="App.startGepland('${p.id}')">Start</button>` : ""}
+          ${p.status === "uitgevoerd" && p.inspectie_id ? `<a class="s" style="margin-left:auto;color:var(--accent);font-weight:800" href="#/rapport/${p.inspectie_id}">Rapport ›</a>` : ""}</div></div>`;
+    },
     view_alleenweb() {
       $("view").appendChild(el(`<div class="leeg" style="margin-top:40px"><span class="bol">💻</span><h1 style="margin:14px 0 6px">Alleen op de computer</h1>
         <div class="s" style="max-width:300px;margin:0 auto">Het dashboard, de trendanalyse en de rapportages open je in de webversie op je computer.</div>
@@ -307,15 +393,24 @@
       const v = $("view"), vn = this.user.full_name.split(" ")[0], u = new Date().getHours();
       const groet = u < 12 ? "Goedemorgen" : u < 18 ? "Goedemiddag" : "Goedenavond";
       const lo = this.state.inspectie;
-      v.appendChild(el(`<div><div class="hi">${groet} ${esc(vn)} 👋</div><h1 class="groot">${lo ? "Je inspectie<br>loopt nog" : "Eén inspectie<br>op de planning"}</h1></div>`));
+      const kop = el(`<div><div class="hi">${groet} ${esc(vn)} 👋</div><h1 class="groot">${lo ? "Je inspectie<br>loopt nog" : "&nbsp;"}</h1></div>`); v.appendChild(kop);
       if (lo) {
         const n = lo.waarnemingen.length;
         v.appendChild(el(`<div class="hero paars"><div class="k">Bezig · ${n} waarneming${n === 1 ? "" : "en"}</div><div class="t">${esc(lo.titel.split(" · ")[0])}</div>
           <div class="s">${esc(lo.titel.split(" · ").slice(1).join(" · ") || "")}${lo.taak ? " · " + esc(lo.taak) : ""}</div>
           <button class="btn primary" onclick="App.goIns()">Verder met de inspectie</button></div>`));
       }
-      v.appendChild(el(`<div class="hero${lo ? " klein" : ""}"><div class="k">Vandaag · P26-168</div><div class="t">Damwand</div><div class="s">RWZI Voorbeeldstad · 2 monteurs</div>
-        <button class="btn primary" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">Start inspectie</button></div>`));
+      const plan = el(`<div></div>`); v.appendChild(plan);
+      this.laadPlanning().then(() => {
+        if (!document.body.contains(plan)) return;
+        const vandaag = isoDag(new Date()), mijn = this.planning.filter((p) => p.inspecteur === this.user.id && p.status === "gepland" && p.datum <= vandaag).sort((a, b) => a.datum.localeCompare(b.datum));
+        if (!lo) kop.querySelector("h1").innerHTML = mijn.length === 1 ? "Eén inspectie<br>op de planning" : mijn.length ? mijn.length + " inspecties<br>op de planning" : "Niets gepland<br>voor vandaag";
+        plan.innerHTML = mijn.map((p) => `<div class="hero${lo ? " klein" : ""}"><div class="k">${p.datum < vandaag ? "Nog te doen · gepland " + dagLabel(p.datum) : "Vandaag"} · ${esc(p.project || "")}</div>
+            <div class="t">${esc(this.productNaam(p.code))}</div><div class="s">${esc(p.locatie || "")}${p.monteurs ? " · " + p.monteurs + " monteurs" : ""}</div>
+            <button class="btn primary" onclick="App.startGepland('${p.id}')">Start inspectie</button></div>`).join("")
+          + (mijn.length ? "" : `<div class="hero rustig"><div class="k">Vandaag</div><div class="t">Geen inspectie gepland</div><div class="s">Plan er een in, of start er spontaan een.</div></div>`)
+          + `<button class="btn ghost plannen" onclick="App.planForm()">${svg("cal", 20)} Inspectie inplannen</button>`;
+      });
       const act = el(`<div id="mijnact"></div>`); v.appendChild(act);
       this.laadActies().then(() => {
         if (!document.body.contains(act)) return;
@@ -351,17 +446,17 @@
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
     // Koppeling aan een TRA-regel is altijd een Voorstel; het oordeel kiest alleen de inspecteur.
-    startInspectie(code, project, titel, zeker) {
+    startInspectie(code, project, titel, zeker, planId) {
       const lo = this.state.inspectie;
       if (lo && !zeker && (lo.waarnemingen.length || lo.taken.length)) {
         return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + " waarneming(en)",
           `<button class="btn primary" onclick="App.closeModal();App.goIns()">Verder met de lopende inspectie</button>
-           <button class="btn danger" style="margin-top:10px;width:100%" onclick='App.closeModal();App.startInspectie(${esc(JSON.stringify(code))},${esc(JSON.stringify(project))},${esc(JSON.stringify(titel))},true)'>Lopende weggooien en nieuw starten</button>`);
+           <button class="btn danger" style="margin-top:10px;width:100%" onclick='App.closeModal();App.startInspectie(${esc(JSON.stringify(code))},${esc(JSON.stringify(project))},${esc(JSON.stringify(titel))},true,${esc(JSON.stringify(planId || null))})'>Lopende weggooien en nieuw starten</button>`);
       }
       this.stopMic();
       this.state.inspectie = { code, project, titel, taak: null, taken: [], stap: "taak", taakTekst: "",
         waarnemingen: [], cur: null, voorstel: null, laatste: null, gesprek: "", positief: "", handtekening: null,
-        keuzes: [], start: new Date().toISOString() };
+        keuzes: [], plan_id: planId || null, start: new Date().toISOString() };
       this._opslag = null;
       this.goIns();
     },
@@ -902,6 +997,7 @@
       try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }
       if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary" onclick="App.closeModal();App.bewaarInspectie(true)">Opnieuw proberen</button>`);
       this.acties = null;
+      if (ins.plan_id) { await this.laadPlanning(); const pl = this.planning.find((x) => x.id === ins.plan_id); if (pl) { pl.status = "uitgevoerd"; pl.inspectie_id = rec.id; try { await DB.put("planning", pl); } catch (e) {} } }
       this.state.inspectie = null; this.bewaarConcept(true); tril([30, 50, 30]);
       const nv = nieuw.filter((a) => a.status === "Voorstel").length;
       this.openModal("Vastgelegd", "Veilig bewaard op dit toestel (cloud-opslag volgt met de backend).",
