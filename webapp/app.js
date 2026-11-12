@@ -1051,7 +1051,7 @@
       const laat = M.filter((m) => m.soort === "laat"), al = $("alert");
       if (al) {
         al.classList.toggle("hidden", !laat.length || this._page === "inspectie");
-        al.innerHTML = laat.length ? `${svg("warn", 20)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum${laat.length === 1 ? ": " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 60)) : ""}</span><b>Bekijk ›</b>` : "";
+        al.innerHTML = laat.length ? `${svg("warn", 16)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum${laat.length === 1 ? ": " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 60)) : ""}</span><b>Bekijk ›</b>` : "";
       }
       // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
       let nieuw = false;
