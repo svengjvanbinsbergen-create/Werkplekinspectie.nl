@@ -381,8 +381,11 @@ def alles_ok(top, text, meta):
 # ======================= P04 toetsen: kaarten van de taak, alleen aantikken wat je ziet =======================
 def in_orde_btn(wat=''):
     """Snelle route: één tik legt [C] vast met waarneming 'gezien: in orde' (Jij); toast biedt ongedaan maken."""
-    return (f'<button aria-label="Gezien, in orde{(": " + wat) if wat else ""}" style="height:44px;padding:0 12px;border-radius:999px;background:#fff;'
-            f'box-shadow:inset 0 0 0 1px #C9CED6;font-size:14px;font-weight:600;color:{INK};white-space:nowrap">Gezien · in orde</button>')
+    # neutraal-grijze getinte pil — zelfde familie als oc(), geen witte omlijning
+    return (f'<button aria-label="Gezien, in orde{(": " + wat) if wat else ""}" style="height:44px;padding:0 12px;border-radius:999px;'
+            f'background:#F3F4F6;border:0;display:inline-flex;align-items:center;gap:6px;'
+            f'font-size:14px;font-weight:600;color:#4A5565;white-space:nowrap">'
+            f'{ico("check", 16, 2.4)}Gezien · in orde</button>')
 
 
 def toast(top, tekst):
@@ -394,14 +397,16 @@ def toast(top, tekst):
 
 
 def bevestigd_inline():
-    # Rustige inline bevestiging ín de kaart; geen zwevende toast (besluit 1).
-    return (f'<div role="status" style="height:44px;border-radius:18px;background:#fff;'
-            f'box-shadow:inset 0 0 0 1px {LINE};display:flex;flex-direction:column;justify-content:center;'
-            f'gap:1px;padding:0 10px;overflow:hidden">'
+    # Inline bevestiging in de conform-familie: zachte groene tint i.p.v. witte omlijning.
+    bg = OORD["C"][2]
+    fg = OORD["C"][1]
+    return (f'<div role="status" style="height:44px;border-radius:16px;background:{bg};'
+            f'display:flex;flex-direction:column;justify-content:center;'
+            f'gap:1px;padding:0 12px;overflow:hidden">'
             f'<div style="display:flex;align-items:center;gap:6px;min-width:0">'
             f'<span aria-hidden="true" style="width:16px;height:16px;border-radius:999px;flex:0 0 auto;'
-            f'background:conic-gradient({OORD["C"][1]} 0 75%, {LINE} 75% 100%);display:grid;place-items:center">'
-            f'<span style="width:10px;height:10px;border-radius:999px;background:#fff;display:grid;place-items:center;color:{OORD["C"][1]}">'
+            f'background:conic-gradient({fg} 0 75%, rgba(0,0,0,0.12) 75% 100%);display:grid;place-items:center">'
+            f'<span style="width:10px;height:10px;border-radius:999px;background:{bg};display:grid;place-items:center;color:{fg}">'
             f'{ico("check", 8, 2.6)}</span></span>'
             f'<span style="font-size:13px;font-weight:600;color:{INK};white-space:nowrap">Vastgelegd</span>'
             f'<span style="font-size:12px;color:{SOFT};white-space:nowrap">· 3 s</span>'
@@ -414,12 +419,12 @@ def bevestigd_inline():
 
 def rtile(ref, naam, st=None, open_punt='', bevestigd=False):
     # Zelfde kaarthoogte/breedte; alleen de onderste 44px-staat wisselt.
+    # open_punt wordt niet meer op de toetskaart getoond (rode actieverwijzing eraf, ronde 6)
     onder = bevestigd_inline() if bevestigd else (oc(st, 28) if st else in_orde_btn(naam))
-    op = (f'<div style="display:flex;align-items:center;gap:4px;font-size:14px;line-height:18px;color:{RED};font-weight:500;margin-top:4px;white-space:nowrap">{ico("clock", 16)}{open_punt}</div>' if open_punt else '')
     # hele kaart is het tikvlak naar de sheet; de snelle knop ligt erboven
     return (f'<div style="position:relative;border-radius:18px;background:{TINT};padding:6px 8px 6px 10px;display:flex;flex-direction:column;gap:4px">'
             f'<a aria-label="{ref} {naam} openen" style="position:absolute;inset:0;border-radius:18px"></a>'
-            f'<div style="min-height:36px"><div style="font-size:15px;font-weight:600;line-height:18px">{naam}</div>{op}</div>'
+            f'<div style="min-height:36px"><div style="font-size:15px;font-weight:600;line-height:18px">{naam}</div></div>'
             f'<div style="height:44px;display:flex;align-items:center;position:relative">{onder}</div></div>')
 
 

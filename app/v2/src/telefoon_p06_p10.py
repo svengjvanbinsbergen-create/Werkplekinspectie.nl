@@ -208,8 +208,9 @@ def p07d_body():
     rijen = (rij('person', 'Actiehouder', 'Coördinator 2', standaard_chip() + chev)
              + rij('cal', 'Termijn · kort', 'do 19 nov', standaard_chip() + chev)
              + rij('shield', 'Toetser', 'Hoofd S&amp;M', standaard_chip() + chev, True))
+    # Besluit 1/ronde 6: Voorstel-bevestigen uniform via de "Overnemen"-pil (zoals P07), niet een los rond vinkje.
     tp = (f'<div style="padding:8px 16px 12px;background:{P["lilac"][0]};border-radius:22px">'
-          f'<div style="display:flex;align-items:center;gap:8px">{label("Voorstel", "ai")}<span style="font-size:14px;color:{SOFT};flex:1">uit jouw transcript</span>{okknop("Maatregel ter plaatse bevestigen")}</div>'
+          f'<div style="display:flex;align-items:center;gap:8px">{label("Voorstel", "ai")}<span style="flex:1"></span>{okknop("Maatregel ter plaatse overnemen", "Overnemen")}</div>'
           f'<div style="font-size:16px;line-height:1.4;margin-top:4px">{MAATREGEL}</div></div>')
     return f'''
 {head(round_btn('back', label='Terug'))}
