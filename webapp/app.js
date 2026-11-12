@@ -907,7 +907,8 @@
         <button class="btn primary" style="margin-top:14px" onclick="App.stap('meer')">Klaar met de onderwerpen</button></div>`));
     },
     // ---- monteurs bij de inspectie (alleen naam; voor koppeling en filter, nooit voor een score per persoon) ----
-    MONTEURS_DEMO: ["Henk de Vries", "Pieter Bakker", "Sander Mulder", "Kees Visser", "Ruben Smit", "Tom Meijer", "Jelle Bos", "Arjen Dijkstra"],
+    // tijdelijke nepnamen; de echte monteurslijst vult Sven later zelf in
+    MONTEURS_DEMO: ["Henk Voorbeeld", "Pieter Proef", "Sander Test", "Kees Demo", "Ruben Fictief"],
     monteursLijst() { try { const l = JSON.parse(localStorage.getItem("wpi_monteurs") || "null"); if (Array.isArray(l) && l.length) return l; } catch (e) {} return this.MONTEURS_DEMO.slice(); },
     bewaarMonteursLijst(l) { try { localStorage.setItem("wpi_monteurs", JSON.stringify(l)); } catch (e) {} },
     togMonteur(n) { const ins = this.state.inspectie; ins.monteurs = ins.monteurs || []; ins.monteurs = ins.monteurs.includes(n) ? ins.monteurs.filter((x) => x !== n) : ins.monteurs.concat([n]); tril(15); this.route(); },
