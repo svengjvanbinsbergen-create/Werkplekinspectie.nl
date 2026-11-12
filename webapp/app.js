@@ -20,28 +20,51 @@
   };
   const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
 
-  const TABS = [
-    { id: "vandaag", lab: "Vandaag", ic: "home" },
-    { id: "inspecties", lab: "Inspecties", ic: "list" },
-    { id: "acties", lab: "Acties", ic: "list" },
-    { id: "dashboard", lab: "Dashboard", ic: "chart" },
+  // Demo-gebruikers (spiegelt supabase/seed.sql; later te vervangen door Supabase Auth)
+  const USERS = [
+    { id: "u-bjorn", full_name: "Björn Sloos", role: "hoofd", functie: "Hoofd Service & Montage" },
+    { id: "u-winfred", full_name: "Winfred Loerts", role: "coordinator", functie: "Montage Coördinator" },
+    { id: "u-douwe", full_name: "Douwe de Boer", role: "coordinator", functie: "Montage Coördinator" },
+    { id: "u-insp", full_name: "Inspecteur (demo)", role: "inspecteur", functie: "Inspecteur op locatie" },
   ];
+  const ROL = { hoofd: "Hoofd S&M", coordinator: "Coördinator", inspecteur: "Inspecteur" };
+  // Welke tabs mag welke rol zien
+  const TABS = [
+    { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "inspecteur"] },
+    { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
+    { id: "acties", lab: "Acties", ic: "list", rollen: ["hoofd", "coordinator"] },
+    { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"] },
+  ];
+  const staf = () => App.user && (App.user.role === "hoofd" || App.user.role === "coordinator");
 
   const App = {
-    data: {}, state: { inspectie: null, extra: [] },
+    data: {}, state: { inspectie: null, extra: [] }, user: null,
 
     async boot() {
       const names = ["cijfers", "kennisbank", "voorbeelddata", "trendacties"];
       const got = await Promise.all(names.map((n) => fetch("data/" + n + ".json").then((r) => r.json())));
       names.forEach((n, i) => (this.data[n] = got[i]));
+      try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
       window.addEventListener("hashchange", () => this.route());
       this.route();
     },
 
+    login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.go("vandaag"); this.route(); },
+    logout() { this.user = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
+    renderAcct() {
+      if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
+      $("acct").innerHTML = `<button class="chip" onclick="App.logout()" title="Uitloggen">${esc(this.user.full_name.split(" ")[0])} · ${ROL[this.user.role]} ×</button>`;
+    },
+
     go(h) { location.hash = "#/" + h; },
     route() {
-      const parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
-      const page = parts[0];
+      this.renderAcct();
+      if (!this.user) { $("tabbar").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
+      $("tabbar").classList.remove("hidden");
+      let parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
+      let page = parts[0];
+      const tab = TABS.find((t) => t.id === page);
+      if (tab && !tab.rollen.includes(this.user.role)) { return this.go("vandaag"); }  // geen toegang
       this.renderTabs(page);
       const fn = this["view_" + page];
       $("view").innerHTML = "";
@@ -50,8 +73,20 @@
       window.scrollTo(0, 0);
     },
     renderTabs(active) {
-      $("tabbar").innerHTML = TABS.map((t) =>
+      $("tabbar").innerHTML = TABS.filter((t) => t.rollen.includes(this.user.role)).map((t) =>
         `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
+    },
+
+    view_login() {
+      const v = $("view");
+      v.appendChild(el(`<div style="padding:30px 0 10px"><div class="kicker">Werkplekinspectie · Noardling</div><h1>Inloggen</h1>
+        <div class="muted" style="margin-top:-8px;margin-bottom:8px">Kies je account. (Voorbeeld-login; later Supabase Auth.)</div></div>`));
+      v.appendChild(el(`<div class="listcard">${USERS.map((u) =>
+        `<div class="row" style="cursor:pointer" onclick="App.login('${u.id}')">
+          <span style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
+          <span class="grow"><span class="t">${esc(u.full_name)}</span><div class="s">${esc(u.functie)} · ${ROL[u.role]}</div></span>
+          <span class="s">${svg("chev", 18)}</span></div>`).join("")}</div>`));
+      v.appendChild(el(`<div class="muted" style="font-size:12px;margin-top:16px">Rollen bepalen wat je ziet: een inspecteur start en ziet eigen inspecties; een coördinator en het Hoofd S&amp;M zien alles, acties en het dashboard.</div>`));
     },
 
     tile(cls, n, lab, sub, onclick) {
@@ -72,12 +107,21 @@
     view_vandaag() {
       const c = this.data.cijfers;
       const v = $("view");
-      v.appendChild(el(`<div><div class="kicker">Woensdag 11 november 2026 · Service &amp; Montage</div><h1>Vandaag</h1></div>`));
-      v.appendChild(el(`<div class="grid kpis">
-        ${this.tile("sage", c.vp_x + " / " + c.vp_y, "Per werkplek", c.vp_mis.length + " gemist", "App.go('dashboard')")}
-        ${this.tile("sky", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.go('inspecties')")}
-        ${this.tile("blush", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.go('acties')")}
-      </div>`));
+      const vn = this.user.full_name.split(" ")[0];
+      v.appendChild(el(`<div><div class="kicker">Woensdag 11 november 2026 · ${esc(ROL[this.user.role])}</div><h1>Hallo ${esc(vn)}</h1></div>`));
+      if (staf()) {
+        v.appendChild(el(`<div class="grid kpis">
+          ${this.tile("sage", c.vp_x + " / " + c.vp_y, "Per werkplek", c.vp_mis.length + " gemist", "App.go('dashboard')")}
+          ${this.tile("sky", c.n_wpi, "Inspecties", c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.go('inspecties')")}
+          ${this.tile("blush", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.go('acties')")}
+        </div>`));
+      } else {
+        const eigen = this.state.extra.length;
+        v.appendChild(el(`<div class="grid kpis">
+          ${this.tile("sky", eigen, "Mijn inspecties", eigen ? "vandaag vastgelegd" : "nog geen vandaag", "App.go('inspecties')")}
+          ${this.tile("sage", "1", "Ingepland", "Damwand · P26-168")}
+        </div>`));
+      }
       v.appendChild(el(`<h2>Ingepland vandaag</h2>`));
       const card = el(`<div class="card"><div class="row" style="border:0">
         <div class="grow"><div class="s">P26-168 · RWZI Voorbeeldstad · 2 monteurs</div><div class="t" style="font-size:19px;margin-top:2px">Damwand</div></div>
@@ -185,8 +229,13 @@
     view_inspecties() {
       const wpis = this.data.voorbeelddata.wpis || [];
       const v = $("view");
-      v.appendChild(el(`<div><div class="kicker">${wpis.length} inspecties · mei–nov 2026</div><h1>Inspecties</h1></div>`));
-      const extra = this.state.extra.map((e) => `<div class="row"><span class="grow"><span class="t">${esc(e.titel)}</span><div class="s">Zojuist · taak ${esc(e.taak)}</div></span><span class="badge b-done">Nieuw</span></div>`).join("");
+      const extra = this.state.extra.map((e) => `<div class="row"><span class="grow"><span class="t">${esc(e.titel)}</span><div class="s">Zojuist · taak ${esc(e.taak)} · ${esc(this.user.full_name.split(" ")[0])}</div></span><span class="badge b-done">Nieuw</span></div>`).join("");
+      if (!staf()) {
+        v.appendChild(el(`<div><div class="kicker">Jouw inspecties</div><h1>Inspecties</h1></div>`));
+        v.appendChild(el(`<div class="listcard">${extra || `<div class="row"><span class="grow s">Nog geen eigen inspecties. Start er een via Vandaag.</span></div>`}</div>`));
+        return;
+      }
+      v.appendChild(el(`<div><div class="kicker">${wpis.length} inspecties · alle inspecteurs · mei–nov 2026</div><h1>Inspecties</h1></div>`));
       const rows = wpis.slice().reverse().map((w) => {
         const dam = (w.nr || "").split("-")[1] || "";
         return `<div class="row"><span class="grow"><span class="t">${esc(w.product || w.nr)}</span><div class="s">${esc(w.nr)} · ${esc(w.ingang || "")}</div></span><span class="s">${dam ? dam.slice(6, 8) + "-" + dam.slice(4, 6) : ""}</span></div>`;
