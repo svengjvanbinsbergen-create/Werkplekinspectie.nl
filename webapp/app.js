@@ -906,8 +906,25 @@
         }).join("")}
         <button class="btn primary" style="margin-top:14px" onclick="App.stap('meer')">Klaar met de onderwerpen</button></div>`));
     },
+    // ---- monteurs bij de inspectie (alleen naam; voor koppeling en filter, nooit voor een score per persoon) ----
+    MONTEURS_DEMO: ["Henk de Vries", "Pieter Bakker", "Sander Mulder", "Kees Visser", "Ruben Smit", "Tom Meijer", "Jelle Bos", "Arjen Dijkstra"],
+    monteursLijst() { try { const l = JSON.parse(localStorage.getItem("wpi_monteurs") || "null"); if (Array.isArray(l) && l.length) return l; } catch (e) {} return this.MONTEURS_DEMO.slice(); },
+    bewaarMonteursLijst(l) { try { localStorage.setItem("wpi_monteurs", JSON.stringify(l)); } catch (e) {} },
+    togMonteur(n) { const ins = this.state.inspectie; ins.monteurs = ins.monteurs || []; ins.monteurs = ins.monteurs.includes(n) ? ins.monteurs.filter((x) => x !== n) : ins.monteurs.concat([n]); tril(15); this.route(); },
+    voegMonteurToe() {
+      const i = $("nieuwe-monteur"), n = (i && i.value || "").trim().replace(/\s+/g, " "); if (!n) return;
+      const l = this.monteursLijst(); if (!l.includes(n)) { l.push(n); this.bewaarMonteursLijst(l); }
+      const ins = this.state.inspectie; ins.monteurs = ins.monteurs || []; if (!ins.monteurs.includes(n)) ins.monteurs.push(n); this.route();
+    },
+    // voorbeeld-inspecties krijgen vaste fictieve namen, zodat het filter iets laat zien
+    demoMonteurs(w) { const L = this.MONTEURS_DEMO, n = Math.min(w.monteurs || 2, 4); let h = 0; for (const c of w.nr) h = (h * 31 + c.charCodeAt(0)) % 997; return Array.from({ length: n }, (_, k) => L[(h + k * 3) % L.length]).filter((x, i, a) => a.indexOf(x) === i); },
     ins_monteurs(ins, v) {
       v.appendChild(el(this.insHead(ins, "Vast onderdeel", "Gesprek met de monteurs")));
+      const gekozen = ins.monteurs || [], lijst = this.monteursLijst();
+      v.appendChild(el(`<div class="q"><div class="qt">Wie waren er aan het werk?</div><div class="qs">Tik de monteurs aan die je hebt geïnspecteerd. Alleen de naam wordt vastgelegd.</div>
+        <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}" onclick='App.togMonteur(${esc(JSON.stringify(n))})'>${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
+        <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" placeholder="Andere naam toevoegen" style="flex:1" onkeydown="if(event.key==='Enter')App.voegMonteurToe()"><button class="btn ghost sm" onclick="App.voegMonteurToe()">${svg("plus", 16)} Toevoegen</button></div>
+        ${gekozen.length ? `<div class="s" style="margin-top:10px;font-weight:700">${gekozen.length} monteur${gekozen.length === 1 ? "" : "s"} gekoppeld</div>` : ""}</div>`));
       v.appendChild(el(`<div class="q"><div class="qt">Wat heb je besproken en hoe reageerden ze?</div><div class="qs">Ideeën van de monteurs komen in het rapport.</div>
         ${this.invoer("gesprek", "Bijv. besproken dat de gasmeter bij de man hoort; monteurs stelden een clip aan het harnas voor")}</div>`));
       v.appendChild(el(`<div class="q"><div class="qt">Wat ging opvallend goed?</div><div class="qs">Elk rapport bevat ten minste één positieve bevinding.</div>
@@ -930,6 +947,7 @@
       ws.filter((w) => w.oordeel === "A" && !w.foto).forEach((w) => p.push("Afwijking bij " + this.regelInfo(w.regel_id, w.buiten).ref + " heeft geen foto."));
       ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && !(w.actie && w.actie.tekst.trim())).forEach((w) => p.push("Bij " + this.regelInfo(w.regel_id, w.buiten).ref + " ontbreekt een actievoorstel."));
       if (!ws.some((w) => w.oordeel === "C") && !ins.positief.trim()) p.push("Nog geen positieve bevinding: leg een Conform vast of vul ‘Wat ging opvallend goed’ in.");
+      if (!(ins.monteurs || []).length) p.push("Je hebt nog niet vastgelegd welke monteurs er aan het werk waren.");
       if (!ins.gesprek.trim()) p.push("Het gesprek met de monteurs is nog leeg.");
       if (!ins.handtekening) p.push("Je hebt nog niet ondertekend.");
       return p;
@@ -980,7 +998,7 @@
       }
       const rec = { id: "WPI-" + Date.now(), versie: 3, titel: ins.titel, code: ins.code, project: ins.project,
         taken: ins.taken.slice(), taak: ins.taken[0] || ins.taak || "", waarnemingen: ins.waarnemingen,
-        gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening, keuzes: ins.keuzes || [],
+        gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening, keuzes: ins.keuzes || [], monteurs: (ins.monteurs || []).slice(),
         open_punten: p, inspecteur: this.user.full_name, inspecteur_id: this.user.id, start: ins.start, opgeslagen: new Date().toISOString() };
       // elk A/V-oordeel wordt een actievoorstel; instellen (houder, toetser, plandatum) gebeurt daarna handmatig
       const nu = new Date().toISOString(), nieuw = [];
@@ -1007,28 +1025,29 @@
     },
 
     // ---------------- INSPECTIES ----------------
+    inspFilter: { insp: "", mont: "" },
     async view_inspecties() {
-      const wpis = this.data.voorbeelddata.wpis || [];
-      const v = $("view");
-      const mine = !staf();
-      v.appendChild(el(`<div><div class="kicker">${mine ? "Jouw inspecties" : wpis.length + " voorbeeld-inspecties · alle inspecteurs"}</div><h1>Inspecties</h1></div>`));
-      v.appendChild(el(`<div class="muted" style="font-size:13px;margin:-8px 0 12px">Eigen inspecties staan veilig op dit toestel. Delen tussen telefoons volgt met de cloud-koppeling.</div>`));
-      const box = el(`<div class="listcard"><div class="row"><span class="grow s">Laden…</span></div></div>`);
-      v.appendChild(box);
-      let saved = [];
-      try { saved = await DB.all(); } catch (e) {}
-      saved = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).sort((a, b) => b.opgeslagen.localeCompare(a.opgeslagen));
-      const savedRows = saved.map((r) => {
-        const n = r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length;
-        return `<div class="row" style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'">
-          <span class="grow"><span class="t">${esc(r.titel)}</span><div class="s">${new Date(r.opgeslagen).toLocaleString("nl-NL")} · ${esc(r.inspecteur.split(" ")[0])} · ${n} waarneming${n === 1 ? "" : "en"}${r.handtekening ? " · ondertekend" : ""}</div></span>
-          <span class="badge b-done">op dit toestel</span></div>`;
-      }).join("");
-      const vbRows = mine ? "" : wpis.slice().reverse().map((w) => {
-        const dam = (w.nr || "").split("-")[1] || "";
-        return `<div class="row"><span class="grow"><span class="t">${esc(w.product || w.nr)}</span><div class="s">${esc(w.nr)} · ${esc(w.ingang || "")}</div></span><span class="s">${dam ? dam.slice(6, 8) + "-" + dam.slice(4, 6) : ""}</span></div>`;
-      }).join("");
-      box.innerHTML = (savedRows || (mine ? `<div class="row"><span class="grow s">Nog geen eigen inspecties. Start er een via Vandaag.</span></div>` : "")) + vbRows;
+      const v = $("view"), mine = !staf(), f = this.inspFilter;
+      let saved = []; try { saved = await DB.all(); } catch (e) {}
+      // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
+      const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({
+        eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, monteurs: r.monteurs || [],
+        sub: (r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length) + " waarnemingen" + (r.handtekening ? " · ondertekend" : "") }))
+        .concat(mine ? [] : (this.data.voorbeelddata.wpis || []).map((w) => ({ eigen: false, id: w.nr, titel: w.product + " · " + (w.locatie || ""), datum: w.datum, inspecteur: w.inspecteur, monteurs: this.demoMonteurs(w), sub: w.nr + " · " + (w.ingang || "") })))
+        .sort((a, b) => b.datum.localeCompare(a.datum));
+      const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
+      const lijst = rijen.filter((r) => (!f.insp || r.inspecteur === f.insp) && (!f.mont || r.monteurs.includes(f.mont)));
+      v.appendChild(el(`<div><div class="hi">${mine ? "Jouw inspecties" : "Alle inspecties"}</div><h1 class="groot">Inspecties</h1></div>`));
+      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}" onchange="App.inspFilter.${k}=this.value;App.route()"><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      v.appendChild(el(`<div class="filterbalk">${mine ? "" : sel("insp", inspecteurs, "Alle inspecteurs")}${sel("mont", monteurs, "Alle monteurs")}
+        ${f.insp || f.mont ? `<button class="linkje" onclick="App.inspFilter={insp:'',mont:''};App.route()">Wis filter</button>` : ""}</div>`));
+      v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.mont ? ` waarbij ${esc(f.mont)} aan het werk was` : ""}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
+      v.appendChild(el(lijst.length ? `<div class="ikaarten">${lijst.map((r) => `<div class="ikaart"${r.eigen ? ` style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'"` : ""}>
+          <div class="boven"><span class="dchip">📅 ${dagLabel(r.datum)}</span>${r.eigen ? `<span class="badge b-done">op dit toestel</span>` : `<span class="s">voorbeeld</span>`}</div>
+          <div class="titel">${esc(r.titel)}</div><div class="s">${esc(r.sub)}</div>
+          <div class="onder"><span class="mini-av">${esc((r.inspecteur || "?")[0])}</span><span>${esc(r.inspecteur || "")}</span></div>
+          ${r.monteurs.length ? `<div class="monteurs">${r.monteurs.map((n) => `<span class="mchip${n === f.mont ? " aan" : ""}">${esc(n)}</span>`).join("")}</div>` : ""}</div>`).join("")}</div>`
+        : `<div class="leeg"><span class="bol">🔍</span><div class="t">Geen inspecties gevonden</div><div class="s">${mine ? "Start er een via Vandaag." : "Pas het filter aan."}</div></div>`));
     },
     async view_rapport(parts) {
       const id = parts[0];
@@ -1068,7 +1087,8 @@
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
         <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
         <div class="s" style="margin-bottom:14px">Project ${esc(r.project || "–")} · inspecteur ${esc(r.inspecteur)}</div>
-        <div class="card"><div class="t">1. Getoetst tijdens bezoek</div><div class="s">${taken.map(esc).join(" · ")}</div></div>
+        <div class="card"><div class="t">1. Getoetst tijdens bezoek</div><div class="s">${taken.map(esc).join(" · ")}</div>
+          <div class="s" style="margin-top:6px">Monteurs: ${(r.monteurs || []).length ? (r.monteurs || []).map(esc).join(", ") : "niet vastgelegd"}</div></div>
         <h2>2. Waarnemingen</h2><div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>
         ${acties.length ? `<h2>3. Acties</h2><div class="listcard">${aRows}</div>` : ""}
         ${r.gesprek ? `<h2>4. Gesprek met de monteurs</h2><div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
