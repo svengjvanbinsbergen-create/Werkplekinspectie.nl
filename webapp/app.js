@@ -344,7 +344,7 @@
           if (this.micKey === key) { this.micKey = null; this.markMic(); }
           if (e && (e.code === "unavailable" || e.code === "not_granted")) {
             this.caps.dictation = null;
-            this.zegHint(key, "Inspreken via Claude kan hier niet; tik nog eens op de microfoon of gebruik die van je toetsenbord.");
+            this.toetsenbordHint(key);
           }
         });
         return;
@@ -359,17 +359,25 @@
             if (fin) this.appendVeld(key, fin);
             this.zegPartial(key, part);
           };
+          let gestart = false;
+          rec.onstart = () => { gestart = true; this.zegPartial(key, "Luistert… spreek nu"); };
           rec.onend = () => { if (this.micKey === key) { this.micKey = null; this.markMic(); this.zegPartial(key, ""); } };
           rec.onerror = (ev) => {
             if (this.micKey === key) { this.micKey = null; this.markMic(); }
-            if (ev && (ev.error === "not-allowed" || ev.error === "service-not-allowed")) this.zegHint(key, "Microfoon geblokkeerd; gebruik de microfoon van je toetsenbord.");
+            if (!ev || ev.error !== "no-speech") this.toetsenbordHint(key);
           };
           this._rec = rec; this.micKey = key; this.markMic(); rec.start();
+          // Sommige omgevingen (bijv. iPhone binnen claude.ai) starten stil niet: na 2,5 s terugvallen.
+          setTimeout(() => { if (!gestart && this._rec === rec) { try { rec.abort(); } catch (e) {} this._rec = null; if (this.micKey === key) { this.micKey = null; this.markMic(); } this.toetsenbordHint(key); } }, 2500);
           return;
         } catch (e) { this.micKey = null; this.markMic(); }
       }
+      this.toetsenbordHint(key);
+    },
+    toetsenbordHint(key) {
       const t = $("f-" + key); if (t) t.focus();
-      this.zegHint(key, "Tik op de microfoon van je toetsenbord om in te spreken.");
+      const p = $("p-" + key); if (!p) return;
+      p.innerHTML = `<div class="hint">Inspreken met de knop kan hier niet. Tik in het tekstvak en gebruik de <b>microfoon van je toetsenbord</b> (iPhone: 🎤 rechtsonder, Android: 🎤 op Gboard).</div>`;
     },
     stopMic() {
       const k = this.micKey; this.micKey = null;

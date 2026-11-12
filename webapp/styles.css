@@ -130,3 +130,4 @@ svg{display:block;width:100%}
 }
 .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .chip{white-space:nowrap}
+.hint{background:var(--butter);color:#5E4500;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;font-style:normal}
