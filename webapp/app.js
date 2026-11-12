@@ -70,9 +70,11 @@
     { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"] },
+    { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"], web: true },   // alleen webversie (computer)
   ];
   const staf = () => App.user && (App.user.role === "hoofd" || App.user.role === "coordinator");
+  // webversie = groot scherm (computer/tablet liggend); telefoon = de veld-app zonder dashboard en trendanalyse
+  const isWeb = () => window.matchMedia("(min-width: 900px)").matches;
   const naam = (id) => { const u = USERS.find((x) => x.id === id); return u ? u.full_name : id ? String(id) : "–"; };
 
   // ---- eenvoudige trefwoord-matching (terugval als Claude niet beschikbaar is) ----
@@ -157,6 +159,7 @@
         window.claude.use("sample").then((s) => { this.caps.sample = s || null; }).catch(() => {});
       }
       window.addEventListener("hashchange", () => this.route());
+      this._web = isWeb(); window.addEventListener("resize", () => { if (isWeb() !== this._web) { this._web = isWeb(); if (this.user) this.route(); } });
       setInterval(() => this.checkMeldingen(), 30 * 60 * 1000);   // elk half uur, zolang de app open is
       this.route();
     },
@@ -233,7 +236,7 @@
       if (!q) { out.innerHTML = `<div class="s">Begin met typen…</div>`; return; }
       const s = this._search, hit = [];
       s.prod.filter((p) => p.toLowerCase().includes(q)).slice(0, 5).forEach((p) => hit.push(["Product", p, ""]));
-      s.trend.filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
+      (isWeb() ? s.trend : []).filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
       s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie", r.titel + " · " + r.taak, "#/rapport/" + r.id]));
       out.innerHTML = hit.length ? `<div class="listcard">${hit.map(([k, lab, href]) =>
         `<div class="row"${href ? ` style="cursor:pointer" onclick="App.closeModal();location.hash='${href}'"` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
@@ -249,6 +252,7 @@
       let page = parts[0];
       const tab = TABS.find((t) => t.id === page);
       if (tab && !tab.rollen.includes(this.user.role)) { return this.go("vandaag"); }  // geen toegang
+      if (tab && tab.web && !isWeb()) page = "alleenweb";
       this.renderTabs(page);
       $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
       this.wakeLock(page === "inspectie");
@@ -260,7 +264,7 @@
       window.scrollTo(0, 0);
     },
     renderTabs(active) {
-      $("tabbar").innerHTML = TABS.filter((t) => t.rollen.includes(this.user.role)).map((t) =>
+      $("tabbar").innerHTML = TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
         `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
     },
 
@@ -291,39 +295,40 @@
     closeModal() { $("ov").classList.remove("on"); },
 
     // ---------------- VANDAAG ----------------
+    view_alleenweb() {
+      $("view").appendChild(el(`<div class="leeg" style="margin-top:40px"><span class="bol">💻</span><h1 style="margin:14px 0 6px">Alleen op de computer</h1>
+        <div class="s" style="max-width:300px;margin:0 auto">Het dashboard, de trendanalyse en de rapportages open je in de webversie op je computer.</div>
+        <button class="btn primary" style="margin-top:20px;max-width:260px" onclick="App.go('vandaag')">Naar Vandaag</button></div>`));
+    },
     view_vandaag() {
-      const v = $("view"), vn = this.user.full_name.split(" ")[0];
-      const dl = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
-      v.appendChild(el(`<div><div class="kicker">${esc(dl[0].toUpperCase() + dl.slice(1))}</div><h1>Hallo ${esc(vn)}</h1></div>`));
+      const v = $("view"), vn = this.user.full_name.split(" ")[0], u = new Date().getHours();
+      const groet = u < 12 ? "Goedemorgen" : u < 18 ? "Goedemiddag" : "Goedenavond";
       const lo = this.state.inspectie;
+      v.appendChild(el(`<div><div class="hi">${groet} ${esc(vn)} 👋</div><h1 class="groot">${lo ? "Je inspectie<br>loopt nog" : "Eén inspectie<br>op de planning"}</h1></div>`));
       if (lo) {
         const n = lo.waarnemingen.length;
-        v.appendChild(el(`<div class="card kaart"><div class="kop"><span class="cirkel paars">${svg("mic", 20)}</span><div class="grow"><div class="t">${esc(lo.titel)}</div>
-          <div class="s">Loopt nog · ${n} waarneming${n === 1 ? "" : "en"}${lo.taak ? " · " + esc(lo.taak) : ""}</div></div></div>
-          <button class="btn primary" style="margin-top:14px" onclick="App.goIns()">Verder met de inspectie</button></div>`));
+        v.appendChild(el(`<div class="hero paars"><div class="k">Bezig · ${n} waarneming${n === 1 ? "" : "en"}</div><div class="t">${esc(lo.titel.split(" · ")[0])}</div>
+          <div class="s">${esc(lo.titel.split(" · ").slice(1).join(" · ") || "")}${lo.taak ? " · " + esc(lo.taak) : ""}</div>
+          <button class="btn primary" onclick="App.goIns()">Verder met de inspectie</button></div>`));
       }
-      v.appendChild(el(`<div class="card kaart"><div class="kop"><span class="cirkel groen">${svg("list", 20)}</span><div class="grow"><div class="t">Damwand</div>
-        <div class="s">RWZI Voorbeeldstad · P26-168 · 2 monteurs</div></div><span class="badge b-todo">Vandaag</span></div>
-        <button class="btn primary" style="margin-top:14px" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">Start inspectie</button></div>`));
+      v.appendChild(el(`<div class="hero${lo ? " klein" : ""}"><div class="k">Vandaag · P26-168</div><div class="t">Damwand</div><div class="s">RWZI Voorbeeldstad · 2 monteurs</div>
+        <button class="btn primary" onclick="App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad')">Start inspectie</button></div>`));
       const act = el(`<div id="mijnact"></div>`); v.appendChild(act);
       this.laadActies().then(() => {
         if (!document.body.contains(act)) return;
-        const B = this.bakjes();
-        const rij = (k, lab, warn) => `<button class="stat" onclick="App.actFilter='${k}';App.go('acties')"><span>${lab}</span><b class="${warn && B[k].length ? "w" : B[k].length ? "" : "nul"}">${B[k].length}</b></button>`;
-        act.innerHTML = `<div class="card statkaart">${rij("telaat", "Te laat", true)}${rij("instellen", "In te stellen")}${rij("toetsen", "Te toetsen")}${rij("gepland", "Gepland")}</div>`;
+        const B = this.bakjes(), voorJou = B.instellen.length + B.toetsen.length + B.gepland.length;
+        const laat = this.meldingen().filter((m) => m.soort === "laat");
+        act.innerHTML = `<div class="duo">
+            <button class="pil${B.telaat.length ? " warm" : ""}" onclick="App.actFilter='telaat';App.go('acties')"><span class="n">${B.telaat.length}</span><span class="l">te laat</span></button>
+            <button class="pil" onclick="App.actFilter=null;App.go('acties')"><span class="n">${voorJou}</span><span class="l">${voorJou === 1 ? "actie" : "acties"} voor jou</span></button></div>
+          ${laat.length ? `<button class="notitie" onclick="App.actFilter='telaat';App.go('acties')"><span class="em">⏰</span><span>${laat.length === 1 ? esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 46)) + " is " + (-laat[0].d) + " dag" + (laat[0].d === -1 ? "" : "en") + " over de plandatum" : laat.length + " acties zijn over de plandatum"}</span></button>` : ""}`;
       });
-      if (staf()) {
-        const c = this.data.cijfers;
-        v.appendChild(el(`<button class="card kaart rijkaart" onclick="App.go('dashboard')"><span class="cirkel blauw">${svg("chart", 20)}</span><span class="grow"><span class="t">Dashboard</span>
-          <span class="s" style="display:block">Per werkplek ${c.vp_x}/${c.vp_y} · ${c.n_wpi} inspecties</span></span><span class="s">${svg("chev", 18)}</span></button>`));
-      }
-      if (!this._spontaan) {
-        v.appendChild(el(`<button class="card kaart rijkaart" onclick="App._spontaan=true;App.route()"><span class="cirkel grijs">${svg("plus", 20)}</span><span class="grow t">Andere inspectie starten</span><span class="s">${svg("chev", 18)}</span></button>`));
-      } else {
+      if (!this._spontaan) v.appendChild(el(`<button class="linkknop" onclick="App._spontaan=true;App.route()">Andere inspectie starten</button>`));
+      else {
         v.appendChild(el(`<h2>Andere inspectie starten</h2>`));
         v.appendChild(el(`<input id="zoek" class="fin" placeholder="Zoek product…" oninput="App.filterProd(this.value)" autocomplete="off" style="margin-bottom:10px">`));
         v.appendChild(el(`<div class="listcard" id="prodlist">${this.productKeuzeRows()}</div>`));
-        v.appendChild(el(`<button class="btn ghost sm" style="margin-top:10px" onclick="App._spontaan=false;App.route()">Inklappen</button>`));
+        v.appendChild(el(`<button class="linkknop" onclick="App._spontaan=false;App.route()">Inklappen</button>`));
       }
     },
     productKeuzeRows() {
@@ -1042,7 +1047,7 @@
       // vaste alert in beeld zolang er acties over de plandatum zijn (niet tijdens het inspecteren)
       const laat = M.filter((m) => m.soort === "laat"), al = $("alert");
       if (al) {
-        al.classList.toggle("hidden", !laat.length || this._page === "inspectie");
+        al.classList.toggle("hidden", !laat.length || this._page === "inspectie" || this._page === "vandaag" || !location.hash || location.hash === "#/");
         al.innerHTML = laat.length ? `${svg("warn", 16)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum</span><b>Bekijk ›</b>` : "";
       }
       // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
@@ -1084,28 +1089,29 @@
     async view_acties() {
       await this.laadActies();
       const v = $("view"), B = this.bakjes(), hoofd = this.user.role === "hoofd";
-      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"]].concat([["instellen", "In te stellen"]]).concat([["alle", "Alle"]]);
+      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
-      v.appendChild(el(`<div><div class="kicker">${hoofd ? "Het hele team" : "Jouw acties"} · peildatum ${dagLabel(isoDag(new Date()))}</div><h1>Acties</h1></div>`));
-      v.appendChild(el(`<div class="chips" style="margin-bottom:12px">${tabs.map(([k, l]) => `<button class="chipb${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " laat" : ""}" onclick="App.actFilter='${k}';App.route()">${l} · ${B[k].length}</button>`).join("")}</div>`));
-      const LEEG = { telaat: "Niets te laat. 👍", gepland: "Geen geplande acties.", toetsen: "Niets dat op jouw toetsing wacht.", instellen: "Geen actievoorstellen om in te stellen.", alle: "Nog geen acties." };
-      const uitleg = { telaat: "Van het hele team: plandatum verstreken, nog niet klaar voor toetsing. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "De actiehouder meldt dat het klaar is. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: actiehouder, toetser en plandatum.", alle: "" }[this.actFilter];
-      if (uitleg) v.appendChild(el(`<div class="muted" style="font-size:13px;margin:-4px 0 10px">${uitleg}</div>`));
+      v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
+      v.appendChild(el(`<div class="tabs">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}" onclick="App.actFilter='${k}';App.route()">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
+      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen.", alle: "" }[this.actFilter];
+      if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
+      const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
-      v.appendChild(el(`<div class="listcard">${lijst.length ? lijst.map((a) => this.actieRij(a)).join("") : `<div class="row"><span class="grow s">${LEEG[this.actFilter]}</span></div>`}</div>`));
-      if (staf()) {
-        const t = this.data.trendacties;
-        v.appendChild(el(`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`));
-        v.appendChild(el(`<div class="listcard">${t.map((a) =>
-          `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
-      }
+      v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
+        : `<div class="leeg"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
     },
-    actieRij(a) {
+    actieKaart(a) {
       const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
-      const plan = a.plandatum ? (loopt && d < 0 ? `<b style="color:var(--red)">${-d} d te laat</b>` : d === 0 && loopt ? "<b>vandaag</b>" : dagLabel(a.plandatum)) : "";
-      return `<div class="row" style="cursor:pointer" onclick="App.openActie('${a.id}')"><span class="grow"><span class="t">${esc(kort(a.tekst || "(geen tekst)", 90))}</span>
-        <div class="s">${esc(a.ref || "")} · ${a.houder ? esc(naam(a.houder)) : "nog geen actiehouder"}${plan ? " · " + plan : ""}${a.demo ? " · voorbeeld" : ""}</div></span>${stBadge(a.status)}</div>`;
+      const plan = !a.plandatum ? `<span class="dchip">nog geen plandatum</span>`
+        : loopt && d < 0 ? `<span class="dchip warm">${-d} dag${d === -1 ? "" : "en"} te laat</span>`
+        : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : `<span class="dchip">📅 ${dagLabel(a.plandatum)}</span>`;
+      const h = a.houder ? USERS.find((u) => u.id === a.houder) : null;
+      return `<button class="akaart" onclick="App.openActie('${a.id}')">
+        <div class="boven">${stBadge(a.status)}${plan}</div>
+        <div class="titel">${esc(kort(a.tekst || "(geen tekst)", 110))}</div>
+        <div class="onder"><span class="mini-av">${h ? esc(h.full_name[0]) : "?"}</span><span>${h ? esc(h.full_name) : "nog geen actiehouder"}</span><span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
     },
+    actieRij(a) { return this.actieKaart(a); },
     openActie(id) {
       const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
       const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
@@ -1266,13 +1272,17 @@
       chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars(D.klasse)}
         <div class="muted" style="font-size:12px;margin-top:8px">Tik een klasse om alles erop te filteren.</div></div>`));
       v.appendChild(chartCard);
+      const t = this.data.trendacties;
+      v.appendChild(el(`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`));
+      v.appendChild(el(`<div class="listcard">${t.map((a) =>
+        `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-todo" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen. Bij minder dan 5 waarnemingen tonen we geen percentage maar het aantal (n).</div>`));
     },
     chartOordeel(mnd, om) {
       const c = this.data.cijfers;
       const tot = mnd.map((m) => Object.values(om[m] || {}).reduce((a, b) => a + b, 0));
       const mx = Math.max(...tot, 1), W = 640, H = 200, pad = 28, gap = (W - pad) / mnd.length, bw = gap * 0.52;
-      const col = { Conform: "#3E7C6B", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
+      const col = { Conform: "#2F5D50", Verbeterpunt: "#8A4B00", Afwijking: "#B42318", "Niet van toepassing": "#9AA2AE" };
       let g = "";
       mnd.forEach((m, i) => {
         const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
@@ -1295,7 +1305,7 @@
       mnd.forEach((m, i) => {
         const d = vm[m] || {}, ok = d.ok || 0, y_ = d.y || 0, lop = d.lopend || 0, gem = y_ - ok;
         const x = pad + gap * i + (gap - bw) / 2; let y = H - 22; let p = "";
-        [[ok, "#3E7C6B", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
+        [[ok, "#2F5D50", 0], [gem, "#B42318", 0], [lop, "url(#h)", 1]].forEach(([val, cl, ht]) => {
           if (val <= 0) return; const h = val / mx * (H - 50); y -= h;
           p += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${cl}" stroke="${ht ? "#9AA2AE" : "none"}" stroke-width="${ht}"/>`;
         });
