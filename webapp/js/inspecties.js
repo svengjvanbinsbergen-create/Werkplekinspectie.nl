@@ -1,0 +1,87 @@
+/* Werkplekinspectie — js/inspecties.js
+   Inspecties: overzicht van afgeronde inspecties en het rapport.
+   Voegt methoden toe aan window.App (zie js/kern.js). */
+(function () {
+  "use strict";
+  const { $, el, esc, svg, DB, staf, naam, kort, dagLabel, stBadge } = window.WPI;
+  Object.assign(window.App, {
+    // ---------------- INSPECTIES ----------------
+    inspFilter: { insp: "", mont: "" },
+    async view_inspecties() {
+      const v = $("view"), mine = !staf(), f = this.inspFilter;
+      let saved = []; try { saved = await DB.all(); } catch (e) {}
+      // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
+      const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({
+        eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, monteurs: r.monteurs || [],
+        sub: (r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length) + " waarnemingen" + (r.handtekening ? " · ondertekend" : "") }))
+        .concat(mine ? [] : (this.data.voorbeelddata.wpis || []).map((w) => ({ eigen: false, id: w.nr, titel: w.product + " · " + (w.locatie || ""), datum: w.datum, inspecteur: w.inspecteur, monteurs: this.demoMonteurs(w), sub: w.nr + " · " + (w.ingang || "") })))
+        .sort((a, b) => b.datum.localeCompare(a.datum));
+      const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
+      const lijst = rijen.filter((r) => (!f.insp || r.inspecteur === f.insp) && (!f.mont || r.monteurs.includes(f.mont)));
+      v.appendChild(el(`<div><div class="hi">${mine ? "Jouw inspecties" : "Alle inspecties"}</div><h1 class="groot">Inspecties</h1></div>`));
+      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}" onchange="App.inspFilter.${k}=this.value;App.route()"><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      v.appendChild(el(`<div class="filterbalk">${mine ? "" : sel("insp", inspecteurs, "Alle inspecteurs")}${sel("mont", monteurs, "Alle monteurs")}
+        ${f.insp || f.mont ? `<button class="linkje" onclick="App.inspFilter={insp:'',mont:''};App.route()">Wis filter</button>` : ""}</div>`));
+      v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.mont ? ` waarbij ${esc(f.mont)} aan het werk was` : ""}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
+      v.appendChild(el(lijst.length ? `<div class="ikaarten">${lijst.map((r) => `<div class="ikaart"${r.eigen ? ` style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'"` : ""}>
+          <div class="boven"><span class="dchip">📅 ${dagLabel(r.datum)}</span>${r.eigen ? `<span class="badge b-done">op dit toestel</span>` : `<span class="s">voorbeeld</span>`}</div>
+          <div class="titel">${esc(r.titel)}</div><div class="s">${esc(r.sub)}</div>
+          <div class="onder"><span class="mini-av">${esc((r.inspecteur || "?")[0])}</span><span>${esc(r.inspecteur || "")}</span></div>
+          ${r.monteurs.length ? `<div class="monteurs">${r.monteurs.map((n) => `<span class="mchip${n === f.mont ? " aan" : ""}">${esc(n)}</span>`).join("")}</div>` : ""}</div>`).join("")}</div>`
+        : `<div class="leeg"><span class="bol">🔍</span><div class="t">Geen inspecties gevonden</div><div class="s">${mine ? "Start er een via Vandaag." : "Pas het filter aan."}</div></div>`));
+    },
+    async view_rapport(parts) {
+      const id = parts[0];
+      const v = $("view");
+      let saved = []; try { saved = await DB.all(); } catch (e) {}
+      const r = saved.find((x) => x.id === id);
+      if (!r) { v.appendChild(el(`<div><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
+      const ws = r.versie >= 2 ? r.waarnemingen : Object.entries(r.oordelen || {}).filter(([, o]) => o)
+        .map(([rid, o]) => ({ regel_id: rid, oordeel: o, tekst: "", foto: (r.fotos || {})[rid] || null, maatregelen: [], actie: { tekst: "" } }));
+      const taken = r.taken || [r.taak];
+      const ob = { C: "Conform", A: "Afwijking", V: "Verbeterpunt", NVT: "Niet van toepassing" };
+      const prioLab = { direct: "Direct", kort: "Kort", planmatig: "Planmatig" };
+      const wRows = ws.map((w) => {
+        const i = this.infoVoor(r.code, w.regel_id, w.buiten);
+        return `<div class="row" style="align-items:flex-start"><span class="grow"><span class="t">${esc(i.ref)} · ${esc(kort(i.titel, 90))}</span>
+          ${w.tekst ? `<div class="s">Waarneming: “${esc(w.tekst.trim())}”</div>` : ""}
+          ${w.maatregelen && w.maatregelen.length ? `<div class="s">Maatregel gezien: ${esc(w.maatregelen.join("; "))}</div>` : ""}</span>
+          <span class="badge b-${w.oordeel === "NVT" ? "N" : w.oordeel}">[${w.oordeel}] ${ob[w.oordeel] || ""}</span></div>`;
+      }).join("");
+      const acties = ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && w.actie);
+      await this.laadActies();
+      const aRows = acties.map((w, n) => {
+        const i = this.infoVoor(r.code, w.regel_id, w.buiten), live = (this.acties || []).find((x) => x.id === w.actie.actie_id);
+        const a = live || w.actie;   // live status uit Acties; oude rapporten (v2) vallen terug op het record
+        const houder = live ? (live.houder ? naam(live.houder) : "nog in te stellen") : a.houder || "–";
+        const toetser = live ? (live.toetser ? naam(live.toetser) : "nog in te stellen") : a.toetser || "–";
+        return `<div class="row" style="align-items:flex-start${live ? ";cursor:pointer" : ""}"${live ? ` onclick="App.openActie('${live.id}')"` : ""}><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
+          <div class="s">${esc(i.ref)} · dringendheid volgens inspecteur: ${prioLab[w.actie.prio] || "–"}${live ? " · plandatum " + dagLabel(live.plandatum) : a.termijn ? " · termijn " + esc(a.termijn) : ""}</div>
+          <div class="s">Actiehouder: ${esc(houder)} · toetser: ${esc(toetser)}</div>
+          ${w.actie.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
+          ${stBadge(live ? live.status : a.status || "Open")}</div>`;
+      }).join("");
+      const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length;
+      const fotos = ws.filter((w) => w.foto);
+      v.appendChild(el(`<div class="noprint"><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button></div>`));
+      v.appendChild(el(`<div id="rap">
+        <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
+        <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
+        <div class="s" style="margin-bottom:14px">Project ${esc(r.project || "–")} · inspecteur ${esc(r.inspecteur)}</div>
+        <div class="card"><div class="t">1. Getoetst tijdens bezoek</div><div class="s">${taken.map(esc).join(" · ")}</div>
+          <div class="s" style="margin-top:6px">Monteurs: ${(r.monteurs || []).length ? (r.monteurs || []).map(esc).join(", ") : "niet vastgelegd"}</div></div>
+        <h2>2. Waarnemingen</h2><div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>
+        ${acties.length ? `<h2>3. Acties</h2><div class="listcard">${aRows}</div>` : ""}
+        ${r.gesprek ? `<h2>4. Gesprek met de monteurs</h2><div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
+        ${r.positief ? `<h2>5. Wat ging opvallend goed</h2><div class="card" style="line-height:1.5">${esc(r.positief)}</div>` : ""}
+        ${fotos.length ? `<h2>Foto's</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map((w) => `<figure style="margin:0"><img src="${w.foto}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}</figcaption></figure>`).join("")}</div>` : ""}
+        <h2>Ondertekening</h2>
+        <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
+          ${r.handtekening ? `<img src="${r.handtekening}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
+        ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${kc("voorstel gebruikt")} voorstel(len) gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
+        ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${r.open_punten.length} open herinnering(en): ${esc(r.open_punten.join(" "))}</div>` : ""}
+      </div>`));
+      v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px" onclick="window.print()">${svg("list", 18)} Opslaan als PDF / printen</button>`));
+    },
+  });
+})();
