@@ -191,13 +191,15 @@
       regels.forEach((r) => {
         const cur = ins.oordelen[r.id] || "";
         const maatr = Array.isArray(r.maatregelen) ? r.maatregelen.join(" · ") : (r.maatregelen || "");
-        wrap.appendChild(el(`<div class="card" style="padding:14px 16px">
+        const btn = (o) => {
+          const cls = cur ? (o === cur ? `t-${o} on-${o}` : "dim") : `t-${o}`;
+          return `<button class="${cls}" onclick="App.zetOordeel('${esc(r.id)}','${o}')"><span class="l">${o}</span><span class="w">${{ C: "Conform", A: "Afwijking", V: "Verbeterpunt" }[o]}</span></button>`;
+        };
+        wrap.appendChild(el(`<div class="card${cur ? " done-" + cur : ""}" style="padding:14px 16px">
           <div style="font-size:12px;color:#4A5565;font-weight:600">${esc(r.id)} · ${esc(r.klasse || "")}</div>
           <div class="t" style="margin:3px 0 8px;font-size:16px">${esc(r.risico || "")}</div>
           ${maatr ? `<details style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--soft);font-size:13px;font-weight:600;list-style:none">Maatregelen tonen</summary><div class="s" style="margin-top:6px">${esc(maatr)}</div></details>` : ""}
-          <div class="seg" data-id="${esc(r.id)}">
-            ${["C", "A", "V"].map((o) => `<button class="t-${o} ${cur === o ? "on-" + o : ""}" onclick="App.zetOordeel('${esc(r.id)}','${o}')"><span class="l">${o}</span><span class="w">${{ C: "Conform", A: "Afwijking", V: "Verbeterpunt" }[o]}</span></button>`).join("")}
-          </div></div>`));
+          <div class="seg" data-id="${esc(r.id)}">${["C", "A", "V"].map(btn).join("")}</div></div>`));
       });
       v.appendChild(wrap);
       const act = ins.acties.length ? ` · ${ins.acties.length} ${ins.acties.length === 1 ? "actie" : "acties"}` : "";

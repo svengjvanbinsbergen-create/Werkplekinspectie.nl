@@ -67,6 +67,12 @@ h2{font-size:18px;font-weight:650;margin:22px 0 12px}
 .seg button.on-C{box-shadow:inset 0 0 0 2.5px var(--green)}
 .seg button.on-A{box-shadow:inset 0 0 0 2.5px var(--red)}
 .seg button.on-V{box-shadow:inset 0 0 0 2.5px var(--amber)}
+/* beoordeelde kaart lost op naar één kleur: niet-gekozen knoppen worden neutraal */
+.seg button.dim{background:var(--mist);color:#9AA2AE}
+.seg button.dim .l{font-weight:700}
+.card.done-C{box-shadow:0 0 0 1px var(--green)}
+.card.done-A{box-shadow:0 0 0 1px var(--red)}
+.card.done-V{box-shadow:0 0 0 1px var(--amber)}
 .seg button.on-C::after,.seg button.on-A::after,.seg button.on-V::after{content:"✓";position:absolute;top:5px;right:9px;font-size:13px;font-weight:800}
 
 /* nav */
