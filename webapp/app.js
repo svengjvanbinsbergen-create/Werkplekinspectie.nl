@@ -130,14 +130,21 @@
         </div>`);
       v.appendChild(card);
       v.appendChild(el(`<h2>Of spontaan</h2>`));
-      v.appendChild(el(`<div class="listcard">${this.productKeuzeRows()}</div>`));
+      v.appendChild(el(`<input id="zoek" placeholder="Zoek product…" oninput="App.filterProd(this.value)" autocomplete="off" style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:8px;background:#fff">`));
+      v.appendChild(el(`<div class="listcard" id="prodlist">${this.productKeuzeRows()}</div>`));
     },
     productKeuzeRows() {
       const kb = this.data.kennisbank;
       return Object.keys(kb).map((code) =>
-        `<div class="row" style="cursor:pointer" onclick="App.startInspectie('${code}','spontaan','${esc(kb[code].naam)}')">
+        `<div class="row" data-naam="${esc(kb[code].naam.toLowerCase())}" style="cursor:pointer" onclick="App.startInspectie('${code}','spontaan','${esc(kb[code].naam)}')">
           <span class="grow"><span class="t">${esc(kb[code].naam)}</span> <span class="s">· ${kb[code].regels.length} regels</span></span>
           <span class="s">${svg("chev", 18)}</span></div>`).join("");
+    },
+    filterProd(q) {
+      q = (q || "").toLowerCase().trim();
+      document.querySelectorAll("#prodlist .row").forEach((r) => {
+        r.style.display = (!q || r.getAttribute("data-naam").includes(q)) ? "" : "none";
+      });
     },
 
     // ---------------- INSPECTIE-FLOW ----------------
@@ -175,21 +182,26 @@
       const regels = this.data.kennisbank[ins.code].regels.filter((r) => r.taak === ins.taak);
       const v = $("view");
       v.appendChild(el(this.flowHead(ins, "Toetsen · " + ins.taak)));
-      v.appendChild(el(`<div class="muted" style="margin-bottom:10px">Tik per risico aan wat je ziet. Niets gezien? Laat leeg.</div>`));
+      const beoordeeld = regels.filter((r) => ins.oordelen[r.id]).length;
+      const pct = regels.length ? Math.round(100 * beoordeeld / regels.length) : 0;
+      v.appendChild(el(`<div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--soft);font-weight:600"><span>${beoordeeld} van ${regels.length} beoordeeld</span><span>tik aan wat je ziet</span></div>
+        <div class="bar"><i style="width:${pct}%"></i></div></div>`));
       const wrap = el(`<div class="grid" style="gap:10px"></div>`);
       regels.forEach((r) => {
         const cur = ins.oordelen[r.id] || "";
         const maatr = Array.isArray(r.maatregelen) ? r.maatregelen.join(" · ") : (r.maatregelen || "");
         wrap.appendChild(el(`<div class="card" style="padding:14px 16px">
           <div style="font-size:12px;color:#4A5565;font-weight:600">${esc(r.id)} · ${esc(r.klasse || "")}</div>
-          <div class="t" style="margin:2px 0 2px">${esc(r.risico || "")}</div>
-          <div class="s" style="margin-bottom:10px">${esc(maatr).slice(0, 160)}</div>
+          <div class="t" style="margin:3px 0 8px;font-size:16px">${esc(r.risico || "")}</div>
+          ${maatr ? `<details style="margin-bottom:10px"><summary style="cursor:pointer;color:var(--soft);font-size:13px;font-weight:600;list-style:none">Maatregelen tonen</summary><div class="s" style="margin-top:6px">${esc(maatr)}</div></details>` : ""}
           <div class="seg" data-id="${esc(r.id)}">
-            ${["C", "A", "V"].map((o) => `<button class="${cur === o ? "on-" + o : ""}" onclick="App.zetOordeel('${esc(r.id)}','${o}')">[${o}] ${{ C: "Conform", A: "Afwijking", V: "Verbeterpunt" }[o]}</button>`).join("")}
+            ${["C", "A", "V"].map((o) => `<button class="t-${o} ${cur === o ? "on-" + o : ""}" onclick="App.zetOordeel('${esc(r.id)}','${o}')"><span class="l">${o}</span><span class="w">${{ C: "Conform", A: "Afwijking", V: "Verbeterpunt" }[o]}</span></button>`).join("")}
           </div></div>`));
       });
       v.appendChild(wrap);
-      v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.go('inspectie/klaar')">Afronden</button>`));
+      const act = ins.acties.length ? ` · ${ins.acties.length} ${ins.acties.length === 1 ? "actie" : "acties"}` : "";
+      v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.go('inspectie/klaar')">Afronden${act}</button>`));
     },
     zetOordeel(id, o) {
       const ins = this.state.inspectie;
