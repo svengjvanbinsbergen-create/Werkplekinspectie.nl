@@ -272,13 +272,13 @@ N1 = KO.nl
 BODY = 20
 add(pagebreak())
 h1m("Managementsamenvatting", nieuwe_pagina=False)
-p("Bij de hercertificering voor VCA oordeelde de auditor dat onze werkplekinspecties hun doel missen. De vaste "
-  "checklist in AMS zegt niets over het werk dat de monteurs op dat moment doen, en een trendanalyse ontbreekt.",
-  space_after=120)
-pmix([("Aanleiding en termijn: ", {"bold": True}), ("[status van de WPI-bevinding bij de heraudit, in te vullen]", {"invul": True}),
-      (" · corrigerende maatregel uiterlijk ", {}), ("[datum van de certificerende instelling, in te vullen]", {"invul": True})],
-     space_after=120)
-p("Dit voorstel vraagt om een proef met een nieuwe methode, die binnen die termijn wordt afgerond en geëvalueerd.", space_after=60)
+p("Noardling behaalde de hercertificering tegen VCA 2026/6.1; op de werkplekinspecties is geen openstaande bevinding. "
+  "Toch kan de huidige opzet beter: de vaste checklist in AMS zegt niets over het werk dat de monteurs op dat moment "
+  "doen, en een trendanalyse ontbreekt.", space_after=120)
+pmix([("Aanleiding: ", {"bold": True}), ("een eigen verbetering, geen corrigerende maatregel. Er loopt geen termijn "
+      "vanuit de certificerende instelling.", {})], space_after=120)
+pmix([("Dit voorstel vraagt om een proef met een nieuwe methode, die wordt afgerond en geëvalueerd vóór ", {}),
+      ("[einddatum proef, in te vullen]", {"invul": True}), (".", {})], space_after=60)
 
 slab("Wat verandert er")
 punten([
@@ -316,27 +316,27 @@ p(f"Eenmalig ca. {round(KO.INR_TOT)} uur inrichten, waarvan {round(KO.PROEF_INR)
   f"{round(KO.PROEF_WPI_L)}–{round(KO.PROEF_WPI_H)} uur voor de zeven inspecties. Of een inspectie langer duurt dan in AMS, meet de proef. Inspecties liften mee op bezoeken die er "
   "al zijn; reistijd en service- en onderhoudsbezoeken zijn niet meegerekend. Fictieve planning en aannames: bijlage G.",
   size=18, space_after=100)
-add(_kn(para("Licenties: het gedeelde account past niet in de voorwaarden", bold=True, size=18, space_after=40)))
-tblm([
-    ["Optie", "Proef (3 inspecteurs)", "Daarna (± 5 gebruikers)", "Opmerking"],
-    ["Gedeeld Claude-account, zoals nu", "–", "–", "Niet toegestaan: account en seat zijn voor één persoon"],
-    ["Claude Team, eigen seat per persoon", f"${KO.LIC['team_proef_mnd']}/maand of ${KO.LIC['team_proef_jaar']}/jaar", f"${KO.LIC['team_na_jaar']:,}/jaar".replace(",", "."), "De methode werkt hier al"],
-    ["Microsoft 365 Copilot (ICT-standaard)", f"${KO.LIC['cop_proef_jaar']}/jaar (actie: ${KO.LIC['cop_proef_promo']})", f"${KO.LIC['cop_na_jaar']:,}/jaar".replace(",", "."), "Methode opnieuw bouwen; niets extra bij bestaande licentie"],
-], [2900, 2000, 1500, 2664], first_bold=True, size=16, mar=40, zebra=False)
-pmix([("Advies: ", {"bold": True}), (f"proef met Claude Team, drie eigen seats met maandbetaling (${KO.LIC['team_proef_mnd']} per maand). "
-      "ICT verkent intussen Copilot; na de evaluatie kiezen we. Dollars excl. belasting, stand 12-11-2026 (bijlage I).", {})], size=18, space_after=60)
+add(_kn(para("Licenties: Noardling gebruikt zijn bestaande Claude Team-seats", bold=True, size=18, space_after=40)))
+p("Noardling heeft al een Claude Team-account. De inspecteurs werken met hun eigen Team-seat; die is persoonlijk en "
+  "wordt niet gedeeld (een seat is voor één persoon, bijlage I). Voor de proef zijn alleen seats nodig voor inspecteurs "
+  "die er nog geen hebben — wie al een seat heeft, kost niets extra.", size=18, space_after=100)
+pmix([("Kosten: ", {"bold": True}), ("alleen extra seats voor nieuwe inspecteurs — ", {}),
+      ("[aantal extra seats, in te vullen]", {"invul": True}),
+      (f" × ${KO.LIC['team_seat_mnd']} per seat per maand (maandbetaling) of ${KO.LIC['team_seat_jaar']} bij jaarbetaling. "
+       "Dollars excl. belasting, stand 12-11-2026 (bijlage I).", {})], size=18, space_after=60)
 
 slab("Wat er nu besloten moet worden (de rest na de proef; alles in bijlage H)")
 pmix([("De proef starten. ", {"bold": True}), ("Vanaf 23-11-2026, met twee Montage Coördinatoren en één directielid. "
-      "De proef eindigt na zeven inspecties, uiterlijk ", {}), ("[datum binnen de termijn]", {"invul": True}),
+      "De proef eindigt na zeven inspecties, uiterlijk ", {}), ("[einddatum proef, in te vullen]", {"invul": True}),
       ("; let op de kerstperiode. Evaluatie een week daarna. Intussen worden de overige werkplekken geïnspecteerd "
        "zoals nu, in AMS. ", {}),
       ("Beslissen: Hoofd S&M en directie.", {"italic": True})])
 pmix([("De werkwijze voor de proef vaststellen. ", {"bold": True}), ("Reikwijdte (eigen monteurs, ook service en "
       "buitenland), oordelen, acties en actiestatus, toetser, taakverdeling, opslag en terugvaloptie. ", {}),
       ("Beslissen: Hoofd S&M (toetser met directie, taakverdeling met QHSE-Manager).", {"italic": True})])
-pmix([("Account, platform en planning. ", {"bold": True}), ("Vóór de start een keuze uit de licentieopties, met de "
-      "AVG en zo nodig de OR; zonder dat besluit geen proef. Verder: planningcijfers 2026, de veertien klassen en de "
+pmix([("Account en planning. ", {"bold": True}), ("Het account is geregeld: de inspecteurs gebruiken Noardlings "
+      "bestaande Claude Team-seats (per persoon, niet delen); alleen voor wie nog geen seat heeft komt er een bij. "
+      "Toetsen aan de AVG en zo nodig de OR. Verder: planningcijfers 2026, de veertien klassen en de "
       "nulmeting in januari 2027. ", {}),
       ("Beslissen: directie, ICT-manager en Hoofd S&M.", {"italic": True})], space_after=60)
 
@@ -364,8 +364,9 @@ p("Het hoofddocument geeft het overzicht. Details staan in de bijlagen: de volle
 
 # ============================================================ 1
 h1m("1. Aanleiding en wat er verandert")
-p("Noardling is VCA**-gecertificeerd en zit in de hercertificering tegen VCA 2026/6.1. De auditor oordeelde dat onze "
-  "werkplekinspecties (WPI's) niet duidelijk genoeg zijn en niet doen wat een WPI moet doen.")
+p("Noardling is VCA**-gecertificeerd en behaalde de hercertificering tegen VCA 2026/6.1. Op de werkplekinspecties "
+  "(WPI's) is geen openstaande bevinding; we willen ze zelf verbeteren, omdat ze nu niet duidelijk genoeg zijn en niet "
+  "doen wat een WPI zou moeten doen.")
 p("Nu vult de inspecteur in de app AMS een vaste checklist in. Die checklist is voor elk werk hetzelfde en heeft geen "
   "verband met de taak die de monteurs op dat moment uitvoeren. Een trendanalyse van de bevindingen, die VCA 7.2 "
   "vraagt, ontbreekt.")
@@ -487,9 +488,9 @@ tblm([
     ["Instructie inspecteurs", "Bestaat niet", O, "20-11-2026", "Ja"],
     ["QMS-map voor WPI-rapporten", "Bestaat niet", "QHSE-Manager", "20-11-2026", "Ja"],
     ["Word-sjabloon en kennisbank-PDF's", "Bestaan niet", O, "Vóór vaststelling van de procedure", "Nee"],
-    ["Besluit over account en platform", "Ligt bij directie en ICT-manager: Claude Team-seats of Copilot (bijlage I); AVG en zo nodig OR. Het gedeelde account past niet in de voorwaarden", "Directie, ICT-manager", "Vóór de start", "Ja: go/no-go"],
+    ["Bestaande Team-seats bevestigen en extra seats regelen", "Inspecteurs gebruiken Noardlings bestaande Claude Team-seats (per persoon, niet delen); extra seats voor wie er nog geen heeft (bijlage I); AVG en zo nodig OR", "Directie, ICT-manager", "Vóór de start", "Ja: go/no-go"],
 ], [2100, 2700, 1500, 1700, 1064], first_bold=True, size=17, mar=70, zebra=False)
-p("De proef start pas als alles met 'Ja' klaar is en het besluit over account en platform is genomen; is dat op 20 november 2026 niet zo, dan schuift de start per week op.")
+p("De proef start pas als alles met 'Ja' klaar is en de Team-seats zijn geregeld; is dat op 20 november 2026 niet zo, dan schuift de start per week op.")
 h2m("4.2 Actieoverzicht en status in de proef: handwerk")
 p("Claude kan vanuit een chat geen bestand in de projectmap wijzigen. In de proef is het actieoverzicht daarom één "
   "Excel-bestand in de WPI-projectmap; bij stap 0 leest Claude het in en toont open acties en eerdere afwijkingen. Na "
@@ -497,14 +498,14 @@ p("Claude kan vanuit een chat geen bestand in de projectmap wijzigen. In de proe
   "Hoofd S&M, of een coördinator namens hem, dat met de vastgestelde statussen. Handwerk: bestand vervangen, statussen doorgeven, PDF's in het QMS "
   "zetten. De proef toont of dat houdbaar is.")
 
-h2m("4.3 Account en platform")
-p("Nu gebruiken alle inspecteurs hetzelfde Noardling Claude-account. Volgens de voorwaarden van Anthropic mag dat niet: "
-  "een account mag niet met anderen worden gedeeld, en een Team-seat is voor één persoon (bijlage I). Met een eigen seat "
-  "per inspecteur is ook herleidbaar wie een rapport maakte. De bevestiging met naam, datum en tijd en de PDF in het QMS "
-  "blijven het bewijsstuk.")
-p("De ICT-manager wil AI eerst in Copilot beproeven, de bedrijfsstandaard. Copilot kan Claude-modellen gebruiken, maar "
-  "die staan in de EU standaard uit en vallen buiten de EU-gegevensgrens van Microsoft. De methode zou daar opnieuw "
-  "gebouwd en getest moeten worden. De directie kiest vóór de proef; de opties en kosten staan op pagina 3.")
+h2m("4.3 Account en seats")
+p("Noardling heeft een Claude Team-account. In de proef werkt elke inspecteur met een eigen Team-seat; die mag niet "
+  "worden gedeeld en is voor één persoon (bijlage I). Zo is ook herleidbaar wie een rapport maakte. De bevestiging met "
+  "naam, datum en tijd en de PDF in het QMS blijven het bewijsstuk. Alleen voor inspecteurs die nog geen seat hebben "
+  "komt er een bij; de kosten staan op pagina 3.")
+p("Claude Team draait naast de bedrijfsstandaard Microsoft 365. Een eventuele latere beproeving van Microsoft 365 "
+  "Copilot is een apart ICT-traject buiten deze proef; de vergelijking die daarbij hoort staat ter achtergrond in "
+  "bijlage I.")
 
 h2m("4.4 Taken van het Hoofd Service & Montage")
 p("Voorstel: de inspecteur zet zijn rapport in het QMS en geeft in het overleg de status van zijn "
@@ -558,17 +559,17 @@ p("Alles in dit voorstel is een voorstel tot erover is beslist. We vragen nu dri
 punten([
     (1, "De proef starten", "Vanaf 23-11-2026, als alles wat nodig is klaar is (hoofdstuk 4). Twee Montage "
         "Coördinatoren doen elk drie inspecties, één directielid doet er één. De proef eindigt na die zeven inspecties, "
-        "uiterlijk [datum binnen de termijn van de certificerende instelling, in te vullen]; de kerstperiode valt erin. "
+        "uiterlijk [einddatum proef, in te vullen]; de kerstperiode valt erin. "
         "Evaluatie een week daarna. "
         "Beslissen: Hoofd S&M en directie."),
     (2, "De werkwijze voor de proef vaststellen", "Voor wie de procedure geldt, de oordelen, de acties, wie toetst, hoe de "
         "status wordt bijgehouden, de taakverdeling met de QHSE-Manager, de opslag en de terugvaloptie, zoals in "
         "hoofdstuk 3 en 4 en bijlage A. Beslissen: Hoofd S&M; de toetser samen met de directie, de taakverdeling samen met de QHSE-Manager."),
-    (3, "Account, platform en planning", "Voorwaarde vóór de start: een keuze tussen eigen Claude Team-seats en Copilot "
-        "(pagina 3 en bijlage I); het gedeelde account past niet in de voorwaarden van Anthropic. Met toets aan de AVG, zo "
-        "nodig met de OR. Advies: proef met Claude Team, Copilot parallel laten verkennen. Zonder dit besluit start de proef niet. Verder: de planning levert de projectcijfers van 2026 vóór "
-        "11-12-2026; de veertien klassen, die de nulmeting over 2026 in januari 2027 nodig heeft. Beslissen: directie, "
-        "ICT-manager en Hoofd S&M."),
+    (3, "Account, seats en planning", "Voorwaarde vóór de start: de inspecteurs gebruiken Noardlings bestaande Claude "
+        "Team-seats (per persoon, niet delen; pagina 3 en bijlage I), met extra seats voor wie er nog geen heeft. Met "
+        "toets aan de AVG, zo nodig met de OR. Zonder geregelde seats start de proef niet. Verder: de planning levert de "
+        "projectcijfers van 2026 vóór 11-12-2026; de veertien klassen, die de nulmeting over 2026 in januari 2027 nodig "
+        "heeft. Beslissen: directie, ICT-manager en Hoofd S&M."),
 ], size=BODY)
 p("Na de proef: de lijst met gegevens, het toetsniveau (taak of taakstap), de definities, de regel voor korte projecten, het programma, "
   "aankondigen, de telling, de inspectie door een monteur, de bewaartermijn, en of AMS daarna vervalt.")
@@ -1008,7 +1009,7 @@ tbl([
     ["18", "Trendanalyse", "Nulmeting over 2026 in januari 2027, halfjaar juli 2027, daarna jaarlijks; TREND-acties", "Hoofd S&M, directie", NU],
     ["19", "Terugvaloptie", "Formulier vóór de proef; achteraf invoeren binnen twee werkdagen", "Hoofd S&M", NU],
     ["20", "Bewaartermijn", "Vijf jaar (langer dan één certificatieperiode)", "Hoofd S&M, QHSE-Manager", NA],
-    ["21", "Account en platform", "Eigen Claude Team-seats of Microsoft 365 Copilot (bijlage I); het gedeelde account past niet in de voorwaarden van Anthropic; AVG toetsen, zo nodig met de OR. Advies: proef met Claude Team, Copilot parallel verkennen", "Directie, ICT-manager", "Nu; vóór de proef (go/no-go)"],
+    ["21", "Account en seats", "Inspecteurs gebruiken Noardlings bestaande Claude Team-seats (per persoon, niet delen; bijlage I); extra seats voor wie er nog geen heeft; AVG toetsen, zo nodig met de OR. Een latere beproeving van Copilot is een apart ICT-traject", "Directie, ICT-manager", "Nu; vóór de proef (go/no-go)"],
     ["22", "Evaluatie en AMS", "Evaluatie een week na de laatste proef-WPI; bij succes AMS weg en procedure vastgesteld", "Hoofd S&M", NA],
     ["23", "Toetsniveau", "Taakstappen terugbrengen in de TRA's, of de taak als toetsniveau accepteren (4.5). In de proef: de taak, en de taakstap waar de TRA die kent", "Hoofd S&M", NA],
  ], [520, 1450, 4494, 1500, 1100])

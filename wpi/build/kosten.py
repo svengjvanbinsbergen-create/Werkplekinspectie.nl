@@ -134,6 +134,7 @@ TEAM_JR, TEAM_MND = 20, 25          # Claude Team, standard seat, per maand: jaa
 COP_JR, COP_PROMO, COP_MND = 21, 18, 25.20   # Microsoft 365 Copilot Business per gebruiker per maand: jaar / actie jaar 1 / maandbetaling
 N_PROEF, N_NA = 3, 5
 LIC = {
+    "team_seat_mnd": TEAM_MND, "team_seat_jaar": TEAM_JR,   # per seat per maand: maand- / jaarbetaling
     "team_proef_jaar": N_PROEF * TEAM_JR * 12, "team_proef_mnd": N_PROEF * TEAM_MND,
     "team_na_jaar": N_NA * TEAM_JR * 12,
     "cop_proef_jaar": N_PROEF * COP_JR * 12, "cop_proef_promo": N_PROEF * COP_PROMO * 12,
