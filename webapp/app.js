@@ -17,23 +17,30 @@
     plus: '<path d="M12 5v14M5 12h14"/>', cam: '<rect x="3" y="7" width="18" height="13" rx="3"/><circle cx="12" cy="13.5" r="3.2"/><path d="M8 7l1.5-2h5L16 7"/>',
     mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3"/>',
     warn: '<path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   };
   const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
 
   // ---- lokale opslag (IndexedDB): inspecties blijven bewaard tot er een backend is ----
+  // stores: inspecties (afgerond), acties (los van de inspectie in te stellen), concept (lopende inspectie)
   const DB = {
     _db: null,
     open() {
       if (this._db) return Promise.resolve(this._db);
       return new Promise((res, rej) => {
-        const r = indexedDB.open("wpi", 1);
-        r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("inspecties")) r.result.createObjectStore("inspecties", { keyPath: "id" }); };
+        const r = indexedDB.open("wpi", 2);
+        r.onupgradeneeded = () => { ["inspecties", "acties", "concept"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
         r.onsuccess = () => { this._db = r.result; res(this._db); };
         r.onerror = () => rej(r.error);
       });
     },
-    async save(obj) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction("inspecties", "readwrite"); t.objectStore("inspecties").put(obj); t.oncomplete = res; t.onerror = () => rej(t.error); }); },
-    async all() { const db = await this.open(); return new Promise((res, rej) => { const r = db.transaction("inspecties").objectStore("inspecties").getAll(); r.onsuccess = () => res(r.result || []); r.onerror = () => rej(r.error); }); },
+    async tx(store, mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction(store, mode); const r = fn(t.objectStore(store)); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); },
+    put(store, obj) { return this.tx(store, "readwrite", (o) => { o.put(obj); }); },
+    del(store, id) { return this.tx(store, "readwrite", (o) => { o.delete(id); }); },
+    get(store, id) { return this.tx(store, "readonly", (o) => o.get(id)); },
+    async getAll(store) { return (await this.tx(store, "readonly", (o) => o.getAll())) || []; },
+    save(obj) { return this.put("inspecties", obj); },
+    all() { return this.getAll("inspecties"); },
   };
   // kleine helper: afbeelding verkleinen naar dataURL (bespaart opslag)
   function fotoDataURL(file, max = 1000) {
@@ -61,10 +68,11 @@
   const TABS = [
     { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "acties", lab: "Acties", ic: "list", rollen: ["hoofd", "coordinator"] },
+    { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "inspecteur"] },
     { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"] },
   ];
   const staf = () => App.user && (App.user.role === "hoofd" || App.user.role === "coordinator");
+  const naam = (id) => { const u = USERS.find((x) => x.id === id); return u ? u.full_name : id ? String(id) : "–"; };
 
   // ---- eenvoudige trefwoord-matching (terugval als Claude niet beschikbaar is) ----
   const STOP = new Set(("de het een en van in op te is dat die niet met voor bij aan zijn er als ook om of door naar uit " +
@@ -102,9 +110,22 @@
   }
   // afkappen op een woordgrens
   function kort(s, n) { s = String(s || ""); if (s.length <= n) return s; const c = s.slice(0, n); const i = c.lastIndexOf(" "); return (i > n * 0.6 ? c.slice(0, i) : c).replace(/[;,.:\s]+$/, "") + "…"; }
-  function termijn(prio) {
-    const d = new Date(); d.setDate(d.getDate() + (prio === "direct" ? 0 : prio === "kort" ? 14 : 56));
-    return d.toLocaleDateString("nl-NL");
+  // datums (plandatum als JJJJ-MM-DD)
+  const dag0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
+  const isoDag = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const plusDagen = (n) => { const d = dag0(); d.setDate(d.getDate() + n); return isoDag(d); };
+  const dagLabel = (iso) => iso ? new Date(iso + "T00:00").toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" }) : "–";
+  const dagenTot = (iso) => Math.round((new Date(iso + "T00:00") - dag0()) / 864e5);
+  const PRIO = { direct: { lab: "Direct", d: 0 }, kort: { lab: "Kort · ±2 weken", d: 14 }, planmatig: { lab: "Planmatig · ±8 weken", d: 56 } };
+  // actie-statusmodel: Voorstel (uit inspectie) → Open → In uitvoering → Klaar voor toetsing → Afgerond (alleen door toetser)
+  const ST_CLS = { "Voorstel": "b-vs", "Open": "b-todo", "In uitvoering": "b-uitv", "Klaar voor toetsing": "b-toets", "Afgerond": "b-done", "Vervallen": "b-N" };
+  const stBadge = (s) => `<span class="badge ${ST_CLS[s] || "b-N"}">${esc(s || "–")}</span>`;
+  const tril = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
+  // welke woorden van de gebruiker een voorstel onderbouwen ("waarom")
+  function eigenWoorden(tekst, doc) {
+    const D = new Set(toks(doc)), uit = [];
+    String(tekst || "").split(/\s+/).forEach((w) => { const t = toks(w)[0]; const schoon = w.replace(/[^\p{L}\p{N}-]/gu, ""); if (t && D.has(t) && schoon && !uit.includes(schoon.toLowerCase())) uit.push(schoon.toLowerCase()); });
+    return uit.slice(0, 4);
   }
 
   const App = {
@@ -116,6 +137,12 @@
       const got = await Promise.all(names.map((n) => fetch("data/" + n + ".json").then((r) => r.json())));
       names.forEach((n, i) => (this.data[n] = got[i]));
       try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
+      this.laadPref();
+      if (this.user) await this.herstelConcept();
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && location.hash === "#/inspectie") this.wakeLock(true);
+        if (document.visibilityState === "hidden" && this.state.inspectie) this.bewaarConcept(true);   // app weggeklikt: meteen bewaren
+      });
       if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("sw.js"); } catch (e) {} }
       // Runtime-mogelijkheden van claude.ai (alleen in de gehoste versie): inspreken en Claude-voorstellen
       if (window.claude && typeof window.claude.use === "function") {
@@ -132,11 +159,57 @@
       this.route();
     },
 
-    login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.go("vandaag"); this.route(); },
-    logout() { this.user = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
+    async login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
+    logout() { this.stopMic(); this.user = null; this.state.inspectie = null; this.acties = null; this.actFilter = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
+
+    // ---- weergave: veldmodus (grote knoppen) en zonmodus (hoog contrast) ----
+    pref: { veld: false, zon: false },
+    laadPref() { try { Object.assign(this.pref, JSON.parse(localStorage.getItem("wpi_pref") || "{}")); } catch (e) {} this.pasPrefToe(); },
+    pasPrefToe() { document.body.classList.toggle("veld", !!this.pref.veld); document.body.classList.toggle("zon", !!this.pref.zon); },
+    zetPref(k) { this.pref[k] = !this.pref[k]; try { localStorage.setItem("wpi_pref", JSON.stringify(this.pref)); } catch (e) {} this.pasPrefToe(); tril(15); this.openWeergave(); },
+    openWeergave() {
+      const sw = (k, t, s) => `<button class="row prefrow" onclick="App.zetPref('${k}')"><span class="grow"><span class="t">${t}</span><div class="s">${s}</div></span><span class="sw${this.pref[k] ? " on" : ""}" role="switch" aria-checked="${!!this.pref[k]}"></span></button>`;
+      this.openModal("Weergave", "Voor op locatie. Wordt onthouden op dit toestel.",
+        `<div class="listcard">${sw("veld", "Veldmodus", "Grotere knoppen en microfoon, voor werken met handschoenen")}${sw("zon", "Zonmodus", "Hoog contrast: zwart op wit met dikke randen, leesbaar in fel licht")}</div>
+         <div class="s" style="margin-top:12px">Tijdens een inspectie blijft het scherm automatisch aan.</div>`);
+    },
+    // scherm aan houden tijdens de inspectie (Screen Wake Lock)
+    async wakeLock(aan) {
+      try {
+        if (aan && !this._wl && navigator.wakeLock) { this._wl = await navigator.wakeLock.request("screen"); this._wl.addEventListener("release", () => { this._wl = null; }); }
+        else if (!aan && this._wl) { const w = this._wl; this._wl = null; await w.release(); }
+      } catch (e) { this._wl = null; }
+    },
+
+    // ---- lopende inspectie direct op het toestel bewaren (overleeft sluiten van de app) ----
+    _opslag: null,
+    async herstelConcept() {
+      if (!this.user || this.state.inspectie) return;
+      try { const c = await DB.get("concept", "lopend-" + this.user.id); if (c && c.ins) { this.state.inspectie = c.ins; this._opslag = { s: "ok", t: new Date(c.t) }; } } catch (e) {}
+    },
+    bewaarConcept(direct) {
+      clearTimeout(this._cTimer);
+      const user = this.user; if (!user) return;
+      this._cTimer = setTimeout(async () => {
+        const ins = this.state.inspectie;
+        try {
+          if (ins) await DB.put("concept", { id: "lopend-" + user.id, ins, t: new Date().toISOString() });
+          else await DB.del("concept", "lopend-" + user.id);
+          this._opslag = { s: "ok", t: new Date() };
+        } catch (e) { this._opslag = { s: "fout" }; }
+        this.toonOpslag();
+      }, direct ? 0 : 300);
+    },
+    toonOpslag() {
+      const c = $("opslag"); if (!c) return; const o = this._opslag || {};
+      c.className = "opslag " + (o.s || "");
+      c.innerHTML = o.s === "fout" ? `Niet opgeslagen · <u style="cursor:pointer" onclick="App.bewaarConcept()">opnieuw</u>`
+        : o.t ? `✓ Veilig op dit toestel · ${o.t.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "Wordt op dit toestel bewaard";
+    },
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
       $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
+        <button class="chip" onclick="App.openWeergave()" title="Weergave" aria-label="Weergave" style="width:40px;justify-content:center;padding:0">${svg("sun", 18)}</button>
         <button class="chip" onclick="App.openSearch()" title="Zoeken" aria-label="Zoeken" style="width:40px;justify-content:center;padding:0">${svg("list", 18)}</button>
         <button class="chip" onclick="App.logout()" title="Uitloggen">${esc(this.user.full_name.split(" ")[0] === ROL[this.user.role] ? ROL[this.user.role] : this.user.full_name.split(" ")[0] + " · " + ROL[this.user.role])} ×</button></div>`;
     },
@@ -172,6 +245,7 @@
       if (tab && !tab.rollen.includes(this.user.role)) { return this.go("vandaag"); }  // geen toegang
       this.renderTabs(page);
       $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
+      this.wakeLock(page === "inspectie");
       const fn = this["view_" + page];
       $("view").innerHTML = "";
       if (fn) fn.call(this, parts.slice(1));
@@ -214,7 +288,16 @@
       const c = this.data.cijfers;
       const v = $("view");
       const vn = this.user.full_name.split(" ")[0];
-      v.appendChild(el(`<div><div class="kicker">Woensdag 11 november 2026 · ${esc(ROL[this.user.role])}</div><h1>Hallo ${esc(vn)}</h1></div>`));
+      const dl = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+      v.appendChild(el(`<div><div class="kicker">${esc(dl[0].toUpperCase() + dl.slice(1))} · ${esc(ROL[this.user.role])}</div><h1>Hallo ${esc(vn)}</h1></div>`));
+      const mijn = el(`<div id="mijnact"></div>`); v.appendChild(mijn);
+      this.laadActies().then(() => {
+        if (!document.body.contains(mijn)) return;
+        const B = this.bakjes(), n = B.telaat.length + B.gepland.length + B.toetsen.length + B.instellen.length; if (!n) return;
+        const t = (k, cls, lab) => B[k].length || k === "telaat" ? `<button class="mini ${cls}" onclick="App.actFilter='${k}';App.go('acties')"><b>${B[k].length}</b>${lab}</button>` : "";
+        mijn.innerHTML = `<div class="card" style="margin-bottom:14px"><h3>${this.user.role === "hoofd" ? "Acties van het team" : "Mijn acties"} <a class="s" href="#/acties">alles ›</a></h3>
+          <div class="minis">${t("telaat", B.telaat.length ? "blush" : "mist", "te laat")}${t("gepland", "sky", "gepland")}${t("toetsen", "lilac", "te toetsen")}${t("instellen", "butter", "in te stellen")}</div></div>`;
+      });
       if (staf()) {
         v.appendChild(el(`<div class="grid kpis">
           ${this.tile("sage", c.vp_x + " / " + c.vp_y, "Per werkplek", c.vp_mis.length + " gemist", "App.go('dashboard')")}
@@ -264,13 +347,22 @@
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
     // Koppeling aan een TRA-regel is altijd een Voorstel; het oordeel kiest alleen de inspecteur.
-    startInspectie(code, project, titel) {
+    startInspectie(code, project, titel, zeker) {
+      const lo = this.state.inspectie;
+      if (lo && !zeker && (lo.waarnemingen.length || lo.taken.length)) {
+        return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + " waarneming(en)",
+          `<button class="btn primary" onclick="App.closeModal();App.goIns()">Verder met de lopende inspectie</button>
+           <button class="btn danger" style="margin-top:10px;width:100%" onclick='App.closeModal();App.startInspectie(${esc(JSON.stringify(code))},${esc(JSON.stringify(project))},${esc(JSON.stringify(titel))},true)'>Lopende weggooien en nieuw starten</button>`);
+      }
       this.stopMic();
       this.state.inspectie = { code, project, titel, taak: null, taken: [], stap: "taak", taakTekst: "",
         waarnemingen: [], cur: null, voorstel: null, laatste: null, gesprek: "", positief: "", handtekening: null,
-        start: new Date().toISOString() };
+        keuzes: [], start: new Date().toISOString() };
+      this._opslag = null;
       this.goIns();
     },
+    // vastleggen wat de inspecteur met elk voorstel deed (bewijs: de mens beslist)
+    logKeuze(soort, uitkomst, wat) { const ins = this.state.inspectie; if (!ins) return; (ins.keuzes = ins.keuzes || []).push({ soort, uitkomst, wat: String(wat || "").slice(0, 120), t: new Date().toISOString() }); },
     goIns() { if (location.hash === "#/inspectie") this.route(); else this.go("inspectie"); },
     stap(s) { this.stopMic(); const ins = this.state.inspectie; if (!ins) return; ins.stap = s; this.goIns(); window.scrollTo(0, 0); },
     nieuweWaarneming(onderwerp) {
@@ -280,7 +372,11 @@
         actie: { tekst: "", herkomst: "", prio: null, terPlaatse: "niets" } };
       ins.voorstel = null; ins.stap = "zie";
     },
-    kiesTaak(t) { const ins = this.state.inspectie; ins.taak = t; if (!ins.taken.includes(t)) ins.taken.push(t); this.nieuweWaarneming(); this.stap("zie"); },
+    kiesTaak(t) {
+      const ins = this.state.inspectie; ins.taak = t; if (!ins.taken.includes(t)) ins.taken.push(t);
+      this.logKeuze("taak", (this._taakVs || []).includes(t) ? "voorstel gebruikt" : "zelf gekozen", t);
+      tril(20); this.nieuweWaarneming(); this.stap("zie");
+    },
     andereTaak() { const ins = this.state.inspectie; ins.taakTekst = ""; ins.cur = null; this.stap("taak"); },
     terug() {
       const ins = this.state.inspectie; if (!ins) return this.go("vandaag");
@@ -309,7 +405,7 @@
       else if (key === "actie" && i.cur) { i.cur.actie.tekst = v; i.cur.actie.herkomst = "Jij"; }
       else if (key === "gesprek") i.gesprek = v;
       else if (key === "positief") i.positief = v;
-      this.syncKnoppen();
+      this.syncKnoppen(); this.bewaarConcept();
     },
     appendVeld(key, txt) {
       if (!key || !txt) return;
@@ -330,13 +426,30 @@
     },
     invoer(key, ph) {
       return `<div class="inbox"><textarea id="f-${key}" placeholder="${esc(ph)}" oninput="App.setVeld('${key}',this.value)">${esc(this.veld(key))}</textarea>
-        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" onclick="App.toggleMic('${key}')" aria-label="Inspreken">${svg("mic", 22)}</button></div>
+        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" aria-label="Inspreken: ingedrukt houden of aantikken" title="Ingedrukt houden = praten, loslaten = klaar. Kort tikken = aan/uit."
+          onpointerdown="App.micDown('${key}',event)" onpointerup="App.micUp('${key}')" onpointercancel="App.micUp('${key}')" oncontextmenu="return false"
+          onclick="if(event.detail===0)App.toggleMic('${key}')">${svg("mic", 24)}</button></div>
         <div class="partial" id="p-${key}"></div>`;
     },
 
     // --- inspreken: Claude-dictatie > spraakherkenning browser > microfoon van het toetsenbord ---
+    // push-to-talk: ingedrukt houden = praten, loslaten = klaar; kort tikken = aan/uit (zoals een WhatsApp-spraakbericht)
+    micDown(key, e) {
+      if (e) e.preventDefault();
+      const was = this.micKey === key; this._pd = { key, t: Date.now(), was };
+      if (!was) { if (this.micKey) this.stopMic(); this.startMic(key); tril(25); }
+    },
+    micUp(key) {
+      const p = this._pd; this._pd = null; if (!p || p.key !== key) return;
+      if (p.was) { tril(15); return this.stopMic(); }
+      if (Date.now() - p.t >= 450) { if (this.micKey === key) { tril(15); this.stopMic(); } }
+      else if (this.micKey === key) this.zegPartial(key, "Luistert… tik nogmaals om te stoppen");
+    },
     toggleMic(key) {
       if (this.micKey) { const was = this.micKey; this.stopMic(); if (was === key) return; }
+      this.startMic(key);
+    },
+    startMic(key) {
       const d = this.caps && this.caps.dictation;
       if (d) {
         this.micKey = key; this._dictKey = key; this.markMic();
@@ -439,12 +552,24 @@
       return { ref: id, titel: r.risico || id, maatregelen: splitMaatregelen(r.maatregelen) };
     },
     regelInfo(id, buiten) { return this.infoVoor(this.state.inspectie.code, id, buiten); },
+    // ---- één vaste Voorstel-component: label, bron, waarom, en jij kiest ----
+    vsKop(vraag, bron) { return `<div class="vskop"><span class="lbl vs">Voorstel</span>${bron ? `<span class="s">via ${esc(bron)}</span>` : ""}<span class="s">· ${esc(vraag)}</span></div>`; },
+    vsPick(onclick, titel, sub, waarom) {
+      return `<button class="pick" onclick="${onclick}"><div class="t">${titel}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ""}${waarom ? `<div class="waarom">Waarom: ${waarom}</div>` : ""}<div class="gebruik">Gebruik dit ›</div></button>`;
+    },
+    waarom(tekst, doc, bron) {
+      const w = eigenWoorden(tekst, doc);
+      if (w.length) return "je zei " + w.map((x) => "“" + esc(x) + "”").join(", ");
+      return bron && /Claude/.test(bron) ? "past inhoudelijk bij je waarneming (Claude)" : "";
+    },
     renderTaakVs() {
       const box = $("taakvs"), ins = this.state.inspectie; if (!box || !ins) return;
       const regels = this.data.kennisbank[ins.code].regels, taken = [...new Set(regels.map((r) => r.taak))];
-      const vs = ins.taakTekst.trim() ? this.lokaalVoorstel(ins.taakTekst, taken.map((t) => ({ id: t, naam: t, doc: regels.filter((r) => r.taak === t).map((r) => (r.taakstap || "") + " " + (r.risico || "")).join(" ") }))).slice(0, 2) : [];
-      box.innerHTML = vs.length ? `<div style="margin-top:12px"><span class="lbl vs">Voorstel</span> <span class="s">is dit de taak?</span></div>` +
-        vs.map((t) => `<button class="pick" onclick="App.kiesTaak(${esc(JSON.stringify(t))})"><div class="t">${esc(t)}</div><div class="s">${regels.filter((r) => r.taak === t).length} risicoregels in de TRA · tik om te bevestigen</div></button>`).join("") : "";
+      const docVan = (t) => t + " " + regels.filter((r) => r.taak === t).map((r) => (r.taakstap || "") + " " + (r.risico || "")).join(" ");
+      const vs = ins.taakTekst.trim() ? this.lokaalVoorstel(ins.taakTekst, taken.map((t) => ({ id: t, naam: t, doc: docVan(t) }))).slice(0, 2) : [];
+      this._taakVs = vs;
+      box.innerHTML = vs.length ? this.vsKop("is dit de taak?") +
+        vs.map((t) => this.vsPick(`App.kiesTaak(${esc(JSON.stringify(t))})`, esc(t), regels.filter((r) => r.taak === t).length + " risicoregels in de TRA", this.waarom(ins.taakTekst, docVan(t)))).join("") : "";
     },
 
     // --- schermen ---
@@ -455,12 +580,16 @@
       if (f) f.call(this, ins, v);
       this.syncKnoppen();
       if (ins.stap === "klaar") this.setupSignature();
+      this.toonOpslag(); this.bewaarConcept(true);
     },
     insHead(ins, kicker, titel) {
       const n = ins.waarnemingen.length, a = ins.waarnemingen.filter((w) => w.oordeel === "A" || w.oordeel === "V").length;
       return `<div><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
         <button class="btn ghost sm" onclick="App.terug()">${svg("back", 16)} Terug</button>
-        <span class="s" style="text-align:right">${esc(ins.titel)}<br>${n} waarneming${n === 1 ? "" : "en"}${a ? " · " + a + " actie" + (a === 1 ? "" : "s") : ""}</span></div>
+        <span class="s" style="text-align:right">${esc(ins.titel)}<br>${n} waarneming${n === 1 ? "" : "en"}${a ? " · " + a + " actievoorstel" + (a === 1 ? "" : "len") : ""}</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px">
+          <span id="opslag" class="opslag"></span>
+          <button class="chip" onclick="App.openWeergave()" aria-label="Weergave">${svg("sun", 16)}&nbsp;Weergave</button></div>
         <div class="kicker" style="margin-top:14px">${esc(kicker)}</div><h1 style="margin:2px 0 4px">${esc(titel)}</h1></div>`;
     },
     citaat(cur) {
@@ -471,7 +600,7 @@
     toastLaatste(ins) {
       const w = ins.waarnemingen.find((x) => x.id === ins.laatste); if (!w) return "";
       const info = this.regelInfo(w.regel_id, w.buiten);
-      return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${w.oordeel}]${w.oordeel === "A" || w.oordeel === "V" ? " · actie aangemaakt" : ""}</span>
+      return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${w.oordeel}]${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
         <button class="btn ghost sm" onclick="App.ongedaan()">Ongedaan maken</button></div>`;
     },
 
@@ -491,7 +620,7 @@
       v.appendChild(el(this.insHead(ins, ow ? "Algemeen onderwerp · " + ow.naam : "Taak · " + ins.taak, "Wat zie je?")));
       v.appendChild(el(`<div class="q">
         ${cur.direct ? `<div class="toast" style="background:var(--red-bg);color:var(--red);margin:0 0 12px">Direct gevaar · laat het werk stilleggen</div>` : ""}
-        <div class="qs" style="margin-top:0">${ow ? "Vertel wat je zag bij " + esc(ow.naam.toLowerCase()) + "." : "Vertel wat je ziet gebeuren, of maak een foto. Alleen wat je ziet telt."}</div>
+        <div class="qs" style="margin-top:0">${ow ? "Vertel wat je zag bij " + esc(ow.naam.toLowerCase()) + "." : "Vertel wat je ziet gebeuren, of maak een foto. Alleen wat je ziet telt."} Houd de microfoon ingedrukt terwijl je praat.</div>
         ${this.invoer("zie", "Bijv. de gasmeter hangt boven aan de ladder, niet bij de man in de put")}
         <div style="display:flex;gap:10px;align-items:center;margin-top:10px">
           <button class="btn ghost sm" onclick="App.addFoto()">${svg("cam", 16)} ${cur.foto ? "Foto vervangen" : "Foto maken"}</button>
@@ -536,10 +665,12 @@
     ins_koppel(ins, v) {
       const cur = ins.cur, vs = ins.voorstel || { ids: [], bezig: true };
       v.appendChild(el(this.insHead(ins, "Taak · " + ins.taak, "Waar hoort dit bij?")));
-      const pick = (id) => { const i = this.regelInfo(id); return `<button class="pick" onclick="App.kiesRegel('${id}')"><div class="t">${esc(i.ref)} · ${esc(kort(i.titel, 110))}</div>${i.maatregelen.length ? `<div class="s">${esc(kort(i.maatregelen.slice(0, 2).join(" · "), 150))}</div>` : ""}</button>`; };
+      const kand = this.kandidaten(ins);
+      const pick = (id) => { const i = this.regelInfo(id), k = kand.find((x) => x.id === id);
+        return this.vsPick(`App.kiesRegel('${id}')`, esc(i.ref) + " · " + esc(kort(i.titel, 110)), i.maatregelen.length ? kort(i.maatregelen.slice(0, 2).join(" · "), 150) : "", this.waarom(cur.tekst, k ? k.doc + " " + k.naam : i.titel, vs.bron)); };
       v.appendChild(el(`<div class="q">${this.citaat(cur)}
         ${vs.bezig ? `<div class="s" style="margin-top:14px;font-weight:600">Even koppelen aan de TRA…</div>`
-          : vs.ids.length ? `<div style="margin-top:14px"><span class="lbl vs">Voorstel${vs.bron ? " · " + esc(vs.bron) : ""}</span> <span class="s">tik aan wat klopt</span></div>${vs.ids.map(pick).join("")}`
+          : vs.ids.length ? `<div style="margin-top:14px">${this.vsKop("tik aan wat klopt", vs.bron)}</div>${vs.ids.map(pick).join("")}`
           : `<div class="s" style="margin-top:14px">Geen duidelijke regel gevonden. Kies hieronder zelf, of leg het vast als buiten de TRA.</div>`}
         <button class="btn ghost" style="margin-top:12px;width:100%" onclick="App.buitenTRA()">Staat niet in de TRA (buiten TRA)</button></div>`));
       const regels = this.regelsVanTaak(ins);
@@ -547,8 +678,12 @@
         <div style="margin-top:8px">${regels.map((r) => `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line)" onclick="App.kiesRegel('${r.id}')"><div class="t">${esc(r.id)} · ${esc(kort(r.risico, 90))}</div></button>`).join("")}
         ${this.onderwerpen().map((o) => `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line)" onclick="App.kiesRegel('ALG-${o.ref}')"><div class="t">Algemeen ${o.ref} · ${esc(o.naam)}</div></button>`).join("")}</div></details>`));
     },
-    kiesRegel(id) { const ins = this.state.inspectie, cur = ins.cur; cur.regel_id = id; cur.buiten = false; cur.vraag = (ins.voorstel && ins.voorstel.vraag) || ""; cur.maatregelen = []; this.stap("oordeel"); },
-    buitenTRA() { const cur = this.state.inspectie.cur; cur.regel_id = null; cur.buiten = true; cur.vraag = ""; cur.maatregelen = []; this.stap("oordeel"); },
+    kiesRegel(id) {
+      const ins = this.state.inspectie, cur = ins.cur, vsIds = (ins.voorstel && ins.voorstel.ids) || [];
+      this.logKeuze("TRA-regel", vsIds.includes(id) ? "voorstel gebruikt" : "zelf gekozen", id);
+      cur.regel_id = id; cur.buiten = false; cur.vraag = (ins.voorstel && ins.voorstel.vraag) || ""; cur.maatregelen = []; tril(20); this.stap("oordeel");
+    },
+    buitenTRA() { this.logKeuze("TRA-regel", "zelf gekozen", "buiten TRA"); const cur = this.state.inspectie.cur; cur.regel_id = null; cur.buiten = true; cur.vraag = ""; cur.maatregelen = []; this.stap("oordeel"); },
     togMaatregel(i) {
       const cur = this.state.inspectie.cur, m = this.regelInfo(cur.regel_id, cur.buiten).maatregelen[i]; if (!m) return;
       cur.maatregelen = cur.maatregelen.includes(m) ? cur.maatregelen.filter((x) => x !== m) : cur.maatregelen.concat([m]);
@@ -569,8 +704,13 @@
       v.appendChild(el(h));
     },
     oordeel(o) {
-      const ins = this.state.inspectie, cur = ins.cur; cur.oordeel = o;
-      if (o === "A" || o === "V") { if (!cur.actie.prio) cur.actie.prio = cur.direct ? "direct" : o === "A" ? "kort" : "planmatig"; return this.stap("actie"); }
+      const ins = this.state.inspectie, cur = ins.cur; cur.oordeel = o; tril(o === "C" ? 25 : [25, 60, 25]);
+      if (o === "A" || o === "V") {
+        if (!cur.actie.prio) cur.actie.prio = cur.direct ? "direct" : o === "A" ? "kort" : "planmatig";
+        this.stap("actie");
+        if (!cur.actie.tekst.trim()) this.actieVoorstel();   // voorstel op basis van wat de inspecteur zei
+        return;
+      }
       const terug = cur.onderwerp ? "algemeen" : "meer";
       this.bewaarWaarneming(); this.stap(terug);
     },
@@ -588,54 +728,60 @@
     },
     ins_actie(ins, v) {
       const cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten), a = cur.actie;
-      v.appendChild(el(this.insHead(ins, info.ref + " · " + (cur.oordeel === "A" ? "Afwijking" : "Verbeterpunt"), "Wat moet er gebeuren?")));
+      v.appendChild(el(this.insHead(ins, info.ref + " · " + (cur.oordeel === "A" ? "Afwijking" : "Verbeterpunt"), "Wat zou er moeten gebeuren?")));
       const chip = (k, val, lab) => `<button class="chipb${a[k] === val ? " on" : ""}" onclick="App.zetActie('${k}','${val}')">${lab}</button>`;
       const gecorr = a.terPlaatse === "gecorrigeerd";
       v.appendChild(el(`<div class="q">${this.citaat(cur)}
-        <div class="s" style="margin:14px 0 6px;font-weight:600">Verbeteractie ${a.herkomst === "Voorstel" ? '<span class="lbl vs">Voorstel</span> pas aan of bevestig' : ""}</div>
+        <div style="margin:14px 0 6px">${a.bezig ? `<span class="s" style="font-weight:600">Even een voorstel maken op basis van wat je zei…</span>`
+          : a.herkomst === "Voorstel" ? this.vsKop("pas aan of laat staan", a.vsBron) + (a.vsWaarom ? `<div class="waarom" style="margin-top:4px">Waarom: ${a.vsWaarom}</div>` : "")
+          : `<span class="s" style="font-weight:600">Actievoorstel</span>`}</div>
         ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting")}
-        <button class="btn ghost sm" id="btn-av" onclick="App.actieVoorstel()">Laat de app een actie voorstellen</button>
-        <div class="s" style="margin:16px 0 6px;font-weight:600">Prioriteit</div>
-        <div class="chips">${chip("prio", "direct", "Direct")}${chip("prio", "kort", "Kort · 2 weken")}${chip("prio", "planmatig", "Planmatig · 8 weken")}</div>
+        <button class="btn ghost sm" id="btn-av" onclick="App.actieVoorstel()">${a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button>
+        <div class="s" style="margin:16px 0 6px;font-weight:600">Hoe dringend vind jij het?</div>
+        <div class="chips">${chip("prio", "direct", "Direct")}${chip("prio", "kort", "Kort · ±2 weken")}${chip("prio", "planmatig", "Planmatig · ±8 weken")}</div>
         <div class="s" style="margin:16px 0 6px;font-weight:600">Ter plaatse</div>
         <div class="chips">${chip("terPlaatse", "niets", "Niets gedaan")}${chip("terPlaatse", "maatregel", "Maatregel genomen")}${chip("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
-        ${a.terPlaatse === "maatregel" ? `<div class="s" style="margin-top:8px">Een direct genomen maatregel maakt alleen het lopende werk veilig; de actie blijft open tot de verbeteractie is uitgevoerd en getoetst.</div>` : ""}
-        ${gecorr ? `<div class="s" style="margin-top:8px">Direct gecorrigeerd: de verbeteractie zelf is ter plaatse uitgevoerd; jij toetst dit nu ter plaatse.</div>` : ""}
-        <div style="margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--mist);font-size:14px;line-height:1.8">
-          <div><span class="lbl std">Standaard</span> Actiehouder: Montage Coördinator van het project</div>
-          <div><span class="lbl std">Standaard</span> Toetser: ${gecorr ? "jij, ter plaatse" : "Hoofd Service &amp; Montage"}</div>
-          <div><span class="lbl std">Standaard</span> Termijn: ${termijn(a.prio)}</div></div>
-        <button class="btn primary" style="margin-top:14px" data-need="actie" onclick="App.bevestigActie()">Actie vastleggen</button></div>`));
+        ${a.terPlaatse === "maatregel" ? `<div class="s" style="margin-top:8px">Een direct genomen maatregel maakt alleen het lopende werk veilig; de actie blijft open tot ze is uitgevoerd en getoetst.</div>` : ""}
+        ${gecorr ? `<div class="s" style="margin-top:8px">Direct gecorrigeerd: de ploeg heeft het ter plaatse opgelost en jij hebt het gezien. Dit wordt vastgelegd als afgerond, met jou als toetser.</div>` : ""}
+        <div class="hint" style="margin-top:14px;background:var(--mist);color:var(--soft)">${gecorr ? "Geen verdere instelling nodig." : "Dit wordt een <b>actievoorstel</b>. Een coördinator stelt daarna de actie in: actiehouder, toetser en plandatum."}</div>
+        <button class="btn primary" style="margin-top:14px" data-need="actie" onclick="App.bevestigActie()">Actievoorstel vastleggen</button></div>`));
     },
-    zetActie(k, val) { this.state.inspectie.cur.actie[k] = val; this.route(); },
+    zetActie(k, val) { this.state.inspectie.cur.actie[k] = val; tril(15); this.route(); },
     async actieVoorstel() {
       const ins = this.state.inspectie, cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten);
-      const btn = $("btn-av"); if (btn) { btn.disabled = true; btn.textContent = "Even denken…"; }
-      let tekst = "";
+      cur.actie.bezig = true; const btn = $("btn-av"); if (btn) { btn.disabled = true; btn.textContent = "Even denken…"; }
+      if (ins.stap === "actie") this.route();
+      let tekst = "", bron = "", waarom = "";
       const s = this.caps && this.caps.sample;
       if (s) {
         try {
           const out = await s.json(
-            `Stel één concrete verbeteractie voor bij een werkplekinspectie. Gebruik alleen de gegevens hieronder en verzin geen feiten.\n` +
+            `Stel één concrete verbeteractie voor bij een werkplekinspectie. Baseer je op wat de inspecteur zei en op de TRA-maatregelen. Verzin geen feiten en geef geen oordeel.\n` +
             `Oordeel van de inspecteur: ${cur.oordeel === "A" ? "Afwijking" : "Verbeterpunt"}\nRisico of onderwerp: ${info.titel}\n` +
-            `Maatregelen uit de TRA: ${info.maatregelen.join("; ").slice(0, 700) || "(geen)"}\nWaarneming van de inspecteur: "${cur.tekst}"\n` +
+            `Maatregelen uit de TRA: ${info.maatregelen.join("; ").slice(0, 700) || "(geen)"}\nWat de inspecteur zei: "${cur.tekst}"\n` +
+            (ins.gesprek ? `Uit het gesprek met de monteurs: "${ins.gesprek.slice(0, 400)}"\n` : "") +
             `Antwoord alleen met JSON: {"actie":"gebiedende wijs, maximaal 25 woorden, Nederlands"}`, { modelTier: "quick" });
-          if (out && typeof out.actie === "string") tekst = out.actie.trim();
+          if (out && typeof out.actie === "string") { tekst = out.actie.trim(); bron = "Claude"; waarom = "jouw waarneming en de maatregelen uit de TRA"; }
         } catch (e) { if (e && (e.code === "not_granted" || e.code === "sampling_disabled")) this.caps.sample = null; }
       }
-      if (!tekst) tekst = info.maatregelen.length
-        ? "Zorg dat de TRA-maatregel wordt toegepast: " + (info.maatregelen.find((m) => !cur.maatregelen.includes(m)) || info.maatregelen[0]).replace(/^[^·]*·\s*/, "")
-        : cur.buiten ? "Risico beoordelen en een maatregel opnemen in de TRA: " + cur.tekst.trim()
-        : "Met de ploeg bespreken en verhelpen: " + cur.tekst.trim();
+      if (!tekst) {
+        const m = info.maatregelen.find((x) => !cur.maatregelen.includes(x)) || info.maatregelen[0];
+        tekst = m ? "Zorg dat de TRA-maatregel wordt toegepast: " + m.replace(/^[^·]*·\s*/, "")
+          : cur.buiten ? "Risico beoordelen en een maatregel opnemen in de TRA: " + cur.tekst.trim()
+          : "Met de ploeg bespreken en verhelpen: " + cur.tekst.trim();
+        bron = m ? "TRA-maatregel" : "jouw woorden"; waarom = m ? "deze TRA-maatregel heb je niet als gezien aangevinkt" : cur.buiten ? "het risico staat niet in de TRA" : "wat je zelf zag en zei";
+      }
+      cur.actie.bezig = false;
       if (this.state.inspectie !== ins || ins.cur !== cur) return;
-      cur.actie.tekst = tekst; cur.actie.herkomst = "Voorstel"; this.route();
+      if (cur.actie.tekst.trim() && cur.actie.herkomst === "Jij") { if (ins.stap === "actie") this.route(); return; }   // niet over eigen tekst heen schrijven
+      Object.assign(cur.actie, { tekst, herkomst: "Voorstel", vsTekst: tekst, vsBron: bron, vsWaarom: waarom });
+      if (ins.stap === "actie") this.route();
     },
     bevestigActie() {
-      const ins = this.state.inspectie, cur = ins.cur, a = cur.actie, gecorr = a.terPlaatse === "gecorrigeerd";
-      a.houder = "Montage Coördinator (project)";
-      a.toetser = gecorr ? this.user.full_name + " (ter plaatse)" : "Hoofd Service & Montage";
-      a.termijn = termijn(a.prio);
-      a.status = gecorr ? "Afgerond · ter plaatse getoetst" : "Open";
+      const ins = this.state.inspectie, cur = ins.cur, a = cur.actie;
+      this.logKeuze("actietekst", a.vsTekst ? (a.tekst.trim() === a.vsTekst.trim() ? "voorstel gebruikt" : "voorstel aangepast") : "zelf geschreven", a.tekst);
+      a.status = a.terPlaatse === "gecorrigeerd" ? "Afgerond" : "Voorstel";
+      tril([20, 40, 20]);
       const terug = cur.onderwerp ? "algemeen" : "meer";
       this.bewaarWaarneming(); this.stap(terug);
     },
@@ -678,16 +824,27 @@
           <span class="badge b-${w.oordeel === "NVT" ? "N" : w.oordeel}">[${w.oordeel}]</span></div>`;
       }).join("")}</div>`;
     },
+    // controle vóór ondertekenen: alleen herinneringen, je kunt altijd vastleggen
+    controlePunten(ins) {
+      const ws = ins.waarnemingen, p = [];
+      if (!ws.length) p.push("Er is nog geen waarneming vastgelegd.");
+      ws.filter((w) => w.oordeel === "A" && !w.foto).forEach((w) => p.push("Afwijking bij " + this.regelInfo(w.regel_id, w.buiten).ref + " heeft geen foto."));
+      ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && !(w.actie && w.actie.tekst.trim())).forEach((w) => p.push("Bij " + this.regelInfo(w.regel_id, w.buiten).ref + " ontbreekt een actievoorstel."));
+      if (!ws.some((w) => w.oordeel === "C") && !ins.positief.trim()) p.push("Nog geen positieve bevinding: leg een Conform vast of vul ‘Wat ging opvallend goed’ in.");
+      if (!ins.gesprek.trim()) p.push("Het gesprek met de monteurs is nog leeg.");
+      if (!ins.handtekening) p.push("Je hebt nog niet ondertekend.");
+      return p;
+    },
     ins_klaar(ins, v) {
       const ws = ins.waarnemingen, cnt = { C: 0, A: 0, V: 0, NVT: 0 };
       ws.forEach((w) => { cnt[w.oordeel] = (cnt[w.oordeel] || 0) + 1; });
       v.appendChild(el(this.insHead(ins, "Afronden", "Klopt dit?")));
-      v.appendChild(el(`<div class="grid kpis">${this.tile("sage", cnt.C, "Conform", "gezien")}${this.tile("blush", cnt.A, "Afwijking", cnt.A ? "met actie" : "geen")}${this.tile("butter", cnt.V, "Verbeterpunt", cnt.V ? "met actie" : "geen")}</div>`));
-      const w = [];
-      if (!ws.length) w.push("Er is nog geen waarneming vastgelegd.");
-      if (!cnt.C && !ins.positief.trim()) w.push("Nog geen positieve bevinding: leg een Conform vast of vul 'Wat ging opvallend goed' in.");
-      if (!ins.gesprek.trim()) w.push("Het gesprek met de monteurs is nog leeg.");
-      if (w.length) v.appendChild(el(`<div class="card" style="margin-top:14px;background:var(--butter);box-shadow:none">${w.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:2px 0">• ${esc(x)}</div>`).join("")}</div>`));
+      v.appendChild(el(`<div class="grid kpis">${this.tile("sage", cnt.C, "Conform", "gezien")}${this.tile("blush", cnt.A, "Afwijking", cnt.A ? "met actievoorstel" : "geen")}${this.tile("butter", cnt.V, "Verbeterpunt", cnt.V ? "met actievoorstel" : "geen")}</div>`));
+      const p = this.controlePunten(ins).filter((x) => !/ondertekend/.test(x));
+      v.appendChild(el(p.length ? `<div class="card" style="margin-top:14px;background:var(--butter);box-shadow:none">
+          <div style="font-weight:700;color:#5E4500">Nog even nalopen</div><div class="s" style="margin-bottom:6px;color:#7A5A00">Herinnering — je kunt de inspectie ook gewoon vastleggen.</div>
+          ${p.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:3px 0">• ${esc(x)}</div>`).join("")}</div>`
+        : `<div class="toast" style="margin-top:14px">✓ Alles compleet: foto’s, actievoorstellen, positieve bevinding en gesprek.</div>`));
       v.appendChild(el(`<div class="card" style="margin-top:14px"><div class="t">Getoetst tijdens bezoek</div><div class="s">${ins.taken.map(esc).join(" · ") || "—"}</div></div>`));
       if (ws.length) v.appendChild(el(this.vastgelegdLijst(ins)));
       v.appendChild(el(`<h2>Handtekening inspecteur</h2>`));
@@ -697,7 +854,7 @@
           <span class="s" id="sigstat">${ins.handtekening ? "Ondertekend ✓" : "Teken in het vak"}</span>
           <button class="btn ghost sm" onclick="App.clearSig()">Wissen</button></div></div>`));
       v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.bewaarInspectie()">Inspectie vastleggen</button>`));
-      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.go('vandaag')">Later afmaken</button>`));
+      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.go('vandaag')">Later afmaken (blijft bewaard)</button>`));
     },
     setupSignature() {
       const cv = $("sig"); if (!cv) return;
@@ -712,17 +869,40 @@
       cv.onpointerup = end; cv.onpointerleave = end;
     },
     clearSig() { const cv = $("sig"); if (cv) cv.getContext("2d").clearRect(0, 0, cv.width, cv.height); if (this.state.inspectie) this.state.inspectie.handtekening = null; const s = $("sigstat"); if (s) s.textContent = "Teken in het vak"; },
-    async bewaarInspectie() {
+    async bewaarInspectie(toch) {
       this.stopMic();
-      const ins = this.state.inspectie;
-      const rec = { id: "WPI-" + Date.now(), versie: 2, titel: ins.titel, code: ins.code, project: ins.project,
+      const ins = this.state.inspectie; if (!ins) return;
+      const p = this.controlePunten(ins);
+      if (p.length && !toch) {
+        return this.openModal("Nog " + p.length + " punt" + (p.length === 1 ? "" : "en") + " open", "Herinnering: je kunt aanvullen of toch vastleggen.",
+          `<div class="card" style="background:var(--butter);box-shadow:none">${p.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:3px 0">• ${esc(x)}</div>`).join("")}</div>
+           <button class="btn ghost" style="margin-top:14px;width:100%" onclick="App.closeModal()">Terug om aan te vullen</button>
+           <button class="btn primary" style="margin-top:10px" onclick="App.closeModal();App.bewaarInspectie(true)">Toch vastleggen</button>`);
+      }
+      const rec = { id: "WPI-" + Date.now(), versie: 3, titel: ins.titel, code: ins.code, project: ins.project,
         taken: ins.taken.slice(), taak: ins.taken[0] || ins.taak || "", waarnemingen: ins.waarnemingen,
-        gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening,
-        inspecteur: this.user.full_name, inspecteur_id: this.user.id, start: ins.start, opgeslagen: new Date().toISOString() };
-      try { await DB.save(rec); } catch (e) {}
-      this.state.inspectie = null;
-      this.openModal("Vastgelegd", "De inspectie is lokaal bewaard op dit toestel (nog geen cloud-opslag).",
-        `<button class="btn primary" onclick="App.closeModal();location.hash='#/rapport/${rec.id}'">Bekijk rapport</button>
+        gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening, keuzes: ins.keuzes || [],
+        open_punten: p, inspecteur: this.user.full_name, inspecteur_id: this.user.id, start: ins.start, opgeslagen: new Date().toISOString() };
+      // elk A/V-oordeel wordt een actievoorstel; instellen (houder, toetser, plandatum) gebeurt daarna handmatig
+      const nu = new Date().toISOString(), nieuw = [];
+      rec.waarnemingen.forEach((w, n) => {
+        if (!((w.oordeel === "A" || w.oordeel === "V") && w.actie)) return;
+        const gecorr = w.actie.terPlaatse === "gecorrigeerd", id = "ACT-" + Date.now() + "-" + n;
+        w.actie.actie_id = id;
+        nieuw.push({ id, inspectie_id: rec.id, inspectie_titel: rec.titel, inspecteur: rec.inspecteur, ref: this.infoVoor(rec.code, w.regel_id, w.buiten).ref,
+          waarneming: (w.tekst || "").trim(), foto: w.foto || null, oordeel: w.oordeel, tekst: w.actie.tekst, prio: w.actie.prio, terPlaatse: w.actie.terPlaatse,
+          status: gecorr ? "Afgerond" : "Voorstel", houder: null, toetser: gecorr ? this.user.id : null, plandatum: gecorr ? isoDag(new Date()) : null,
+          log: [{ t: nu, wie: rec.inspecteur, wat: gecorr ? "Ter plaatse gecorrigeerd en door de inspecteur gezien" : "Actievoorstel uit de inspectie" + (w.actie.herkomst === "Voorstel" ? " (tekst voorgesteld door de app)" : "") }] });
+      });
+      let ok = true;
+      try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }
+      if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary" onclick="App.closeModal();App.bewaarInspectie(true)">Opnieuw proberen</button>`);
+      this.acties = null;
+      this.state.inspectie = null; this.bewaarConcept(true); tril([30, 50, 30]);
+      const nv = nieuw.filter((a) => a.status === "Voorstel").length;
+      this.openModal("Vastgelegd", "Veilig bewaard op dit toestel (cloud-opslag volgt met de backend).",
+        `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Een coördinator stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
+         <button class="btn primary" onclick="App.closeModal();location.hash='#/rapport/${rec.id}'">Bekijk rapport</button>
          <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.closeModal();App.go('inspecties')">Naar inspecties</button>`);
     },
 
@@ -732,16 +912,17 @@
       const v = $("view");
       const mine = !staf();
       v.appendChild(el(`<div><div class="kicker">${mine ? "Jouw inspecties" : wpis.length + " voorbeeld-inspecties · alle inspecteurs"}</div><h1>Inspecties</h1></div>`));
+      v.appendChild(el(`<div class="muted" style="font-size:13px;margin:-8px 0 12px">Eigen inspecties staan veilig op dit toestel. Delen tussen telefoons volgt met de cloud-koppeling.</div>`));
       const box = el(`<div class="listcard"><div class="row"><span class="grow s">Laden…</span></div></div>`);
       v.appendChild(box);
       let saved = [];
       try { saved = await DB.all(); } catch (e) {}
       saved = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).sort((a, b) => b.opgeslagen.localeCompare(a.opgeslagen));
       const savedRows = saved.map((r) => {
-        const n = r.versie === 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length;
+        const n = r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length;
         return `<div class="row" style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'">
           <span class="grow"><span class="t">${esc(r.titel)}</span><div class="s">${new Date(r.opgeslagen).toLocaleString("nl-NL")} · ${esc(r.inspecteur.split(" ")[0])} · ${n} waarneming${n === 1 ? "" : "en"}${r.handtekening ? " · ondertekend" : ""}</div></span>
-          <span class="badge b-done">eigen</span></div>`;
+          <span class="badge b-done">op dit toestel</span></div>`;
       }).join("");
       const vbRows = mine ? "" : wpis.slice().reverse().map((w) => {
         const dam = (w.nr || "").split("-")[1] || "";
@@ -755,7 +936,7 @@
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       const r = saved.find((x) => x.id === id);
       if (!r) { v.appendChild(el(`<div><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
-      const ws = r.versie === 2 ? r.waarnemingen : Object.entries(r.oordelen || {}).filter(([, o]) => o)
+      const ws = r.versie >= 2 ? r.waarnemingen : Object.entries(r.oordelen || {}).filter(([, o]) => o)
         .map(([rid, o]) => ({ regel_id: rid, oordeel: o, tekst: "", foto: (r.fotos || {})[rid] || null, maatregelen: [], actie: { tekst: "" } }));
       const taken = r.taken || [r.taak];
       const ob = { C: "Conform", A: "Afwijking", V: "Verbeterpunt", NVT: "Niet van toepassing" };
@@ -768,14 +949,19 @@
           <span class="badge b-${w.oordeel === "NVT" ? "N" : w.oordeel}">[${w.oordeel}] ${ob[w.oordeel] || ""}</span></div>`;
       }).join("");
       const acties = ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && w.actie);
+      await this.laadActies();
       const aRows = acties.map((w, n) => {
-        const i = this.infoVoor(r.code, w.regel_id, w.buiten), a = w.actie;
-        return `<div class="row" style="align-items:flex-start"><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
-          <div class="s">${esc(i.ref)} · prioriteit ${prioLab[a.prio] || "–"} · termijn ${esc(a.termijn || "–")}</div>
-          <div class="s">Actiehouder: ${esc(a.houder || "–")} · toetser: ${esc(a.toetser || "–")}</div>
-          ${a.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
-          <span class="badge ${String(a.status || "").startsWith("Afgerond") ? "b-done" : "b-V"}">${esc(a.status || "Open")}</span></div>`;
+        const i = this.infoVoor(r.code, w.regel_id, w.buiten), live = (this.acties || []).find((x) => x.id === w.actie.actie_id);
+        const a = live || w.actie;   // live status uit Acties; oude rapporten (v2) vallen terug op het record
+        const houder = live ? (live.houder ? naam(live.houder) : "nog in te stellen") : a.houder || "–";
+        const toetser = live ? (live.toetser ? naam(live.toetser) : "nog in te stellen") : a.toetser || "–";
+        return `<div class="row" style="align-items:flex-start${live ? ";cursor:pointer" : ""}"${live ? ` onclick="App.openActie('${live.id}')"` : ""}><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
+          <div class="s">${esc(i.ref)} · dringendheid volgens inspecteur: ${prioLab[w.actie.prio] || "–"}${live ? " · plandatum " + dagLabel(live.plandatum) : a.termijn ? " · termijn " + esc(a.termijn) : ""}</div>
+          <div class="s">Actiehouder: ${esc(houder)} · toetser: ${esc(toetser)}</div>
+          ${w.actie.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
+          ${stBadge(live ? live.status : a.status || "Open")}</div>`;
       }).join("");
+      const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length;
       const fotos = ws.filter((w) => w.foto);
       v.appendChild(el(`<div class="noprint"><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button></div>`));
       v.appendChild(el(`<div id="rap">
@@ -791,23 +977,160 @@
         <h2>Ondertekening</h2>
         <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
           ${r.handtekening ? `<img src="${r.handtekening}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
+        ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${kc("voorstel gebruikt")} voorstel(len) gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
+        ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${r.open_punten.length} open herinnering(en): ${esc(r.open_punten.join(" "))}</div>` : ""}
       </div>`));
       v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px" onclick="window.print()">${svg("list", 18)} Opslaan als PDF / printen</button>`));
     },
 
     // ---------------- ACTIES ----------------
-    view_acties() {
-      const c = this.data.cijfers, t = this.data.trendacties;
-      const v = $("view");
-      v.appendChild(el(`<div><div class="kicker">Hoofd Service &amp; Montage</div><h1>Acties</h1></div>`));
-      v.appendChild(el(`<div class="grid kpis">
-        ${this.tile("blush", c.act_status.Open, "Open", c.act_over.length + " over termijn")}
-        ${this.tile("sage", c.act_status.Afgerond, "Afgerond", "getoetst")}
-        ${this.tile("butter", c.act_prio.direct, "Direct", "hoogste prioriteit")}</div>`));
-      const head = el(`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`);
-      v.appendChild(head);
-      v.appendChild(el(`<div class="listcard">${t.map((a) =>
-        `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
+    acties: null, actFilter: null,
+    async laadActies() {
+      if (this.acties) return this.acties;
+      let a = []; try { a = await DB.getAll("acties"); } catch (e) {}
+      if (!a.some((x) => x.demo) && !(localStorage.getItem("wpi_demo_acties"))) {   // eenmalig voorbeeldacties (fictief)
+        const d = this.demoActies(); try { for (const x of d) await DB.put("acties", x); localStorage.setItem("wpi_demo_acties", "1"); } catch (e) {}
+        a = a.concat(d);
+      }
+      this.acties = a; return a;
+    },
+    demoActies() {
+      const t = "Voorbeeld · Damwand · P26-168", L = (wat) => [{ t: new Date().toISOString(), wie: "Voorbeelddata", wat }];
+      const b = (o) => Object.assign({ demo: true, inspectie_titel: t, inspecteur: "Inspecteur (demo)", foto: null, terPlaatse: "niets" }, o);
+      return [
+        b({ id: "ACT-demo1", ref: "DAM-2.07", oordeel: "A", waarneming: "Gasmeter hing boven aan de ladder, niet bij de man in de put.", tekst: "Gasmeter altijd meenemen naar de man in de put; toolbox gasmeting houden", prio: "kort", status: "In uitvoering", houder: "u-winfred", toetser: "u-bjorn", plandatum: plusDagen(-2), log: L("Ingesteld en gestart") }),
+        b({ id: "ACT-demo2", ref: "Algemeen F", oordeel: "V", waarneming: "Afzetting rond de bouwput was aan één zijde weggehaald.", tekst: "Afzetting rond de bouwput rondom herstellen en dagelijks controleren", prio: "kort", status: "Open", houder: "u-douwe", toetser: "u-winfred", plandatum: plusDagen(0), log: L("Ingesteld") }),
+        b({ id: "ACT-demo3", ref: "DAM-1.03", oordeel: "A", waarneming: "Hijsband vertoonde een rafelige rand.", tekst: "Hijsband afkeuren en vervangen; hijsmiddelencheck opnemen in de LMRA", prio: "direct", status: "Klaar voor toetsing", houder: "u-winfred", toetser: "u-douwe", plandatum: plusDagen(1), log: L("Klaar voor toetsing gemeld") }),
+        b({ id: "ACT-demo4", ref: "Algemeen C", oordeel: "V", waarneming: "Eén monteur droeg geen gehoorbescherming bij het trillen van de damwand.", tekst: "Gehoorbescherming bij trilwerk bespreken in de toolbox en voorraad in de bus aanvullen", prio: "planmatig", status: "Voorstel", houder: null, toetser: null, plandatum: null, log: L("Actievoorstel uit de inspectie") }),
+        b({ id: "ACT-demo5", ref: "DAM-3.02", oordeel: "V", waarneming: "Kabels lagen over het looppad naar de keet.", tekst: "Kabels via een kabelbrug of opgehangen langs het looppad leggen", prio: "planmatig", status: "Klaar voor toetsing", houder: "u-douwe", toetser: "u-bjorn", plandatum: plusDagen(6), log: L("Klaar voor toetsing gemeld") }),
+      ];
+    },
+    // bakjes: hoofd ziet het hele team, anderen hun eigen acties
+    bakjes() {
+      const me = this.user.id, A = this.acties || [], hoofd = this.user.role === "hoofd";
+      const loopt = (a) => a.status === "Open" || a.status === "In uitvoering";
+      const scope = A.filter((a) => loopt(a) && (hoofd || a.houder === me));
+      const opDatum = (x, y) => (x.plandatum || "9").localeCompare(y.plandatum || "9");
+      return {
+        telaat: scope.filter((a) => a.plandatum && dagenTot(a.plandatum) < 0).sort(opDatum),
+        gepland: scope.filter((a) => !a.plandatum || dagenTot(a.plandatum) >= 0).sort(opDatum),
+        toetsen: A.filter((a) => a.status === "Klaar voor toetsing" && a.toetser === me).sort(opDatum),
+        instellen: staf() ? A.filter((a) => a.status === "Voorstel") : [],
+        alle: (staf() ? A : A.filter((a) => a.houder === me || a.toetser === me)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
+      };
+    },
+    async view_acties() {
+      await this.laadActies();
+      const v = $("view"), B = this.bakjes(), hoofd = this.user.role === "hoofd";
+      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"]].concat(staf() ? [["instellen", "In te stellen"]] : []).concat([["alle", "Alle"]]);
+      if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
+      v.appendChild(el(`<div><div class="kicker">${hoofd ? "Het hele team" : "Jouw acties"} · peildatum ${dagLabel(isoDag(new Date()))}</div><h1>Acties</h1></div>`));
+      v.appendChild(el(`<div class="chips" style="margin-bottom:12px">${tabs.map(([k, l]) => `<button class="chipb${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " laat" : ""}" onclick="App.actFilter='${k}';App.route()">${l} · ${B[k].length}</button>`).join("")}</div>`));
+      const LEEG = { telaat: "Niets te laat. 👍", gepland: "Geen geplande acties.", toetsen: "Niets dat op jouw toetsing wacht.", instellen: "Geen actievoorstellen om in te stellen.", alle: "Nog geen acties." };
+      const uitleg = { telaat: "Plandatum verstreken, nog niet klaar voor toetsing.", gepland: "Op volgorde van plandatum.", toetsen: "De actiehouder meldt dat het klaar is. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Stel actiehouder, toetser en plandatum in.", alle: "" }[this.actFilter];
+      if (uitleg) v.appendChild(el(`<div class="muted" style="font-size:13px;margin:-4px 0 10px">${uitleg}</div>`));
+      const lijst = B[this.actFilter] || [];
+      v.appendChild(el(`<div class="listcard">${lijst.length ? lijst.map((a) => this.actieRij(a)).join("") : `<div class="row"><span class="grow s">${LEEG[this.actFilter]}</span></div>`}</div>`));
+      if (staf()) {
+        const t = this.data.trendacties;
+        v.appendChild(el(`<div style="display:flex;justify-content:space-between;align-items:center"><h2>Trendacties (VCA 7.2)</h2><button class="btn ghost sm" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button></div>`));
+        v.appendChild(el(`<div class="listcard">${t.map((a) =>
+          `<div class="row"><span class="grow"><span class="t">${esc(a.nr)}</span><div class="s">${esc(a.onderwerp)} · ${esc(a.actiehouder)} · ${esc(a.termijn)}</div></span><span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span></div>`).join("")}</div>`));
+      }
+    },
+    actieRij(a) {
+      const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
+      const plan = a.plandatum ? (loopt && d < 0 ? `<b style="color:var(--red)">${-d} d te laat</b>` : d === 0 && loopt ? "<b>vandaag</b>" : dagLabel(a.plandatum)) : "";
+      return `<div class="row" style="cursor:pointer" onclick="App.openActie('${a.id}')"><span class="grow"><span class="t">${esc(kort(a.tekst || "(geen tekst)", 90))}</span>
+        <div class="s">${esc(a.ref || "")} · ${a.houder ? esc(naam(a.houder)) : "nog geen actiehouder"}${plan ? " · " + plan : ""}${a.demo ? " · voorbeeld" : ""}</div></span>${stBadge(a.status)}</div>`;
+    },
+    openActie(id) {
+      const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
+      const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
+      const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${u.id}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
+      let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
+        <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${a.foto ? `<img src="${a.foto}" alt="foto" style="height:64px;border-radius:10px">` : ""}</div>`;
+      if (a.status === "Voorstel") {
+        if (staf()) {
+          h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
+            <textarea id="ai-tekst" class="fin" rows="3">${esc(a.tekst || "")}</textarea>
+            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
+              <div>${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts(null)}</select>`)}</div>
+              <div>${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts(null)}</select>`)}</div>
+              <div>${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen((PRIO[a.prio] || PRIO.kort).d)}">`)}</div></div>
+            <div class="s" style="margin-top:6px">De inspecteur vond het: <b>${esc((PRIO[a.prio] || {}).lab || "–")}</b>. De plandatum staat daarop voorgesteld; pas gerust aan.</div>
+            <div id="ai-fout" class="fout"></div>
+            <button class="btn primary" style="margin-top:12px" onclick="App.stelIn('${a.id}')">Actie instellen</button>
+            <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Geen actie nodig?</summary>
+              <textarea id="ai-reden" class="fin" rows="2" placeholder="Reden, bijv. al opgelost via trendactie T-04"></textarea>
+              <button class="btn ghost sm" style="margin-top:8px" onclick="App.vervalVoorstel('${a.id}')">Voorstel laten vervallen</button></details>`;
+        } else h += `<div class="card" style="background:var(--mist);box-shadow:none"><div class="t">${esc(a.tekst)}</div></div><div class="hint" style="margin-top:10px">Een coördinator stelt dit voorstel in.</div>`;
+      } else {
+        h += `<div class="card" style="background:var(--mist);box-shadow:none;margin-bottom:12px"><div class="t" style="font-size:16px">${esc(a.tekst)}</div>
+          <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b></div></div>`;
+        if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${a.foto}" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${a.nafoto}" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
+        if ((a.status === "Open" || a.status === "In uitvoering") && (isHouder || staf())) {
+          if (a.status === "Open") h += `<button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="App.zetStatus('${a.id}','In uitvoering','Uitvoering gestart')">Start uitvoering</button>`;
+          h += `<button class="btn primary" onclick="App.naFoto('${a.id}')">${svg("cam", 18)} Klaar · na-foto maken</button>
+            <button class="btn ghost" style="width:100%;margin-top:10px" onclick="App.zetStatus('${a.id}','Klaar voor toetsing','Klaar voor toetsing gemeld (zonder na-foto)')">Klaar voor toetsing, zonder foto</button>`;
+        }
+        if (a.status === "Klaar voor toetsing") {
+          if (isToetser) h += `<button class="btn primary" onclick="App.akkoord('${a.id}')">${svg("check", 18)} Akkoord na toetsing · afronden</button>
+            <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout"></div>
+            <button class="btn danger" style="width:100%;margin-top:8px" onclick="App.nietAkkoord('${a.id}')">Niet akkoord · terug naar actiehouder</button>`;
+          else h += `<div class="hint">Wacht op toetsing door <b>${esc(naam(a.toetser))}</b>. Alleen de toetser kan afronden.</div>`;
+        }
+        if (staf() && (a.status === "Open" || a.status === "In uitvoering" || a.status === "Klaar voor toetsing")) {
+          h += `<details style="margin-top:14px"><summary class="s" style="cursor:pointer;font-weight:600">Plandatum wijzigen</summary>
+            <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" value="${a.plandatum || ""}"><button class="btn ghost sm" onclick="App.wijzigPlan('${a.id}')">Opslaan</button></div></details>`;
+        }
+      }
+      h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${esc(l.wat)}</div>`).join("")}</div>`;
+      this.openModal(kort(a.tekst || "Actie", 60), a.demo ? "Voorbeeldactie (fictief)" : "", h);
+    },
+    async bewaarActie(a, wat) {
+      a.log = (a.log || []).concat([{ t: new Date().toISOString(), wie: this.user.full_name, wat }]);
+      try { await DB.put("acties", a); } catch (e) { alert("Opslaan mislukt op dit toestel."); }
+    },
+    fout(t) { const f = $("ai-fout"); if (f) f.textContent = t; tril([40, 40, 40]); },
+    async stelIn(id) {
+      const a = this.acties.find((x) => x.id === id); if (!a || !staf()) return;
+      const tekst = $("ai-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
+      if (!tekst) return this.fout("Vul de actietekst in.");
+      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.");
+      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.");
+      if ((USERS.find((u) => u.id === houder) || {}).role === "qhse") return this.fout("De QHSE-manager kan geen actiehouder zijn.");
+      if (!plan) return this.fout("Kies een plandatum.");
+      const aangepast = tekst !== a.tekst; Object.assign(a, { tekst, houder, toetser, plandatum: plan, status: "Open" });
+      await this.bewaarActie(a, `Ingesteld${aangepast ? " (tekst aangepast)" : ""}: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);
+      tril(30); this.closeModal(); this.route();
+    },
+    async vervalVoorstel(id) {
+      const a = this.acties.find((x) => x.id === id), r = ($("ai-reden") || {}).value || "";
+      if (!r.trim()) { const f = $("ai-reden"); if (f) { f.focus(); f.placeholder = "Reden is verplicht"; } return; }
+      a.status = "Vervallen"; await this.bewaarActie(a, "Voorstel vervallen: " + r.trim()); this.closeModal(); this.route();
+    },
+    async zetStatus(id, st, wat) { const a = this.acties.find((x) => x.id === id); a.status = st; await this.bewaarActie(a, wat); tril(25); this.closeModal(); this.route(); },
+    naFoto(id) {
+      const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.capture = "environment";
+      inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; const d = await fotoDataURL(f); const a = this.acties.find((x) => x.id === id); if (!d || !a) return;
+        a.nafoto = d; a.status = "Klaar voor toetsing"; await this.bewaarActie(a, "Klaar voor toetsing gemeld, met na-foto"); tril(25); this.closeModal(); this.route(); };
+      inp.click();
+    },
+    async akkoord(id) {
+      const a = this.acties.find((x) => x.id === id); if (!a || a.toetser !== this.user.id) return;
+      if (a.houder === a.toetser) return this.fout("Toetser en actiehouder zijn dezelfde persoon; afronden kan niet.");
+      a.status = "Afgerond"; await this.bewaarActie(a, "Getoetst en akkoord · afgerond"); tril([30, 50, 30]); this.closeModal(); this.route();
+    },
+    async nietAkkoord(id) {
+      const a = this.acties.find((x) => x.id === id), r = ($("ai-reden") || {}).value || ""; if (!a || a.toetser !== this.user.id) return;
+      if (!r.trim()) return this.fout("Geef een reden, zodat de actiehouder weet wat er nog moet gebeuren.");
+      a.status = "In uitvoering"; await this.bewaarActie(a, "Niet akkoord na toetsing: " + r.trim()); this.closeModal(); this.route();
+    },
+    async wijzigPlan(id) {
+      const a = this.acties.find((x) => x.id === id), v = ($("ai-plan2") || {}).value; if (!a || !v) return;
+      const oud = a.plandatum; a.plandatum = v; await this.bewaarActie(a, `Plandatum gewijzigd van ${dagLabel(oud)} naar ${dagLabel(v)}`); this.closeModal(); this.route();
     },
     exportCSV() {
       const t = this.data.trendacties;
@@ -865,7 +1188,8 @@
       </div>`));
       v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Filters werken op waarnemingen en oordelen. Tik op een tegel, staaf of klasse voor detail / kruis-filter.</div>`));
       v.appendChild(el(`<div class="grid kpis">
-        ${this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")}
+        ${w.totaal >= 5 ? this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + w.totaal, "App.drill('conform')")
+          : this.tile("mist", "n = " + w.totaal, "Conform", "te weinig voor een percentage (n < 5)", "App.drill('conform')")}
         ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
         ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, "App.drill('programma')")}
         ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
@@ -879,6 +1203,7 @@
       chartCard.appendChild(el(`<div class="card"><h3>Afwijkingen en verbeterpunten per klasse</h3>${this.klasseBars(D.klasse)}
         <div class="muted" style="font-size:12px;margin-top:8px">Tik een klasse om alles erop te filteren.</div></div>`));
       v.appendChild(chartCard);
+      v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen. Bij minder dan 5 waarnemingen tonen we geen percentage maar het aantal (n).</div>`));
     },
     chartOordeel(mnd, om) {
       const c = this.data.cijfers;

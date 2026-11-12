@@ -131,3 +131,69 @@ svg{display:block;width:100%}
 .clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .chip{white-space:nowrap}
 .hint{background:var(--butter);color:#5E4500;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.4;font-style:normal}
+
+/* ---- statusbadges acties ---- */
+.b-vs{background:var(--lilac);color:#5a3ea8}.b-uitv{background:var(--sky);color:#1d4f8f}
+.b-toets{background:#DDE8F7;color:#123d73;box-shadow:inset 0 0 0 1.5px #1d4f8f}
+.chipb.laat:not(.on){box-shadow:inset 0 0 0 1.5px var(--red);color:var(--red)}
+.minis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.mini{border-radius:14px;padding:10px 12px;text-align:left;font-size:13px;font-weight:600;color:var(--soft);display:flex;flex-direction:column;min-height:64px}
+.mini b{font-size:24px;color:var(--ink);line-height:1.1}
+.fin{width:100%;border:0;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:var(--ink);min-height:44px}
+.fin:focus{outline:none;box-shadow:inset 0 0 0 2px var(--ink)}
+.flab{display:block;font-size:12.5px;font-weight:650;color:var(--soft);margin:8px 0 4px}
+.fout{color:var(--red);font-weight:650;font-size:14px;min-height:18px;margin-top:8px}
+.tijdlijn div{font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);line-height:1.4}
+.tijdlijn span{color:var(--soft);font-weight:600;margin-right:4px}
+
+/* ---- Voorstel-component ---- */
+.vskop{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pick .waarom,.waarom{font-size:12.5px;color:#5a3ea8;margin-top:4px}
+.pick .gebruik{font-size:12.5px;font-weight:700;color:#5a3ea8;margin-top:6px}
+
+/* ---- opslagstatus ---- */
+.opslag{font-size:12px;font-weight:650;color:var(--soft);background:var(--mist);border-radius:999px;padding:4px 10px}
+.opslag.ok{background:var(--sage);color:var(--green)}
+.opslag.fout{background:var(--red-bg);color:var(--red)}
+
+/* ---- push-to-talk microfoon ---- */
+.mic{width:54px;height:54px;bottom:10px;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.inbox textarea{padding-right:72px}
+
+/* ---- weergave-schakelaars ---- */
+.prefrow{width:100%;text-align:left}
+.sw{width:50px;height:30px;border-radius:999px;background:#C9CED6;position:relative;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .15s}
+.sw.on{background:var(--green)}.sw.on::after{left:23px}
+
+/* ---- Veldmodus: grote tikdoelen voor handschoenen ---- */
+body.veld{font-size:16.5px}
+body.veld .btn{min-height:62px;font-size:17.5px;border-radius:18px}
+body.veld .btn.sm{min-height:50px;height:auto;font-size:15.5px}
+body.veld .seg button{min-height:84px}
+body.veld .seg button .l{font-size:24px}body.veld .seg button .w{font-size:12.5px}
+body.veld .chipb{min-height:56px;font-size:15.5px;padding:10px 14px}
+body.veld .pick{padding:16px}
+body.veld .mic{width:68px;height:68px}
+body.veld .inbox textarea{font-size:17.5px;min-height:124px;padding-right:86px}
+body.veld .q .qt{font-size:21px}
+body.veld .tabbar a{padding:12px 0 16px;font-size:12px}
+
+/* ---- Zonmodus: hoog contrast voor fel licht ---- */
+body.zon{--bg:#fff;--soft:#1f2630;--line:#5b6472;background:#fff}
+body.zon .tile,body.zon .q,body.zon .card,body.zon .listcard,body.zon .pick,body.zon .mini{background:#fff!important;box-shadow:0 0 0 2px #141A22!important}
+body.zon .seg .t-C{background:var(--green);color:#fff}body.zon .seg .t-A{background:var(--red);color:#fff}body.zon .seg .t-V{background:#A65A00;color:#fff}
+body.zon .seg button.dim{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .seg button.on-C,body.zon .seg button.on-A,body.zon .seg button.on-V{box-shadow:inset 0 0 0 4px #141A22}
+body.zon .badge,body.zon .lbl{box-shadow:inset 0 0 0 1.5px currentColor}
+body.zon .b-C{background:var(--green);color:#fff}body.zon .b-A{background:var(--red);color:#fff}body.zon .b-V{background:#A65A00;color:#fff}
+body.zon .lbl.vs,body.zon .b-vs{background:#4b2f99;color:#fff}
+body.zon .pick .waarom,body.zon .pick .gebruik,body.zon .waarom{color:#3d2580}
+body.zon .chipb{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .inbox textarea,body.zon .fin{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .btn.ghost{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .hint{background:#FFE9A8;color:#141A22;box-shadow:0 0 0 2px #141A22}
+body.zon .toast{background:#fff;color:var(--green);box-shadow:0 0 0 2px var(--green)}
+body.zon .opslag.ok{background:var(--green);color:#fff}
+/* smalle schermen: merknaam inkorten zodat account/zoeken/weergave passen */
+@media(max-width:440px){.brand span:not(.logo){display:none}.topbar{padding:14px 16px 6px}}
