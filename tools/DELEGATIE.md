@@ -45,3 +45,25 @@ routinematig is.
 
 Claude doet het zelf, óf overlegt kort met de gebruiker — nooit stilletjes
 een risicovolle taak naar DeepSeek schuiven.
+
+## Modeltiering (welk DeepSeek-model)
+
+Standaard het goedkoopste model; alleen opschalen als de kwaliteit
+tekortschiet.
+
+| Situatie | Model | `--model` |
+| --- | --- | --- |
+| Routine, standaard (default) | DeepSeek V4.1 Flash | `deepseek/deepseek-v4.1-flash-1017` |
+| Flash levert te zwak werk | DeepSeek V4 Pro | `deepseek/deepseek-v4-pro` |
+
+Pro is ~40x duurder op output dan Flash; gebruik het gericht en kort, en val
+daarna terug op Flash. Is Pro óók niet goed genoeg, dan doet Claude het zelf.
+
+## Efficiency-hulpmiddelen in het harnas
+
+- **Auto-context** — `tools/CONTEXT.md` gaat automatisch mee als
+  systeemprompt, zodat DeepSeek het project kent zonder herhaalde uitleg.
+- **Parallel** — onafhankelijke deeltaken tegelijk draaien via
+  `--tasks taken.json` (`[{"label": "...", "prompt": "..."}]`).
+- **Patch-modus** — `--patch` laat DeepSeek hele bestanden in een vast
+  formaat leveren (`=== FILE: pad ===`), zodat Claude ze direct wegschrijft.
