@@ -47,7 +47,8 @@ Korte checklist voor Werkplekinspectie (Noardling B.V.). Wie wat doet staat erbi
    Let op: `login_herhaald_mislukt` komt alleen binnen als er daarna op **hetzelfde toestel** wél iemand inlogt (de app bewaart de melding tot dan). Iemand die vanaf zijn eigen apparaat wachtwoorden raadt, zie je **alleen** in *Logs › Auth* (stap 2), niet in deze tabel.
    En: deze logboeken zijn alleen-toevoegen voor de app en voor gewone databasegebruikers, **niet** voor de eigenaar. Wie het databasewachtwoord of de SQL Editor van Supabase heeft, kan in onderhoudsstand regels verwijderen of de bewaking uitzetten. Houd die toegang dus klein (alleen Sven en het hoofd), en bewaar bij de maandcontrole een export van de uitkomst van deze drie zoekopdrachten buiten Supabase (bijv. in het beheerlogboek), zodat een latere wijziging opvalt.
 4. **Gedeelde computers** (± 5 min): vraag op kantoor na of op gedeelde pc's bij het uitloggen "Wissen en uitloggen" wordt gekozen (niet "Bewaren"). Onverstuurd werk staat onversleuteld in de browser tot de volgende gebruiker inlogt (beveiligingsrapport punt 15).
-5. **Verslag**: één regel in het beheerlogboek, met datum, uitkomst (`0 FOUT` / bevindingen) en eventuele acties.
+5. **Bewaartermijn 7 jaar** (± 5 min; overslaan als pg_cron het al doet, dan alleen `cron.job_run_details` bekijken): in de SQL Editor als `postgres` eerst `select public.bewaartermijn_opschonen(p_proef => true);`, daarna zonder `p_proef`; verwijder de foto's uit `select pad from public.bewaartermijn_fotos;` via de Storage-API en haal ze daarna uit die lijst (`supabase/README.md` §4).
+6. **Verslag**: één regel in het beheerlogboek, met datum, uitkomst (`0 FOUT` / bevindingen) en eventuele acties.
 
 ## 2. Elk kwartaal (± 2 uur, beheerder en hoofd samen)
 
@@ -57,7 +58,7 @@ Korte checklist voor Werkplekinspectie (Noardling B.V.). Wie wat doet staat erbi
    ```
    Zonder `PGHOST`/`PGUSER` draait de controle de databasetests op een kopie als OS-gebruiker `postgres` (vraagt `sudo`); verwacht `529 van 529 databasecontroles geslaagd`. Met een eigen test-server: `PGHOST=… PGPORT=… PGUSER=… tools/periodieke_check.sh --db`.
 2. **Alle app-tests**: `node webapp/tests/run-all.js --extra -j 3` (alles PASS, ook `security.js` en `xss.js`).
-3. **Gebruikers en rollen** met het hoofd doorlopen: wie is hoofd of coördinator, wie is inspecteur? Klopt dat nog? Heeft het hoofd nog tweestapsverificatie (MFA) aan?
+3. **Gebruikers en rollen** met een hoofd doorlopen (in de app: Beheer › Team en rollen): twee hoofden (Hoofd Service & Montage, Manager Projects), twee coördinatoren, één QHSE-manager en één beheerder. Klopt dat nog? Staat er iemand met "Nog geen rol" of met de oude rol inspecteur (geef een rol of zet op non-actief)? Hebben de hoofden, de QHSE-manager en de beheerder nog tweestapsverificatie (MFA) aan, en staat `mfa_verplicht_hoofd` op `true`?
 4. **Supabase-instellingen** naast `supabase/README.md` §2 leggen: sign-ups uit, wachtwoord minimaal 12 tekens, *leaked password protection* aan, herstel-link maximaal 1 uur geldig, sessies met een tijdslimiet, redirect-URL's precies goed (de app-URL moet erin staan, anders werkt de herstellink met PKCE niet) en eigen SMTP.
 5. **Backup-hersteltest** (README §4): zet een backup terug in een testproject en open een paar foto's.
 6. **Updates**: Supabase meldt Postgres-upgrades in het dashboard (*Settings › Infrastructure*); plan die in. De app zelf heeft geen npm-pakketten. Werk Playwright en Python bij als je ze lokaal gebruikt (alleen voor tests en tools, ze gaan niet online).

@@ -42,3 +42,29 @@ body.zon .kstap .kpick .ktag,body.zon .kzwak,body.zon .kv-vs .s,body.zon .kook-t
 body.zon .kstap .kpick .waarom{color:#3d2580}
 body.zon .lbl.kmatch{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px #141A22}
 body.zon .kgevaar{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2.5px #B42318}
+
+/* ---- oordeel C/A/V naast elkaar (koppel- en oordeelstap): boven de vouw op 390×844, direct onder de regel ----
+   Elk vlak ± 110 px breed en ≥ 76 px hoog (handschoenen); de uitleg ("Niet in orde, moet opgelost") blijft voor
+   schermlezers in de knopnaam, maar staat niet zichtbaar in het smalle vlak. */
+.seg.stapel.orij{flex-direction:row;gap:8px}
+.seg.stapel.orij button{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:76px;padding:10px 4px;text-align:center}
+.seg.stapel.orij .l{width:40px;height:40px;border-radius:13px;font-size:21px}
+.seg.stapel.orij .w{align-self:center;font-size:15.5px;line-height:1.1}
+.seg.stapel.orij .u{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.seg.stapel.orij button.on-C::after,.seg.stapel.orij button.on-A::after,.seg.stapel.orij button.on-V::after{top:8px;right:10px;transform:none;font-size:16px}
+.odock.vlak .seg.stapel.orij button{min-height:76px}
+body.veld .odock.vlak .seg.stapel.orij button,body.veld .seg.stapel.orij button{min-height:88px}
+body.veld .seg.stapel.orij .l{width:46px;height:46px;font-size:24px}
+body.veld .seg.stapel.orij button .w{font-size:16.5px}
+/* onder de oordeelknoppen bij een sterke match: doorvraag en maatregelen */
+.kna{padding:12px 14px}
+.kna .doorvraag{margin-top:0}
+.kna .doorvraag + .vs-mr{margin-top:10px}
+/* algemeen onderwerp: apart van de drie taakregels */
+.kstap .kpick.kalg{margin-top:12px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #E2D6C5}
+.kstap .kpick.kalg .ktag{color:#6E6255}
+body.zon .kstap .kpick.kalg{background:#fff;box-shadow:inset 0 0 0 2px #141A22}
+/* direct gevaar: ter-plaatse-vraag niet beantwoord bij vastleggen */
+.kvmis{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--red-bg);color:#8A1C12;font-size:15px;font-weight:800;line-height:1.35}
+.kvmis-groep{border-radius:18px;box-shadow:0 0 0 3px var(--red)}
+body.zon .kvmis{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2.5px #B42318}

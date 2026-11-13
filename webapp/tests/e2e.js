@@ -32,7 +32,9 @@ await ev(()=>App.goIns());await p.waitForTimeout(300);
 await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);
 console.log('modal:', await p.locator('#mod').innerText().then(t=>t.slice(0,200)));
 await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(500);
-console.log('na opslaan:', (await p.locator('#mod').innerText()).slice(0,200));
+const naOpslaan=await p.locator('#mod').innerText();console.log('na opslaan:', naOpslaan.slice(0,200));
+// "Vastgelegd": in de voorbeeldmodus eerlijk dat er geen server is (de tekst staat op één plek: App.vastgelegdTekst in js/sync.js)
+if(!/Vastgelegd/.test(naOpslaan)||!/voorbeeldmodus: er is geen server/.test(naOpslaan)||/cloud-opslag volgt/.test(naOpslaan))errs.push('Vastgelegd-venster: tekst klopt niet in de voorbeeldmodus: '+naOpslaan.slice(0,160));
 const rid=await ev(async()=>{const r=await (await indexedDB.databases(), null);return null});
 // Winfred stelt in
 await ev(()=>{App.closeModal();return App.login('u-coord1')});await p.waitForTimeout(600);

@@ -394,18 +394,23 @@
       // eigen rangschikking (gevaarzinnen boven losse woorden, js/koppel.js): terugval zonder Claude, en controle erop
       const rang = this.koppelRang(ins, cur.tekst);
       let sterk = false, reden = rang ? rang.reden : "geen", enkel = rang ? rang.enkel : "";
+      // het Voorstel is altijd een regel van de taak; een algemeen onderwerp (ALG-) staat er apart onder
+      const isAlg = (x) => /^ALG-/.test(x);
+      let alg = (rang && rang.alg) || ids.find(isAlg) || null;
+      ids = ids.filter((x) => !isAlg(x));
       if (ids.length) {
         // Claude koppelde: alleen sterk als de gevaarzinnen dezelfde regel sterk aanwijzen, anders één bevestigingstik
         sterk = !!(rang && rang.sterk && rang.top === ids[0]);
         if (!sterk) { reden = "controle"; enkel = ""; }
-      } else if (rang && rang.lijst.length) {
-        ids = rang.lijst.filter((x, i) => i === 0 || !x.alg).slice(0, 3).map((x) => x.id);
+      } else if (rang && rang.lijst.some((x) => !x.alg)) {
+        ids = rang.lijst.filter((x) => !x.alg).slice(0, 3).map((x) => x.id);
         sterk = rang.sterk; bron = bron ? bron + " + gevaarwoorden" : "gevaarwoorden";
       } else if (!rang) {
-        const l = this.lokaalVoorstel(cur.tekst, kand); if (l.length) { ids = l; bron = bron ? bron + " + trefwoorden" : "trefwoorden"; }
+        const l = this.lokaalVoorstel(cur.tekst, kand); if (l.length) { alg = alg || l.find(isAlg) || null; ids = l.filter((x) => !isAlg(x)); bron = bron ? bron + " + trefwoorden" : "trefwoorden"; }
       }
+      if (alg && ids.length && !sterk && reden !== "controle") reden = "algemeen";
       if (this.state.inspectie !== ins || ins.stap !== "koppel") return;
-      ins.voorstel = { ids, bron, bezig: false, vraag, sterk, reden, enkel,
+      ins.voorstel = { ids, bron, bezig: false, vraag, sterk, reden, enkel, alg,
         rang: rang ? rang.lijst.slice(0, 6).map((x) => ({ id: x.id, alg: x.alg, woorden: x.woorden.slice(0, 4) })) : [] };
       this.route();
     },
@@ -422,7 +427,7 @@
       const gevaar = (r) => (K && K.directGevaar(r.risico, "") ? 0 : 1);
       const vul = regels.slice().sort((a, b) => gevaar(a) - gevaar(b)).map((r) => r.id);
       const uit = [];
-      [].concat(vs.ids || [], (vs.rang || []).filter((x) => !x.alg).map((x) => x.id), vul).forEach((id) => { if (id && !uit.includes(id)) uit.push(id); });
+      [].concat((vs.ids || []).filter((id) => !/^ALG-/.test(id)), (vs.rang || []).filter((x) => !x.alg).map((x) => x.id), vul).forEach((id) => { if (id && !uit.includes(id)) uit.push(id); });
       return uit.slice(0, 3);
     },
     // risicokop (vóór de dubbele punt): "Vallen van de last"
@@ -458,22 +463,30 @@
       const zwakTekst = vs.reden === "een-woord" && vs.enkel ? `Alleen “${esc(vs.enkel)}” past bij een regel. Tik de regel aan die klopt; daarna kies je je oordeel.`
         : vs.reden === "twijfel" ? "Twee regels passen ongeveer even goed. Tik de regel aan die klopt; daarna kies je je oordeel."
         : vs.reden === "controle" ? "Controleer het voorstel: tik de regel aan die klopt; daarna kies je je oordeel."
+        : vs.reden === "algemeen" ? "Je woorden passen ook bij een algemeen onderwerp (onderaan). Tik aan wat klopt; daarna kies je je oordeel."
         : "Weinig aanwijzingen in je woorden. Tik de regel aan die klopt; daarna kies je je oordeel.";
       const match = sterk ? `<span class="lbl kmatch sterk">Sterke match</span>` : `<span class="lbl kmatch zwak">Zwakke match</span>`;
+      // algemeen onderwerp dat beter past dan de regels van de taak: apart, onder de drie regels (nooit als taakregel)
+      const algId = !vs.bezig && vs.alg && /^ALG-/.test(vs.alg) ? vs.alg : null;
+      const algKaart = () => { if (!algId) return ""; const inf = this.regelInfo(algId), r = rangVan(algId);
+        return `<button class="pick vpick kpick kalg"${act("kiesRegel", algId)}><span class="vp-top"><span class="vp-ref">${esc(inf.ref)}</span><span class="ktag">Algemeen onderwerp</span><span class="vp-meer">Kies deze ›</span></span><span class="t">${esc(inf.titel)}</span>${r && r.woorden && r.woorden.length ? `<span class="waarom">Waarom: je zei ${r.woorden.map((x) => "“" + esc(x) + "”").join(", ")}</span>` : ""}</button>`; };
+      const doorvraag = vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : "";
       // één lijst met alle andere mogelijkheden (ook voorgesteld, de taak, algemene onderwerpen, buiten de TRA)
-      const ook = (een ? vs.ids : []).concat((vs.rang || []).filter((x) => x.alg).map((x) => x.id)).filter((id, i, a) => !toon.includes(id) && a.indexOf(id) === i);
-      const rest = regels.filter((r) => !toon.includes(r.id) && !ook.includes(r.id)), owRest = ows.filter((o) => !toon.includes("ALG-" + o.ref) && !ook.includes("ALG-" + o.ref));
+      const ook = (een ? vs.ids : []).concat((vs.rang || []).filter((x) => x.alg).map((x) => x.id)).filter((id, i, a) => !toon.includes(id) && id !== algId && a.indexOf(id) === i);
+      const rest = regels.filter((r) => !toon.includes(r.id) && !ook.includes(r.id)), owRest = ows.filter((o) => !toon.includes("ALG-" + o.ref) && !ook.includes("ALG-" + o.ref) && "ALG-" + o.ref !== algId);
       const vraag = een ? "Klopt dit?" : "Waar hoort dit bij?";
       const ref0 = een ? info0.ref + (String(id0).startsWith("ALG-") ? "" : " (" + this.risicoKop(info0.titel) + ")") : "";
       let kaartHtml, onder = "";
       if (vs.bezig) kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">Even koppelen aan de TRA…</span></div><div class="vpick-leeg" aria-hidden="true"></div>`;
       else if (sterk) {
-        // sterke match: de beste regel, dan meteen je oordeel; de twee andere regels van de taak eronder
-        kaartHtml = `${this.vsKop("klopt dit?", vs.bron)}<div class="kmatchrij">${match}</div>${kaart(id0, 0)}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}${mr}`;
+        // sterke match: de beste regel en DIRECT daaronder je oordeel (boven de vouw, één hand). Doorvraag, maatregelen
+        // en de twee andere regels van de taak staan onder de oordeelknoppen.
+        kaartHtml = `${this.vsKop("klopt dit?", vs.bron)}<div class="kmatchrij">${match}</div>${kaart(id0, 0)}`;
         const anders = toon.filter((id) => id !== id0);
-        if (anders.length) onder = `<section class="q kook" aria-labelledby="kook-t"><div class="kook-t" id="kook-t">Of past een van deze beter?</div>${anders.map((id, i) => kaart(id, i + 1)).join("")}</section>`;
-      } else if (een) kaartHtml = `${this.vsKop("welke regel klopt?", vs.bron)}<div class="kmatchrij">${match}<span class="kzwak">${zwakTekst}</span></div>${toon.map(kaart).join("")}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}`;
-      else kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies zelf. Dit zijn de belangrijkste risico's van deze taak; de rest staat hieronder, of leg het vast als buiten de TRA.</div>${toon.map(kaart).join("")}`;
+        onder = (doorvraag || mr ? `<div class="q kna">${doorvraag}${mr}</div>` : "")
+          + (anders.length || algId ? `<section class="q kook" aria-labelledby="kook-t"><div class="kook-t" id="kook-t">Of past een van deze beter?</div>${anders.map((id, i) => kaart(id, i + 1)).join("")}${algKaart()}</section>` : "");
+      } else if (een) kaartHtml = `${this.vsKop("welke regel klopt?", vs.bron)}<div class="kmatchrij">${match}<span class="kzwak">${zwakTekst}</span></div>${toon.map(kaart).join("")}${algKaart()}${doorvraag}`;
+      else kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies zelf. Dit zijn de belangrijkste risico's van deze taak; de rest staat hieronder, of leg het vast als buiten de TRA.</div>${toon.map(kaart).join("")}${algKaart()}`;
       v.appendChild(el(`<div class="stapwrap kstap">
         ${this.insHead(ins, "Taak · " + ins.taak, vraag)}
         <div class="q jijkaart">${this.citaat(cur)}</div>
@@ -506,7 +519,8 @@
         else if (n) n.remove();
       } else this.route();
     },
-    // oordeelknoppen C/A/V (+ NVT), groot. modus: "oordeel" (koppeling staat), "bevestig" (sterke match: je
+    // oordeelknoppen C/A/V (+ NVT), groot en naast elkaar (orij): zo staan ze op 390×844 boven de vouw, direct onder
+    // de regel, met één duim te raken (≥ 72 px hoog, ± 110 px breed; handschoenen). modus: "oordeel" (koppeling staat), "bevestig" (sterke match: je
     // oordeel bevestigt de regel), "zwak" (zwakke match: eerst de regel aantikken), "wacht"/"bezig" (nog geen
     // koppeling). Bij zwak/wacht/bezig zijn de knoppen zichtbaar maar uit. Nooit voorgekozen.
     oordeelBlok(cur, modus, ref) {
@@ -517,7 +531,7 @@
         : modus === "bezig" ? `Jouw oordeel <span>· zodra het voorstel er is</span>`
         : modus === "wacht" ? `Jouw oordeel <span>· kies eerst hieronder een regel</span>` : `Jouw oordeel <span>· alleen jij beslist</span>`;
       return `<section class="dock odock vlak${uit ? " uit" : ""}" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>
-        <div class="seg stapel" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
+        <div class="seg stapel orij" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
         <button class="linkknop nvt"${act(fn, "NVT")}${uit}>Niet van toepassing</button></section>`;
     },
     // Voorstel + oordeel in één tik (alleen bij een sterke match): de inspecteur bevestigt de koppeling door zelf C/A/V/NVT te kiezen
@@ -552,8 +566,9 @@
           ${cur.onderwerp ? "" : `<button class="wijzig"${act("wijzigKoppeling")} aria-label="Wijzig: andere TRA-regel kiezen">Wijzig</button>`}</div>`;
       if (cur.direct) h += `<div class="gevaarbalk" role="status">${svg("warn", 20)}<span>Direct gevaar · werk is stilgelegd</span></div>`;
       if (cur.vraag) h += `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(cur.vraag)}</div>`;
-      if (info.maatregelen.length) h += `<div class="otitel">Welke maatregel zag je? <span>(optioneel)</span></div>
-        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div>`;
+      // maatregelen (optioneel) ingeklapt: zo staan C/A/V op 390×844 boven de vouw; open zodra je er een aantikte
+      if (info.maatregelen.length) h += `<details class="vs-mr omr"${cur.maatregelen.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${cur.maatregelen.length ? `<span class="n">${cur.maatregelen.length} gezien</span>` : ""}</summary>
+        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div></details>`;
       h += `</div>`;
       // wat er na je keuze gebeurt: rustig onderaan, zodat het scherm niet in een lege vlakte eindigt
       const hierna = `<section class="hierna ohierna" aria-labelledby="ohierna-t"><div class="hierna-t" id="ohierna-t">Hierna</div>

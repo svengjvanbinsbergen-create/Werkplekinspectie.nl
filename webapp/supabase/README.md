@@ -100,9 +100,10 @@ Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase
    Winfred Loerts en Douwe de Boer, precies zoals in *Authentication › Users*. Draai het nadat
    de uitnodigingen zijn verstuurd. Het koppelt naam, rol en functie op **e-mailadres van een
    uitgenodigd account**, nooit op naam. De naam wordt alleen gezet zolang het profiel nog de
-   beginnaam (deel vóór de @) heeft, de rol alleen zolang het nog de beginrol `inspecteur`
-   heeft; opnieuw draaien is veilig. Daarnaast: `mfa_verplicht_hoofd = false`.
-   Er wordt **geen** `doel_conform` vooraf gezet (leeg = geen doellijn); dat kiest het hoofd.
+   beginnaam (deel vóór de @) heeft, de rol alleen zolang het nog geen rol heeft (of de oude
+   beginrol `inspecteur`); opnieuw draaien is veilig. Daarnaast: `mfa_verplicht_hoofd = false` en
+   `doel_conform = 85` (besluit producteigenaar; een bestaande keuze blijft staan). De overige vaste
+   gebruikers (tweede hoofd "Manager Projects", QHSE-manager, beheerder) krijgen hun rol in de app.
    Er komen **geen** monteurs in: voorbeelddata hoort nooit op de server. Het hoofd voert de
    echte namen in via Beheer. Nooit wachtwoorden in SQL.
    *Eerder een oudere `seed.sql` gedraaid?* Die zette vijf fictieve monteurs in het project
@@ -444,13 +445,15 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   een `DELETE`/`PATCH` niet: dat geeft 204 met 0 rijen, zoals altijd bij RLS.
 - **Profielen**: leden zien actieve profielen en profielen die ooit via een uitnodiging
   binnenkwamen (ook oud-collega's, voor namen in de historie); een nooit uitgenodigde aanmelding
-  zien alleen het hoofd en de persoon zelf. Naam, functie, rol en activering wijzigt alleen het hoofd
-  (`PATCH /rest/v1/profiles?id=eq.<id>`, alleen die vier kolommen). Namen zijn uniek onder
+  zien alleen de beheerrollen en de persoon zelf. Naam, functie, rol en activering wijzigen alleen de
+  beheerrollen: hoofden, QHSE-manager en beheerder (`PATCH /rest/v1/profiles?id=eq.<id>`, alleen die vier
+  kolommen; met MFA indien verplicht); nooit je eigen rol of activering, en nooit naar de oude rol
+  `inspecteur`. Een actief profiel zonder rol ziet alleen zichzelf. Namen zijn uniek onder
   dezelfde sleutel als de monteurs (zonder hoofdletters, accenten, spaties en leestekens). Er
-  moet altijd minstens één actief hoofd zijn (ook bij gelijktijdige wijzigingen). De rol `qhse`
-  kan iemand pas krijgen als hij geen houder of toetser van een lopende actie meer is (§5,
-  statusmodel).
-- **Monteurs**: lezen iedereen; de tabel schrijft alleen het hoofd (Beheer). Tijdens een
+  moet altijd minstens één actief hoofd zijn (ook bij gelijktijdige wijzigingen). De rol `qhse` of
+  `beheerder` kan iemand pas krijgen als hij geen actiehouder van een lopende actie meer is, `beheerder`
+  ook pas als hij geen toetser meer is (§5, statusmodel; 0008).
+- **Monteurs**: lezen iedereen; de tabel schrijven de hoofden, de coördinatoren en de beheerrollen (Beheer). Tijdens een
   inspectie voegt een inspecteur een naam toe met
   `POST /rest/v1/rpc/monteur_aanmelden {"p_naam":"…"}`. Bestaat de naam al, dan komt die
   terug in de schrijfwijze van de lijst met `"nieuw": false`. Stond die naam op non-actief,
@@ -465,8 +468,9 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   met de echte code uit `beheer.js` voor **alle** Unicode-codepunten.
   Namen (monteurs én profielen) met onzichtbare tekens (zero-width, richtingtekens, BOM) of
   besturingstekens worden geweigerd. Max 20 nieuwe namen per gebruiker per dag.
-- **Instellingen**: alleen `doel_conform` (geheel getal 1..100; rij weg of JSON `null` = geen
-  doel) en `mfa_verplicht_hoofd` (true/false). Andere sleutels of waarden weigert de database.
+- **Instellingen**: alleen `doel_conform` (geheel getal 1..100; JSON `null` = bewust geen doel; geen rij =
+  standaard 85, zoals de app) en `mfa_verplicht_hoofd` (true/false; geldt voor alle beheerrollen). Andere
+  sleutels of waarden weigert de database.
 
 **Foto's (Storage, bucket `fotos`)**
 
@@ -521,40 +525,52 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
 - `POST /rest/v1/rpc/report_security_event` `{"p_soort":"csp_violation","p_details":{...}}`
   (per gebruiker max 10 per minuut, 100 en 256 KiB per 24 uur, binnen het gezamenlijke
   dagquotum; geeft `false` boven de limiet en slaat dan niets op).
-- `POST /rest/v1/rpc/dashboard_cijfers` `{"p_van":"2026-07-01","p_tot":"2026-09-30"}`: alleen
-  coördinator en hoofd (het dashboard is web-only voor hen); anderen krijgen 403. Conform-%
-  alleen bij ≥ 5 beoordeelde waarnemingen, zonder NVT; `doel_conform` is `null` als er geen doel is.
+- `POST /rest/v1/rpc/dashboard_cijfers` `{"p_van":"2026-07-01","p_tot":"2026-09-30"}`: iedereen met volledige
+  inzage (coördinatoren; hoofden, QHSE-manager en beheerder met MFA indien verplicht; 0008); anderen krijgen 403.
+  Conform-% alleen bij ≥ 5 beoordeelde waarnemingen, zonder NVT; `doel_conform` is 85 zonder rij en `null` als er
+  bewust geen doel is.
 - `POST /rest/v1/rpc/monteur_aanmelden` (zie hierboven).
 
 ## 6. Rollen en rechten
 
-| | inspecteur | coordinator | hoofd | qhse |
-|---|---|---|---|---|
-| inspecties lezen | eigen | alle | alle | alle |
-| inspecties schrijven | eigen (inhoud vast na vastleggen) | idem | idem | idem |
-| inspecties verwijderen | – | – | ja | – |
-| planning lezen | toegewezen + zelf gemaakt | alle | alle | alle |
-| planning maken | ja (ook voor een ander) | ja | ja | ja |
-| planning wijzigen | maker; toegewezen: verzetten, uitgevoerd (alleen met eigen inspectie), niet aan een ander toewijzen | alles (uitgevoerd alleen met inspectie) | idem | als maker |
-| planning verwijderen | maker of toegewezen, zolang `gepland` | alles | alles | als maker |
-| acties lezen | houder/toetser/aanmaker/instelde/liet vervallen/eigen inspectie + alle voorstellen + alle te late | alle | alle | alle |
-| actie aanmaken | ja (aan inspectie: alleen eigen) | idem | idem | idem |
-| voorstel instellen / laten vervallen | ja | ja | ja | ja |
-| voorstel tussendoor aanpassen (tekst, houder, plandatum) | eigen (waarnemer) | ja | ja | eigen |
-| waarneming, ref, prio van een actie uit een inspectie | niemand (kopie van de vastgelegde momentopname) | idem | idem | idem |
-| waarneming, ref, prio, foto van een handmatige actie | alleen de waarnemer | idem | idem | idem |
-| uitvoering bijwerken | als houder | ja, behalve als toetser | ja, behalve als toetser | – |
-| actie afronden | alleen als toetser die niet aan de uitvoering werkte | idem | idem | – (nooit houder/toetser) |
-| verloop (actie_log) aanvullen | als betrokkene (houder, toetser, aanmaker, instelde/liet vervallen, eigen inspectie) | ja | ja | ja |
-| monteur toevoegen | via `monteur_aanmelden` | idem | tabel (beheer) | via `monteur_aanmelden` |
-| instellingen, profielen | lezen (profielen: namen van actieve en uitgenodigde collega's) | idem | **schrijven** (met MFA indien verplicht); ziet ook niet-uitgenodigde aanmeldingen | lezen |
-| dashboard_cijfers | – | ja | ja (met MFA indien verplicht) | – |
-| audit_log, security_events | – | – | lezen | – |
-| anoniem (alleen anon-key) of inactief profiel | niets | | | |
+Het echte team (besluit producteigenaar, migratie 0008): **twee hoofden** (Hoofd Service & Montage en Manager
+Projects, gelijke rechten), **twee coördinatoren**, **één QHSE-manager** en **één beheerder** (applicatiebeheer). De
+inspecteurs zijn de hoofden en de coördinatoren. De app spiegelt dit in `js/kern.js` (`RECHTEN`, `mag()`); de
+database dwingt het af.
 
-Een profiel met `actief = false` heeft direct nergens meer toegang. De rol `qhse` bestaat in
-de database (lezen voor rapportage/audit), maar de app kent die rol nog niet; geef hem pas
-aan iemand als de app hem ondersteunt.
+| | coordinator | hoofd | qhse (QHSE-manager) | beheerder |
+|---|---|---|---|---|
+| inspecties lezen | alle | alle (met MFA indien verplicht) | alle (met MFA indien verplicht) | alle (met MFA indien verplicht) |
+| inspecties maken | eigen | eigen | – (inspecteert niet) | – (inspecteert niet) |
+| inspecties verwijderen | – | ja | – | – |
+| planning lezen | alle | alle | alle | alle |
+| planning maken/wijzigen/weghalen | ja (ook voor een ander) | ja | – (leest alleen) | – (leest alleen) |
+| als inspecteur ingepland worden | ja | ja | nee | nee |
+| acties lezen | alle | alle | alle | alle |
+| actie aanmaken, voorstel instellen of laten vervallen | ja | ja | ja ("iedereen in het team") | ja |
+| actiehouder | ja | ja | **nooit** | **nooit** |
+| toetser | ja | ja | **ja** | **nooit** |
+| ingestelde actie inhoudelijk wijzigen (plandatum, houder) | ja | ja | – | – |
+| monteurs (tabel) | ja | ja | ja | ja |
+| instellingen (o.a. `doel_conform`) | lezen | schrijven* | schrijven* | schrijven* |
+| profielen: rol en activering van een ander | – | ja* | ja* | ja* |
+| eigen rol of activering | – | – (een ander doet dat) | – | – |
+| dashboard_cijfers | ja | ja* | ja* | ja* |
+| audit_log, security_events lezen | – | ja* | ja* | ja* |
+| bewaartermijn_opschonen | – | – | – | – (alleen eigenaar `postgres` / pg_cron) |
+
+\* met een sessie op niveau `aal2` zodra `instellingen.mfa_verplicht_hoofd = true` (§2).
+
+**Altijd, voor iedereen:** toetser ≠ actiehouder; Afgerond alleen door de toetser na "Klaar voor toetsing"; het
+oordeel C/A/V/NVT komt van de inspecteur en wijzigt niemand; minstens één actief hoofd (ook bij gelijktijdige
+wijzigingen, `race_hoofd.sh`); wie actiehouder van een lopende actie is, wordt geen QHSE-manager of beheerder, en wie
+toetser is geen beheerder (`profiles_bewaak`, met `race_qhse.sh` voor beide rollen).
+
+**Nog geen rol** (`role` is NULL): elk nieuw profiel. Zo'n account heeft nergens toegang behalve het eigen
+profiel (zodat de app "nog geen rol" kan zeggen), en kan geen actiehouder, toetser of ingeplande inspecteur zijn.
+**Oude rol `inspecteur`:** bestaat nog in de enum en werkt voor bestaande rijen zoals vroeger (eigen inspecties en
+planning; geen staf), maar via de app of de API kan niemand hem meer toekennen en de app laat zo'n account niet
+binnen. Een profiel met `actief = false` heeft direct nergens meer toegang.
 
 ## 7. Testen
 
@@ -577,16 +593,20 @@ sudo -u postgres sh /tmp/wpi-db/supabase/tests/run.sh        # als root: runuser
 (idempotent), draait `seed.sql` (met de testadressen ingevuld), `testdata.sql` (5 fictieve
 monteurs, alleen lokaal), `rls_test.sql`, laadt `schema.sql` daarna nog eens over de **gevulde**
 testdatabase (bijwerken van een bestaande installatie), draait `race_hoofd.sh` (twee hoofden
-degraderen elkaar gelijktijdig in twee sessies) en `race_qhse.sh` (iemand wordt tegelijk
-actiehouder en QHSE-manager, in beide volgordes), en ten slotte `naamsleutel_check.sh`: die
+degraderen elkaar gelijktijdig in twee sessies), `race_qhse.sh` (iemand wordt tegelijk
+actiehouder en QHSE-manager of beheerder, in beide volgordes) en `race_quotum.sh`, en ten slotte `naamsleutel_check.sh` en
+`tekens_check.sh` (tekenregel gelijk aan `js/sync.js`). `naamsleutel_check.sh`
 leest `schoon()`/`sleutel()` letterlijk uit `js/beheer.js` (vraagt `node`) en vergelijkt ze met
 `naam_schoon`/`naam_sleutel` voor **alle** Unicode-codepunten en een reeks echte namen.
 
-Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0007): **483 van 483 geslaagd**, het opnieuw laden over de gevulde
-database, beide racetests en de naamsleutelvergelijking groen (0 verschillen op 138 560
+Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0008): **606 van 606 geslaagd**, het opnieuw laden over de gevulde
+database, alle racetests (laatste hoofd; QHSE-manager én beheerder als actiehouder, beide volgordes; quotum), de
+tekenvergelijking met `js/sync.js` (511 codepunten, 0 verschillen) en de naamsleutelvergelijking groen (0 verschillen op 138 560
 codepunten met een sleutel; codepunten die pas in een nieuwere Unicode-versie dan de ICU van de
 database bestaan, tellen niet mee). Gedekt o.a.:
-RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); aanvalstest: tekens, foto van een actie uit een inspectie ligt vast, snelheid bij 1000 foto's × 1000 acties (sectie 25); gelijktijdige verzoeken tegen de limieten (`tests/race_quotum.sh`); geen escalatie via
+RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; rollen van het echte team (sectie 26, 0008: beheerder,
+QHSE-manager, tweede hoofd, nog geen rol, geen rol `inspecteur` meer toekennen, geen zelfpromotie, MFA voor alle beheerrollen,
+verloop-tekens, bewaartermijn 7 jaar met proefrun, gedeelde foto's en rechten); datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); aanvalstest: tekens, foto van een actie uit een inspectie ligt vast, snelheid bij 1000 foto's × 1000 acties (sectie 25); gelijktijdige verzoeken tegen de limieten (`tests/race_quotum.sh`); geen escalatie via
 naam of `seed.sql`; inspecteur leest/wijzigt geen inspecties van een ander en schrijft geen
 instellingen/monteurs/profielen; geen foto-IDOR via `foto_pad`/`nafoto_pad`; veilige
 Storage-namen; bewijsfoto's niet te overschrijven of te verwijderen; functiescheiding

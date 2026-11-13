@@ -36,7 +36,9 @@
       if (!mag("plant")) return;
       const p = id ? (this.planning || []).find((x) => x.id === id) : null, kb = this.data.kennisbank;
       const prod = Object.keys(kb).sort((a, b) => kb[a].naam.localeCompare(kb[b].naam)).map((c) => `<option value="${c}"${p && p.code === c ? " selected" : ""}>${esc(kb[c].naam)}</option>`).join("");
-      const mens = personenOpties("inspecteert", p ? p.inspecteur : this.user.id, { leeg: null });   // alleen wie inspecteert (hoofden, coördinatoren)
+      // alleen wie inspecteert (hoofden, coördinatoren); stond er iemand anders ingepland, dan eerst opnieuw kiezen
+      const mens = (p && p.inspecteur && nietKiesbaar("inspecteert", p.inspecteur) ? `<option value="" selected disabled>${esc(naam(p.inspecteur))} · kies opnieuw</option>` : "")
+        + personenOpties("inspecteert", p ? p.inspecteur : this.user.id, { leeg: null });
       const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       const snel = [[0, "Vandaag"], [1, "Morgen"], [7, "Over een week"]].map(([n, l]) => `<button class="chipb"${act("zetPlanDatum", plusDagen(n))}>${l}</button>`).join("");
       this.openModal(p ? "Inspectie wijzigen" : "Inspectie inplannen", "Wie inspecteert wat, waar en wanneer.",
