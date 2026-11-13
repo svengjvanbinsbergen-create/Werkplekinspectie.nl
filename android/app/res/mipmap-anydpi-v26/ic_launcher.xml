@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptief icoon (Android 8+). Gemaakt met maak-iconen.py uit webapp/icon-512.png. -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/icoon_achtergrond" />
+    <foreground android:drawable="@mipmap/ic_launcher_voorgrond" />
+    <monochrome android:drawable="@mipmap/ic_launcher_monochroom" />
+</adaptive-icon>

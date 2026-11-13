@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "nl.werkplekinspectie.app",
+      "sha256_cert_fingerprints": [
+        "28:D5:AD:81:87:F0:84:9F:F6:FB:8A:7D:99:E8:FD:9C:E4:EC:21:BB:6C:33:9E:B9:B5:43:3B:82:D6:0C:3B:7B"
+      ]
+    }
+  }
+]

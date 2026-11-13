@@ -1,0 +1,25 @@
+# Sleutels en wachtwoorden horen NOOIT in git (zie README.md: bewaren bij Sven/IT).
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*wachtwoord*
+*password*
+keystore.properties
+signing.properties
+
+# Bouwresultaten
+build/
+*.apk
+*.aab
+*.idsig
+*.dex
+*.class
+
+# Lokale instellingen van Android Studio / Gradle
+local.properties
+.gradle/
+.idea/
+*.iml

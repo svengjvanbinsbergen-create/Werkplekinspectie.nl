@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sjabloon: build.sh vervangt @@PACKAGE_ID@@ en @@WEB_HOST@@ met de waarden uit app.conf.
+  Versie en min/target SDK zet build.sh via aapt2 (ook uit app.conf).
+
+  Geen RECORD_AUDIO en geen INTERNET nodig: in een Trusted Web Activity draait de site in
+  Chrome zelf. Chrome vraagt de microfoon-toestemming (per website en, de eerste keer, voor
+  Chrome als app) en doet al het netwerkverkeer.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="@@PACKAGE_ID@@">
+
+    <!-- Android 11+: zonder deze regels ziet de app geen browsers en kan hij Chrome niet vinden. -->
+    <queries>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+    </queries>
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_naam"
+        android:theme="@style/Opstart">
+
+        <activity
+            android:name=".LauncherActivity"
+            android:exported="true"
+            android:alwaysRetainTaskState="true"
+            android:label="@string/app_naam">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Links naar de web-app openen in de app (werkt pas als assetlinks.json online staat). -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="@@WEB_HOST@@" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_naam, web_host en start_pad staan in app.conf (build.sh maakt ze aan). -->
+    <string name="geen_browser">Geen browser gevonden. Installeer of activeer Google Chrome.</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kort zichtbaar bij het openen, tot Chrome de web-app toont. Kleuren komen uit app.conf. -->
+    <style name="Opstart" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/achtergrond</item>
+        <item name="android:statusBarColor">@color/thema</item>
+        <item name="android:navigationBarColor">@color/thema</item>
+        <item name="android:colorPrimary">@color/thema</item>
+        <item name="android:colorPrimaryDark">@color/thema</item>
+    </style>
+</resources>
