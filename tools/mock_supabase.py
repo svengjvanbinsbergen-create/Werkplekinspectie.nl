@@ -7,7 +7,9 @@ Serveert op één poort (zelfde origin, dus de CSP connect-src 'self' volstaat):
   - /__mock/herstellink?email=…[&soort=recovery|invite]  de link uit de herstel-/uitnodigingsmail
   - /rest/v1     profiles, inspecties, acties, planning, actie_log (+ rpc/report_security_event)
   - /storage/v1  object/fotos/<pad> (upload) en object/authenticated/fotos/<pad> (download)
-  - /__mock/...  testhulp: state (alles bekijken), fail (volgende verzoeken laten mislukken; optioneel alleen
+  - /__mock/...  testhulp: verberg?tabel=…&id=…&uid=… (die gebruiker krijgt die rij niet, zoals RLS; sinds 0008 ziet
+                 iedereen in het team alles, dus zo bootsen de tests "de server geeft jou dit niet" na),
+                 state (alles bekijken), fail (volgende verzoeken laten mislukken; optioneel alleen
                  voor één pad/methode: fail?n=1&status=503&pad=/rest/v1/inspecties&methode=POST), reset,
                  maxrows (PostgREST max-rows nabootsen; filters eq/is/gt/gte/lt/lte/in, order, limit, select)
 
@@ -97,7 +99,7 @@ def nieuwe_state():
              u(8, "norol@noardling.test", "Nieuwe Collega", None, "")]
     return {"users": {x["email"]: x for x in users}, "sessions": {}, "refresh": {}, "challenges": {},
             "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "security_events": [],
-            "fotos": {}, "recover": [], "pkce": {}, "logins": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
+            "fotos": {}, "recover": [], "pkce": {}, "logins": [], "verborgen": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
 
 
 STATE = nieuwe_state()
@@ -227,11 +229,14 @@ class Handler(SimpleHTTPRequestHandler):
                 s = {k: v for k, v in STATE.items() if k not in ("fotos", "users", "refresh")}
                 s["fotos"] = [{"pad": k, "mime": v["mime"], "grootte": len(v["data"]), "exif": b"Exif" in v["data"][:4096],
                                "door": v["door"]} for k, v in STATE["fotos"].items()]
-                s["users"] = [{"email": x["email"], "id": x["id"], "factors": x["factors"]} for x in STATE["users"].values()]
+                s["users"] = [{"email": x["email"], "id": x["id"], "factors": x["factors"], "profiel": x["profiel"]} for x in STATE["users"].values()]
                 return self.stuur(200, s)
             if p == "/__mock/fail":
                 STATE["fail"] = {"n": int(q.get("n", "1")), "status": int(q.get("status", "503")), "pad": q.get("pad", ""), "methode": q.get("methode", ""), "code": q.get("code", "")}
                 return self.stuur(200, STATE["fail"])
+            if p == "/__mock/verberg":
+                STATE["verborgen"].append("%s:%s:%s" % (q.get("tabel", ""), q.get("id", ""), q.get("uid", "")))
+                return self.stuur(200, {"verborgen": STATE["verborgen"]})
             if p == "/__mock/maxrows":   # PostgREST max-rows nabootsen (Supabase-standaard 1000)
                 STATE["max_rows"] = int(q.get("n", "1000"))
                 return self.stuur(200, {"max_rows": STATE["max_rows"]})
@@ -514,7 +519,7 @@ class Handler(SimpleHTTPRequestHandler):
     def zichtbaar(self, tabel, x):
         T, rol, uid = STATE["tables"][tabel], x["profiel"]["role"], x["id"]
         if rol in ("hoofd", "coordinator", "qhse", "beheerder"):
-            return list(T)
+            return [i for i in T if "%s:%s:%s" % (tabel, i, uid) not in STATE["verborgen"]]
         if tabel == "inspecties":
             return [i for i, r in T.items() if r.get("inspecteur_id") == uid]
         if tabel == "planning":

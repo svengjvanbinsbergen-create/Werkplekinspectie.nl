@@ -498,6 +498,9 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     // ---------- 10b. gedeeld toestel: tabblad dicht zonder uitloggen; daarna logt een ander in terwijl het ophalen mislukt ----------
     const Wid = '00000000-0000-4000-8000-000000000002';
     ok(await rest(wtok, 'inspecties?on_conflict=id', [{ id: 'GEHEIM-W', inspecteur_id: Wid, titel: 'Vertrouwelijk W', code: 'DAM', project: 'P26-901', opgeslagen: new Date().toISOString(), record: { versie: 3, titel: 'Vertrouwelijk W', taken: [], waarnemingen: [] } }]) === 201, 'coördinator Winfred heeft een eigen inspectie (GEHEIM-W)');
+    // Carla mag GEHEIM-W van de server niet krijgen. Sinds 0008 ziet iedereen in het team alle inspecties; de mock bootst
+    // "de server geeft jou dit niet" na (zoals RLS), zodat zichtbaar blijft dat niets van de vorige gebruiker achterblijft.
+    await fetch(BASE + '/__mock/verberg?tabel=inspecties&id=GEHEIM-W&uid=00000000-0000-4000-8000-000000000001');
     const ruweIdb = (pg, id) => pg.evaluate((id) => new Promise((res) => { const r = indexedDB.open('wpi'); r.onsuccess = () => { const t = r.result.transaction('inspecties').objectStore('inspecties').get(id); t.onsuccess = () => { const ja = !!t.result; r.result.close(); res(ja); }; }; }), id);
     const ctxG = await b.newContext(opt), g1 = await pagina(ctxG, 'gedeeld-douwe');
     await g1.goto(BASE + '/index.html'); await g1.waitForTimeout(700);
@@ -688,7 +691,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     const eigenLink = (await (await fetch(BASE + '/__mock/herstellink?email=carla@noardling.test&soort=recovery&redirect_to=' + encodeURIComponent(BASE + '/index.html'))).json()).link;
     await L.goto('about:blank'); await L.goto(eigenLink); await L.waitForTimeout(1200);
     const ve = await L.locator('#view').innerText();
-    ok(/Nieuw wachtwoord/.test(ve) && /inspecteur@noardling\.test/.test(ve), 'eigen link: scherm "Nieuw wachtwoord" noemt het account');
+    ok(/Nieuw wachtwoord/.test(ve) && /carla@noardling\.test/.test(ve), 'eigen link: scherm "Nieuw wachtwoord" noemt het account');
     ok((await telL()).sessie, 'eigen link: bewaarde sessie nog niet aangeraakt');
     await L.click('text=Annuleren, terug naar inloggen'); await L.waitForTimeout(1200);
     const naE = await telL();
@@ -717,6 +720,90 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(!!wnieuw.access_token, 'PKCE: inloggen met het nieuwe wachtwoord lukt');
     await fetch(BASE + '/auth/v1/user', { method: 'PUT', headers: { apikey: 'mock-anon-key', Authorization: 'Bearer ' + wnieuw.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: WW }) });   // terugzetten voor de rest van de test
     await ctxP.close();
+
+    // ---------- 12a2. tweede tabblad / link uit een e-mail terwijl iemand ingelogd is met "Ingelogd blijven" UIT ----------
+    // Fout uit de critic-ronde: de sessie staat dan alleen in sessionStorage van het eerste tabblad. Een nieuw tabblad op
+    // "/" of met #access_token=onzin&type=recovery zag "geen sessie" en wiste de opgehaalde gegevens van wie ingelogd was.
+    // Nu houdt elk ingelogd tabblad een slot vast (Web Locks) en wist een tabblad zonder eigen sessie dan niets.
+    const ctxT2 = await b.newContext(opt), T1 = await pagina(ctxT2, 'tab1');
+    await T1.goto(BASE + '/index.html'); await T1.waitForTimeout(700);
+    await inloggen(T1, 'douwe@noardling.test', WW, false); await T1.waitForTimeout(900);
+    await T1.evaluate(() => App.closeModal && App.closeModal());
+    const telT = () => T1.evaluate(async () => ({ user: App.user && App.user.id, n: (await WPI.DB.all()).length + (await WPI.DB.getAll('acties')).length + (await WPI.DB.getAll('planning')).length,
+      ob: (await WPI.DB.getAll('outbox')).length, sessie: !!sessionStorage.getItem('wpi_sessie'), lokaal: !!localStorage.getItem('wpi_sessie') }));
+    ok(await totdat(async () => (await telT()).n > 0), 'tweede tabblad: tab 1 ingelogd met "Ingelogd blijven" uit en gegevens op het toestel');
+    // een wijziging die (door een tijdelijke serverfout) in de wachtrij blijft staan
+    await fetch(BASE + '/__mock/fail?n=1000&status=503&pad=/rest/v1/planning&methode=POST');
+    await T1.evaluate(() => WPI.DB.put('planning', { id: 'PL-tab1', datum: '2026-11-28', code: 'DAM', project: 'P26-700', locatie: 'Gemaal Tab', monteurs: 1, inspecteur: App.user.id, toelichting: 'wachtrij', status: 'gepland' }));
+    await T1.waitForTimeout(800);
+    const voorT = await telT();
+    ok(voorT.ob >= 1 && voorT.sessie && !voorT.lokaal, 'tweede tabblad: wachtrij gevuld, sessie alleen in sessionStorage van tab 1 ' + JSON.stringify(voorT));
+    // (soort invite: altijd een #access_token-link; een herstelmail is hier PKCE, want eerder in deze test aangevraagd)
+    const linkVan = async (mail) => (await (await fetch(BASE + '/__mock/herstellink?email=' + mail + '&soort=invite&redirect_to=' + encodeURIComponent(BASE + '/'))).json()).link;
+    for (const [naam, url, verwacht] of [['nieuw tabblad op /', () => BASE + '/', /Inloggen/], ['nep-link (#access_token=onzin&type=recovery)', () => BASE + '/#access_token=onzin&type=recovery', /verlopen|ongeldig/],
+      ['index.html', () => BASE + '/index.html', /Inloggen/], ['geldige link van een ANDER account', () => linkVan('winfred@noardling.test'), /ander account/]]) {
+      const T2 = await pagina(ctxT2, 'tab2'); await T2.goto(await url()); await T2.waitForTimeout(1600);
+      const v2 = await T2.locator('#view').innerText();
+      ok(verwacht.test(v2) && await T2.evaluate(() => App.user === null) && !/Nieuw wachtwoord|Kies je wachtwoord/.test(v2), 'tweede tabblad (' + naam + '): niemand ingelogd, juiste uitleg: ' + v2.replace(/\s+/g, ' ').slice(0, 160));
+      await T2.close(); await T1.waitForTimeout(400);
+      const naT = await telT();
+      ok(naT.user === voorT.user && naT.n === voorT.n && naT.ob === voorT.ob && naT.sessie, 'tweede tabblad (' + naam + '): niets gewist bij tab 1 (gegevens, wachtrij, sessie) ' + JSON.stringify(naT));
+    }
+    // een geldige link van het EIGEN account in een tweede tabblad: "Nieuw wachtwoord", Annuleren wist ook niets
+    const T3 = await pagina(ctxT2, 'tab3'); await T3.goto(await linkVan('douwe@noardling.test')); await T3.waitForTimeout(1500);
+    const v3 = await T3.locator('#view').innerText();
+    ok(/Kies je wachtwoord|Nieuw wachtwoord/.test(v3), 'tweede tabblad, eigen link: scherm "Kies je wachtwoord": ' + v3.replace(/\s+/g, ' ').slice(0, 160));
+    if (await T3.locator('text=Annuleren, terug naar inloggen').count()) { await T3.click('text=Annuleren, terug naar inloggen'); await T3.waitForTimeout(1200); }
+    await T3.close(); await T1.waitForTimeout(300);
+    const naE2 = await telT();
+    ok(naE2.user === voorT.user && naE2.n === voorT.n && naE2.ob === voorT.ob, 'tweede tabblad, eigen link → Annuleren: niets gewist bij tab 1 ' + JSON.stringify(naE2));
+    await fetch(BASE + '/__mock/fail?n=0');
+    // pas als tab 1 dicht is (slot weg) geldt weer: geen sessie bij het openen = gedeeld toestel, servergegevens weg
+    await T1.close();
+    const T4 = await pagina(ctxT2, 'tab4'); await T4.goto(BASE + '/index.html'); await T4.waitForTimeout(1500);
+    ok(await T4.evaluate(async () => (await WPI.DB.all()).length === 0 && App.user === null), 'na sluiten van tab 1: servergegevens wel van het toestel (gedeeld toestel, zoals altijd)');
+    await ctxT2.close();
+
+    // ---------- 12a3. rollen (migratie 0008): nog geen rol, QHSE-manager en beheerder met tweestapsverificatie, Team en rollen ----------
+    const ctxR = await b.newContext(opt), R = await pagina(ctxR, 'rollen');
+    await R.goto(BASE + '/index.html'); await R.waitForTimeout(700);
+    await inloggen(R, 'norol@noardling.test'); await R.waitForTimeout(900);
+    ok(/nog geen rol/.test(await R.locator('#view').innerText()) && await R.evaluate(() => App.user === null && !sessionStorage.getItem('wpi_sessie') && !localStorage.getItem('wpi_sessie')),
+      'nog geen rol: niet binnen (sessie ingetrokken), uitleg "nog geen rol"');
+    const mfaIn = async (mail) => {
+      await inloggen(R, mail); await R.waitForTimeout(500);
+      const gevraagd = /Tweestapsverificatie/.test(await R.locator('h1').innerText()) && await R.evaluate(() => App.user === null);
+      const geheim = (await R.locator('#view b').last().innerText()).trim();
+      await R.fill('#m-code', totp(geheim)); await R.click('#m-knop'); await R.waitForTimeout(1000);
+      return gevraagd;
+    };
+    ok(await mfaIn('qhse@noardling.test') && await R.evaluate(() => App.user && App.user.role === 'qhse'), 'QHSE-manager: tweestapsverificatie gevraagd en daarna binnen');
+    ok(await R.evaluate(() => !localStorage.getItem('wpi_sessie')), 'QHSE-manager: refresh-token nooit in localStorage (beheerrol)');
+    ok(/Overzicht van het team/.test(await R.locator('#view h1').innerText()), 'QHSE-manager: Vandaag is een overzicht (geen inspectie starten)');
+    await R.evaluate(() => App.logout()); await R.waitForTimeout(500);
+    ok(await mfaIn('beheer@noardling.test') && await R.evaluate(() => App.user && App.user.role === 'beheerder'), 'beheerder: tweestapsverificatie gevraagd en daarna binnen');
+    await R.evaluate(() => App.go('beheer')); await R.waitForTimeout(1200);
+    const rolVan = (st, mail) => ((st.users || []).find((u) => u.email === mail) || { profiel: {} }).profiel.role;
+    const tl = await R.locator('#bh-team').innerText().catch(() => '');
+    ok(/Nieuwe Collega/.test(tl) && /Nog geen rol/.test(tl) && /Carla Proef/.test(tl), 'Team en rollen: lijst van de server, ook wie nog geen rol heeft', tl.slice(0, 200));
+    const opties = await R.locator('#bh-team select').first().locator('option').allInnerTexts();
+    ok(opties.length >= 4 && !opties.some((t) => /Inspecteur/i.test(t)) && opties.includes('QHSE-manager') && opties.includes('Beheerder'), 'Team en rollen: rolkeuze zonder "Inspecteur" ' + JSON.stringify(opties));
+    ok(await R.locator('.bhteamrij', { hasText: 'Hanna Hypothese' }).locator('select').count() === 0, 'Team en rollen: je eigen rol kies je niet zelf');
+    await R.locator('.bhteamrij', { hasText: 'Nieuwe Collega' }).locator('select').selectOption('coordinator'); await R.waitForTimeout(1200);
+    ok(rolVan(await state(), 'norol@noardling.test') === 'coordinator' && /Nieuwe Collega is nu Coördinator/.test(await R.locator('#view').innerText()), 'Team en rollen: rol gekozen en op de server opgeslagen');
+    await R.locator('.bhteamrij', { hasText: 'Björn Sloos' }).locator('select').selectOption('coordinator'); await R.waitForTimeout(1200);
+    ok(/minstens één actief hoofd/.test(await R.locator('#bh-team-fout').innerText()) && rolVan(await state(), 'bjorn@noardling.test') === 'hoofd', 'Team en rollen: het laatste hoofd degraderen geweigerd, met de uitleg van de server');
+    const voorRol = rolVan(await state(), 'norol@noardling.test');
+    const rtok = await R.evaluate(() => App.authToken());
+    const pr = await fetch(BASE + '/rest/v1/profiles?id=eq.00000000-0000-4000-8000-000000000008', { method: 'PATCH', headers: { apikey: 'mock-anon-key', Authorization: 'Bearer ' + rtok, 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'inspecteur' }) });
+    ok(pr.status >= 400 && rolVan(await state(), 'norol@noardling.test') === voorRol, 'API: de rol inspecteur toekennen geweigerd (' + pr.status + ')');
+    await R.evaluate(() => App.go('acties')); await R.waitForTimeout(500);
+    await R.evaluate(() => App.nieuweActie()); await R.waitForTimeout(300);
+    const kh = await R.locator('#ai-houder option').allInnerTexts(), kt = await R.locator('#ai-toetser option').allInnerTexts();
+    ok(!kh.some((t) => /Gijs Gefingeerd|Hanna Hypothese/.test(t)) && kt.some((t) => /Gijs Gefingeerd/.test(t)) && !kt.some((t) => /Hanna Hypothese/.test(t)),
+      'actiehouder: nooit QHSE-manager of beheerder; toetser: wel de QHSE-manager, nooit de beheerder ' + JSON.stringify({ kh, kt }));
+    await R.evaluate(() => App.closeModal());
+    await ctxR.close();
 
     // ---------- 12b. opgeslagen XSS via record-jsonb (negatieve test) ----------
     const itok = await token('carla@noardling.test');
@@ -804,10 +891,10 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await d.goto(DEMO + '/index.html'); await d.waitForTimeout(800);
     const dl = await d.locator('#view').innerText();
     ok(/Kies je account/.test(dl) && /Voorbeeld/.test(dl) && await d.locator('#l-mail').count() === 0, 'voorbeeldmodus: accountkiezer met label "Voorbeeld"');
-    await d.evaluate(() => App.login('u-insp')); await d.waitForTimeout(500);
-    ok(await d.evaluate(() => App.user && App.user.id === 'u-insp'), 'voorbeeldmodus: demo-login werkt');
+    await d.evaluate(() => App.login('u-coord1')); await d.waitForTimeout(500);
+    ok(await d.evaluate(() => App.user && App.user.id === 'u-coord1'), 'voorbeeldmodus: demo-login werkt');
     ok(await d.locator('#syncchip').count() === 0, 'voorbeeldmodus: geen synchronisatiechip');
-    await d.evaluate(() => WPI.DB.put('planning', { id: 'PL-x', datum: '2026-11-20', code: 'DAM', inspecteur: 'u-insp', status: 'gepland' })); await d.waitForTimeout(300);
+    await d.evaluate(() => WPI.DB.put('planning', { id: 'PL-x', datum: '2026-11-20', code: 'DAM', inspecteur: 'u-coord1', status: 'gepland' })); await d.waitForTimeout(300);
     ok(await d.evaluate(async () => (await WPI.DB.getAll('outbox')).length === 0), 'voorbeeldmodus: geen wachtrij');
     ok(await d.evaluate(() => App.syncChip('inspecties', 'x')).then((s) => /Veilig op dit toestel/.test(s)), 'voorbeeldmodus: chiptekst zoals vandaag');
 
@@ -816,7 +903,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await oudVenster.goto(DEMO + '/manifest.json');
     await oudVenster.evaluate(() => new Promise((res) => { const r = indexedDB.open('wpi', 3); r.onupgradeneeded = () => ['inspecties', 'acties', 'concept', 'planning'].forEach((n) => r.result.createObjectStore(n, { keyPath: 'id' })); r.onsuccess = () => { window.__db = r.result; res(); }; }));
     await nieuw.goto(DEMO + '/index.html'); await nieuw.waitForTimeout(600);
-    await nieuw.evaluate(() => { App.login('u-insp'); }); await nieuw.waitForTimeout(800);
+    await nieuw.evaluate(() => { App.login('u-coord1'); }); await nieuw.waitForTimeout(800);
     ok(/Sluit andere vensters/.test(await nieuw.locator('#dbmelding').innerText().catch(() => '')), 'upgrade geblokkeerd: melding "Sluit andere vensters"');
     await oudVenster.evaluate(() => window.__db.close());
     ok(await totdat(async () => nieuw.evaluate(() => !!App.user && !document.getElementById('dbmelding'))), 'na sluiten van het oude venster gaat de app verder');
