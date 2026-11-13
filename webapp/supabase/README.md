@@ -13,9 +13,10 @@ triggers en rechten. De controles in de app zijn alleen gebruiksgemak.
 | `migrations/0005_storage.sql` | privébucket `fotos` (5 MB, jpeg/png/webp) en Storage-policies |
 | `migrations/0006_rpc.sql` | `report_security_event` (rate-limited), `dashboard_cijfers`, `monteur_aanmelden` |
 | `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker; geteld in `public.foto_uploads` met een lock per gebruiker, snel ook bij duizenden foto's), indexen op `acties.foto_pad`/`nafoto_pad`. Na de aanvalstest ook: C1-, zero-width- en richtingstekens geweigerd, en elke tekst in het record met dezelfde regel |
+| `migrations/0008_rollen_beheer.sql` | rollen van het echte team: nieuwe rol `beheerder`; QHSE-manager en beheerder zien alles en beheren (team en rollen, instellingen, monteurs, auditlog), inspecteren en plannen niet; QHSE nooit actiehouder (wel toetser), beheerder geen van beide; nieuw profiel = **nog geen rol** (de rol `inspecteur` blijft alleen voor compatibiliteit, niemand krijgt hem nog); niemand wijzigt zijn eigen rol; MFA (aal2) voor alle beheerrollen; monteurslijst door hoofden en coördinatoren; dashboard voor iedereen met volledige inzage, doel standaard 85; `actie_log.wat` met `tekst_tekens_ok`; bewaartermijn 7 jaar (`bewaartermijn_opschonen()`) |
 | `schema.sql` | alle migraties samen (gegenereerd met `sh bouw-schema.sh`) |
-| `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstelling; **geen** voorbeelddata |
-| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (483 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh`, `naamsleutel_check.sh`, `sleutelcheck.sh`, `run.sh` |
+| `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstellingen (`doel_conform` = 85, `mfa_verplicht_hoofd`); **geen** voorbeelddata |
+| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (606 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh` (QHSE-manager én beheerder), `race_quotum.sh`, `naamsleutel_check.sh`, `tekens_check.sh`, `sleutelcheck.sh`, `run.sh` |
 
 Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase/bouw-schema.sh`.
 
@@ -38,16 +39,20 @@ Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase
    Begin dan met een **nieuw project**, of zet de database van het gekoppelde project terug met
    de CLI: `supabase db reset --linked` (wist **alle** data en draait de migraties opnieuw; het
    dashboard heeft hier geen knop voor).
-4. **Gebruikers uitnodigen.** Het profiel ontstaat automatisch met rol `inspecteur` en wordt
-   **actief zodra de uitnodiging is verstuurd** (`auth.users.invited_at`; Supabase Auth maakt
-   de gebruiker aan en zet `invited_at` in dezelfde transactie). Een rol uit metadata wordt
-   **genegeerd** (die kan de gebruiker zelf zetten). Voor de naam zijn er twee werkende routes:
+4. **Gebruikers uitnodigen.** Het profiel ontstaat automatisch **zonder rol** (sinds 0008; zonder rol is er
+   nog nergens toegang, de app zegt "Je account heeft nog geen rol") en wordt **actief zodra de uitnodiging is
+   verstuurd** (`auth.users.invited_at`; Supabase Auth maakt de gebruiker aan en zet `invited_at` in dezelfde
+   transactie). Daarna kiest een hoofd, de QHSE-manager of de beheerder de rol in de app (**Beheer › Team en
+   rollen**: hoofd, coördinator, QHSE-manager of beheerder; de oude rol `inspecteur` wordt niet meer toegekend).
+   Een rol uit metadata wordt **genegeerd** (die kan de gebruiker zelf zetten). Uitnodigen zelf kan niet vanuit de
+   app (daarvoor is de secret/service_role-sleutel nodig): de beheerder doet dat als lid van het Supabase-project.
+   Voor de naam zijn er twee werkende routes:
    - **Dashboard** (*Authentication › Users › Invite user*): dat venster vraagt alléén een
      e-mailadres, er is geen veld voor user metadata. Het profiel heet dan eerst naar het deel
      vóór de @ (bv. `bjorn.sloos`). Voor de drie vaste gebruikers zet `seed.sql` (stap 5) de
-     volledige naam. Voor latere collega's zet het hoofd (of SQL als `postgres`) de naam:
+     volledige naam. Voor latere collega's zet een beheerrol (of SQL als `postgres`) de naam:
      `update public.profiles set full_name = 'Voornaam Achternaam' where id = '<uid>';`
-     (de app heeft nog geen scherm om profielen te bewerken).
+     (Beheer › Team en rollen wijzigt rol en activering, nog niet de naam).
    - **Admin API** (alleen server-side, nooit in de app of in git, met de *secret/service_role*
      key uit de wachtwoordkluis), met de naam als metadata:
      ```sh
@@ -162,14 +167,14 @@ De namen van menu's kunnen per dashboardversie iets verschillen; de waarden niet
 | *Redirect URLs* | exact de eigen URL's, bv. `https://app.<domein>.nl/**`; **geen** `localhost` in productie | voorkomt token-lekken via open redirects |
 | *SMTP* | eigen SMTP-dienst (EU) met SPF/DKIM | de standaardmailer is alleen voor testen |
 
-**MFA voor het hoofd.** Het hoofd koppelt eerst een TOTP-app (de client gebruikt
-`supabase.auth.mfa.enroll/challenge/verify`). Zet daarna als hoofd
-`instellingen.mfa_verplicht_hoofd` op `true`. Vanaf dan heeft het hoofd **alle** extra
-rechten alleen nog met een sessie op niveau `aal2`: de beheerroutes (monteurs, instellingen,
-profielen, auditlog, verwijderen) én de staf-rechten (alle inspecties en acties lezen,
-dashboard, acties inhoudelijk wijzigen, planning van anderen). Met alleen een wachtwoord
-(`aal1`) heeft het hoofd de rechten van een inspecteur; een gestolen wachtwoord geeft dus
-geen inzage in alles. Weer uitzetten kan alleen met `aal2`.
+**MFA voor de beheerrollen (hoofden, QHSE-manager, beheerder).** De app vraagt deze drie rollen bij elke login
+een TOTP-code (bij de eerste keer eerst koppelen met een QR-code; `supabase.auth.mfa.enroll/challenge/verify`) en
+bewaart voor hen nooit een refresh-token. Zet daarna `instellingen.mfa_verplicht_hoofd` op `true` (de naam is
+gebleven; sinds 0008 geldt hij voor alle drie de beheerrollen). Vanaf dan hebben zij **alle** extra rechten alleen
+nog met een sessie op niveau `aal2`: de beheerroutes (team en rollen, monteurs, instellingen, auditlog,
+verwijderen), volledige inzage (alle inspecties en acties, dashboard) en voor de hoofden ook de staf-rechten
+(acties inhoudelijk wijzigen, planning van anderen). Met alleen een wachtwoord (`aal1`) zien zij alleen hun eigen
+werk; een gestolen wachtwoord geeft dus geen inzage in alles. Weer uitzetten kan alleen met `aal2`.
 
 **CORS.** De REST- en Storage-API van Supabase hebben geen eigen origin-allowlist;
 RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
@@ -208,18 +213,40 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
 - **Hersteltest** elk kwartaal in een apart (test)project: zet een backup terug, draai
   `tests/rls_test.sql`-achtige controles en controleer of foto's te openen zijn.
   Een backup zonder geoefend herstel is geen garantie.
-- **Bewaartermijn logs.** `audit_log`, `actie_log` en `security_events` zijn append-only:
-  UPDATE, DELETE en TRUNCATE worden door triggers geweigerd, ook voor `service_role`.
-  Opschonen na de bewaartermijn kan alleen als eigenaar (`postgres`, SQL Editor) in
-  onderhoudsmodus:
+- **Bewaartermijn: 7 jaar** (besluit producteigenaar; migratie 0008). `public.bewaartermijn_opschonen()` verwijdert
+  in één transactie wat ouder is dan 7 jaar: inspecties (`opgeslagen`), acties (laatst gewijzigd, `updated_at`; een
+  actie die nog loopt wordt dus nooit stil weggehaald) en planning (`datum`), met hun verloop (`actie_log`) en hun
+  regels in `audit_log` (anders bleef de inhoud daar staan), plus alle auditregels ouder dan 7 jaar en
+  beveiligingsgebeurtenissen ouder dan 12 maanden. Foto's van die records die geen overblijvend record nog gebruikt,
+  komen in `public.bewaartermijn_fotos` (een rij in `storage.objects` mag je in Supabase niet met SQL weghalen: het
+  bestand blijft dan staan). Alleen de eigenaar (`postgres`) mag de functie uitvoeren; de app en `service_role` niet.
   ```sql
-  begin;
-  set local wpi.onderhoud = 'aan';
-  delete from public.audit_log       where t < now() - interval '7 years';
-  delete from public.security_events where t < now() - interval '1 year';
-  commit;
+  select public.bewaartermijn_opschonen(p_proef => true);   -- eerst tellen (verwijdert niets)
+  select public.bewaartermijn_opschonen();                  -- uitvoeren (minstens 7 jaar; p_jaren => 8 mag ook)
+  select pad from public.bewaartermijn_fotos;               -- deze foto's daarna via de Storage-API verwijderen
   ```
-  Stem de termijnen af met het privacybeleid (AVG) en VCA-dossier.
+  Foto's verwijderen (server-side, met de secret key uit de wachtwoordkluis, nooit in de app of in git), daarna de
+  lijst leegmaken:
+  ```sh
+  curl -s -X DELETE "https://<project-ref>.supabase.co/storage/v1/object/fotos" \
+    -H "apikey: $SECRET_KEY" -H "Authorization: Bearer $SECRET_KEY" -H "Content-Type: application/json" \
+    -d '{"prefixes":["<pad 1>","<pad 2>"]}'
+  ```
+  ```sql
+  delete from public.bewaartermijn_fotos where pad in ('<pad 1>', '<pad 2>');
+  ```
+  **Planning (maandelijks).** Met pg_cron (*Database › Extensions › pg_cron* aanzetten), als `postgres` in de SQL
+  Editor; de taak draait als `postgres`:
+  ```sql
+  select cron.schedule('wpi-bewaartermijn', '17 3 1 * *', $$select public.bewaartermijn_opschonen()$$);
+  -- controleren: select * from cron.job_run_details where jobid = (select jobid from cron.job where jobname = 'wpi-bewaartermijn') order by start_time desc limit 5;
+  ```
+  Zonder pg_cron: elke maand handmatig (zelfde opdrachten; staat op de checklist in `docs/beveiliging-periodiek.md`).
+  De foto's blijven een handmatige stap (Storage-API). Getest in `tests/rls_test.sql`, sectie 26f.
+- **Logs zijn append-only.** `audit_log`, `actie_log` en `security_events`: UPDATE, DELETE en TRUNCATE worden door
+  triggers geweigerd, ook voor `service_role`. Alleen de eigenaar (`postgres`) kan in onderhoudsmodus opschonen
+  (`set local wpi.onderhoud = 'aan';` in een transactie); `bewaartermijn_opschonen()` doet dat zelf, alleen binnen
+  zijn eigen transactie. Stem de termijnen af met het privacybeleid (AVG) en het VCA-dossier.
 
 ## 5. Datacontract voor de client
 
