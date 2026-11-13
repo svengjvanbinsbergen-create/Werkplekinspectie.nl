@@ -117,7 +117,7 @@
         // label boven de punt; raakt het de doellijn, dan eronder (en met een witte rand voor de leesbaarheid)
         const ly = yDoel != null && Math.abs(yDoel - (yy - 19)) < 12.5 && yy + 26 < T + ih + 4 ? yy + 26 : yy - 14;
         const lx = q.x === L && mnd.length > 1 ? q.x - 6 : q.x, la = lx === q.x ? "middle" : "start";   // eerste punt: niet over de as-labels
-        g += `<g style="cursor:pointer" aria-label="${esc(mlabel(q.m) + ": " + (q.p !== null && !klein ? Math.round(q.p * 100) + "% conform" : "n=" + q.tot) + " · details")}"${act("drill", "oordeelmaand", q.m)}><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
+        g += `<g style="cursor:pointer" aria-label="${esc((q.p !== null && !klein ? Math.round(q.p * 100) + "%" : "n=" + q.tot) + " " + mlabel(q.m) + " · % conform, details")}"${act("drill", "oordeelmaand", q.m)}><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
           <circle cx="${q.x}" cy="${yy}" r="7" fill="${klein ? "#fff" : P.C}" stroke="${klein ? P.N : "#fff"}" stroke-width="3"/>
           ${q.p !== null && !klein ? `<text class="pctlab" x="${lx}" y="${ly}" text-anchor="${la}" font-size="13" font-weight="800" fill="${P.ink}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${Math.round(q.p * 100)}%</text>` : `<text x="${lx}" y="${ly}" text-anchor="${la}" font-size="12" fill="${P.soft}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">n=${q.tot}</text>`}
           <text x="${q.x}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${P.soft}">${mlabel(q.m)}</text></g>`;
@@ -134,9 +134,9 @@
         segs.forEach(([val, col, pat]) => { if (!val) return; tot += val; const h = Math.max(6, val / max * ih); yb -= h;
           p += `<rect x="${x}" y="${yb + 1.5}" width="${bw}" height="${h - 3}" rx="${Math.min(bw / 2, (h - 3) / 2)}" fill="${col}"${pat ? ` stroke="#CFC2B0" stroke-dasharray="3 3"` : ""}/>`; });
         p += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" font-size="15" font-weight="800" fill="${P.ink}">${labels[i][0]}</text>`;
-        p += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
+        p += ` <text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
         p += `<rect x="${pad + gap * i}" y="0" width="${gap}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer" aria-label="${esc(labels[i][1] + ": " + labels[i][0] + " · details")}"${actieFn(i)}>${p}</g>`;
+        g += `<g style="cursor:pointer" aria-label="${esc(labels[i][0] + " " + labels[i][1] + " · details")}"${actieFn(i)}>${p}</g>`;
       });
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },

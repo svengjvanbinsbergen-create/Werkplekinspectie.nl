@@ -316,7 +316,10 @@
 
     go(h) { location.hash = "#/" + h; },
     route() {
-      const inMenu = document.activeElement && $("tabbar").contains(document.activeElement);
+      // focus na het opnieuw tekenen: menu → blijft op het menu; stond hij in de inhoud (of nergens) → naar de kop
+      // van het nieuwe scherm (in de inspectie: de nieuwe vraag), zodat toetsenbord en schermlezer meegaan
+      const fa = document.activeElement, inMenu = fa && $("tabbar").contains(fa);
+      const naarKop = !inMenu && (!fa || fa === document.body || $("view").contains(fa));
       this.renderAcct();
       if (!this.user) { $("app").classList.add("nonav"); $("view").dataset.page = "login"; $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
@@ -336,6 +339,7 @@
       else this.view_vandaag();
       window.scrollTo(0, 0);
       if (inMenu) { const a = $("tabbar").querySelector("a.on"); if (a) a.focus({ preventScroll: true }); }
+      else if (naarKop && this.user) this.focusKop();
     },
     renderTabs(active) {
       $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo" aria-hidden="true">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
@@ -381,6 +385,13 @@
       if (!was) return;
       const t = this._modTerug, a = document.activeElement; this._modTerug = null;
       if (t && t.isConnected && typeof t.focus === "function" && (!a || a === document.body || mod.contains(a))) { try { t.focus({ preventScroll: true }); } catch (e) {} }
+    },
+    focusKop() {
+      const a = document.activeElement; if (a && a !== document.body && a.isConnected) return;   // het scherm zette zelf al focus (bijv. een invoerveld)
+      if ($("ov").classList.contains("on")) return;
+      const h = $("view").querySelector("h1"); if (!h) return;
+      if (!h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1");
+      try { h.focus({ preventScroll: true }); } catch (e) {}
     },
     // skiplink "Naar de inhoud" (index.html): geen hash-navigatie (die is van de router), alleen focus verplaatsen
     naarInhoud() { const v = $("view"), h = v && v.querySelector("h1"); if (h && !h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1"); (h || v).focus(); },
