@@ -109,7 +109,6 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[data-action=\"openSearch\"] > .grow > .s": 1,
     "button[data-action=\"openWeergave\"] > .grow > .s": 1,
     "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
     "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
@@ -125,7 +124,6 @@
    "vormen": {
     ".hi": 1,
     ".muted": 1,
-    ".tijdlijn > div > span": 1,
     "a[href$=\"#/dashboard\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/kwartaal\"]": 1,
@@ -162,7 +160,6 @@
     ".b-todo": 1,
     ".hi": 1,
     ".muted": 1,
-    ".tijdlijn > div > span": 1,
     "a[href$=\"#/dashboard\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/kwartaal\"]": 1,
@@ -397,7 +394,6 @@
   "color-contrast|ins-oordeel@1440": {
    "impact": "serious",
    "vormen": {
-    "#oordeel-lab > span": 1,
     ".brand > span:nth-child(n)": 1
    }
   },
@@ -745,12 +741,12 @@
   "color-contrast|vandaag@1440": {
    "impact": "serious",
    "vormen": {
-    ".sidebrand > span:nth-child(n) > small": 1,
     "a[href$=\"#/acties\"]": 1,
     "a[href$=\"#/dashboard\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/kwartaal\"]": 1,
-    "a[href$=\"#/planning\"]": 1
+    "a[href$=\"#/planning\"]": 1,
+    "small": 1
    }
   },
   "color-contrast|vandaag@390": {
@@ -2391,28 +2387,24 @@
   "region|ins-oordeel@1440": {
    "impact": "moderate",
    "vormen": {
-    "#oordeel-lab": 1,
     ".brand": 1,
     ".clamp3": 1,
     ".ih-meta": 1,
     ".ih-vraag": 1,
     ".kicker": 1,
     ".q > div:nth-child(n)": 1,
-    ".seg": 1,
     ".vp-ref": 1
    }
   },
   "region|ins-oordeel@390": {
    "impact": "moderate",
    "vormen": {
-    "#oordeel-lab": 1,
     ".brand > .logo": 1,
     ".clamp3": 1,
     ".ih-meta": 1,
     ".ih-vraag": 1,
     ".kicker": 1,
     ".q > div:nth-child(n)": 1,
-    ".seg": 1,
     ".vp-ref": 1
    }
   },
@@ -2792,7 +2784,6 @@
    "impact": "moderate",
    "vormen": {
     "#mijnact > .vsectie": 1,
-    ".hero": 1,
     ".vkop": 1,
     ".vmeer > .vsectie": 1
    }
@@ -2802,7 +2793,6 @@
    "vormen": {
     "#mijnact > .vsectie": 1,
     ".brand > .logo": 1,
-    ".hero": 1,
     ".vkop": 1,
     ".vmeer > .vsectie": 1
    }
@@ -2811,7 +2801,6 @@
    "impact": "moderate",
    "vormen": {
     "#mijnact > .vsectie": 1,
-    ".hero": 1,
     ".vkop": 1,
     ".vmeer > .vsectie": 1
    }
@@ -2821,7 +2810,6 @@
    "vormen": {
     "#mijnact > .vsectie": 1,
     ".brand > .logo": 1,
-    ".hero": 1,
     ".vkop": 1,
     ".vmeer > .vsectie": 1
    }

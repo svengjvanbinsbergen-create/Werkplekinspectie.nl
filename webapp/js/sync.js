@@ -93,6 +93,96 @@
   const lijstVan = (v, f) => (Array.isArray(v) ? v.filter(f) : []);
   const isTekst = (x) => typeof x === "string", isObj = (x) => !!x && typeof x === "object" && !Array.isArray(x);
 
+  // ---------------- debuguitvoer ----------------
+  // Ruwe servermeldingen (Engels, met tabel- en kolomnamen) en conflictdetails alleen in de console met
+  // WPI_CONFIG.debug === true. Standaard (en in productie altijd) uit; de gebruiker ziet de Nederlandse melding.
+  // Alleen de CSP-waarschuwing (verkeerd ingevuld project-adres, geen gegevens) blijft altijd staan.
+  const logDebug = (...a) => { if (CFG.debug === true && window.console) console.warn(...a); };
+
+  // ---------------- uploads: type en grootte (ook in de voorbeeldmodus) ----------------
+  // Elke foto (waarneming, extra foto's, na-foto) loopt via WPI.fotoDataURL (js/kern.js), die het beeld via een
+  // canvas opnieuw tekent als JPEG van max 1000 px. Hier — vóór js/inspectie.js en js/acties.js die functie
+  // overnemen — komt er een keuring omheen:
+  //   - alleen foto's: JPEG, PNG, WebP of HEIC/HEIF (iPhone); dus geen SVG, PDF, video of willekeurige bestanden.
+  //     Een leeg type (sommige Android-browsers) mag alleen met een foto-extensie.
+  //   - het gekozen bestand max 20 MB (een telefoonfoto is 2–12 MB), en het resultaat max 5 MB en altijd JPEG.
+  // Wordt iets geweigerd, dan zegt de app dat in gewone taal. De server dwingt hetzelfde af (Storage-bucket "fotos":
+  // max 5 MB, alleen image/jpeg|png|webp, eigen map; zie supabase/migrations/0005_storage.sql) en sanerFoto()
+  // weigert vóór het versturen alles boven 5 MB.
+  const FOTO_GRENS = Object.freeze({ typen: Object.freeze(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]),
+    extensies: /\.(jpe?g|png|webp|heic|heif)$/i, maxBron: 20 * 1024 * 1024, maxUpload: 5 * 1024 * 1024 });
+  const mb = (n) => (n / 1048576).toLocaleString("nl-NL", { maximumFractionDigits: 1 }) + " MB";
+  function fotoKeuring(file) {
+    if (!file || typeof file !== "object" || typeof file.size !== "number") return "Dit is geen bestand.";
+    const type = String(file.type || "").toLowerCase(), naam = String(file.name || "");
+    if (type ? !FOTO_GRENS.typen.includes(type) : !FOTO_GRENS.extensies.test(naam)) return "Alleen foto's (JPEG, PNG, WebP of HEIC) kunnen worden toegevoegd.";
+    if (file.size === 0) return "Het bestand is leeg.";
+    if (file.size > FOTO_GRENS.maxBron) return "De foto is te groot (" + mb(file.size) + "; maximaal " + mb(FOTO_GRENS.maxBron) + ").";
+    return null;
+  }
+  let afgewezen = [], afTimer = null;
+  function meldAfgewezen(file, reden) {
+    afgewezen.push({ naam: String((file && file.name) || "foto").slice(0, 80), reden });
+    clearTimeout(afTimer);
+    afTimer = setTimeout(() => {
+      const l = afgewezen; afgewezen = [];
+      if (!l.length || !App.openModal) return;
+      App.openModal("Foto niet toegevoegd", l.length === 1 ? l[0].reden : l.length + " bestanden zijn niet toegevoegd.",
+        (l.length > 1 ? `<div class="listcard" style="margin-bottom:12px">${l.map((x) => `<div class="row"><span class="grow"><span class="t">${esc(x.naam)}</span><div class="s">${esc(x.reden)}</div></span></div>`).join("")}</div>` : "") +
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">Maak een nieuwe foto met de camera, of kies een gewone foto uit je galerij.</div>
+         <button class="btn primary"${act("closeModal")}>Sluiten</button>`);
+    }, 60);
+  }
+  {
+    const fotoDataURL0 = window.WPI.fotoDataURL;
+    if (typeof fotoDataURL0 === "function" && !fotoDataURL0.gekeurd) {
+      const gekeurd = async function (file, max) {
+        const r = fotoKeuring(file);
+        if (r) { meldAfgewezen(file, r); return null; }
+        const d = await fotoDataURL0(file, max);
+        if (!d) { meldAfgewezen(file, "Deze foto kon niet worden gelezen."); return null; }
+        if (!/^data:image\/jpeg;base64,/.test(d) || Math.floor((d.length - d.indexOf(",") - 1) * 3 / 4) > FOTO_GRENS.maxUpload) {
+          meldAfgewezen(file, "De foto is na verkleinen nog te groot of heeft een onbekend formaat."); return null;
+        }
+        return d;
+      };
+      gekeurd.gekeurd = true;
+      window.WPI.fotoDataURL = gekeurd;
+    }
+    window.WPI.fotoKeuring = fotoKeuring;
+    window.WPI.FOTO_GRENS = FOTO_GRENS;
+  }
+
+  // ---------------- invoergrenzen gelijk aan de server ----------------
+  // De database weigert te lange teksten (CHECK-constraints in supabase/migrations/0001_tabellen.sql). Zonder grens
+  // in het scherm typt iemand 3000 tekens die pas bij het synchroniseren blijvend worden geweigerd. Daarom krijgt elk
+  // bekend tekstveld bij het focussen dezelfde maxlength als de server (alleen als het veld er zelf nog geen heeft).
+  // Ook in de voorbeeldmodus, zodat het gedrag gelijk is. De server blijft de echte controle.
+  const INVOERGRENS = Object.freeze({
+    "pl-project": 120, "pl-loc": 200, "pl-toel": 2000,              // planning (planning_*_lengte)
+    "na-tekst": 2000, "na-aanl": 2000, "ai-tekst": 2000,             // acties.tekst / waarneming
+    "ai-reden": 1800,                                                // actie_log.wat ≤ 2000 (met voorvoegsel)
+    "bh-nieuw": 120, "bh-hernoem": 120, "nieuwe-monteur": 120,      // monteurs.naam
+    "f-zie": 2000,                                                   // wordt acties.waarneming (≤ 2000)
+    "l-mail": 200, "v-mail": 200, "zq": 200,
+  });
+  const invoerGrens = (x) => INVOERGRENS[x.id] || (/^f-/.test(x.id) ? 2000 : 0);
+  // datums: zelfde venster als de server (0007_invoer_aanvulling.sql: 2 jaar terug … 5 jaar vooruit)
+  const DATUMVELD = new Set(["pl-datum", "ai-plan", "ai-plan2"]);
+  const isoPlus = (jaren) => { const d = new Date(); d.setFullYear(d.getFullYear() + jaren); return d.toISOString().slice(0, 10); };
+  document.addEventListener("focusin", (e) => {
+    const x = e.target;
+    if (x && x.tagName === "INPUT" && x.type === "date" && DATUMVELD.has(x.id)) {
+      if (!x.min) x.min = isoPlus(-2);
+      if (!x.max) x.max = isoPlus(5);
+      return;
+    }
+    if (!x || !x.id || !(x.tagName === "TEXTAREA" || (x.tagName === "INPUT" && /^(text|search|email|)$/.test(x.getAttribute("type") || "")))) return;
+    const g = invoerGrens(x);
+    if (g && !x.hasAttribute("maxlength")) x.maxLength = g;
+  }, true);
+  window.WPI.INVOERGRENS = INVOERGRENS;
+
   // ---------------- HTTP naar Supabase ----------------
   class SbFout extends Error {
     constructor(status, body, msg) { super(msg || ("HTTP " + status)); this.status = status; this.body = body; }
@@ -349,6 +439,9 @@
     let f = ontleed(dataUrl);
     if (!f) throw new SbFout(422, null, "Foto onleesbaar");
     if (heeftMetadata(f) || !BEELDTYPE.test(f.mime)) f = ontleed(await herCodeer(dataUrl, f.mime));
+    // zelfde grens als de Storage-bucket (5 MB, alleen jpeg/png/webp): niet eerst versturen en dan geweigerd worden
+    if (!f || !BEELDTYPE.test(f.mime)) throw new SbFout(415, null, "Dit bestandstype wordt niet geaccepteerd");
+    if (f.bytes.length > FOTO_GRENS.maxUpload) throw new SbFout(413, null, "Foto te groot om te versturen (max 5 MB)");
     return f;
   }
   const kaalPad = (p) => String(p).replace(/^fotos\//, "");
@@ -676,7 +769,7 @@
             : err.status === 401 ? "sessie wordt vernieuwd"
             : "wacht tot de inspectie op de server staat";
           wijzig++; try { await p0("outbox", cur); } catch (x) {}
-          if (window.console) console.warn("[sync] " + e.id + ": " + (err.message || err) + " → " + cur.melding);
+          logDebug("[sync] " + e.id + ": " + (err.message || err) + " → " + cur.melding);
           if (stopRonde(err)) break;   // geen netwerk, geen sessie of server overbelast: de rest heeft nu ook geen zin
         }
         toonStatus();
@@ -708,7 +801,7 @@
     // begrensd: de 40 nieuwste regels; alleen open conflicten houden hun kopie
     l = l.slice(-40).map((x) => (x.open ? x : Object.assign({}, x, { kopie: null })));
     await zetMeta("conflicten", l);
-    if (window.console) console.warn(`[sync] conflict ${store}/${id}: ${winnaar}` + (verloren.length ? " — niet doorgevoerd: " + verloren.join(", ") : "") + (mee.length ? " — samengevoegd: " + mee.join(", ") : ""));
+    logDebug(`[sync] conflict ${store}/${id}: ${winnaar}` + (verloren.length ? " — niet doorgevoerd: " + verloren.join(", ") : "") + (mee.length ? " — samengevoegd: " + mee.join(", ") : ""));
   }
   const VELDNAAM = { datum: "datum", code: "product", project: "project", locatie: "locatie", monteurs: "monteurs", inspecteur: "inspecteur", toelichting: "toelichting",
     status: "status", inspectie_id: "inspectie", tekst: "actietekst", oordeel: "oordeel", ref: "referentie", waarneming: "waarneming", prio: "prioriteit", houder: "actiehouder",
@@ -885,7 +978,7 @@
       }
       return n;
     })().catch((e) => {
-      if (window.console) console.warn("[sync] ophalen mislukt: " + (e.message || e));
+      logDebug("[sync] ophalen mislukt: " + (e.message || e));
       contactFout(e);
       // server (nog) niet bereikt: vanzelf opnieuw proberen, oplopend tot 5 min
       if (tijdelijk(e) && App.user) { clearTimeout(haalTimer); haalTimer = setTimeout(() => { haalTimer = null; syncHaal(); }, wacht(++haalPogingen)); }

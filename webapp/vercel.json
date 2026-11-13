@@ -1,5 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete",
+  "outputDirectory": "dist",
+  "installCommand": "",
+  "framework": null,
   "routes": [
     {
       "src": "/(.*)",
@@ -24,14 +28,21 @@
       "continue": true
     },
     {
-      "src": "/(docs|tests|supabase)(/.*)?",
+      "src": "/(docs|tests|supabase|tools|handoff|wpi|node_modules)(/.*)?",
       "status": 404,
       "headers": {
         "X-Robots-Tag": "noindex, nofollow"
       }
     },
     {
-      "src": "/.*\\.[mM][dD]",
+      "src": "/(.*/)?\\.[^/]*(/.*)?",
+      "status": 404,
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      }
+    },
+    {
+      "src": "/.*\\.([mM][dD]|[sS][qQ][lL]|[pP][yY]|[pP][yY][cC]|[sS][hH]|[tT][oO][mM][lL]|[eE][nN][vV]|[bB][aA][kK]|[zZ][iI][pP]|[lL][oO][gG]|[tT][xX][tT])",
       "status": 404,
       "headers": {
         "X-Robots-Tag": "noindex, nofollow"

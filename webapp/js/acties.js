@@ -5,6 +5,9 @@
   "use strict";
   const { $, el, esc, svg, DB, fotoDataURL, USERS, staf, isWeb, naam, kort, plusDagen, dagLabel, dagenTot, PRIO,
     stBadge, tril, act } = window.WPI;
+  // prioriteit volgens de inspecteur: rustige chip (warm oranje blijft voor "te laat")
+  const prioChip = (p) => PRIO[p] ? `<span class="pchip p-${esc(p)}"><span class="pbol" aria-hidden="true"></span>Prio ${esc(PRIO[p].lab.split(" · ")[0].toLowerCase())}</span>` : "";
+  const prioTekst = (p) => PRIO[p] ? PRIO[p].lab : "";
   Object.assign(window.App, {
     // ---------------- ACTIES ----------------
     acties: null, actFilter: null,
@@ -69,18 +72,23 @@
         : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : `<span class="dchip">📅 ${dagLabel(a.plandatum)}</span>`;
       const h = a.houder ? USERS.find((u) => u.id === a.houder) : null;
       return `<button class="akaart"${act("openActie", a.id)}>
-        <div class="boven">${stBadge(a.status)}${plan}</div>
+        <div class="boven">${stBadge(a.status)}${plan}${prioChip(a.prio)}</div>
         <div class="titel">${esc(kort(a.tekst || "(geen tekst)", 110))}</div>
         <div class="onder"><span class="mini-av">${h ? esc(h.full_name[0]) : "?"}</span><span>${h ? esc(h.full_name) : "nog geen actiehouder"}</span><span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
     },
     actieRij(a) { return this.actieKaart(a); },
+    // foto's bij de waarneming: a.foto (hoofdfoto, ook in oude acties) + a.extraFotos [{ foto }] (zie fotoLijst in inspectie.js)
+    actieFotos(a) {
+      const l = this.fotoLijst(a).map((f) => WPI.fotoSrc(f)).filter(Boolean).slice(0, 6);
+      return l.length ? `<span class="afotos">${l.map((f, i) => `<img src="${esc(f)}" alt="Foto ${i + 1} van ${l.length} bij de waarneming">`).join("")}</span>` : "";
+    },
     // computer: overzicht als tabel
     actieTabel(lijst) {
       const plan = (a) => { const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
         return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip warm">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : dagLabel(a.plandatum); };
       const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers"><span class="mini-av">${esc(u.full_name[0])}</span>${esc(u.full_name)}</span>` : `<span class="s">–</span>`; };
       return `<div class="card tabelkaart"><div class="tablewrap"><table class="atabel"><thead><tr><th>Status</th><th>Actie</th><th>Actiehouder</th><th>Toetser</th><th>Plandatum</th><th>Herkomst</th></tr></thead><tbody>
-        ${lijst.map((a) => `<tr${act("openActie", a.id)}><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}</div></td>
+        ${lijst.map((a) => `<tr${act("openActie", a.id)}><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${PRIO[a.prio] ? " · prio " + esc(prioTekst(a.prio).split(" · ")[0].toLowerCase()) : ""}</div></td>
           <td>${persoon(a.houder)}</td><td>${persoon(a.toetser)}</td><td>${plan(a)}</td><td class="s">${esc(a.handmatig ? "Handmatig" : (a.inspectie_titel || "").replace(/^Voorbeeld · /, "").split(" · ")[0])}${a.demo ? " · voorbeeld" : ""}</td></tr>`).join("")}
       </tbody></table></div></div>`;
     },
@@ -116,7 +124,7 @@
       const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${u.id}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
       const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
       let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
-        <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${a.foto ? `<img src="${esc(WPI.fotoSrc(a.foto))}" alt="foto" style="height:64px;border-radius:10px">` : ""}</div>`;
+        <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${this.actieFotos(a)}</div>`;
       if (a.status === "Voorstel") {
         {
           h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
@@ -134,16 +142,22 @@
         }
       } else {
         h += `<div class="card" style="background:var(--mist);box-shadow:none;margin-bottom:12px"><div class="t" style="font-size:16px">${esc(a.tekst)}</div>
-          <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b></div></div>`;
-        if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.foto))}" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.nafoto))}" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
-        if ((a.status === "Open" || a.status === "In uitvoering") && (isHouder || staf())) {
-          if (a.status === "Open") h += `<button class="btn ghost" style="width:100%;margin-bottom:10px"${act("zetStatus", a.id, "In uitvoering", "Uitvoering gestart")}>Start uitvoering</button>`;
-          h += `<button class="btn primary"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
+          <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b>${PRIO[a.prio] ? ` · prio <b>${esc(prioTekst(a.prio))}</b>` : ""}</div></div>`;
+        if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.foto))}" alt="Foto vóór uitvoering" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.nafoto))}" alt="Na-foto na uitvoering" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
+        // Rolbewust: iedereen ziet alleen zijn eigen volgende stap. Uitvoeren en klaar melden = alleen de
+        // actiehouder; toetsen en afronden = alleen de toetser (nooit dezelfde persoon). De toetser, het hoofd
+        // en de coördinatoren krijgen de knoppen van de actiehouder dus niet (zie ook zetStatus/naFoto).
+        // De uitleg per rol ("Jij bent de actiehouder/toetser …") staat in de kop van het venster (verrijkActie).
+        if (a.status === "Open" || a.status === "In uitvoering") {
+          if (isHouder && !isToetser && a.status === "Open") h += `<button class="btn primary"${act("zetStatus", a.id, "In uitvoering", "Uitvoering gestart")}>${svg("play", 18)} Start uitvoering</button>
+            <div class="alklaar"><span class="s">Al klaar?</span><button class="btn ghost"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
+            <button class="btn ghost"${act("zetStatus", a.id, "Klaar voor toetsing", "Klaar voor toetsing gemeld (zonder na-foto)")}>Klaar voor toetsing, zonder foto</button></div>`;
+          else if (isHouder && !isToetser) h += `<button class="btn primary"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
             <button class="btn ghost" style="width:100%;margin-top:10px"${act("zetStatus", a.id, "Klaar voor toetsing", "Klaar voor toetsing gemeld (zonder na-foto)")}>Klaar voor toetsing, zonder foto</button>`;
         }
         if (a.status === "Klaar voor toetsing") {
-          if (isToetser) h += `<button class="btn primary"${act("akkoord", a.id)}>${svg("check", 18)} Akkoord na toetsing · afronden</button>
-            <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout"></div>
+          if (isToetser && !isHouder) h += `<button class="btn primary"${act("akkoord", a.id)}>${svg("check", 18)} Akkoord na toetsing · afronden</button>
+            <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord" aria-label="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout"></div>
             <button class="btn danger" style="width:100%;margin-top:8px"${act("nietAkkoord", a.id)}>Niet akkoord · terug naar actiehouder</button>`;
           else h += `<div class="hint">Wacht op toetsing door <b>${esc(naam(a.toetser))}</b>. Alleen de toetser kan afronden.</div>`;
         }
@@ -178,10 +192,16 @@
       if (!r.trim()) { const f = $("ai-reden"); if (f) { f.focus(); f.placeholder = "Reden is verplicht"; } return; }
       a.status = "Vervallen"; await this.bewaarActie(a, "Voorstel vervallen: " + r.trim()); this.closeModal(); this.route();
     },
-    async zetStatus(id, st, wat) { const a = this.acties.find((x) => x.id === id); a.status = st; await this.bewaarActie(a, wat); tril(25); this.closeModal(); this.route(); },
+    // uitvoeren en klaar melden mag alleen de actiehouder (en nooit als hij ook toetser is): zelfde regel als de knoppen
+    magUitvoeren(a) { return !!(a && this.user && a.houder === this.user.id && a.toetser !== this.user.id && (a.status === "Open" || a.status === "In uitvoering")); },
+    async zetStatus(id, st, wat) {
+      const a = (this.acties || []).find((x) => x.id === id); if (!this.magUitvoeren(a) || !["In uitvoering", "Klaar voor toetsing"].includes(st)) return;
+      a.status = st; await this.bewaarActie(a, wat); tril(25); this.closeModal(); this.route();
+    },
     naFoto(id) {
+      if (!this.magUitvoeren((this.acties || []).find((x) => x.id === id))) return;
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.capture = "environment";
-      inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; const d = await fotoDataURL(f); const a = this.acties.find((x) => x.id === id); if (!d || !a) return;
+      inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; const d = await fotoDataURL(f); const a = this.acties.find((x) => x.id === id); if (!d || !this.magUitvoeren(a)) return;
         a.nafoto = d; a.status = "Klaar voor toetsing"; await this.bewaarActie(a, "Klaar voor toetsing gemeld, met na-foto"); tril(25); this.closeModal(); this.route(); };
       inp.click();
     },

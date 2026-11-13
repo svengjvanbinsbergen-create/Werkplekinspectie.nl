@@ -22,15 +22,27 @@
 # dat de browser daarna nooit meer http probeert. Preload pas aanmelden (hstspreload.org) als
 # ALLE subdomeinen van het eigen domein HTTPS hebben; op *.netlify.app/*.pages.dev geen preload.
 #
-# Afgeschermd (/docs, /tests, /supabase, *.md, interne pagina's als beveiliging.html/onderzoek.html/
-# gauntlet.html/verbeter.html/design-vandaag.html — elke .html behalve index.html — en de hostingconfig
-# zelf): Netlify verwijdert ze in de build en geeft daar 404 via netlify.toml. Cloudflare Pages kent geen
-# 404-regel: zet daar (root directory "webapp", build output directory ".") als build command
-#   rm -rf docs tests supabase netlify.toml vercel.json && find . -name '*.md' -type f -delete && find . -maxdepth 1 -name '*.html' ! -name index.html -type f -delete
-# De headers hieronder zijn alleen een extra vangnet (noindex, niets uitvoeren).
+# PUBLICATIE = ALLOWLIST (aanbevolen indeling, voor alle drie de hosts gelijk):
+#   repo/
+#     webapp/            bron (app + docs/ tests/ supabase/ en interne pagina's: NOOIT publiceren)
+#       dist/            het enige dat online gaat; wordt bij elke deploy opnieuw gebouwd (staat niet in git)
+#     tools/  handoff/  wpi/   buiten webapp/, dus nooit in een publicatie
+# De build kopieert alleen index.html, styles.css, sw.js, manifest.json, de iconen, _headers, css/, js/ en data/
+# naar dist/ en houdt daarvan alleen html/css/js/json/png over (en alleen index.html als pagina). Zo staan
+# docs/, tests/, supabase/, tools/, *.md, *.sql, *.py, *.sh, .env, .git en interne pagina's (beveiliging.html,
+# onderzoek.html, gauntlet.html, verbeter.html, design-vandaag.html) nooit online, ook niet als ze later bijkomen.
+#   Netlify: netlify.toml (publish = "dist", command hieronder).
+#   Vercel: vercel.json (buildCommand + outputDirectory "dist"), Root Directory = webapp.
+#   Cloudflare Pages: Root directory "webapp", Build output directory "dist", Build command:
+#     CLOUDFLARE_BUILD: rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete
+# Controle: node tests/exposed.js --config voert de build van netlify.toml, vercel.json en deze regel uit in een
+# tijdelijke kopie en faalt als er iets anders dan de app in dist/ komt. Na een deploy:
+#   node tests/exposed.js --alles https://<productie-url> --strict
+# De blokken hieronder voor /docs, /tests, /supabase, /tools en de interne pagina's zijn alleen een extra vangnet
+# (Cloudflare Pages kan met _headers geen 404 geven; noindex en niets uitvoeren).
 #
-# Vercel (vercel.json, Root Directory = webapp): dezelfde headers via "routes"; /docs, /tests,
-# /supabase en *.md geven daar 404 vóór de bestandscontrole. Vercel stuurt http altijd door naar
+# Vercel (vercel.json, Root Directory = webapp): dezelfde headers via "routes"; /docs, /tests, /supabase, /tools,
+# dotfiles (/.git, /.env) en *.md/*.sql/*.py/*.sh/*.toml geven daar 404 vóór de bestandscontrole (vangnet naast de allowlist). Vercel stuurt http altijd door naar
 # https (niet uit te zetten). vercel.json kan geen commentaar bevatten; de opmerkingen hierboven (CSP, project-ref) gelden ook daar.
 
 /*
@@ -59,6 +71,9 @@
   X-Robots-Tag: noindex, nofollow
   Content-Security-Policy: default-src 'none'; sandbox
 /supabase/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/tools/*
   X-Robots-Tag: noindex, nofollow
   Content-Security-Policy: default-src 'none'; sandbox
 /beveiliging.html

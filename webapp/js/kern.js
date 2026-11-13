@@ -365,7 +365,10 @@
 
   // ---- de delegatielaag (zie act/op hierboven): één luisteraar per eventsoort op document ----
   const NAAM_OK = /^[A-Za-z_$][\w$]*$/;
-  const SPECIAAL = { waarde: (x) => x.value, element: (x) => x, event: (x, e) => e };
+  // prototype-loos object + eigen-sleutelcontrole: {"@":"constructor"}, {"@":"__proto__"} e.d. zijn géén plaatshouder
+  const SPECIAAL = Object.assign(Object.create(null), { waarde: (x) => x.value, element: (x) => x, event: (x, e) => e });
+  const plaats = (a) => (a && typeof a === "object" && !Array.isArray(a) && typeof a["@"] === "string" &&
+    Object.prototype.hasOwnProperty.call(SPECIAAL, a["@"]) ? SPECIAAL[a["@"]] : null);
   function roep(x, naam, ruw, e) {
     // alleen eigen functies van App (Object.assign in js/*.js); niets van Object.prototype en geen andere globals
     if (!naam || !NAAM_OK.test(naam) || !Object.prototype.hasOwnProperty.call(App, naam) || typeof App[naam] !== "function") {
@@ -374,7 +377,7 @@
     let args = [];
     if (ruw) { try { args = JSON.parse(ruw); } catch (err) { console.warn("Werkplekinspectie: ongeldige args bij", naam); return; } }
     if (!Array.isArray(args)) args = [args];
-    args = args.map((a) => (a && typeof a === "object" && !Array.isArray(a) && SPECIAAL[a["@"]] ? SPECIAAL[a["@"]](x, e) : a));
+    args = args.map((a) => { const f = plaats(a); return f ? f(x, e) : a; });
     return App[naam].apply(App, args);
   }
   // loopt het pad van het event af (doel → document), zoals de inline handlers vroeger opborrelden

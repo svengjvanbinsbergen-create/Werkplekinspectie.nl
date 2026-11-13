@@ -2,7 +2,7 @@
 //
 //   node tests/exposed.js http://localhost:8418                 bereikbaarheid (lokaal of gedeployd)
 //   node tests/exposed.js --headers https://werkplekinspectie.nl  headers van een gedeployde site
-//   node tests/exposed.js --config                               statische controle van netlify.toml / vercel.json
+//   node tests/exposed.js --config                               deploy-config: allowlist-build (echt uitgevoerd), 404-regels, CSP gelijk
 //   node tests/exposed.js --alles https://...                    alle drie
 //   --strict  → exitcode 1 als iets gevoeligs bereikbaar is of een verplichte header ontbreekt
 //
@@ -133,34 +133,108 @@ async function checkHeaders(url) {
   return uit;
 }
 
-// ---------- statische controle van de deploy-configuratie ----------
-function configCheck() {
-  const paden = ["/docs/x.md", "/docs/", "/tests/e2e.js", "/supabase/seed.sql", "/supabase/migrations/0001_tabellen.sql", "/README.md",
-    "/docs/sub/diep/x.md", "/js/README.md", "/beveiliging.html", "/gauntlet.html", "/onderzoek.html", "/verbeter.html", "/design-vandaag.html",
-    "/netlify.toml", "/vercel.json", "/_headers", "/.git/HEAD"];
-  const uit = [];
-  // Vercel: eerste route met status die matcht (routes met "continue" zetten alleen headers)
+// ---------- controle van de deploy-configuratie ----------
+// 1. De publicatie is een ALLOWLIST: netlify.toml (command), vercel.json (buildCommand) en _headers (regel
+//    "CLOUDFLARE_BUILD:" voor Cloudflare Pages) bouwen dist/ en publiceren alleen die map. bouwDist() voert elke
+//    opdracht echt uit in een tijdelijke kopie van webapp/ (met extra lokaasbestanden: .env, x.sql, x.py, x.sh,
+//    README.md, een interne pagina, een submap met tests) en controleert de inhoud: alleen app-bestanden, en
+//    alles uit de SHELL-lijst van sw.js aanwezig (anders werkt de app offline niet).
+// 2. Daarnaast (vangnet) per pad: geeft de host 404 (vercel.json-routes, netlify.toml-redirects) of staat het
+//    niet in dist/?
+// 3. De CSP is in index.html (meta), _headers, netlify.toml en vercel.json gelijk (frame-ancestors alleen als header).
+const { execFileSync } = require("child_process");
+const os = require("os");
+function leesConfig() {
   let vercel = null; try { vercel = JSON.parse(fs.readFileSync(path.join(WEBAPP, "vercel.json"), "utf8")); } catch (e) {}
-  // Netlify: redirects met status 404 en de build-opdracht (rm -rf ... / find -name '*.md' -delete)
   let toml = ""; try { toml = fs.readFileSync(path.join(WEBAPP, "netlify.toml"), "utf8"); } catch (e) {}
-  const cmd = (toml.match(/^\s*command\s*=\s*"(.*)"\s*$/m) || [])[1] || "";
-  const weg = (cmd.match(/rm -rf ([^&;]+)/) || [, ""])[1].trim().split(/\s+/).filter(Boolean);
-  const mdWeg = /-name\s+'\*\.md'.*-delete/.test(cmd);
-  const reds = [...toml.matchAll(/\[\[redirects\]\]([\s\S]*?)(?=\[\[|$)/g)].map((m) => ({ from: (m[1].match(/from\s*=\s*"([^"]+)"/) || [])[1], status: +((m[1].match(/status\s*=\s*(\d+)/) || [])[1] || 0) })).filter((r) => r.from && r.status === 404);
-  const netGlob = (pat, p) => new RegExp("^" + pat.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\/:\w+/g, "/[^/]+").replace(/\*/g, ".*") + "$").test(p);
-  for (const p of paden) {
-    let v = "geen vercel.json";
-    if (vercel) { const r = (vercel.routes || []).find((x) => x.src && !x.continue && x.status && new RegExp("^" + x.src + "$").test(p)); v = r ? "geblokkeerd (" + r.status + ")" : "BEREIKBAAR"; }
-    const rel = p.slice(1), top = rel.split("/")[0];
-    let n = "geen netlify.toml";
-    if (toml) n = weg.includes(top) && rel.includes("/") ? "verwijderd in build" : mdWeg && /\.md$/i.test(rel) ? "verwijderd in build" : reds.some((r) => netGlob(r.from, p)) ? "geblokkeerd (404)" : "BEREIKBAAR";
-    if (p === "/.git/HEAD") { v = v === "BEREIKBAAR" ? "niet in publicatiemap" : v; n = "niet in publicatiemap"; }
-    uit.push({ pad: p, vercel: v, netlify: n });
+  let hdr = ""; try { hdr = fs.readFileSync(path.join(WEBAPP, "_headers"), "utf8"); } catch (e) {}
+  const netlifyCmd = (toml.match(/^\s*command\s*=\s*"(.*)"\s*$/m) || [])[1] || "";
+  const netlifyPublish = (toml.match(/^\s*publish\s*=\s*"(.*)"\s*$/m) || [])[1] || "";
+  const cfCmd = (hdr.match(/CLOUDFLARE_BUILD:\s*(.+)$/m) || [])[1] || "";
+  return { vercel, toml, hdr, netlifyCmd, netlifyPublish, cfCmd: cfCmd.trim() };
+}
+const SHELL = () => { const t = fs.readFileSync(path.join(WEBAPP, "sw.js"), "utf8"); return [...(t.match(/const SHELL = \[([\s\S]*?)\];/) || [, ""])[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter((x) => x !== "./"); };
+const MAG_IN_DIST = (rel) => NODIG(rel) || rel === "_headers";
+const LOKAAS = [".env", "geheim.sql", "script.py", "deploy.sh", "NOTITIE.md", "intern.html", "tests/lokaas.js", "docs/lokaas.md",
+  "supabase/lokaas.sql", "js/README.md", "js/.env", "data/export.sql", "css/oud.css.bak", "js/debug.py", "data/.DS_Store"];
+function kopieer(van, naar) {
+  fs.mkdirSync(naar, { recursive: true });
+  for (const d of fs.readdirSync(van, { withFileTypes: true })) {
+    if (["node_modules", ".git", "dist"].includes(d.name) || (d.name === "ref" && van.endsWith("docs"))) continue;
+    const a = path.join(van, d.name), b = path.join(naar, d.name);
+    if (d.isDirectory()) kopieer(a, b); else fs.copyFileSync(a, b);
+  }
+}
+function bouwDist(opdracht, uitmap = "dist") {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "wpi-dist-")), werk = path.join(tmp, "webapp");
+  try {
+    kopieer(WEBAPP, werk);
+    for (const f of LOKAAS) { fs.mkdirSync(path.dirname(path.join(werk, f)), { recursive: true }); fs.writeFileSync(path.join(werk, f), "lokaas\n"); }
+    execFileSync("sh", ["-c", opdracht], { cwd: werk, stdio: "pipe", timeout: 60000 });
+    const dist = path.join(werk, uitmap);
+    const lijst = fs.existsSync(dist) ? bestanden(dist) : [];
+    const fout = lijst.filter((f) => !MAG_IN_DIST(f));
+    const mist = SHELL().filter((f) => !lijst.includes(f));
+    return { ok: !!lijst.length && !fout.length && !mist.length, bestanden: lijst, fout, mist };
+  } catch (e) {
+    return { ok: false, bestanden: [], fout: ["build mislukt: " + String(e.stderr || e.message).slice(0, 200)], mist: [] };
+  } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+}
+const CSP_DIRECTIVES = (csp) => Object.fromEntries(String(csp || "").split(";").map((x) => x.trim()).filter(Boolean).map((x) => { const [k, ...v] = x.split(/\s+/); return [k, v.join(" ")]; }));
+function cspCheck() {
+  const c = leesConfig(), uit = [];
+  const meta = (fs.readFileSync(path.join(WEBAPP, "index.html"), "utf8").match(/http-equiv="Content-Security-Policy" content="([^"]+)"/) || [])[1];
+  const hdr = (c.hdr.match(/^\s*Content-Security-Policy:\s*(default-src 'self'.*)$/m) || [])[1];
+  const net = (c.toml.match(/^\s*Content-Security-Policy\s*=\s*"(.*)"\s*$/m) || [])[1];
+  const ver = c.vercel && ((c.vercel.routes || []).find((r) => r.headers && r.headers["Content-Security-Policy"]) || {}).headers;
+  const bronnen = { "index.html (meta)": meta, _headers: hdr, "netlify.toml": net, "vercel.json": ver && ver["Content-Security-Policy"] };
+  const ref = CSP_DIRECTIVES(hdr);
+  for (const [naam, csp] of Object.entries(bronnen)) {
+    if (!csp) { uit.push({ bron: naam, oordeel: "ONTBREEKT", detail: "" }); continue; }
+    const d = CSP_DIRECTIVES(csp), w = [];
+    for (const k of new Set([...Object.keys(ref), ...Object.keys(d)])) {
+      if (k === "frame-ancestors" && naam.startsWith("index.html")) continue;   // werkt niet in een meta-tag
+      if ((ref[k] || null) !== (d[k] || null)) w.push(k + ": " + (d[k] == null ? "(ontbreekt)" : d[k]));
+    }
+    if (!/script-src 'self'(;|$)/.test(csp.replace(/\s+/g, " ").replace(/ ;/g, ";")) && !/script-src 'self';/.test(csp)) w.push("script-src is niet strikt 'self'");
+    if (/script-src[^;]*'unsafe-(inline|eval)'/.test(csp)) w.push("script-src met 'unsafe-inline'/'unsafe-eval'");
+    if (!/script-src-attr 'none'/.test(csp)) w.push("geen script-src-attr 'none'");
+    if (/\*\.supabase\.co/.test(csp)) w.push("wildcard *.supabase.co");
+    uit.push({ bron: naam, oordeel: w.length ? "AFWIJKEND" : "ok", detail: w.join("; ") });
   }
   return uit;
 }
+function configCheck() {
+  const paden = ["/docs/x.md", "/docs/", "/docs/beveiliging-checklist-ruw.md", "/tests/e2e.js", "/tests/security.js", "/supabase/seed.sql",
+    "/supabase/migrations/0001_tabellen.sql", "/supabase/tests/run.sh", "/README.md", "/docs/sub/diep/x.md", "/js/README.md",
+    "/beveiliging.html", "/gauntlet.html", "/onderzoek.html", "/verbeter.html", "/design-vandaag.html",
+    "/netlify.toml", "/vercel.json", "/_headers", "/.git/HEAD", "/.git/config", "/.env", "/js/.env",
+    "/tools/periodieke_check.sh", "/tools/mock_supabase.py", "/x.sql", "/data/export.sql", "/x.py", "/x.sh", "/handoff/x.md", "/wpi/x"];
+  const c = leesConfig(), uit = [];
+  const vercelCmd = c.vercel && c.vercel.buildCommand, vercelOut = c.vercel && c.vercel.outputDirectory;
+  const net = c.netlifyCmd ? bouwDist(c.netlifyCmd, c.netlifyPublish || ".") : null;
+  const ver = vercelCmd ? bouwDist(vercelCmd, vercelOut || ".") : null;
+  const cf = c.cfCmd ? bouwDist(c.cfCmd, "dist") : null;
+  const reds = [...c.toml.matchAll(/\[\[redirects\]\]([\s\S]*?)(?=\[\[|$)/g)].map((m) => ({ from: (m[1].match(/from\s*=\s*"([^"]+)"/) || [])[1], status: +((m[1].match(/status\s*=\s*(\d+)/) || [])[1] || 0) })).filter((r) => r.from && r.status === 404);
+  const netGlob = (pat, p) => new RegExp("^" + pat.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\/:\w+/g, "/[^/]+").replace(/\*/g, ".*") + "$").test(p);
+  const inDist = (b, p) => b && b.bestanden.includes(p.slice(1));
+  for (const p of paden) {
+    let v = "geen vercel.json";
+    if (c.vercel) { const r = (c.vercel.routes || []).find((x) => x.src && !x.continue && x.status && new RegExp("^" + x.src + "$").test(p)); v = r ? "geblokkeerd (" + r.status + ")" : ver && ver.ok && !inDist(ver, p) ? "niet in dist" : "BEREIKBAAR"; }
+    let n = "geen netlify.toml";
+    if (c.toml) n = reds.some((r) => netGlob(r.from, p)) ? "geblokkeerd (404)" : net && net.ok && !inDist(net, p) ? "niet in dist" : "BEREIKBAAR";
+    // _headers moet in dist/ staan: Cloudflare Pages (en Netlify) lezen hem daar en serveren hem niet als bestand;
+    // er staan alleen de publieke beveiligingsheaders in, geen geheimen.
+    const f = !c.cfCmd ? "GEEN BUILD" : p === "/_headers" ? "door host verwerkt" : cf && cf.ok && !inDist(cf, p) ? "niet in dist" : "BEREIKBAAR";
+    uit.push({ pad: p, vercel: v, netlify: n, cloudflare: f });
+  }
+  const builds = [["netlify.toml", net, c.netlifyCmd], ["vercel.json", ver, vercelCmd], ["_headers (Cloudflare)", cf, c.cfCmd]].map(([naam, b, cmd]) => ({
+    host: naam, ok: !!(b && b.ok), detail: !cmd ? "geen build-opdracht (dan wordt alles gepubliceerd)" : b.ok ? b.bestanden.length + " bestanden in dist/, alleen app-bestanden" : [b.fout.length ? "niet toegestaan: " + b.fout.join(", ") : "", b.mist.length ? "ontbreekt (SHELL): " + b.mist.join(", ") : ""].filter(Boolean).join(" · ") }));
+  const gelijk = !!(c.netlifyCmd && c.netlifyCmd === vercelCmd && c.netlifyCmd === c.cfCmd);
+  return Object.assign(uit, { builds, gelijk });
+}
 
-module.exports = { probeExposed, checkHeaders, configCheck, vraag };
+module.exports = { probeExposed, checkHeaders, configCheck, cspCheck, bouwDist, vraag };
 
 if (require.main === module) {
   (async () => {
@@ -186,10 +260,17 @@ if (require.main === module) {
     }
     if (modus.includes("config")) {
       const c = configCheck();
-      console.log("\n=== Deploy-configuratie (statisch: vercel.json en netlify.toml) ===");
-      console.log("Pad".padEnd(42) + "Vercel".padEnd(26) + "Netlify");
-      for (const x of c) console.log(x.pad.padEnd(42) + x.vercel.padEnd(26) + x.netlify);
-      slecht += c.filter((x) => /BEREIKBAAR/.test(x.vercel + x.netlify) && !/\.html$|\.toml$|\.json$|_headers$/.test(x.pad)).length;
+      console.log("\n=== Publicatie (allowlist-build in een tijdelijke kopie, met lokaasbestanden) ===");
+      for (const b of c.builds) console.log(`${(b.ok ? "ok" : "FOUT").padEnd(6)} ${b.host.padEnd(24)} ${b.detail}`);
+      console.log(`${(c.gelijk ? "ok" : "FOUT").padEnd(6)} ${"zelfde opdracht".padEnd(24)} netlify.toml, vercel.json en _headers ${c.gelijk ? "gebruiken dezelfde build" : "verschillen"}`);
+      console.log("\n=== Deploy-configuratie per pad ===");
+      console.log("Pad".padEnd(42) + "Vercel".padEnd(22) + "Netlify".padEnd(22) + "Cloudflare Pages");
+      for (const x of c) console.log(x.pad.padEnd(42) + x.vercel.padEnd(22) + x.netlify.padEnd(22) + x.cloudflare);
+      const csp = cspCheck();
+      console.log("\n=== CSP gelijk in alle vier de bronnen ===");
+      for (const x of csp) console.log(`${x.oordeel.padEnd(10)} ${x.bron.padEnd(20)} ${x.detail}`);
+      slecht += c.filter((x) => /BEREIKBAAR|GEEN BUILD/.test(x.vercel + x.netlify + x.cloudflare)).length + c.builds.filter((b) => !b.ok).length + (c.gelijk ? 0 : 1)
+        + csp.filter((x) => x.oordeel !== "ok").length;
     }
     console.log(strict && slecht ? `\nSTRICT: ${slecht} problemen` : "");
     process.exit(strict && slecht ? 1 : 0);

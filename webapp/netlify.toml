@@ -1,15 +1,17 @@
-# Werkplekinspectie — Netlify. In de Netlify-instellingen: Base directory = "webapp".
-# (Staat dit bestand in de root van de repo, gebruik dan base = "webapp".)
+# Werkplekinspectie — Netlify. In de Netlify-instellingen: Base directory = "webapp", Publish directory = "webapp/dist"
+# (volgt uit publish hieronder). Staat dit bestand in de root van de repo, gebruik dan base = "webapp".
 # Headers staan in _headers (zelfde map); de regels hieronder doen hetzelfde, voor als
 # _headers per ongeluk niet wordt meegenomen. Bij dubbele headers wint netlify.toml.
 
 [build]
-  publish = "."
-  # Geen build-stap voor de app zelf; dit haalt alleen bestanden weg die nooit online horen
-  # (documentatie, tests, databasescripts, markdown). Wat niet wordt geüpload, kan niet lekken.
-  # Ook alle .html behalve index.html (interne pagina's: beveiligingsplan, onderzoek, ontwerpen) en
-  # vercel.json; netlify.toml zelf blijft staan (Netlify leest hem) maar geeft 404 (zie hieronder).
-  command = "rm -rf docs tests supabase vercel.json && find . -name '*.md' -type f -delete && find . -maxdepth 1 -name '*.html' ! -name index.html -type f -delete"
+  # ALLOWLIST: alleen wat de app nodig heeft gaat naar dist/ en alleen dist/ wordt gepubliceerd. Nieuwe interne
+  # bestanden (docs, tests, supabase, tools, *.md, *.sql, *.py, *.sh, losse .html-pagina's, .env, .git) kunnen zo nooit
+  # per ongeluk online komen; ook niet als iemand ze later in webapp/ zet. Daarna blijven alleen bestandstypen over
+  # die de app gebruikt (html/css/js/json/png) en alleen index.html als pagina. _headers gaat mee (Netlify en
+  # Cloudflare Pages lezen hem uit de publicatiemap). DEZELFDE opdracht staat in vercel.json en in _headers
+  # (Cloudflare Pages); tests/exposed.js --config voert ze uit en controleert de inhoud van dist/.
+  publish = "dist"
+  command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
 
 # --- HTTP → HTTPS (Netlify doet dit ook automatisch met "Force HTTPS") ---
 [[redirects]]
@@ -39,8 +41,33 @@
   to = "/404.html"
   status = 404
   force = true
-# Netlify kent geen "*.md"-patroon midden in een pad; de build hierboven verwijdert alle .md-bestanden
-# en deze regels vangen de bekende plekken af.
+[[redirects]]
+  from = "/tools/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/handoff/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/wpi/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/.git/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/.env"
+  to = "/404.html"
+  status = 404
+  force = true
+# Netlify kent geen "*.md"-patroon midden in een pad; de allowlist-build hierboven publiceert geen .md/.sql/.py/.sh
+# en deze regels vangen de bekende plekken af (vangnet).
 [[redirects]]
   from = "/README.md"
   to = "/404.html"

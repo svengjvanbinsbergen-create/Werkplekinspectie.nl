@@ -1,6 +1,7 @@
 /* Werkplekinspectie — js/vandaag.js
-   Vandaag-scherm: één blik = wat moet ik vandaag doen. De eerstvolgende inspectie start met één tik
-   via de startbalk onderin (duimzone, ook met handschoenen). Productkeuze voor een spontane inspectie.
+   Vandaag-scherm: één blik = wat moet ik vandaag doen. De grote kaart bovenaan ÍS de startknop:
+   één tik (de hele kaart, ook met handschoenen) start of hervat de inspectie; geen tweede startbalk
+   met dezelfde tekst. Productkeuze voor een spontane inspectie.
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
@@ -16,7 +17,7 @@
     // ---------------- VANDAAG ----------------
 
     view_vandaag() {
-      const v = $("view"), vn = this.user.full_name.split(" ")[0], u = new Date().getHours(), web = isWeb();
+      const v = $("view"), vn = this.user.full_name.split(" ")[0], u = new Date().getHours();
       const groet = u < 12 ? "Goedemorgen" : u < 18 ? "Goedemiddag" : "Goedenavond";
       const datum = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
       const lo = this.state.inspectie;
@@ -26,9 +27,8 @@
       // ---- lopende inspectie: altijd bovenaan ----
       if (lo) {
         const n = lo.waarnemingen.length, delen = lo.titel.split(" · ");
-        v.appendChild(el(`<div class="hero nu"><div class="k">Bezig · ${meer(n, "waarneming", "waarnemingen")}</div><div class="t">${esc(delen[0])}</div>
-          <div class="s">${esc(delen.slice(1).join(" · "))}${lo.taak ? (delen.length > 1 ? " · " : "") + esc(lo.taak) : ""}</div></div>`));
-        this.vDock(v, act("goIns"), "Verder met de inspectie", delen[0] + " · " + meer(n, "waarneming", "waarnemingen"), "play");
+        v.appendChild(el(this.heroKnop("hero nu", act("goIns"), `Bezig · ${meer(n, "waarneming", "waarnemingen")}`, esc(delen[0]),
+          `<span class="s">${esc(delen.slice(1).join(" · "))}${lo.taak ? (delen.length > 1 ? " · " : "") + esc(lo.taak) : ""}</span>`, "Verder met de inspectie", "play")));
       }
 
       // ---- planning: eerstvolgende groot, de rest als rustige rijen ----
@@ -46,18 +46,16 @@
             <button class="startpil"${act("startVandaag", p.id)} aria-label="Start inspectie ${esc(this.productNaam(p.code))}">${svg("play", 18)}Start</button></div>`;
         let html = "";
         const rest = lo ? mijn : mijn.slice(1);
+        // de kaart zelf is de knop: één doel, één tik
         if (!lo && mijn.length) {
           const p = mijn[0];
-          html += `<div class="hero"><div class="k">${wanneer(p)}${p.project ? " · " + esc(p.project) : ""}</div>
-            <div class="t">${esc(this.productNaam(p.code))}</div><div class="meta">${waar(p)}</div></div>`;
+          html += this.heroKnop("hero", act("startVandaag", p.id), `${wanneer(p)}${p.project ? " · " + esc(p.project) : ""}`, esc(this.productNaam(p.code)),
+            `<span class="meta">${waar(p)}</span>`, "Start inspectie", "play");
         }
-        if (!lo && !mijn.length) html += `<div class="hero rustig"><div class="k">Vandaag</div><div class="t">Geen inspectie gepland</div><div class="s">Start er spontaan een, of plan er een in.</div></div>`;
+        if (!lo && !mijn.length) html += this.heroKnop("hero rustig", act("kiesProduct"), "Vandaag", "Geen inspectie gepland",
+          `<span class="s">Start er spontaan een, of plan er een in.</span>`, "Inspectie starten", "plus");
         if (rest.length) html += `<div class="vsectie">${lo ? "Daarna" : "Ook te doen"}</div><div class="listcard vlijst">${rest.map(rij).join("")}</div>`;
         plan.innerHTML = html;
-        if (!lo) {
-          if (mijn.length) this.vDock(plan, act("startVandaag", mijn[0].id), "Start inspectie", this.productNaam(mijn[0].code) + (mijn[0].locatie ? " · " + mijn[0].locatie : ""), "play", web ? plan.firstElementChild : null);
-          else this.vDock(plan, act("kiesProduct"), "Inspectie starten", "Kies wat je gaat bekijken", "plus", web ? plan.firstElementChild : null);
-        }
         // overige keuzes: rustig onderaan
         const spontaan = lo || mijn.length;
         ander.innerHTML = `<div class="vsectie">Meer</div><div class="listcard vlijst">
@@ -78,12 +76,11 @@
             <button class="vknop"${act("naarActies", null)}><span class="nr${voorJou ? "" : " nul"}">${voorJou ? voorJou : svg("check", 18, 2.6)}</span><span class="grow"><span class="t">${voorJou ? (voorJou === 1 ? "Actie" : "Acties") + " voor jou" : "Geen acties voor jou"}</span><span class="s">${voorJou ? uitleg : "Alles ligt op schema"}</span></span>${svg("chev", 18)}</button></div>`;
       });
     },
-    // startbalk: telefoon = vast onderin boven de tabbalk (duimzone); computer = direct onder de kaart
-    vDock(ouder, actie, label, sub, ic, naHero) {   // actie = attributen van act(…)
-      const d = el(`<div class="vdock"><button class="btn primary groot"${actie}><span class="ic">${svg(ic, 22)}</span><span class="tekst"><b>${esc(label)}</b><small>${esc(sub || "")}</small></span></button></div>`);
-      if (naHero && naHero.parentNode === ouder) ouder.insertBefore(d, naHero.nextSibling); else ouder.appendChild(d);
-      const plaats = () => { const tb = $("tabbar"); d.style.bottom = (tb && !tb.classList.contains("hidden") && !isWeb() ? tb.offsetHeight : 0) + "px"; };
-      plaats(); requestAnimationFrame(plaats);
+    // grote kaart = startknop. Alleen <span>'s (geldige inhoud van een <button>); de groene balk onderin
+    // maakt duidelijk dat de hele kaart tikbaar is. kop/titel/inhoud zijn al ge-escapete HTML.
+    heroKnop(cls, actie, kop, titel, inhoud, knop, ic) {   // actie = attributen van act(…)
+      return `<button class="${cls} heroknop"${actie}><span class="k">${kop}</span><span class="t">${titel}</span>${inhoud || ""}
+        <span class="hk-balk"><span class="ic">${svg(ic, 22)}</span><span class="hk-t">${esc(knop)}</span>${svg("chev", 22, 2.6)}</span></button>`;
     },
     startVandaag(id) { tril(20); this.startGepland(id); },
     kiesProduct() {

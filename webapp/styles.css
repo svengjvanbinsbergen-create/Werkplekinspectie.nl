@@ -146,7 +146,7 @@ svg{display:block;width:100%}
 .flab{display:block;font-size:12.5px;font-weight:650;color:var(--soft);margin:8px 0 4px}
 .fout{color:var(--red);font-weight:650;font-size:14px;min-height:18px;margin-top:8px}
 .tijdlijn div{font-size:13px;padding:6px 0;border-bottom:1px solid var(--line);line-height:1.4}
-.tijdlijn span{color:var(--soft);font-weight:600;margin-right:4px}
+.tijdlijn span{color:#6E6255;font-weight:600;margin-right:4px}
 
 /* ---- Voorstel-component ---- */
 .vskop{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
@@ -534,6 +534,22 @@ body.zon .vknop.warm .nr{background:#A65A00;color:#fff}
 body.zon .vknop .nr,body.zon .vknop .cirkel{box-shadow:inset 0 0 0 2px #141A22}
 body.zon .startpil{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
 @media(min-width:900px){body.zon .vdock{background:none}}
+/* de grote kaart ÍS de startknop (geen tweede startbalk met dezelfde tekst): hele kaart tikbaar */
+.heroknop{display:block;width:100%;text-align:left;color:var(--ink);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .08s ease,filter .08s ease}
+.heroknop>span{display:block}
+.heroknop .meta{display:flex}
+.heroknop .hk-balk{display:flex;align-items:center;gap:12px;margin-top:16px;min-height:64px;padding:8px 14px 8px 9px;border-radius:20px;background:var(--accent);color:#fff;box-shadow:0 8px 20px rgba(47,93,80,.25)}
+.heroknop .hk-balk .ic{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;flex:none}
+.heroknop .hk-balk .ic svg{fill:currentColor}
+.heroknop .hk-balk svg{width:auto;display:inline-block;flex:none}
+.heroknop .hk-t{flex:1;min-width:0;font-size:19px;font-weight:800;line-height:1.2}
+.heroknop:active{transform:scale(.985);filter:brightness(.97)}
+.heroknop:active .hk-balk{filter:brightness(.9)}
+.heroknop:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.hero.rustig.heroknop .hk-balk{background:var(--accent)}
+body.veld .heroknop .hk-balk{min-height:76px}body.veld .heroknop .hk-t{font-size:21px}
+body.zon .heroknop .hk-balk{background:#141A22;box-shadow:none}
+@media(min-width:900px){.heroknop .hk-balk{display:inline-flex;min-width:380px;padding-right:22px}.heroknop .hk-t{flex:none;margin-right:auto}}
 
 /* ================= Inspectie · kop en "Wat zie je?" (stem/foto, één hand, handschoenen, zon) ================= */
 .inshead .ih-rij{display:flex;align-items:center;gap:10px}
@@ -764,3 +780,89 @@ body.zon #mod.actiemod>details>summary{color:#141A22}
 /* contrast (WCAG AA) binnen de actieblokken */
 .aw-stap li:not(.klaar):not(.nu) .n,.leegw{color:#6E6255}
 .aw-kick .b-todo,.aw-feiten .dchip.warm{color:#7E4706}
+
+/* ---- Prioriteit (volgens de inspecteur) op actiekaart en actievenster: rustig, nooit warm oranje (dat is "te laat") ---- */
+.pchip{display:inline-flex;align-items:center;gap:6px;height:25px;padding:0 10px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #E2D6C5;color:#5E544A;font-size:12.5px;font-weight:800;white-space:nowrap}
+.pchip .pbol{width:8px;height:8px;border-radius:50%;background:#B9AD9E;flex:none}
+.pchip.p-kort .pbol{background:var(--accent);opacity:.55}
+.pchip.p-direct{background:var(--accent);color:#fff;box-shadow:none}
+.pchip.p-direct .pbol{background:#fff}
+.aw-feiten .pchip{height:28px;font-size:13.5px}
+body.zon .pchip{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .pchip.p-direct{background:#141A22;color:#fff}
+/* actievenster: foto's bij de waarneming, "al klaar?"-keuzes voor de actiehouder */
+.afotos{display:flex;gap:6px;flex:none;flex-wrap:wrap;max-width:45%;justify-content:flex-end}
+.afotos img{width:64px;height:64px;object-fit:cover;border-radius:12px;background:#F0E6D8}
+.alklaar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.alklaar .s{grid-column:1/-1;font-weight:700;color:#6E6255;margin:2px 2px 0}
+.alklaar .btn{min-height:56px;padding:8px 10px;white-space:normal;line-height:1.2;font-size:15px}
+.alklaar .btn svg{flex:none}
+body.veld .alklaar .btn{min-height:64px}
+body.zon .alklaar .s{color:#141A22}
+
+/* ---- Koppelen + oordelen op één scherm (stap koppel) en compacte oordeelstap: geen lege middenruimte ---- */
+.kstap,.ostap{min-height:0}
+.kstap .jijkaart{padding:12px 14px}
+.kstap .vskaart{margin-top:10px}
+.kstap .vpick{padding:12px 14px;gap:4px}
+.kstap .vp-top{display:flex;align-items:center;justify-content:space-between;gap:8px;align-self:stretch;flex-wrap:wrap}
+.kstap .vpick .gebruik,.kstap .vpick + .vpick .gebruik{display:inline-flex;align-self:auto;min-height:44px;margin:0;padding:0 14px;border-radius:999px;font-size:14.5px;gap:6px;background:var(--accent);color:#fff;box-shadow:none}
+.kstap .vpick.een .gebruik{background:#fff;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.kstap .vpick .gebruik svg{width:16px;height:16px}
+.kstap .vpick .t{font-size:16.5px}
+.kstap .doorvraag{margin-top:10px}
+.odock.vlak{position:static;margin:14px 0 0;padding:2px 0 4px;background:none}
+.odock.vlak .otitel{margin:0 2px 8px}
+.odock.vlak .otitel span,.okaart .otitel span{color:#6E6255}
+.odock.vlak .seg.stapel button{min-height:64px}
+.odock.uit .seg.stapel button{background:#F6F1EA;box-shadow:inset 0 0 0 1.5px #EADFCF;cursor:default}
+.odock.uit .seg.stapel .l{background:#C9BFB2}
+.odock.uit .seg.stapel button:active{transform:none}
+.odock.uit .linkknop.nvt{color:#8B7F72;cursor:default}
+.ostap .okaart{padding:14px 16px}
+.kzelf{margin:4px 0 24px}
+.kzelf .linkknop{min-height:56px;padding:14px 0 6px}
+body.veld .odock.vlak .seg.stapel button{min-height:80px}
+body.veld .kstap .vpick .gebruik{min-height:52px}
+body.veld .kzelf .linkknop{min-height:64px}
+body.zon .odock.vlak{background:none}
+body.zon .odock.vlak .otitel span,body.zon .okaart .otitel span{color:#141A22}
+body.zon .kstap .vpick .gebruik{background:#141A22;color:#fff}
+body.zon .kstap .vpick.een .gebruik{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .odock.uit .seg.stapel button{background:#fff;box-shadow:inset 0 0 0 2px #8B7F72;opacity:.7}
+@media(min-width:900px){.odock.vlak{padding:4px 0 12px}.kzelf{margin-bottom:28px}}
+
+/* ---- "Wat zie je?": meerdere foto's per waarneming (overzicht + detail), elk met eigen verwijderknop ---- */
+.fotoblok.multi{display:block;padding:10px 10px 12px}
+.fb-kop{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:0 4px 8px;line-height:1.3}
+.fb-kop b{font-size:15px}
+.fb-kop .s{font-size:13px;color:#6B6055;font-weight:600}
+.fb-rij{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.fb-item{position:relative;aspect-ratio:1/1;border-radius:14px;background:#F0E6D8}
+.fb-item img{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block}
+.fb-leeg{display:grid;place-items:center;height:100%;font-size:13px;color:#6B6055}
+.fb-item .fotoweg{position:absolute;top:-6px;right:-6px;width:44px;height:44px;font-size:24px;box-shadow:0 2px 6px rgba(0,0,0,.18),inset 0 0 0 1.5px #EADFCF}
+.fotogroot:disabled{opacity:.45;cursor:default}
+.fduimen{display:inline-flex;gap:4px;flex:none;align-items:center}
+.fduimen img{height:var(--fh,52px);width:var(--fh,52px);object-fit:cover;border-radius:10px;background:#F0E6D8}
+.fduimen .fmeer{min-width:30px;height:30px;padding:0 6px;border-radius:999px;background:#F4EDE3;color:#5E544A;font-size:12.5px;font-weight:800;display:grid;place-items:center}
+body.veld .fb-item .fotoweg{width:52px;height:52px;min-width:52px;min-height:52px}
+body.zon .fb-kop .s{color:#141A22}
+body.zon .fb-item .fotoweg{box-shadow:inset 0 0 0 2px #141A22}
+.vs-alt-kop{margin:12px 2px 2px;font-size:13.5px;font-weight:800;color:#5E544A}
+.kstap .vpick.alt{flex-direction:row;align-items:center;gap:10px;margin-top:6px;padding:8px 8px 8px 12px;background:#fff;box-shadow:inset 0 0 0 1.5px #E6DEF6;min-height:56px}
+.kstap .vpick.alt .vp-ref{align-self:center}
+.kstap .vpick.alt .t{flex:1;min-width:0;font-size:14.5px;font-weight:700;-webkit-line-clamp:2}
+.kstap .vpick.alt .gebruik{flex:none;min-height:40px;padding:0 12px;font-size:13.5px;background:#fff;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+body.veld .kstap .vpick.alt{min-height:64px}
+body.zon .vs-alt-kop{color:#141A22}
+body.zon .kstap .vpick.alt{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .kstap .vpick.alt .gebruik{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+.vs-alt{margin-top:8px}
+.vs-alt summary{list-style:none;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 6px;font-size:14.5px;font-weight:800;color:#5B46A0;cursor:pointer}
+.vs-alt summary::-webkit-details-marker{display:none}
+.vs-alt summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+.vs-alt[open] summary::after{transform:rotate(225deg) translateY(-3px)}
+.vs-alt summary .n{min-width:24px;height:22px;padding:0 7px;border-radius:999px;background:#EAE4F7;color:#5B46A0;font-size:12.5px;display:grid;place-items:center}
+body.veld .vs-alt summary{min-height:58px}
+body.zon .vs-alt summary,body.zon .vs-alt summary .n{color:#141A22}

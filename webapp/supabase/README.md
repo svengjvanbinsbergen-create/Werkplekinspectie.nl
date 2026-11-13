@@ -12,9 +12,10 @@ triggers en rechten. De controles in de app zijn alleen gebruiksgemak.
 | `migrations/0004_audit.sql` | auditlog (oud/nieuw als jsonb; bij wijzigen alleen de verschillen), schrijfquotum per gebruiker, append-only bewaking |
 | `migrations/0005_storage.sql` | privébucket `fotos` (5 MB, jpeg/png/webp) en Storage-policies |
 | `migrations/0006_rpc.sql` | `report_security_event` (rate-limited), `dashboard_cijfers`, `monteur_aanmelden` |
+| `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker) |
 | `schema.sql` | alle migraties samen (gegenereerd met `sh bouw-schema.sh`) |
 | `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstelling; **geen** voorbeelddata |
-| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (459 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh`, `naamsleutel_check.sh`, `sleutelcheck.sh`, `run.sh` |
+| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (483 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh`, `naamsleutel_check.sh`, `sleutelcheck.sh`, `run.sh` |
 
 Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase/bouw-schema.sh`.
 
@@ -185,6 +186,9 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   sleutel) en decodeert elke JWT-sleutel (`eyJ…`) in `webapp/`: alles met een andere rol dan
   `anon` (bv. `service_role`) wordt gemeld. Een simpele `grep` op het woord `service_role` werkt
   niet: dat woord staat terecht in de migraties en in deze README.
+- **Periodiek** (maandelijks): `tools/periodieke_check.sh` (geheimenscan over de hele git-geschiedenis,
+  sleutel in `config.js` echt anon/publishable, debug uit, CSP, publicatie-allowlist). Stappenplan voor het
+  intrekken en vervangen van een gelekte sleutel: `webapp/docs/beveiliging-periodiek.md` §4.
 - **Rotatie** (jaarlijks, bij vertrek van een beheerder en direct bij een vermoed lek):
   1. *Settings › API Keys*: maak een nieuwe secret/publishable key aan, zet de nieuwe in
      server-side omgevingen en in `webapp/js/config.js`, en trek daarna de oude in.
@@ -546,11 +550,11 @@ actiehouder en QHSE-manager, in beide volgordes), en ten slotte `naamsleutel_che
 leest `schoon()`/`sleutel()` letterlijk uit `js/beheer.js` (vraagt `node`) en vergelijkt ze met
 `naam_schoon`/`naam_sleutel` voor **alle** Unicode-codepunten en een reeks echte namen.
 
-Laatste run (PostgreSQL 16, lokaal): **459 van 459 geslaagd**, het opnieuw laden over de gevulde
+Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0007): **483 van 483 geslaagd**, het opnieuw laden over de gevulde
 database, beide racetests en de naamsleutelvergelijking groen (0 verschillen op 138 560
 codepunten met een sleutel; codepunten die pas in een nieuwere Unicode-versie dan de ICU van de
 database bestaan, tellen niet mee). Gedekt o.a.:
-RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; geen escalatie via
+RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); geen escalatie via
 naam of `seed.sql`; inspecteur leest/wijzigt geen inspecties van een ander en schrijft geen
 instellingen/monteurs/profielen; geen foto-IDOR via `foto_pad`/`nafoto_pad`; veilige
 Storage-namen; bewijsfoto's niet te overschrijven of te verwijderen; functiescheiding

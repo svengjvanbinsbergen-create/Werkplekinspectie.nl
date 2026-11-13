@@ -1181,8 +1181,10 @@ select tests.telt('verloop: niets van de vloed opgeslagen', $q$select * from pub
 select tests.lukt('foto: inspecteur 1 uploadt een (nog ongebruikte) foto',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000011/los.jpg', auth.uid())$q$);
 :I2
-select tests.lukt('foto: inspecteur 2 zet dat pad in zijn eigen inspectierecord',
-  $q$insert into public.inspecties (id, titel, record) values ('WPI-r9', 'x', '{"foto":"a0000000-0000-4000-a000-000000000011/los.jpg"}')$q$);
+-- (sinds 0007 kan dat niet eens meer: een fotopad in een inspectierecord moet in de eigen map staan)
+select tests.faalt('foto: inspecteur 2 kan dat pad NIET in zijn eigen inspectierecord zetten (0007)',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-r9', 'x', '{"foto":"a0000000-0000-4000-a000-000000000011/los.jpg"}')$q$,
+  '%fotos_eigen%');
 :I1
 select tests.raakt('foto: inspecteur 1 kan zijn ongebruikte foto toch verwijderen',
   $q$delete from storage.objects where name = 'a0000000-0000-4000-a000-000000000011/los.jpg'$q$, 1);
@@ -1688,6 +1690,94 @@ select tests.faalt('upsert-foto: een foto die als bewijs in een actie staat, kan
 select tests.faalt('upsert-foto: andermans foto overschrijven geweigerd',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/abc123.jpg', auth.uid())
      on conflict (bucket_id, name) do update set owner = excluded.owner returning *$q$, '%row-level security%');
+
+-- =====================================================================
+-- 24. Beveiligingsronde: aanvullende validatie en uploadquotum (migratie 0007)
+-- =====================================================================
+-- 24a. datums: altijd tussen 2000 en 2100; vanuit de app tussen 2 jaar terug en 5 jaar vooruit
+-- (coördinator D: I1 heeft in 23i zijn dagquotum al opgebruikt)
+:D
+select tests.faalt('datum: planning in het jaar 9999 geweigerd',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-s1', '9999-12-31', 'ROO', auth.uid())$q$, '%niet tussen twee jaar%');
+select tests.faalt('datum: planning drie jaar terug geweigerd',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-s2', current_date - 1100, 'ROO', auth.uid())$q$, '%niet tussen twee jaar%');
+select tests.lukt('datum: planning over een week mag',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-s3', current_date + 7, 'ROO', auth.uid())$q$);
+select tests.lukt('datum: planning een maand terug (achteraf inplannen) mag',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-s4', current_date - 30, 'ROO', auth.uid())$q$);
+select tests.faalt('datum: eigen planning verzetten naar over zes jaar geweigerd',
+  $q$update public.planning set datum = current_date + 2200 where id = 'PL-s3'$q$, '%niet tussen twee jaar%');
+select tests.lukt('datum: andere velden van een planning wijzigen zonder de datum mag',
+  $q$update public.planning set toelichting = 'Let op hijswerk' where id = 'PL-s3'$q$);
+select tests.faalt('datum: handmatige actie met plandatum over tien jaar geweigerd',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
+     values ('ACT-s1', 'Opstap herstellen', '–', true, 'Open', 'c0000000-0000-4000-a000-000000000002',
+             'b0000000-0000-4000-a000-000000000001', current_date + 3650)$q$, '%niet tussen twee jaar%');
+:PG
+select tests.faalt('datum: ook beheer via SQL kan geen jaar 9999 opslaan (CHECK)',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-s5', '9999-12-31', 'ROO', 'a0000000-0000-4000-a000-000000000011')$q$,
+  '%datum_bereik%');
+
+-- 24b. vrije tekst: geen besturingstekens of bidi-overrides
+:D
+select tests.faalt('tekst: planning-toelichting met bidi-override (U+202E) geweigerd',
+  format('insert into public.planning (id, datum, code, inspecteur, toelichting) values (%L, current_date + 1, %L, auth.uid(), %L)',
+         'PL-s6', 'ROO', 'Hijswerk ' || U&'\202E' || 'kcehc'), '%tekst_tekens%');
+select tests.faalt('tekst: planning-locatie met besturingsteken (BEL) geweigerd',
+  format('insert into public.planning (id, datum, code, inspecteur, locatie) values (%L, current_date + 1, %L, auth.uid(), %L)',
+         'PL-s7', 'ROO', 'RWZI' || chr(7)), '%tekst_tekens%');
+select tests.lukt('tekst: toelichting met regeleinde, tab, accenten en emoji mag',
+  format('insert into public.planning (id, datum, code, inspecteur, toelichting) values (%L, current_date + 1, %L, auth.uid(), %L)',
+         'PL-s8', 'ROO', E'Café-terrein:\n\tmobiele kraan 👷‍♂️'));
+select tests.faalt('tekst: actietekst met bidi-isolate (U+2066) geweigerd',
+  format('insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum) values (%L, %L, %L, true, %L, %L, %L, current_date + 3)',
+         'ACT-s2', 'Kabel ' || U&'\2066' || 'ophangen', '–', 'Open', 'c0000000-0000-4000-a000-000000000002', 'b0000000-0000-4000-a000-000000000001'),
+  '%tekst_tekens%');
+:I2
+select tests.faalt('tekst: inspectietitel met besturingsteken geweigerd',
+  format('insert into public.inspecties (id, titel) values (%L, %L)', 'WPI-s1', 'Damwand' || chr(27) || '[2J'), '%tekst_tekens%');
+select tests.faalt('tekst: besturingsteken in de tekst van een waarneming (record) geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-s2', 'x', '{"waarnemingen":[{"oordeel":"C","tekst":"ok\u0007"}]}')$q$, '%tekst_tekens%');
+select tests.faalt('tekst: bidi-override in het gesprek (record) geweigerd',
+  format('insert into public.inspecties (id, titel, record) values (%L, %L, %L)', 'WPI-s3', 'x',
+         jsonb_build_object('gesprek', 'goed ' || U&'\202E' || 'tseg')), '%tekst_tekens%');
+select tests.lukt('tekst: een letterlijk getypte backslash-u (C:\u0001) in het record mag',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-s4', 'x', '{"gesprek":"pad C:\\u0001\\map","positief":"regel1\nregel2"}')$q$);
+select tests.klopt('tekst: de helpers zelf', public.tekst_tekens_ok(E'a\tb\nc\r') and not public.tekst_tekens_ok('a' || chr(0127))
+  and not public.tekst_tekens_ok(U&'\202D') and public.tekst_tekens_ok(null) and public.record_tekens_ok('{"a":"\\\\u0007"}')
+  and not public.record_tekens_ok('{"a":"\\\\\u0007"}'));
+
+-- 24c. fotopaden in de momentopname: alleen de eigen map
+select tests.lukt('fotos: eigen fotopad (en lege handtekening) in het record mag',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-s5', 'x',
+     '{"waarnemingen":[{"oordeel":"C","foto":"a0000000-0000-4000-a000-000000000012/abc.jpg","extraFotos":[{"foto":"fotos/a0000000-0000-4000-a000-000000000012/def.webp"}]}],"handtekening":"","fotos":{"r1":null}}')$q$);
+select tests.faalt('fotos: andermans fotopad in een waarneming geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-s6', 'x', '{"waarnemingen":[{"oordeel":"A","foto":"a0000000-0000-4000-a000-000000000011/voor.jpg"}]}')$q$,
+  '%fotos_eigen%');
+select tests.klopt('fotos: alle plekken en vormen gecontroleerd (record_fotos_ok)',
+  public.record_fotos_ok('{"waarnemingen":[{"foto":"a0000000-0000-4000-a000-000000000012/a.png"}]}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"handtekening":"a0000000-0000-4000-a000-000000000011/sig.png"}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"waarnemingen":[{"extraFotos":[{"foto":"a0000000-0000-4000-a000-000000000011/x.jpg"}]}]}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"fotos":{"r7":"a0000000-0000-4000-a000-000000000011/x.jpg"}}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"fotos":["a0000000-0000-4000-a000-000000000011/x.jpg"]}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"foto":"a0000000-0000-4000-a000-000000000012/../a0000000-0000-4000-a000-000000000011/x.jpg"}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"foto":"javascript:alert(1)"}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"foto":"https://evil.example/x.jpg"}', 'a0000000-0000-4000-a000-000000000012')
+  and not public.record_fotos_ok('{"nafoto":"a0000000-0000-4000-a000-000000000012/x.svg"}', 'a0000000-0000-4000-a000-000000000012')
+  and public.record_fotos_ok('{"tekst":"a0000000-0000-4000-a000-000000000011/x.jpg","foto":null}', 'a0000000-0000-4000-a000-000000000012'));
+
+-- 24d. uploadquotum: max 120 foto's per uur per gebruiker
+:I1
+select tests.lukt('quotum: een gewone upload lukt',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000011/q0.jpg', auth.uid())$q$);
+select tests.faalt('quotum: 200 uploads in één keer geweigerd',
+  $q$insert into storage.objects (bucket_id, name, owner) select 'fotos', 'a0000000-0000-4000-a000-000000000011/q' || g || '.jpg', auth.uid() from generate_series(1, 200) g$q$,
+  '%row-level security%');
+select tests.telt('quotum: niets van de vloed opgeslagen',
+  $q$select * from storage.objects where name like 'a0000000-0000-4000-a000-000000000011/q%'$q$, 1);
+:I2
+select tests.lukt('quotum: telt per gebruiker (een ander kan nog gewoon uploaden)',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/q0.jpg', auth.uid())$q$);
 
 -- =====================================================================
 -- Resultaat

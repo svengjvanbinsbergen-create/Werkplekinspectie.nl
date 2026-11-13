@@ -7,7 +7,7 @@
 // Na elke weergave wordt gecontroleerd:
 //   - window.__xss is nooit gezet (geen enkele payload is uitgevoerd);
 //   - er zijn geen geïnjecteerde handlers (onerror/onload/onmouseover/ontoggle/... met "__xss"),
-//     geen JS-uitbraak uit een bestaande onclick (code buiten een stringliteral), geen javascript:-links,
+//     geen invoer als actienaam (data-action) of uit de JSON van data-args gebroken, geen javascript:-links,
 //     geen <script>/<iframe>/<object>/<embed> en geen <img src=x> die uit de invoer komen.
 // Geïnjecteerde handlers worden daarna ook echt afgevuurd (mouseover/focus/...) als bewijs.
 // Apart (GEEN XSS, telt niet als fout): invoer die ongevalideerd in een <img src> belandt. Dat is
@@ -52,7 +52,9 @@ const VELDEN = {
 // ---------- in de pagina: scanner ----------
 function installeer() {
   window.__xssVond = [];
-  const APP_HANDLERS = new Set(["onclick", "oninput", "onchange", "onkeydown", "onpointerdown", "onpointerup", "onpointercancel", "oncontextmenu"]);
+  // De app zelf zet geen inline handler-attributen meer (event-delegatie met data-action, zie js/kern.js;
+  // CSP script-src-attr 'none'): elk on*-attribuut met "__xss" is dus geïnjecteerd.
+  const APP_HANDLERS = new Set();
   const zonderStrings = (c) => c.replace(/"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|`(?:[^`\\]|\\.)*`/g, '""');
   const veld = (s) => { const m = String(s).match(/__xss=(\d+)/); return m ? +m[1] : null; };
   window.__xssScan = (scherm) => {
@@ -67,7 +69,13 @@ function installeer() {
         if (n.startsWith("on")) {
           if (!APP_HANDLERS.has(n)) { uit.push({ soort: "geïnjecteerde handler " + n, veld: veld(v), html: e.outerHTML.slice(0, 180) }); vuur.push([e, n.slice(2)]); }
           else if (zonderStrings(v).includes("__xss")) uit.push({ soort: "JS-uitbraak in " + n, veld: veld(v), html: e.outerHTML.slice(0, 180) });
-        } else if (n === "src" && ["IMG", "SOURCE", "VIDEO", "AUDIO"].includes(tag) && !/^\s*javascript:/i.test(v))
+        } else if (/^data-(action|change|input|submit|enter|escape|mic)$/.test(n))
+          // invoer mag nooit de NAAM van een actie worden (delegatie in js/kern.js roept App[naam] aan)
+          uit.push({ soort: "invoer als actienaam in " + n, veld: veld(v), html: e.outerHTML.slice(0, 180) });
+        else if (/^data-(\w+-)?args$/.test(n) && (() => { try { return !Array.isArray(JSON.parse(v)); } catch (x) { return true; } })())
+          // data-args is altijd een JSON-array (WPI.act/op); iets anders = uit de JSON gebroken
+          uit.push({ soort: "ongeldige JSON in " + n, veld: veld(v), html: e.outerHTML.slice(0, 180) });
+        else if (n === "src" && ["IMG", "SOURCE", "VIDEO", "AUDIO"].includes(tag) && !/^\s*javascript:/i.test(v))
           // geen scriptuitvoering (esc() houdt de waarde in het attribuut), wel ongevalideerde invoer
           uit.push({ soort: "VALIDATIE: ongevalideerde invoer in <" + tag.toLowerCase() + " src>", validatie: true, veld: veld(v), html: e.outerHTML.slice(0, 180) });
         else if (["src", "srcdoc", "action", "formaction", "xlink:href", "data"].includes(n) || (n === "href" && /^\s*javascript:/i.test(v)))

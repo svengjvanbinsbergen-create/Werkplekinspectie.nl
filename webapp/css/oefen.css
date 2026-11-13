@@ -1,0 +1,176 @@
+/* Werkplekinspectie — css/oefen.css · Oefeninspectie (js/oefen.js). Stijl B: crème, witte ronde kaarten,
+   één donkergroen accent. Geen oranje (dat is alleen voor "te laat"). Veld- en zonmodus onderaan. */
+.oef{padding-bottom:28px}
+.oef-s,.row .s.oef-s{color:#6E6255}
+.oef :focus-visible,.oef-hint :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.oef h1:focus,.oef .oef-fb:focus{outline:none}
+.oef h1:focus-visible,.oef .oef-fb:focus-visible{outline:3px solid var(--accent);outline-offset:4px;border-radius:10px}
+
+/* kop: terug · label "Oefening" · stoppen */
+.oef-rij{display:flex;align-items:center;gap:10px}
+.oef-rond{width:48px;height:48px}
+.oef-label{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 14px;border-radius:999px;background:#F1ECE2;box-shadow:inset 0 0 0 1.5px #E2D6C5;color:#4A4038;font-size:14px;font-weight:700;line-height:1.25}
+.oef-label b{font-weight:800;color:var(--ink)}
+.oef-stip{flex:none;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-bg)}
+.oef-stop{flex:none;min-height:44px;padding:0 12px;border-radius:12px;font-weight:800;font-size:14.5px;color:var(--accent)}
+.oef-stop:active{background:var(--accent-bg)}
+.oef-vg{margin-top:14px}
+.oef-vg-t{font-size:13px;font-weight:700;color:#6E6255;margin-bottom:6px}
+.oef-balk{height:6px;border-radius:999px;background:#EADFCF;overflow:hidden}
+.oef-balk span{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .25s ease}
+.oef-kicker{margin-top:14px;color:#6B6055}
+.oef h1{margin:2px 0 12px}
+
+/* kaarten en tekst */
+.oef-kaart{margin-top:12px}
+.oef-p{font-size:16px;line-height:1.5;font-weight:600}
+.oef-vraag{font-size:16px;line-height:1.45;font-weight:700;margin-bottom:10px}
+.oef-stappen{list-style:none;padding:0;margin:14px 0 4px;display:flex;flex-direction:column;gap:10px}
+.oef-stappen li{display:flex;gap:12px;align-items:flex-start}
+.oef-stappen li>span:last-child{display:flex;flex-direction:column;line-height:1.3}
+.oef-stappen .oef-s{font-size:13.5px;font-weight:600}
+.oef-nr{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:14px}
+.oef-veilig{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 14px;border-radius:18px;background:var(--accent-bg);color:#24493F;font-size:14px;font-weight:700;line-height:1.4}
+.oef-veilig svg{flex:none;width:18px;height:18px;margin-top:1px}
+.oef-hoofd{margin-top:16px}
+.oef-midden{text-align:center;margin-top:6px;font-size:13.5px}
+.oef .linkknop{min-height:52px}
+
+/* de scène: tekening + verhaal */
+.oef-scene{margin-top:12px;background:#fff;border-radius:26px;box-shadow:var(--shadow);overflow:hidden}
+.oef-plaat{line-height:0}
+.oef-svg{width:100%;height:auto;display:block}
+.oef-verhaal{padding:14px 18px 16px}
+.oef-verhaal p{font-size:15.5px;line-height:1.5;margin-top:6px}
+.oef-plek{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:#5E544A}
+.oef-plek svg{width:15px;height:15px;flex:none}
+/* later in de scène: de situatie ingeklapt, zodat elk scherm kort en rustig blijft */
+.oef-terug{margin-top:12px;background:#fff;border-radius:22px;box-shadow:var(--shadow)}
+.oef-terug>summary{list-style:none;min-height:52px;display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;font-weight:800;color:var(--accent);font-size:15px}
+.oef-terug>summary::-webkit-details-marker{display:none}
+.oef-terug>summary .grow{display:flex;flex-direction:column;line-height:1.25}
+.oef-terug>summary .oef-s{font-size:12.5px;font-weight:700}
+.oef-terug>summary::after{content:"";flex:none;width:9px;height:9px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .15s}
+.oef-terug[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.oef-terug-ic{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent-bg);display:grid;place-items:center}
+.oef-terug .oef-scene{margin-top:0;box-shadow:none;border-radius:0 0 22px 22px}
+
+/* invoer */
+.oef-lab{display:block;font-size:13.5px;font-weight:800;color:#5E544A;margin:10px 2px 6px}
+.oef .inbox textarea{padding-right:14px;min-height:96px}
+.oef-tip{font-size:13px;margin-top:6px}
+.oef-verder{margin-top:14px}
+.oef-vs{margin-top:12px}
+.oef-gekozen{margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14.5px;font-weight:600;line-height:1.5}
+.oef-jij{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4;overflow-wrap:anywhere}
+.oef-jij .lbl{flex:none}
+
+/* keuzes */
+.oef-keuzes{display:flex;flex-wrap:wrap;gap:8px}
+.oef-keuzes.kolom{flex-direction:column}
+.oef-chip{text-align:left;min-height:48px}
+.oef-chip.on .oef-s{color:rgba(255,255,255,.9)}
+.oef-groot{min-height:56px;font-size:15.5px;padding:12px 14px;width:100%}
+.oef-keuzes:not(.kolom) .oef-chip{flex:1 1 220px}
+.oef-rollen{margin-top:6px}
+.oef-odock{margin-top:14px}
+.oef-odock .linkknop.nvt{min-height:52px}
+
+/* terugkoppeling */
+.oef-fb{margin-top:14px;padding:18px;border-radius:26px;background:#fff;box-shadow:var(--shadow),inset 4px 0 0 var(--accent)}
+.oef-fb-kop{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;color:#24493F}
+.oef-fb-ic{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}
+.oef-fb-ic svg{width:16px;height:16px}
+.oef-fb>p{margin-top:8px;font-size:15.5px;line-height:1.5}
+.oef-beter{display:block;margin-top:6px;font-weight:700}
+.oef-corr{margin:10px 0 0;padding:10px 12px 10px 30px;border-radius:16px;background:#F3EFFA;color:#3F2F78;font-size:14.5px;font-weight:600;line-height:1.45;display:flex;flex-direction:column;gap:6px}
+.oef-knoppen{display:flex;flex-direction:column;gap:2px}
+.oef-regel{margin-top:10px;padding:10px 12px;border-radius:16px;background:#F2F7F4;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.4}
+.oef-regel b{font-weight:800;color:#24493F}
+.oef-vb{margin-top:10px;padding:10px 12px;border-radius:16px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA;font-size:14.5px;line-height:1.45}
+.oef-vb-t{font-size:12.5px;font-weight:800;color:#5E544A;margin-bottom:2px}
+.oef-let{margin-top:10px;padding:10px 12px;border-radius:16px;background:#F3EFFA;color:#3F2F78;font-size:14px;font-weight:600;line-height:1.4}
+.oef-hierna{margin-top:12px}
+.oef-quiz-uit{list-style:none;padding:0;margin:10px 0 0;display:flex;flex-direction:column;gap:8px}
+.oef-quiz-uit li{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:16px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA;font-size:14.5px;line-height:1.4}
+.oef-quiz-uit li>span:last-child{display:flex;flex-direction:column;gap:2px}
+.oef-quiz-uit li.mis{box-shadow:inset 0 0 0 2px #B9A9E2}
+.oef-mk{flex:none;min-width:84px;text-align:center;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:800;background:var(--accent-bg);color:#24493F}
+
+/* samenvatting */
+.oef-regels{list-style:none;padding:0;margin:12px 0 0;display:flex;flex-direction:column;gap:10px}
+.oef-regels li{display:flex;gap:10px;align-items:flex-start;line-height:1.35}
+.oef-regels li>span:last-child{display:flex;flex-direction:column;gap:1px;font-size:15px}
+.oef-regels .oef-s{font-size:13.5px;font-weight:600}
+.oef-vink{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;margin-top:1px}
+.oef-vink svg{width:14px;height:14px}
+.oef-lijst{margin-top:12px}
+
+/* tip op Vandaag/Inspecties */
+.oef-hint{display:flex;gap:12px;align-items:flex-start;margin:4px 0 14px;padding:14px 16px;border-radius:24px;background:#fff;box-shadow:var(--shadow);text-align:left}
+.oef-hint .t{font-weight:800;font-size:16px}
+.oef-hint .oef-s{font-size:14px;font-weight:600;line-height:1.4;margin-top:2px}
+.oef-hint .grow{flex:1;min-width:0}
+.oef-hint-ic{flex:none;width:42px;height:42px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center}
+.oef-hint-ic svg{width:22px;height:22px}
+.oef-hint-knop{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.oef-hint-start{background:var(--accent);color:#fff;min-height:44px}
+.oef-nietnu{min-height:44px;padding:0 12px;border-radius:12px;font-weight:800;font-size:14.5px;color:var(--accent)}
+.leeg .oef-hint{margin:18px auto 0;max-width:460px}
+
+/* computer: tekening naast het verhaal */
+@media(min-width:900px){
+  .oef-scene{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:center}
+  .oef-plaat{padding:14px 0 14px 14px}
+  .oef-svg{border-radius:18px}
+  .oef-verhaal{padding:18px 22px}
+  .oef-hoofd,.oef-verder{width:auto;min-width:260px;padding:0 28px}
+  .oef-fb .oef-verder{display:flex}
+}
+@media(prefers-reduced-motion:reduce){.oef-balk span{transition:none}}
+
+/* veldmodus: grotere tikdoelen */
+body.veld .oef-rond{width:58px;height:58px}
+body.veld .oef-stop,body.veld .oef-nietnu,body.veld .oef-lees summary{min-height:56px}
+body.veld .oef-chip{min-height:60px;font-size:16px}
+body.veld .oef-groot{min-height:68px}
+body.veld .oef-verhaal p,body.veld .oef-fb>p,body.veld .oef-vraag{font-size:17px}
+/* zonmodus: zwart op wit, dikke randen */
+body.zon .oef-label{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .oef-stip{box-shadow:none}
+body.zon .oef-s,body.zon .row .s.oef-s,body.zon .oef-vg-t,body.zon .oef-kicker,body.zon .oef-plek,body.zon .oef-lab,body.zon .oef-vb-t{color:#141A22}
+body.zon .oef-balk{background:#fff;box-shadow:inset 0 0 0 1.5px #141A22}
+body.zon .oef-scene,body.zon .oef-fb,body.zon .oef-hint{background:#fff;box-shadow:0 0 0 2px #141A22}
+body.zon .oef-fb{box-shadow:0 0 0 2px #141A22,inset 6px 0 0 var(--accent)}
+body.zon .oef-regel,body.zon .oef-vb,body.zon .oef-quiz-uit li,body.zon .oef-veilig,body.zon .oef-let{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .oef-chip.on .oef-s{color:#fff}
+body.zon .oef-stop,body.zon .oef-nietnu{box-shadow:inset 0 0 0 2px #141A22;color:#141A22}
+/* kop boven het actievoorstel: label + knop naast elkaar, tekst breekt netjes af */
+.oef .arij .oef-arijkop{flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.oef .arij .oef-arijkop .s{white-space:normal;flex:1 1 140px}
+.oef .arij .arij-k{flex:none;max-width:48%}
+.oef-vg + h1{margin-top:14px}
+.oef .otitel span{color:#6E6255}
+.oef-gekozen{display:block}
+.oef-gekozen .lbl,.oef-gekozen .badge{margin-right:4px}
+
+/* het gesprek: wat jij zegt en wat de ploeg antwoordt */
+.oef-intro{margin-bottom:10px}
+.oef-p2{margin-top:8px;font-weight:600;color:#4A4038}
+.oef-dialoog{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.oef-zij{display:flex;gap:10px;align-items:flex-start;font-size:16px;line-height:1.4;padding-left:4px}
+.oef-zij .lbl{flex:none}
+.lbl.oef-ploeg{background:#F1ECE2;color:#4A4038}
+.oef-chip.oef-groot.on{box-shadow:none}
+body.zon .oef-corr,body.zon .lbl.oef-ploeg{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .oef-terug{box-shadow:0 0 0 2px #141A22}
+body.veld .oef-terug>summary{min-height:60px}
+
+/* rust tijdens het oefenen: geen meldingenbalk en geen bel of accountknop (die leiden de oefening uit) */
+#app[data-page="oefen"] #alert,#app[data-page="oefen"] #acct{display:none!important}
+/* terugkoppeling die iets wil bijsturen: rustig paars "i" in plaats van een vinkje (geen oranje: dat is alleen voor te laat) */
+.oef-fb.let{box-shadow:var(--shadow),inset 4px 0 0 #8E7CC3}
+.oef-fb.let .oef-fb-kop{color:#3F2F78}
+.oef-fb.let .oef-fb-ic{background:#6B55B0;font-weight:900;font-size:16px;font-family:Georgia,serif;font-style:italic}
+body.zon .oef-fb.let{box-shadow:0 0 0 2px #141A22,inset 6px 0 0 #6B55B0}
+.oef-kaart .oef-p + .oef-vraag,.oef-keuzes + .oef-vraag{margin-top:16px}

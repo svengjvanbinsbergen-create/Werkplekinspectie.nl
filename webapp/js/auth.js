@@ -15,15 +15,14 @@
      de app/het tabblad sluit). Alleen met "Ingelogd blijven" (standaard UIT; de keuze wordt per
      toestel onthouden) in localStorage. Afweging: een inspecteur in het veld moet de app zonder bereik
      opnieuw kunnen openen, en daarvoor moet het token de herstart overleven; maar XSS kan alles in
-     localStorage/sessionStorage lezen, en zolang script-src nog 'unsafe-inline' heeft (inline
-     handlers, zie _headers) is een gestolen refresh-token een langdurige overname. Daarom:
+     localStorage/sessionStorage lezen (script-src is inmiddels strikt: 'self', geen inline handlers,
+     zie _headers; XSS blijft toch de grootste dreiging) en een gestolen refresh-token is een langdurige overname. Daarom:
      - het Hoofd S&M (MFA, beheerrechten) krijgt NOOIT een bewaard refresh-token, ook niet met het vinkje;
      - het token wordt pas bewaard na een volledige login (profiel + rol + zo nodig MFA);
      - korte JWT (Supabase: 1 uur), refresh-token-rotatie met hergebruikdetectie, "Overal uitloggen";
      - VERPLICHT in Supabase (Auth → Sessions): "Time-box user sessions" (bijv. 7 dagen) en een
        inactiviteits-timeout, zodat ook een gestolen token vanzelf verloopt.
-     Een HttpOnly-cookie vraagt een eigen server/Edge Function (later, als de inline handlers weg
-     zijn en script-src strak kan).
+     Een HttpOnly-cookie vraagt een eigen server/Edge Function (volgende stap nu script-src strak is).
    - "Ingelogd blijven" staat standaard uit (gedeelde toestellen). Een inspecteur die voor het eerst op een
      toestel inlogt met het vinkje uit krijgt daarna één keer de vraag "Is dit je eigen telefoon?", zodat
      hij bewust kan kiezen om de app ook zonder bereik opnieuw te kunnen openen. "Ja" zet dan het
@@ -327,7 +326,7 @@
     if (App.syncWisVoorbeeld) await App.syncWisVoorbeeld();
     await wisAlsAnder(prof.id);   // andere gebruiker dan de vorige op dit toestel: eerst diens servergegevens weg
     if (herstel) App.user = prof;
-    else await App.login(prof.id, prof);
+    else await loginKern.call(App, prof.id, prof);   // de echte login; App.login zelf is in productie dicht (zie onderaan)
     if (App.syncStart) setTimeout(() => App.syncStart(), 0);
     if (!herstel && S.vraagToestel && prof.role === "inspecteur") setTimeout(() => App.authToestelVraag(), 600);
     S.vraagToestel = false;
@@ -365,10 +364,11 @@
   }
 
   // ---------------- koppelingen met kern.js ----------------
-  const login0 = App.view_login, acct0 = App.openAccount;
+  const login0 = App.view_login, acct0 = App.openAccount, loginKern = App.login, renderAcct0 = App.renderAcct;
   Object.assign(App, {
     authActief: actief,
     async authHerstel() {
+      zonderVoorbeelddata();   // vóór er iets op het scherm komt (boot() heeft de data net geladen)
       await herstel();
       // Geen sessie te herstellen (tabblad/app gesloten zonder uitloggen, sessie verlopen, herstellink):
       // de servergegevens van de vorige gebruiker horen niet op het inlogscherm van een gedeeld toestel.
@@ -523,6 +523,60 @@
         (MFA_ROLLEN.includes(this.user.role) ? `<div class="row"><span class="cirkel">${svg("check", 18)}</span><span class="grow"><span class="t">Tweestapsverificatie</span><div class="s">${S.aal === "aal2" ? "Actief" : "Wordt gevraagd bij de volgende login"}</div></span></div>` : ""));
     },
   });
+
+  // ---------------- productie (backend ingevuld) tegenover voorbeeldmodus ----------------
+  // PRODUCTIE: geen enkele voorbeeld-omweg. De echte bescherming is RLS op de server (zonder geldige JWT
+  // geeft PostgREST niets), maar de app biedt ook zelf niets fictiefs of omzeilbaars aan:
+  //   - App.login is dicht: alleen rondAf() (na wachtwoord, profiel/rol uit de server en zo nodig MFA) logt in,
+  //     via de kern-functie in een closure. App.login("u-bjorn") of App.login(id, {role:"hoofd"}) vanuit de
+  //     console of een geïnjecteerde data-action="login" doet niets.
+  //   - geen fictieve accounts (WPI.USERS leeg tot de profielen van de server er zijn), geen "wpi_user";
+  //   - geen voorbeeldacties of -planning in IndexedDB (demoActies/demoPlanning leveren niets);
+  //   - geen fictieve inspecties, projecten of cijfers uit data/voorbeelddata.json en data/cijfers.json: alleen de
+  //     catalogus met de algemene onderwerpen (A–I) blijft. Dashboard en kwartaalrapportage rekenen in deze versie
+  //     nog met die voorbeelddata; in productie tonen ze daarom een rustige melding in plaats van verzonnen cijfers.
+  //   - geen "Voorbeeld"-chip bovenin.
+  // VOORBEELDMODUS (config leeg): alles zoals het prototype, met een rustig "Demo"-label bovenin.
+  function zonderVoorbeelddata() {
+    if (!actief()) return;
+    const vd = App.data.voorbeelddata || {}, cat = {};
+    (Array.isArray(vd.regels) ? vd.regels : []).forEach((x) => {
+      if (x && x.soort === "Algemeen" && x.ref && !cat[x.ref]) cat[x.ref] = { ref: x.ref, soort: "Algemeen", omschrijving: x.omschrijving, classificatie: x.classificatie };
+    });
+    const d = new Date(), vandaag = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    App.data.voorbeelddata = Object.freeze({ productie: true, peildatum: vandaag, regels: Object.freeze(Object.values(cat)),
+      wpis: Object.freeze([]), acties: Object.freeze([]), programma: Object.freeze([]), projecten: Object.freeze([]), toelichting: Object.freeze({}) });
+    App.data.cijfers = null;
+  }
+  const nogNiet = (titel, ic, tekst) => function () {
+    $("view").appendChild(el(`<div class="leeg" style="margin-top:40px"><span class="bol">${ic}</span><h1 style="margin:14px 0 6px">${titel}</h1>
+      <div class="s" style="max-width:420px;margin:0 auto">${tekst}</div>
+      <button class="btn primary" style="margin-top:20px;max-width:260px"${act("go", "vandaag")}>Naar Vandaag</button></div>`));
+  };
+  if (actief()) {
+    USERS.splice(0, USERS.length);
+    try { localStorage.removeItem("wpi_user"); } catch (e) {}
+    Object.assign(App, {
+      login() { return Promise.resolve(); },   // dicht; zie hierboven
+      demoActies: () => [],
+      demoPlanning: () => [],
+      view_dashboard: nogNiet("Dashboard", "📊", "Het dashboard rekent in deze versie nog met voorbeelddata. Op de echte omgeving tonen we geen verzonnen cijfers; dit scherm komt terug zodra het met de gegevens van de server werkt."),
+      view_kwartaal: nogNiet("Rapportage", "📄", "De kwartaalrapportage rekent in deze versie nog met voorbeelddata. Op de echte omgeving maken we geen rapport met verzonnen cijfers; dit scherm komt terug zodra het met de gegevens van de server werkt."),
+      renderAcct() { if (!this.user) { $("acct").innerHTML = ""; return; } return renderAcct0.apply(this, arguments); },
+    });
+  } else {
+    App.renderAcct = function () {
+      renderAcct0.apply(this, arguments);
+      const a = $("acct"), box = this.user && a && a.firstElementChild;
+      // een knop (geen losse tekst): tikken geeft uitleg; ook voor een schermlezer duidelijk wat "Demo" betekent
+      if (box) box.insertAdjacentHTML("afterbegin", `<button type="button" class="chip demolabel"${act("demoUitleg")} aria-label="Demo: voorbeeldmodus, uitleg" style="color:var(--accent);background:var(--accent-bg);box-shadow:none">Demo</button>`);
+    };
+    App.demoUitleg = function () {
+      App.openModal("Voorbeeldmodus", "Er is geen server gekoppeld.",
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">Je werkt met fictieve accounts en voorbeelddata. Wat je vastlegt blijft alleen op dit toestel en gaat nergens heen. In de echte omgeving log je in met je eigen e-mailadres en wachtwoord en is deze voorbeeldmodus er niet.</div>
+         <button class="btn primary"${act("closeModal")}>Begrepen</button>`);
+    };
+  }
 
   if (actief()) {
     // een ander tabblad logt uit → hier ook

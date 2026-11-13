@@ -37,7 +37,7 @@ const OUT = process.env.RUNALL_DIR || "/tmp/claude-0/tests/run-all";
 const TIMEOUT = 1000 * +(process.env.RUNALL_TIMEOUT || 420);
 const TIMEOUT_PER = { xss: 1000 * +(process.env.RUNALL_TIMEOUT || 1500) };   // xss.js: 10 payloads × ±90 schermen
 
-const SCENARIO = ["methode", "e2e", "meld", "plan", "mont", "kw", "beheer", "sync"];
+const SCENARIO = ["methode", "e2e", "meld", "plan", "mont", "kw", "beheer", "sync", "oefen", "security"];
 const ROOK = ["dash", "stijlB", "web"];      // schermafbeeldingen; eindigen met console.log(pageerrors)
 const POORT = ["a11y"];                      // regressiepoort t.o.v. de nulmeting
 const EXTRA = ["xss"];

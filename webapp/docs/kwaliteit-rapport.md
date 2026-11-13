@@ -4,6 +4,19 @@ Peildatum 13 november 2026 (derde versie, 05:30) · QA-ronde vóór de volgende 
 
 Dit rapport bundelt vijf controles: toegankelijkheid (axe-core), XSS, publiek bereikbare bestanden, geheimen in de git-geschiedenis en (nieuw) de methoderegels als harde testpoort. Bij elke bevinding staat een concreet herstelvoorstel. Geen van de herstelpunten raakt de methoderegels: het oordeel C/A/V/NVT blijft altijd bij de inspecteur, AI-voorstellen blijven "Voorstel", toetser ≠ actiehouder.
 
+**Stand na de beveiligingsronde (13 november 2026, middag).** Het volledige verslag staat in `beveiligingsrapport.md`. Wat dat aan dit rapport verandert:
+- **#5 Invoervalidatie: opgelost.** De database controleert nu ook de fotovelden in een inspectierecord: alleen een pad in de eigen map van de inspecteur (`supabase/migrations/0007_invoer_aanvulling.sql`, `record_fotos_ok`). Daarnaast nieuw: datumgrenzen voor planning en plandatum, geen besturings- of bidi-tekens in vrije tekst, en een uploadquotum voor Storage. De databasetests staan op 483 van 483.
+- **#7 Publicatie: opgelost.** Netlify, Vercel en Cloudflare Pages publiceren nu alleen `dist/`, gebouwd met een allowlist. `beveiliging.html`, `onderzoek.html` en de andere interne pagina's, de configbestanden, `docs/`, `tests/`, `supabase/`, `tools/`, `*.md`, `*.sql`, `*.py`, `*.sh`, `.env` en `.git` komen daar nooit in. `tests/exposed.js --config` voert de build echt uit (met lokaasbestanden) en controleert ook dat de CSP in alle vier de bronnen gelijk is. De tabel in §3 hieronder beschrijft de oude toestand.
+- **#8 CSP: opgelost** (CSP-fase): `script-src 'self'`, `script-src-attr 'none'` en het exacte project-adres in plaats van `*.supabase.co`. Nog open: `style-src 'unsafe-inline'`.
+- **Nieuwe testpoort `tests/security.js`** (in `run-all.js`). Die controleert:
+  - dat de CSP echt wordt afgedwongen (geïnjecteerde handlers en scripts worden geblokkeerd);
+  - dat er na het doorlopen van alle schermen geen inline handlers in de DOM staan;
+  - dat de productiemodus geen voorbeeld-login of voorbeelddata heeft;
+  - de uploadkeuring (type en grootte);
+  - de invoergrenzen gelijk aan de server;
+  - een XSS-payload in elk tekstveld.
+- **Nieuw: `tools/periodieke_check.sh`** voor de maandelijkse controle, met de checklist in `beveiliging-periodiek.md`.
+
 **Wat is er veranderd sinds de tweede versie (03:45).** Reviewers vonden vijf gaten in de controles zelf; alle vijf zijn gedicht en met sabotage in kopieën aangetoond:
 - **De a11y-poort was niet zonder marge voor de eigen controle `klik-zonder-toetsenbord`.** De nulmeting telde per selector, niet per element, en de eigen controle maakt geen unieke selectors (klasse + de eerste 28 tekens van de `onclick`). Rijen met dezelfde selector telden als één: van de 167 klikbare elementen zag de poort er maar 104. Drie extra klikbare rijen in de productkiezer bleven zo onopgemerkt. De vorige versie van dit rapport beweerde ten onrechte "één nieuw element is genoeg" en "167 elementen". Nu telt de poort elk element (formaat 3, met een interne controle dat de nulmeting evenveel elementen telt als er gevonden zijn), en ook **minder** elementen dan de nulmeting maakt de poort rood (zie §2).
 - **De scenariotests controleerden de methoderegels niet.** Ze schreven de uitkomst alleen naar het log; run-all gaf PASS zolang er geen pageerror was. Een reviewer liet "Akkoord na toetsing" de status `Open` geven en haalde het QHSE-filter weg: 5 PASS. Nieuw is `tests/methode.js` met harde asserties op alle methoderegels; `e2e`, `meld`, `plan`, `mont` en `kw` controleren nu ook hun kernuitkomst (zie §5 en §6).
