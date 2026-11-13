@@ -102,8 +102,11 @@
 .oef-regels li{display:flex;gap:10px;align-items:flex-start;line-height:1.35}
 .oef-regels li>span:last-child{display:flex;flex-direction:column;gap:1px;font-size:15px}
 .oef-regels .oef-s{font-size:13.5px;font-weight:600}
-.oef-vink{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;margin-top:1px}
-.oef-vink svg{width:14px;height:14px}
+.oef-bol{flex:none;width:8px;height:8px;border-radius:50%;background:#B7A894;margin:7px 6px 0 4px}
+.oef-anders{display:flex;gap:8px;align-items:flex-start;margin-top:6px;padding:8px 10px;border-radius:14px;background:#F3EFFA;color:#3F2F78;font-size:13.5px;font-weight:700;line-height:1.4}
+.oef-anders-ic{flex:none;width:20px;height:20px;border-radius:50%;background:#6B55B0;color:#fff;display:grid;place-items:center;font:italic 900 13px/1 Georgia,serif;margin-top:0}
+body.zon .oef-anders{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .oef-bol{background:#141A22}
 .oef-lijst{margin-top:12px}
 
 /* tip op Vandaag/Inspecties */

@@ -56,7 +56,7 @@ async function nieuwePagina(b, w, h) {
   const scherm = async (naam, maxHoogte) => {
     await wacht(200);
     const lab = await p.locator(".oef-label").first();
-    ok((await lab.count()) === 1 && (await lab.isVisible()) && /Oefening/.test(await lab.innerText()), naam + ": label ‘Oefening’ zichtbaar");
+    ok((await lab.count()) === 1 && (await lab.isVisible()) && /Oefening/.test(await lab.innerText()) && /niets wordt een echte inspectie/.test(await lab.innerText()) && !/opgeslagen/.test(await lab.innerText()), naam + ": label ‘Oefening · niets wordt een echte inspectie’ zichtbaar");
     const rust = await ev(() => ({ alert: getComputedStyle(document.getElementById("alert")).display, acct: getComputedStyle(document.getElementById("acct")).display, tab: document.getElementById("tabbar").classList.contains("hidden") }));
     ok(rust.alert === "none" && rust.acct === "none" && rust.tab, naam + ": geen meldingenbalk, bel, accountknop of tabbalk");
     await geenScroll(naam);
@@ -129,7 +129,8 @@ async function nieuwePagina(b, w, h) {
   ok(totaal <= 12, "kort: hooguit 12 stappen in de hele oefening (" + totaal + ")");
   await scherm("s1-ingrijpen");
   await kies("ingrijpen", 1);
-  ok(/eerst stoppen/i.test(await fbTekstR()) && await knop("Kies opnieuw").count() === 1, "ingrijpen: eerst een foto → uitleg ‘eerst stoppen’ + opnieuw kiezen");
+  const tif = await fbTekstR();
+  ok(/eerst stoppen/i.test(tif) && await knop("Kies opnieuw").count() === 1 && !/Kies nog eens/.test(tif), "ingrijpen: eerst een foto → uitleg ‘eerst stoppen’ + één knop ‘Kies opnieuw’ (geen dubbel ‘Kies nog eens’)");
   await geenVerder("ingrijpen");
   ok(await p.locator(".oef-fb .oef-regel").count() === 0, "ingrijpen fout: nog geen regelkaartje (dat komt bij de goede keuze)");
   await ev(() => App.oefVerder()); await wacht();
@@ -206,6 +207,7 @@ async function nieuwePagina(b, w, h) {
   await vast.click(); await wacht();
   const tc = await fbTekstR();
   ok(/Let op: dit is direct gevaar/.test(tc) && await p.locator(".oef-corr li").count() === 3 && /Kies ‘Direct’/.test(tc) && /‘Later’ past niet/.test(tc) && /Maatregel genomen/.test(tc), "actie: ‘later’ + niets gedaan + planmatig → drie correcties");
+  ok(await p.locator(".oef-fb .oef-regel").count() === 0 && !/QHSE-manager|toetser is niet/.test(tc), "actie-correctie: geen regelkaartje over acties (alleen bij het goede pad)");
   await scherm("s1-actie-correctie");
   await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
@@ -238,18 +240,32 @@ async function nieuwePagina(b, w, h) {
   ok(await ev(() => document.activeElement && document.activeElement.classList.contains("oef-fb")), "terugkoppeling krijgt de focus");
   ok(/jij bevestigde/i.test(await fbTekstR()), "taak: ‘jij bevestigde het Voorstel’");
   await verder();
+  const vs2 = (await p.locator(".oef-vs").innerText()).replace(/\s+/g, " ");
+  ok(/hoort bij deze taak/.test(vs2) && /Waarom: de monteur werkt onderin een sleuf/.test(vs2) && !/je zei/.test(vs2) && !/bij wat je zag/.test(vs2), "koppel sleuf: vraag en Waarom over de taak en de sleuf, geen zwak ‘je zei “leiding”’");
   await p.locator(".oef-vs .vpick").click(); await wacht();
   await p.locator(".oef .seg .t-A").click(); await wacht();
   const t2 = await fbTekstR();
   ok(/Jouw oordeel: Afwijking/.test(t2) && /de TRA vraagt een gasmeter/.test(t2) && !/inspecteurs kiezen/.test(t2), "sleuf A: jouw keuze telt, uitleg noemt wat de TRA vraagt (geen verzonnen meerderheid)");
   await verder();
   ok(/Actievoorstel/.test(await p.locator(".oef h1").innerText()) && await p.locator("#oef-vastleg").count() === 1, "sleuf A: actievoorstel volgt (de app overrulet je oordeel niet)");
-  await p.fill("#oef-f-actie", "Gasmeter vóór gebruik laten testen en dat noteren");
-  await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-kort"); await wacht();
+  // wat de critici vonden: A + ‘niks’ + niets gedaan + planmatig mag geen groen vinkje ‘Past bij wat je zag’ geven
+  await p.fill("#oef-f-actie", "niks");
+  await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-planmatig"); await wacht();
   await scherm("s2-actie");
   await p.click("#oef-vastleg"); await wacht();
-  ok(/Past bij wat je zag/.test(await fbTekstR()), "sleuf: actievoorstel genoteerd");
+  const t2a = await fbTekstR();
+  ok(!/Past bij wat je zag/.test(t2a) && await p.locator(".oef-fb.let").count() === 1 && await p.locator(".oef-hierna").count() === 0 && /Volgens de TRA was hier alles in orde/.test(t2a) && /actie is dan niet nodig/.test(t2a) && await p.locator(".oef-fb .oef-regel").count() === 0,
+    "sleuf A + actie: rustige i-uitleg ‘volgens de TRA was hier alles in orde’, geen groen vinkje, geen Hierna, geen regelkaartje");
+  await scherm("s2-actie-anders");
+  await knop("Bekijk je oordeel opnieuw").click(); await wacht(300);
+  ok(/Koppel en beoordeel/.test(await p.locator(".oef h1").innerText()) && await p.locator(".oef .seg button").count() === 3 && await ev(() => document.activeElement && document.activeElement.id === "oef-oordeel-lab"), "sleuf: ‘Bekijk je oordeel opnieuw’ → terug naar het oordeel, focus op ‘Jouw oordeel’");
+  // de oefenaar houdt vast aan A (het oordeel is van hem) en gaat via ‘Verder’ door
+  await p.locator(".oef .seg .t-A").click(); await wacht();
   await verder();
+  ok((await p.inputValue("#oef-f-actie")) === "niks", "sleuf: eigen actietekst blijft staan");
+  await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-planmatig"); await wacht();
+  await p.click("#oef-vastleg"); await wacht();
+  await p.locator('.oef-fb button.linkknop[data-action="oefVerder"]').click(); await wacht();
   const vraagPos = await p.locator(".oef-vraag").innerText();
   ok(/Wat gaat hier wél goed/.test(vraagPos) && !/Alles wat je zag was in orde/.test(await p.locator(".oef").innerText()), "positief na A: ‘wat gaat hier wél goed’, niet ‘alles was in orde’");
   await knop("Geef een voorbeeld").click(); await wacht();
@@ -302,15 +318,18 @@ async function nieuwePagina(b, w, h) {
   ok(Object.keys(regelTelling).length === 8 && Object.values(regelTelling).every((n) => n === 1), "methoderegels: alle acht, elk bij precies één stap " + JSON.stringify(regelTelling));
 
   // ================= samenvatting =================
-  ok(/Oefening afgerond/.test(await p.locator(".oef h1").innerText()), "samenvatting: ‘Oefening afgerond’");
-  ok(await p.locator(".oef-regels li").count() === 8, "samenvatting: acht methoderegels");
+  ok(/De oefening zit erop/.test(await p.locator(".oef h1").innerText()), "samenvatting: ‘De oefening zit erop’");
+  const kick = await p.locator(".oef-kicker").innerText();
+  ok(/Even terugkijken/.test(kick) && !/Goed gedaan/.test(kick), "samenvatting: neutrale ondertitel als je oordeel afweek (" + kick + ")");
+  ok(await p.locator(".oef-regels li").count() === 8 && await p.locator(".oef-regels svg").count() === 0 && await p.locator(".oef-regels .oef-bol").count() === 8, "samenvatting: acht methoderegels met neutrale bolletjes, geen vinkjes");
   const lijst = await p.locator(".oef-lijst").innerText();
   ok(/werk laten stoppen/.test(lijst) && /gesprek begonnen met wat goed gaat/.test(lijst) && /waarneming beschreven/.test(lijst) && /taak gevraagd en bevestigd/.test(lijst) && /open vraag gesteld/.test(lijst) && /herstel gezien, actie afgerond/.test(lijst) && (lijst.match(/positief benoemd/g) || []).length === 1 && (lijst.match(/actievoorstel geschreven/g) || []).length === 2, "samenvatting: per scène wat je deed");
+  ok(await p.locator(".oef-anders").count() === 1 && /jij koos A; volgens de TRA conform \(C\)/.test(lijst) && !/Pomp uit de put[\s\S]*Kijk nog eens[\s\S]*Werken in de sleuf/.test(lijst), "samenvatting: alleen bij de sleuf ‘jij koos A; volgens de TRA conform (C)’");
   ok(await knop("Klaar om echt te beginnen").count() === 1, "samenvatting: ‘Klaar om echt te beginnen’");
   await scherm("samenvatting");
   const alles = teksten.join("\n");
   for (const [re, wat] of [[/!/, "uitroepteken"], [/≠/, "≠-teken"], [/dringendheid/i, "‘dringendheid’"], [/Winfred|Loerts|Douwe|Björn/, "echte collega"], [/moet opgelost\b/, "‘moet opgelost’"], [/inspreken kan dan ook/, "dubbel ‘ook’"],
-    [/inspecteurs kiezen/, "verzonnen meerderheid"], [/Klopt met de TRA/, "‘Klopt met de TRA’"], [/Dit zie je niet nu/, "‘Dit zie je niet nu’"], [/blijft het werk en de controle/, "‘blijft het werk en de controle’"], [/Zeg het hem\./, "‘Zeg het hem.’"], [/helpt je begrijpen/, "‘helpt je begrijpen’"], [/10 minuten/, "‘10 minuten’"]])
+    [/inspecteurs kiezen/, "verzonnen meerderheid"], [/Kies nog eens/, "dubbel ‘Kies nog eens’ boven ‘Kies opnieuw’"], [/niets wordt opgeslagen|er wordt niets opgeslagen/, "‘niets wordt opgeslagen’"], [/Klopt met de TRA/, "‘Klopt met de TRA’"], [/Dit zie je niet nu/, "‘Dit zie je niet nu’"], [/blijft het werk en de controle/, "‘blijft het werk en de controle’"], [/Zeg het hem\./, "‘Zeg het hem.’"], [/helpt je begrijpen/, "‘helpt je begrijpen’"], [/10 minuten/, "‘10 minuten’"]])
     ok(!re.test(alles), "teksten: geen " + wat);
   ok(/±5 minuten/.test(alles), "teksten: ±5 minuten");
 
@@ -375,6 +394,15 @@ async function nieuwePagina(b, w, h) {
   // de samenvatting zegt alleen wat je echt deed: na een verkeerde keuze geen ‘werk laten stoppen’
   const sam = await q.evaluate(() => { const o = App.oefState(); o.a[0].ingrijpen = 1; o.a[2].gesprek = 2; o.s = 3; o.i = 0; App.oefToon(); return document.querySelector(".oef-lijst").innerText; });
   ok(!/werk laten stoppen/.test(sam) && !/open vraag gesteld/.test(sam), "samenvatting: verkeerde keuze → niet ‘werk laten stoppen’ of ‘open vraag gesteld’");
+  // de samenvatting zegt rustig waar je oordeel afweek (V/C bij de hijsband) en geeft dan geen ‘Goed gedaan’
+  const sam2 = await q.evaluate(() => { const o = App.oefState(); o.a[0].oordeel = "V"; o.a[1].oordeel = "C"; o.a[2].oordeel = "C"; o.a[2].actieKlaar = false; o.s = 3; o.i = 0; App.oefToon();
+    return { lijst: document.querySelector(".oef-lijst").innerText, kick: document.querySelector(".oef-kicker").textContent, n: document.querySelectorAll(".oef-anders").length }; });
+  ok(/jij koos V; volgens de TRA een afwijking \(A\)/.test(sam2.lijst) && /jij koos C; volgens de TRA een afwijking \(A\)/.test(sam2.lijst) && sam2.n === 2 && !/Goed gedaan/.test(sam2.kick), "samenvatting: ‘jij koos V/C; volgens de TRA een afwijking (A)’, neutrale ondertitel");
+  const sam3 = await q.evaluate(() => { const o = App.oefState(); o.a[0] = { ingrijpen: 0, gesprek: 0, zie: "De hijsband is gerafeld.", regel: "2.1", oordeel: "A", actie: "Band afkeuren en vervangen door een gekeurde band", terPlaatse: "maatregel", prio: "direct", actieKlaar: true };
+    o.a[1] = { taak: "leiding aansluiten", gekozenTaak: "Persleiding aansluiten in de sleuf", regel: "4.1", oordeel: "C", positief: "Goed dat de gasmeter bij je hangt" };
+    o.a[2] = { gesprek: 0, regel: "5.2", oordeel: "A", actie: "Label hangen", terPlaatse: "gecorrigeerd", actieKlaar: true }; o.s = 3; App.oefToon();
+    return { kick: document.querySelector(".oef-kicker").textContent, n: document.querySelectorAll(".oef-anders").length }; });
+  ok(sam3.kick === "Goed gedaan" && sam3.n === 0, "samenvatting: alles volgens de TRA → ‘Goed gedaan’, geen ‘Kijk nog eens’");
   await q.evaluate(() => { const o = App.oefState(); o.s = 0; o.i = 4; o.fb = false; o.a[0].oordeel = "A"; App.oefToon(); }); await q.waitForTimeout(250);
   await q.screenshot({ path: path.join(SHOTS, "1440-actie.png"), fullPage: true });
   await q.evaluate(() => { const o = App.oefState(); o.s = 2; o.i = 0; o.fb = false; App.oefToon(); }); await q.waitForTimeout(250);
