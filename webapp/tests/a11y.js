@@ -116,7 +116,7 @@ const SCHERMEN = [
   ["ins-koppel", async (p) => { await ev(p, () => App.koppel()); await wacht(p, 900); }],
   ["ins-oordeel", async (p) => { await ev(p, () => App.kiesRegel(App.state.inspectie.voorstel.ids[0] || App.data.kennisbank.DAM.regels[0].id)); await wacht(p, 400); }],
   ["ins-actie", async (p) => { await ev(p, () => App.oordeel("A")); await wacht(p, 900); }],
-  ["ins-meer", async (p) => { await ev(p, () => { if (!App.state.inspectie.cur.actie.tekst) App.state.inspectie.cur.actie.tekst = "Hijsband vervangen"; App.bevestigActie(); }); await wacht(p, 400); }],
+  ["ins-meer", async (p) => { await ev(p, () => { if (!App.state.inspectie.cur.actie.tekst) App.state.inspectie.cur.actie.tekst = "Hijsband vervangen"; if (App.state.inspectie.cur.actie.gevaar && !App.state.inspectie.cur.actie.terPlaatse) App.zetTerPlaatse("niets"); App.bevestigActie(); }); await wacht(p, 400); }],
   ["ins-algemeen", async (p) => { await ev(p, () => App.stap("algemeen")); await wacht(p, 400); }],
   ["ins-monteurs", async (p) => { await ev(p, () => App.stap("monteurs")); await wacht(p, 400); }],
   ["ins-klaar", async (p) => { await ev(p, () => App.stap("klaar")); await wacht(p, 400); }],

@@ -68,3 +68,12 @@ body.zon .kstap .kpick.kalg{background:#fff;box-shadow:inset 0 0 0 2px #141A22}
 .kvmis{margin-top:10px;padding:12px 14px;border-radius:16px;background:var(--red-bg);color:#8A1C12;font-size:15px;font-weight:800;line-height:1.35}
 .kvmis-groep{border-radius:18px;box-shadow:0 0 0 3px var(--red)}
 body.zon .kvmis{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2.5px #B42318}
+/* sterke match: oordeelknoppen plakken onderin (sticky) zolang hun plek onder de vouw ligt */
+.odock.kplak{margin:12px -6px 0;padding:16px 6px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(rgba(250,246,239,0),var(--bg) 16px)}
+.odock.kplak .otitel{margin:0 2px 8px}
+.odock.kplak .otitel span{color:#6E6255}
+.knvt .linkknop.nvt{min-height:56px;padding:12px 0 4px}
+body.veld .knvt .linkknop.nvt{min-height:64px}
+body.zon .odock.kplak{background:#fff}
+body.zon .odock.kplak .otitel span{color:#141A22}
+@media(min-width:900px){.odock.kplak{position:static;background:none;margin:14px 0 0;padding:2px 0 4px}}

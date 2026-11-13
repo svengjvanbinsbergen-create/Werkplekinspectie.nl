@@ -560,6 +560,47 @@
   // Moet precies gelijk blijven aan tekst_tekens_ok; supabase/tests/tekens_check.sh vergelijkt elk codepunt.
   const ONZICHTBAAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u0600-\u0605\u06DD\u070F\u0890\u0891\u08E2\u115F\u1160\u17B4\u17B5\u180E\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0\uFFF9-\uFFFB\u{110BD}\u{110CD}\u{13430}-\u{1343F}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}-\u{E007F}\u{E0100}-\u{E01EF}]/gu;
   const schoonTekst = (t) => t.replace(/[\u2028\u2029]/g, "\n").replace(ONZICHTBAAR, "");
+  // Verloop (actie_log.wat, iedereen ziet "wie · wat"): strengere regel, gelijk aan public.verloop_tekens_ok en
+  // public.verloop_lijkt_serverregel (migratie 0008); supabase/tests/tekens_check.sh vergelijkt elk codepunt.
+  // - U+200D (ZWJ) alleen tussen twee emoji (👷‍♀️): een losse ZWJ is onzichtbaar ("Status<ZWJ>: …").
+  // - variatiekiezers U+FE00–FE0D en U+180B–180F en de braillespatie U+2800 nooit; VS15/VS16 (U+FE0E/FE0F) alleen
+  //   direct na een emoji-teken, of VS16 in een toetsdop (1️⃣). Zo kan "Status<VS16>: …" niet meer.
+  // - minstens één zichtbaar teken (zichtbaar); anders wordt de regel niet verstuurd.
+  // - een regel waarvan het skelet (NFKD, kleine letters, lookalikes → Latijn, alleen a–z) begint als een
+  //   serverregel ("Status:", "Aangemaakt met status", "Actiehouder, toetser of plandatum gewijzigd") weigert de
+  //   server; de app begint haar regels altijd met een eigen vast woord, maar zet er in dat geval "Toelichting: " voor.
+  const EMOJI_ZWJ = "[\\u00A9\\u00AE\\u203C\\u2049\\u2122\\u2139\\u2194-\\u21AA\\u231A-\\u23FF\\u24C2\\u25AA-\\u25FE\\u2600-\\u27BF\\u2934\\u2935\\u2B05-\\u2B55\\u3030\\u303D\\u3297\\u3299\\u{1F000}-\\u{1FAFF}]";
+  const LOSSE_ZWJ = new RegExp("(?<!" + EMOJI_ZWJ + "\\uFE0F?)\\u200D|\\u200D(?!" + EMOJI_ZWJ + ")", "gu");
+  const VS_NOOIT = /[\u180B-\u180F\u2800\uFE00-\uFE0D]/gu;
+  const LOSSE_VS = new RegExp("(?<!" + EMOJI_ZWJ + ")(?<![#*0-9])[\\uFE0E\\uFE0F]|(?<=[#*0-9])\\uFE0E|(?<=[#*0-9])\\uFE0F(?!\\u20E3)", "gu");
+  const schoonLog = (t) => schoonTekst(t).replace(LOSSE_ZWJ, "").replace(VS_NOOIT, "").replace(LOSSE_VS, "");
+  const ZICHTBAAR = /[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\u2800\u200D\u180B-\u180F\uFE00-\uFE0F]/u;
+  const zichtbaar = (t) => ZICHTBAAR.test(t);
+  // lookalikes (van → naar), precies de paren uit public.verloop_skelet
+  const SKELET_VAN = "@431|05$7"
+    + "\u0430\u0410\u03B1\u0391\u0251\u1D00\uA4EE\u13AA\uAB7A" + "\u0441\u0421\u03F2\u03F9\u1D04\uA4DA\u13DF\uABAF"
+    + "\u0501\uA4D3\u13A0\uAB70\u1D05" + "\u0435\u0415\u03B5\u0395\u04BD\u1D07\uA4F0\u13AC\uAB7C" + "\uA4DD"
+    + "\u0261\u0581\u0262\uA4D6\u13C0\uAB90" + "\u04BB\u04BA\u043D\u041D\u03B7\u0397\u029C\uA4E7\u13BB\uAB8B"
+    + "\u0456\u0406\u03B9\u0399\u0131\u026A\uA4F2\u13A5\uAB75" + "\u0458\u0408\u03F3\uA4D9\u13AB\uAB7B"
+    + "\u043A\u041A\u03BA\u039A\u1D0B\uA4D7\u13E6\uABB6" + "\u04CF\u04C0\u029F\uA4E1\u13DE\uABAE"
+    + "\u043C\u041C\u03BC\u039C\u1D0D\uA4DF\u13B7\uAB87" + "\u0578\u03BD\u039D\u0274\uA4E0"
+    + "\u043E\u041E\u03BF\u039F\u0585\u1D0F\uA4F3\u13BE\uAB8E" + "\u0440\u0420\u03C1\u03A1\u1D18\uA4D1\u13E2\uABB2"
+    + "\u0280\uA4E3\u13D2\uABA2" + "\u0455\u0405\uA731\uA4E2\u13DA\uAB9A" + "\u0442\u0422\u03C4\u03A4\u1D1B\uA4D4\u13A2\uAB72"
+    + "\u03C5\u03A5\u057D\u1D1C\uA4F4\u028B\u0443\u0423\uAB4E\u028A" + "\u051D\u051C\u1D21\uA4EA\u13B3\uAB83"
+    + "\u1D22\uA4DC\u03B6\u0396\u13C3\uAB93";
+  const SKELET_NAAR = "aaeiiosst" + "aaaaaaaaa" + "cccccccc" + "ddddd" + "eeeeeeeee" + "f" + "gggggg" + "hhhhhhhhhh" + "iiiiiiiii" + "jjjjjj"
+    + "kkkkkkkk" + "llllll" + "mmmmmmmm" + "nnnnn" + "ooooooooo" + "pppppppp" + "rrrr" + "ssssss" + "tttttttt" + "uuuuuuuuuu" + "wwwwww" + "zzzzzz";
+  const SKELET = new Map(Array.from(SKELET_VAN, (c, i) => [c, SKELET_NAAR[i]]));
+  const skelet = (t) => Array.from(t.normalize("NFKD").toLowerCase(), (c) => SKELET.get(c) || c).join("").replace(/[^a-z]/g, "");
+  const SERVERREGEL = /^(status|aangemaaktmetstatus|actiehoudertoetserofplandatumgewijzigd)/;
+  const lijktServerregel = (t) => SERVERREGEL.test(skelet(t));
+  // tekst voor één nieuwe regel van het verloop: opgeschoond, nooit gelijkend op een serverregel, ≤ 2000 tekens
+  function logTekst(wat) {
+    let s = schoonLog(String(wat));
+    if (lijktServerregel(s)) s = "Toelichting: " + s;
+    if (s.length > 2000) s = schoonLog(s.slice(0, 2000));
+    return s.replace(/[\uD800-\uDBFF]$/, "");
+  }
   function schoonDiep(o) {
     if (typeof o === "string") return schoonTekst(o);
     if (Array.isArray(o)) return o.map(schoonDiep);
@@ -723,9 +764,10 @@
       const n = META.get("logn:" + rec.id) || 0, nieuw = (rec.log || []).slice(n).filter((l) => l && l.wat).map((l) => String(l.wat).slice(0, 2000));
       if (uit.verloren && uit.verloren.length) nieuw.push(("Niet doorgevoerd vanaf het toestel (intussen door iemand anders gewijzigd): "
         + uit.verloren.map((k) => VELDNAAM[veldVan(k)] || veldVan(k)).join(", ") + ". Bewaard bij de gebruiker.").slice(0, 2000));
-      if (nieuw.length) await sb("/rest/v1/actie_log", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-        // zelfde tekenregel als de server (actie_log.wat → tekst_tekens_ok, migratie 0008): schoonTekst, verder niets
-        body: json(nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat: schoonTekst(wat) }))) });
+      // zelfde regel als de server (actie_log.wat → verloop_tekens_ok en verloop_lijkt_serverregel, migratie 0008)
+      const regels = nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat: logTekst(wat) })).filter((r) => zichtbaar(r.wat));
+      if (regels.length) await sb("/rest/v1/actie_log", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: json(regels) });
       await zetMeta("logn:" + rec.id, (rec.log || []).length);
     }
     return uit;
@@ -933,7 +975,9 @@
     }
     return n;
   }
-  const logRegel = (l, naam) => ({ t: vTijd(l.t) || nu(), wie: naam(l.wie), wat: vTekst(l.wat) || "" });
+  // bron "server" (statusregels van de database) bewaren: het verloop toont die regels herkenbaar anders dan wat
+  // iemand zelf schreef (bron "client"), zodat een nagemaakte statusregel nooit als serverregel oogt
+  const logRegel = (l, naam) => Object.assign({ t: vTijd(l.t) || nu(), wie: naam(l.wie), wat: vTekst(l.wat) || "" }, l.bron === "server" ? { bron: "server" } : {});
   async function syncHaal() {
     if (!actief() || !App.user || !navigator.onLine) return 0;
     if (haalBezig) return haalBezig;
@@ -955,12 +999,12 @@
       }
       // verloop: alleen nieuwe regels (id > cursor); van gewijzigde acties het hele verloop
       const ck = "logcursor:" + uid, cursor = META.get(ck) || 0;
-      const nieuweLogs = await pagineer("actie_log", "id,actie_id,t,wie,wat", "", cursor || null);
+      const nieuweLogs = await pagineer("actie_log", "id,actie_id,t,wie,wat,bron", "", cursor || null);
       const gewijzigd = new Set(rijen.acties.map((r) => r.id));
       let logs = nieuweLogs;
       if (cursor) {
         const ids = [...new Set([...gewijzigd, ...nieuweLogs.map((l) => l.actie_id)])].filter(vId);
-        logs = await perStuk(ids, (c) => pagineer("actie_log", "id,actie_id,t,wie,wat", "&actie_id=" + encodeURIComponent(inLijst(c))));
+        logs = await perStuk(ids, (c) => pagineer("actie_log", "id,actie_id,t,wie,wat,bron", "&actie_id=" + encodeURIComponent(inLijst(c))));
       }
       const logPer = new Map();
       logs.forEach((l) => { if (!l || !vId(l.actie_id)) return; if (!logPer.has(l.actie_id)) logPer.set(l.actie_id, []); logPer.get(l.actie_id).push(l); });

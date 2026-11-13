@@ -1,5 +1,6 @@
 #!/bin/sh
-# Gelijktijdigheidstest: twee hoofden degraderen elkaar op hetzelfde moment.
+# Gelijktijdigheidstest: twee hoofden degraderen elkaar op hetzelfde moment; daarna verwijdert service_role een
+# hoofd terwijl dat hoofd tegelijk het andere degradeert.
 # Verwacht: precies één lukt, de ander krijgt "minstens één actief hoofd", en er
 # blijft één actief hoofd over. Draait in een eigen, verse database.
 #   Gebruik: sh supabase/tests/race_hoofd.sh [basisnaam]   (PGHOST/PGPORT/PGUSER zoals run.sh)
@@ -38,11 +39,41 @@ wait $P1 || true
 wait $P2 || true
 FOUT=$(cat "$OUT.1" "$OUT.2" | grep -c "minstens één actief hoofd" || true)
 HOOFD=$(psql -X -At -d "$DB" -c "select count(*) from public.profiles where role = 'hoofd' and actief")
-rm -f "$OUT" "$OUT.1" "$OUT.2"
-dropdb --if-exists "$DB"
 if [ "$FOUT" = "1" ] && [ "$HOOFD" = "1" ]; then
   echo "race laatste hoofd: OK (één degradatie geweigerd, 1 actief hoofd over)"
 else
   echo "race laatste hoofd: FOUT (weigeringen=$FOUT, actieve hoofden=$HOOFD)"
+  rm -f "$OUT" "$OUT.1" "$OUT.2"; dropdb --if-exists "$DB"
+  exit 1
+fi
+
+# Tweede ronde: verwijderen (service_role, of het account wissen in het dashboard) tegelijk met degraderen.
+# Verwacht: precies één van de twee lukt, er blijft één actief hoofd over (BEFORE DELETE-trigger, zelfde slot).
+psql -X -q -d "$DB" -v ON_ERROR_STOP=1 -c "update public.profiles set role = 'hoofd', actief = true"
+verwijder() {   # service_role verwijdert hoofd $1
+  psql -X -q -d "$DB" -v ON_ERROR_STOP=1 2>&1 <<SQL
+begin;
+select set_config('request.jwt.claims', '{"role":"service_role"}', true) is null;
+set local role service_role;
+delete from public.profiles where id = 'b0000000-0000-4000-a000-0000000000$1';
+select pg_sleep(2);
+commit;
+SQL
+}
+verwijder a2 > "$OUT.1" &
+P1=$!
+sleep 0.5
+degradeer a2 a1 > "$OUT.2" &
+P2=$!
+wait $P1 || true
+wait $P2 || true
+FOUT=$(cat "$OUT.1" "$OUT.2" | grep -c "minstens één actief hoofd" || true)
+HOOFD=$(psql -X -At -d "$DB" -c "select count(*) from public.profiles where role = 'hoofd' and actief")
+rm -f "$OUT" "$OUT.1" "$OUT.2"
+dropdb --if-exists "$DB"
+if [ "$FOUT" = "1" ] && [ "$HOOFD" = "1" ]; then
+  echo "race laatste hoofd (verwijderen tegelijk met degraderen): OK (één geweigerd, 1 actief hoofd over)"
+else
+  echo "race laatste hoofd (verwijderen tegelijk met degraderen): FOUT (weigeringen=$FOUT, actieve hoofden=$HOOFD)"
   exit 1
 fi

@@ -13,10 +13,10 @@ triggers en rechten. De controles in de app zijn alleen gebruiksgemak.
 | `migrations/0005_storage.sql` | privébucket `fotos` (5 MB, jpeg/png/webp) en Storage-policies |
 | `migrations/0006_rpc.sql` | `report_security_event` (rate-limited), `dashboard_cijfers`, `monteur_aanmelden` |
 | `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker; geteld in `public.foto_uploads` met een lock per gebruiker, snel ook bij duizenden foto's), indexen op `acties.foto_pad`/`nafoto_pad`. Na de aanvalstest ook: C1-, zero-width- en richtingstekens geweigerd, en elke tekst in het record met dezelfde regel |
-| `migrations/0008_rollen_beheer.sql` | rollen van het echte team: nieuwe rol `beheerder`; QHSE-manager en beheerder zien alles en beheren (team en rollen, instellingen, monteurs, auditlog), inspecteren en plannen niet; QHSE nooit actiehouder (wel toetser), beheerder geen van beide; nieuw profiel = **nog geen rol** (de rol `inspecteur` blijft alleen voor compatibiliteit, niemand krijgt hem nog); niemand wijzigt zijn eigen rol; MFA (aal2) voor alle beheerrollen; monteurslijst door hoofden en coördinatoren; dashboard voor iedereen met volledige inzage, doel standaard 85; `actie_log.wat` met `tekst_tekens_ok`; bewaartermijn 7 jaar (`bewaartermijn_opschonen()`) |
+| `migrations/0008_rollen_beheer.sql` | rollen van het echte team: nieuwe rol `beheerder`; QHSE-manager en beheerder zien alles en beheren (team en rollen, instellingen, monteurs, auditlog), inspecteren en plannen niet; QHSE nooit actiehouder (wel toetser), beheerder geen van beide; nieuw profiel = **nog geen rol** (de rol `inspecteur` blijft alleen voor compatibiliteit, niemand krijgt hem nog); niemand wijzigt zijn eigen rol; MFA (aal2) voor alle beheerrollen; monteurslijst door hoofden en coördinatoren, `monteur_aanmelden` alleen voor wie inspecteert (hoofd met MFA); wie geen inspecterende rol krijgt, mag geen open planning meer hebben; dashboard voor iedereen met volledige inzage, doel standaard 85 en "geen doel" als JSON null (ook als PostgREST SQL NULL stuurt); `actie_log.wat` met `tekst_tekens_ok` en de zero-width joiner alleen tussen emoji; bewaartermijn 7 jaar (`bewaartermijn_opschonen()`: alleen afgesloten acties, ook oud verloop van verwijderde acties) |
 | `schema.sql` | alle migraties samen (gegenereerd met `sh bouw-schema.sh`) |
 | `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstellingen (`doel_conform` = 85, `mfa_verplicht_hoofd`); **geen** voorbeelddata |
-| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (606 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh` (QHSE-manager én beheerder), `race_quotum.sh`, `naamsleutel_check.sh`, `tekens_check.sh`, `sleutelcheck.sh`, `run.sh` |
+| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (676 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh` (QHSE-manager én beheerder, als actiehouder en in de planning), `race_quotum.sh`, `naamsleutel_check.sh`, `tekens_check.sh`, `sleutelcheck.sh`, `run.sh` |
 
 Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase/bouw-schema.sh`.
 
@@ -215,9 +215,11 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   `tests/rls_test.sql`-achtige controles en controleer of foto's te openen zijn.
   Een backup zonder geoefend herstel is geen garantie.
 - **Bewaartermijn: 7 jaar** (besluit producteigenaar; migratie 0008). `public.bewaartermijn_opschonen()` verwijdert
-  in één transactie wat ouder is dan 7 jaar: inspecties (`opgeslagen`), acties (laatst gewijzigd, `updated_at`; een
-  actie die nog loopt wordt dus nooit stil weggehaald) en planning (`datum`), met hun verloop (`actie_log`) en hun
-  regels in `audit_log` (anders bleef de inhoud daar staan), plus alle auditregels ouder dan 7 jaar en
+  in één transactie wat ouder is dan 7 jaar: inspecties (`opgeslagen`), **afgesloten** acties (status Afgerond of
+  Vervallen én laatst gewijzigd, `updated_at`, vóór de grens; een actie die nog loopt wordt dus nooit stil
+  weggehaald, hoe oud ook) en planning (`datum`), met hun verloop (`actie_log`) en hun regels in `audit_log` (anders
+  bleef de inhoud daar staan), het verloop ouder dan 7 jaar van acties die al eerder zijn verwijderd (dat verloop
+  blijft bij het verwijderen bewust staan, zie §5), plus alle auditregels ouder dan 7 jaar en
   beveiligingsgebeurtenissen ouder dan 12 maanden. Foto's van die records die geen overblijvend record nog gebruikt,
   komen in `public.bewaartermijn_fotos` (een rij in `storage.objects` mag je in Supabase niet met SQL weghalen: het
   bestand blijft dan staan). Alleen de eigenaar (`postgres`) mag de functie uitvoeren; de app en `service_role` niet.
@@ -395,13 +397,22 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   (niet elk teamlid dat een voorstel of te late actie alleen kan zien). Per gebruiker max 30
   regels per actie per uur, 60 per uur, 300 per 24 uur en 1 MiB per 24 uur (plus het gezamenlijke
   dagquotum, zie *Auditlog en schrijfquotum*); daarboven fout 54000.
-- Zulke regels zijn altijd `bron = 'client'`. Regels die op een serverstatusregel lijken
-  (`Status:…`, `Aangemaakt met status…`, ook met een fullwidth dubbele punt of tekens ervoor)
-  en regels met onzichtbare tekens (zero-width, richtingtekens) of besturingstekens worden
-  geweigerd. Die controle is een extra; **de echte grens is `bron`**: de app moet het officiële
-  verloop tonen op basis van `bron = 'server'` en clientregels herkenbaar als toelichting.
+- Zulke regels zijn altijd `bron = 'client'`, en mogen nooit lijken op een regel van de server (0008, sectie 8):
+  - tekenregel `verloop_tekens_ok` (trigger én CHECK `actie_log_wat_tekens`): alles wat `tekst_tekens_ok` weigert,
+    plus: de zero-width joiner (U+200D) alleen tussen twee emoji (👷‍♀️); variatiekiezers U+FE00–FE0D en de Mongoolse
+    U+180B–180F nooit; VS15/VS16 (U+FE0E/FE0F) alleen direct na een emoji-teken (❤️) of als VS16 in een toetsdop
+    (1️⃣); geen braillespatie U+2800; en minstens één zichtbaar teken (alleen spaties/U+00A0/U+3000 = leeg);
+  - `verloop_lijkt_serverregel`: het skelet van de tekst (`verloop_skelet`: NFKD, kleine letters, Cyrillische,
+    Griekse, Cherokee-, Lisu- en kleine-hoofdletter-lookalikes en 0/1/3/4/5/7/$/@/| naar de Latijnse letter, daarna
+    alleen a–z) mag niet beginnen met `status`, `aangemaaktmetstatus` of `actiehoudertoetserofplandatumgewijzigd`.
+    Zo vallen ook `Status∶` (U+2236), `Status꞉` (U+A789), `Ѕtatus:` (Cyrillische S), `S t a t u s:` en `- Status :`
+    af. De app begint haar eigen regels altijd met een vast woord ("Ingesteld", "Klaar voor toetsing gemeld", …).
+  `js/sync.js` (`schoonLog`, `zichtbaar`, `skelet`, `logTekst`) volgt precies dezelfde regels; `tests/tekens_check.sh`
+  vergelijkt ze voor elk codepunt en voor ruim 36 000 randgevallen. Daarnaast leest de app `bron` en toont ze
+  serverregels herkenbaar ("automatisch"), zodat een eventueel toch doorgelaten lookalike nooit als serverregel oogt.
   `t_client` wordt bewaard als het tussen 30 dagen geleden en nu (+5 min) ligt, anders leeg.
-- Het verloop blijft na het verwijderen van een actie bewaard (AVG-bewaartermijn, audit), maar
+- Het verloop blijft na het verwijderen van een actie bewaard (AVG-bewaartermijn, audit; na 7 jaar haalt
+  `bewaartermijn_opschonen()` het weg, §4), maar
   je ziet alleen regels vanaf het aanmaken van de actie die nu bestaat: wie later een actie met
   hetzelfde id aanmaakt, ziet het oude verloop niet.
 - Ophalen: `GET /rest/v1/actie_log?select=actie_id,t,t_client,wie,wat,bron&order=t.asc,id.asc`.
@@ -450,12 +461,18 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   kolommen; met MFA indien verplicht); nooit je eigen rol of activering, en nooit naar de oude rol
   `inspecteur`. Een actief profiel zonder rol ziet alleen zichzelf. Namen zijn uniek onder
   dezelfde sleutel als de monteurs (zonder hoofdletters, accenten, spaties en leestekens). Er
-  moet altijd minstens één actief hoofd zijn (ook bij gelijktijdige wijzigingen). De rol `qhse` of
+  moet altijd minstens één actief hoofd zijn (ook bij gelijktijdige wijzigingen, en ook bij verwijderen:
+  service_role of het account wissen in het Supabase-dashboard wordt geweigerd voor het laatste actieve hoofd,
+  trigger `profiles_laatste_hoofd`; maak eerst iemand anders hoofd). De rol `qhse` of
   `beheerder` kan iemand pas krijgen als hij geen actiehouder van een lopende actie meer is, `beheerder`
-  ook pas als hij geen toetser meer is (§5, statusmodel; 0008).
-- **Monteurs**: lezen iedereen; de tabel schrijven de hoofden, de coördinatoren en de beheerrollen (Beheer). Tijdens een
-  inspectie voegt een inspecteur een naam toe met
-  `POST /rest/v1/rpc/monteur_aanmelden {"p_naam":"…"}`. Bestaat de naam al, dan komt die
+  ook pas als hij geen toetser meer is (§5, statusmodel; 0008). Een rol die niet inspecteert (`qhse`,
+  `beheerder` of geen rol) kan iemand pas krijgen als hij niet meer als inspecteur in open planning
+  (`status = 'gepland'`) staat; plan die eerst op een ander in.
+- **Monteurs**: lezen iedereen; de tabel schrijven de hoofden, de coördinatoren en de beheerrollen (Beheer; beheerrollen
+  met MFA als die verplicht is). Tijdens een inspectie voegt wie inspecteert (hoofd of coördinator; het hoofd met MFA
+  als die verplicht is, net als in de tabel) een naam toe met
+  `POST /rest/v1/rpc/monteur_aanmelden {"p_naam":"…"}`. De QHSE-manager en de beheerder inspecteren niet en gebruiken
+  deze RPC niet (geweigerd); zij beheren de lijst in Beheer. Bestaat de naam al, dan komt die
   terug in de schrijfwijze van de lijst met `"nieuw": false`. Stond die naam op non-actief,
   dan wordt hij **weer actief** (`"heractiveerd": true`), precies zoals `beheer.js`
   voegMonteurToe; het hoofd ziet dat in de auditlog. De naam wordt opgeschoond met
@@ -469,7 +486,8 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   Namen (monteurs én profielen) met onzichtbare tekens (zero-width, richtingtekens, BOM) of
   besturingstekens worden geweigerd. Max 20 nieuwe namen per gebruiker per dag.
 - **Instellingen**: alleen `doel_conform` (geheel getal 1..100; JSON `null` = bewust geen doel; geen rij =
-  standaard 85, zoals de app) en `mfa_verplicht_hoofd` (true/false; geldt voor alle beheerrollen). Andere
+  standaard 85, zoals de app; de app stuurt "geen doel" als `{"sleutel":"doel_conform","waarde":null}`, PostgREST
+  maakt daar SQL NULL van en de trigger `instellingen_doel_null` zet dat om in JSON `null`) en `mfa_verplicht_hoofd` (true/false; geldt voor alle beheerrollen). Andere
   sleutels of waarden weigert de database.
 
 **Foto's (Storage, bucket `fotos`)**
@@ -593,20 +611,23 @@ sudo -u postgres sh /tmp/wpi-db/supabase/tests/run.sh        # als root: runuser
 (idempotent), draait `seed.sql` (met de testadressen ingevuld), `testdata.sql` (5 fictieve
 monteurs, alleen lokaal), `rls_test.sql`, laadt `schema.sql` daarna nog eens over de **gevulde**
 testdatabase (bijwerken van een bestaande installatie), draait `race_hoofd.sh` (twee hoofden
-degraderen elkaar gelijktijdig in twee sessies), `race_qhse.sh` (iemand wordt tegelijk
+degraderen elkaar gelijktijdig in twee sessies; en service_role verwijdert een hoofd terwijl dat hoofd het andere degradeert), `race_qhse.sh` (iemand wordt tegelijk
 actiehouder en QHSE-manager of beheerder, in beide volgordes) en `race_quotum.sh`, en ten slotte `naamsleutel_check.sh` en
 `tekens_check.sh` (tekenregel gelijk aan `js/sync.js`). `naamsleutel_check.sh`
 leest `schoon()`/`sleutel()` letterlijk uit `js/beheer.js` (vraagt `node`) en vergelijkt ze met
 `naam_schoon`/`naam_sleutel` voor **alle** Unicode-codepunten en een reeks echte namen.
 
-Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0008): **606 van 606 geslaagd**, het opnieuw laden over de gevulde
-database, alle racetests (laatste hoofd; QHSE-manager én beheerder als actiehouder, beide volgordes; quotum), de
-tekenvergelijking met `js/sync.js` (511 codepunten, 0 verschillen) en de naamsleutelvergelijking groen (0 verschillen op 138 560
+Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0008): **676 van 676 geslaagd**, het opnieuw laden over de gevulde
+database, alle racetests (laatste hoofd; QHSE-manager én beheerder als actiehouder en als ingeplande inspecteur, beide
+volgordes; quotum), de tekenvergelijking met `js/sync.js` (511 codepunten, 0 verschillen; en de verloopregel: elk codepunt los en in tekst, het skelet van elk codepunt en
+36 343 randgevallen met ZWJ, variatiekiezers en nagemaakte serverregels, 0 verschillen) en de naamsleutelvergelijking groen (0 verschillen op 138 560
 codepunten met een sleutel; codepunten die pas in een nieuwere Unicode-versie dan de ICU van de
 database bestaan, tellen niet mee). Gedekt o.a.:
 RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; rollen van het echte team (sectie 26, 0008: beheerder,
 QHSE-manager, tweede hoofd, nog geen rol, geen rol `inspecteur` meer toekennen, geen zelfpromotie, MFA voor alle beheerrollen,
-verloop-tekens, bewaartermijn 7 jaar met proefrun, gedeelde foto's en rechten); datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); aanvalstest: tekens, foto van een actie uit een inspectie ligt vast, snelheid bij 1000 foto's × 1000 acties (sectie 25); gelijktijdige verzoeken tegen de limieten (`tests/race_quotum.sh`); geen escalatie via
+`monteur_aanmelden` alleen voor wie inspecteert, geen open planning bij een niet-inspecterende rol, "geen doel" via de
+PostgREST-route, verloop-tekens met nagemaakte statusregels ("Status<ZWJ>:", "Status<VS16>:", VS1, Mongoolse kiezers, braillespatie, ∶, ꞉, Cyrillische S, alleen onzichtbare tekst), de laatste hoofd ook niet te verwijderen (service_role of het account wissen), bewaartermijn 7 jaar met proefrun,
+lopende acties blijven, oud verloop van verwijderde acties gaat weg, gedeelde foto's en rechten); datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); aanvalstest: tekens, foto van een actie uit een inspectie ligt vast, snelheid bij 1000 foto's × 1000 acties (sectie 25); gelijktijdige verzoeken tegen de limieten (`tests/race_quotum.sh`); geen escalatie via
 naam of `seed.sql`; inspecteur leest/wijzigt geen inspecties van een ander en schrijft geen
 instellingen/monteurs/profielen; geen foto-IDOR via `foto_pad`/`nafoto_pad`; veilige
 Storage-namen; bewijsfoto's niet te overschrijven of te verwijderen; functiescheiding
@@ -724,7 +745,7 @@ gebruiker een weigering ("Mislukt — opnieuw") in plaats van een stille fout.
 8. Id's (`inspectie.js`, `acties.js`, `planning.js`): een willekeurig deel toevoegen aan
    `WPI-`/`ACT-`/`PL-<ms>` (zie §5, *Id's*), zodat id's niet uit de klok te voorspellen zijn.
 9. `beheer.js`: monteurs en `doel_conform` naar de tabellen `monteurs`/`instellingen`
-   schrijven (nu alleen localStorage); geen doel = rij verwijderen.
+   schrijven. **Gedaan** (0008): geen doel = `waarde` JSON `null` (geen rij = standaard 85).
 10. `sync.js` verloop: het officiële verloop tonen op basis van `bron = 'server'`; clientregels
     alleen als toelichting (een clientregel kan nooit een status bewijzen).
 11. `sync.js` foutmelding: bij een permanente weigering de Nederlandse servermelding tonen

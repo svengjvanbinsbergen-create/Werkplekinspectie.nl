@@ -161,6 +161,8 @@ async function scenario(b, [pnaam, pf]) {
     await scan("ins-oordeel");
     await klik(".seg button.t-A"); await wacht(500);
     await vul("#f-actie", 6); await wacht(200); await scan("ins-actie");
+    // bij direct gevaar (bijv. spanning; js/koppel.js) vraagt de app eerst "Wat heb je ter plaatse gedaan?" (niets voorgekozen)
+    if (await p.locator("#kv-tp-groep").count()) await klik('#kv-tp-groep button:has-text("Werk stilgelegd")');
     await klik("text=Actievoorstel vastleggen"); await scan("ins-meer");
     await klik("text=Nee, naar het gesprek met de monteurs");
     await vul("#nieuwe-monteur", 7); await klik('button:has-text("Toevoegen")'); await scan("ins-monteurs (na toevoegen)");
@@ -223,8 +225,9 @@ async function scenario(b, [pnaam, pf]) {
   // ===== 5. overzichten en rapport =====
   await stap("overzichten", async () => {
     await route("inspecties"); await scan("inspecties");
-    const opt = await ev(() => [...document.querySelectorAll("select.filtersel")[1].options].map((o) => o.value).find((v) => v.includes("__xss")));
-    if (opt) { await p.selectOption("select.filtersel >> nth=1", opt); await wacht(500); await scan("inspecties (filter op monteur)"); await ev(() => { App.inspFilter = { insp: "", mont: "" }; }); }
+    // (geen filter per monteur meer; filter per inspecteur blijft: de monteurnamen staan wel op de kaarten)
+    const opt = await ev(() => { const s = document.querySelector("select.filtersel"); return s ? [...s.options].map((o) => o.value).find(Boolean) || null : null; });
+    if (opt) { await p.selectOption("select.filtersel", opt); await wacht(500); await scan("inspecties (filter op inspecteur)"); await ev(() => { App.inspFilter = { insp: "" }; }); }
     const rid = await ev(async () => { const a = await WPI.DB.all(); return a[a.length - 1].id; });
     await ev((id) => { location.hash = "#/rapport/" + id; }, rid); await wacht(700); await scan("rapport");
     await route("planning"); await scan("planning (uitgevoerd)");

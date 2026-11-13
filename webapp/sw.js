@@ -1,6 +1,6 @@
 /* Service worker — netwerk eerst, cache als terugval wanneer je offline bent.
    Zo zie je na een update altijd de nieuwste versie, en werkt de app zonder bereik. */
-const CACHE = "wpi-v22";
+const CACHE = "wpi-v23";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.json",
   "js/kern.js", "js/vandaag.js", "js/planning.js", "js/inspectie.js", "js/inspecties.js",
@@ -8,6 +8,7 @@ const SHELL = [
   "js/config.js", "js/sync.js", "js/auth.js", "js/beheer.js", "css/beheer.css",
   "js/oefen.js", "css/oefen.css",
   "js/koppel.js", "css/koppel.css",
+  "fonts/nunito-latin-wght-normal.woff2",
   "icon-192.png", "icon-512.png",
   "data/cijfers.json", "data/kennisbank.json", "data/voorbeelddata.json", "data/trendacties.json",
 ];

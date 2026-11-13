@@ -26,7 +26,7 @@
 .bhrij .grow{flex:1;min-width:0}
 .bhrij .t{font-weight:800;overflow-wrap:anywhere}
 .bhrij.uit .t{color:var(--soft)}
-.bhrij.uit .mini-av{background:#F4EDE3;color:var(--soft)}
+.bhrij.uit .mini-av,.bhrij.uit .pini{background:#F4EDE3;color:var(--soft);box-shadow:none}
 /* wijzigen: naam over de hele breedte, knoppen eronder */
 .bhrij.bewerk{flex-wrap:wrap;padding:12px 0}
 .bhrij.bewerk .fin{flex:1 1 100%;min-width:0}
@@ -68,7 +68,6 @@
 .listcard.progrij{margin:-4px 0 16px;padding-top:0;padding-bottom:0}
 .progrij .vknop{min-height:64px}
 .progrij svg,.vgemist svg,.bhknop svg{width:auto;display:inline-block;flex:none}
-@media(min-width:900px){.listcard.progrij{max-width:520px}}
 .progvs{margin:0 0 8px}
 .vsal{margin:0 0 8px;font-size:13.5px}
 .progvs h2{margin-top:2px}
@@ -104,34 +103,43 @@
 @media(min-width:900px){.vsvelden{grid-template-columns:1fr;gap:0}}
 @media(max-width:360px){.vsvelden{grid-template-columns:1fr}}
 
-/* ---- Meldingen: gemiste inspectie ---- */
+/* ---- Meldingen: drie blokken (te laat = rood, niet gedaan = oranje, binnenkort = blauw), elke melding een eigen tegel ----
+   De hele tegel licht getint in de kleur van het blok, met een rand in dezelfde kleur. Tekst ≥ 4.5:1 (AA) op de tint.
+   Nieuw = gekleurde stip + vette titel; gelezen = geen stip, rustige titel. */
 .mritme{margin-top:14px;font-size:12.5px;line-height:1.45}
-/* één signaal per regel: een kleine groene stip voor ongelezen; de status als rustige pil onder de titel */
-.mrij{align-items:flex-start;cursor:pointer}
-.mrij .mstip{width:8px;height:8px;border-radius:50%;flex:none;margin-top:8px;background:transparent}
-.mrij.nieuw .mstip{background:var(--accent)}
+.mblokken{display:flex;flex-direction:column;gap:18px}
+.mblok{--mk:#8F1D14;--mkb:#FDECEA;--mt:#FFF5F4;--mr:#F1B9B2;--mpb:#FBD9D5}
+.mblok.gemist{--mk:#8A4B00;--mkb:#FCEBD3;--mt:#FFF7EE;--mr:#EFC98F;--mpb:var(--warm)}
+.mblok.week{--mk:#1D4F8F;--mkb:#E3EDF9;--mt:#F4F8FD;--mr:#B7CDEB;--mpb:#DCE8F7}
+.mkop{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--mkb);color:var(--mk);font-size:15px;font-weight:800}
+.mkop .mkt{flex:1;min-width:0}
+.mkop .mnr{flex:none;min-width:30px;height:26px;padding:0 9px;border-radius:999px;background:var(--mk);color:#fff;font-size:13.5px;font-weight:800;display:grid;place-items:center}
+.mtegels{display:flex;flex-direction:column;gap:8px}
+.mrij{align-items:flex-start;cursor:pointer;gap:10px;padding:12px 14px;border-radius:18px;background:var(--mt);border:1.5px solid var(--mr);transition:transform .08s ease,filter .08s ease}
+.mrij.row{border-bottom:1.5px solid var(--mr)}
+.mrij:last-child{border-bottom:1.5px solid var(--mr)}
+.mrij:hover{filter:brightness(.98)}
+.mrij:active{transform:scale(.99)}
+.mrij .mstip{width:10px;height:10px;border-radius:50%;flex:none;margin-top:6px;background:transparent}
+.mrij.nieuw .mstip{background:var(--mk)}
+.mrij.nieuw .t{font-weight:800}
 .mrij.gelezen .t{font-weight:600}
 .mrij .t{display:block;line-height:1.35}
 .mrij .mmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px}
-.mpil{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:#F4EDE3;color:#6E6255}
-.mpil.laat{background:var(--warm);color:#8A4F0A}   /* warm-ink iets donkerder: leesbaar op 12px (contrast ≥ 4.5) */
-.mrij .mmeta .s{color:#6E6255}
-body.zon .mpil{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px currentColor}
+.mpil{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--mpb,#F4EDE3);color:var(--mk,#6E6255)}
+.mpil.laat{color:var(--mk,#8A4F0A)}
+.mblok.gemist .mpil.laat{background:var(--warm);color:#8A4F0A}   /* warm-ink iets donkerder: leesbaar op 12px (contrast ≥ 4.5) */
+.mrij .mmeta .s{color:#5E544A}
+@media(min-width:900px){.mrij{padding:14px 16px}}
+body.veld .mrij{min-height:64px;padding:14px 16px}
+body.zon .mkop{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px var(--mk)}
+body.zon .mkop .mnr{background:#141A22}
+body.zon .mrij{background:#fff;border:2px solid var(--mk)}
+body.zon .mrij .mmeta .s{color:#141A22}
+body.zon .mpil,body.zon .mblok.gemist .mpil.laat{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px currentColor}
 body.zon .mrij.nieuw .mstip{background:#141A22}
 
-/* ---- alertbalk even breed als de inhoud: zelfde rechterrand als de bel en de kaarten, op elke pagina.
-   De topbalk en de pagina hebben 36px binnenruimte, de balk 36px buitenmarge: balk = paginabreedte − 72px.
-   Eerst de standaard (820px-pagina's; zelfde selector als in styles.css, deze komt later), dan de brede pagina's.
-   Beheer is even breed als de Planning, zodat bel en avatar op de beheerpagina's niet verspringen. ---- */
-@media(min-width:900px){
-  #app:not(.nonav):not([data-page=dashboard]) .alertbar{max-width:748px}
-  .view[data-page=beheer]{max-width:1100px}
-  #app:not(.nonav):not(.x)[data-page=beheer] .topbar{max-width:1100px}
-  #app:not(.nonav):not(.x)[data-page=beheer] .alertbar,#app:not(.nonav):not(.x)[data-page=planning] .alertbar,
-  #app:not(.nonav):not(.x)[data-page=kwartaal] .alertbar,#app:not(.nonav):not(.x)[data-page=acties] .alertbar,
-  #app:not(.nonav):not(.x)[data-page=inspecties] .alertbar{max-width:1028px}
-  #app:not(.nonav):not(.x)[data-page=dashboard] .alertbar{max-width:1248px}
-}
+/* (de alertbalk volgt de paginabreedte: geen vaste maximale breedtes meer per pagina; zie styles.css) */
 
 /* ---- veldmodus en zonmodus ---- */
 body.veld .bhknop,body.veld .vsweg{min-height:50px}

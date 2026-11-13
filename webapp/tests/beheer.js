@@ -229,14 +229,14 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     check(await p.locator('#tabbar a.bhtab.on:has-text("Beheer")').count() === 1, 'web: Beheer in de zijbalk, actief');
     const br = await p.evaluate(() => { const r = (s) => document.querySelector(s).getBoundingClientRect(); return { view: r('#view').right, top: r('.topbar').right, grid: r('.bhgrid').right }; });
     check(Math.abs(br.view - br.top) < 3 && br.grid <= br.top + 1, 'web: Beheer even breed als topbalk en alertbalk', br);
-    const alR = await p.evaluate(() => { const a = document.getElementById('alert'), r = (e) => e.getBoundingClientRect(); return { a: a.classList.contains('hidden') ? null : Math.round(r(a).right), grid: Math.round(r(document.querySelector('.bhgrid')).right), bel: Math.round(r(document.querySelector('.topbar')).right - parseFloat(getComputedStyle(document.querySelector('.topbar')).paddingRight)) }; });
+    const alR = await p.evaluate(() => { const a = document.getElementById('alert'), r = (e) => e.getBoundingClientRect(); return { a: a.classList.contains('hidden') ? null : Math.round(r(a).right), grid: Math.round(r(document.querySelector('.bhgrid')).right), bel: Math.round(r(document.querySelector('.topbar')).right - parseFloat(getComputedStyle(document.querySelector('.topbar')).paddingRight) * (+getComputedStyle(document.documentElement).zoom || 1)) }; });
     check(alR.a !== null && Math.abs(alR.a - alR.grid) <= 1 && Math.abs(alR.a - alR.bel) <= 1, 'web Beheer: alertbalk, kaarten en bel op dezelfde rechterrand', alR);
     // op elke pagina eindigt de alertbalk bij de bel; Beheer is even breed als de Planning (bel en avatar verspringen niet)
     const randen = {};
     for (const pg of ['beheer', 'planning', 'acties', 'inspecties', 'kwartaal', 'dashboard', 'vandaag']) {
       await p.evaluate((pg) => App.go(pg), pg); await wacht(p, 450);
       randen[pg] = await p.evaluate(() => { const a = document.getElementById('alert'), t = document.querySelector('.topbar'), r = (e) => e.getBoundingClientRect();
-        return { a: a.classList.contains('hidden') || !a.offsetWidth ? null : Math.round(r(a).right), bel: Math.round(r(t).right - parseFloat(getComputedStyle(t).paddingRight)) }; });
+        return { a: a.classList.contains('hidden') || !a.offsetWidth ? null : Math.round(r(a).right), bel: Math.round(r(t).right - parseFloat(getComputedStyle(t).paddingRight) * (+getComputedStyle(document.documentElement).zoom || 1)) }; });
     }
     check(Object.entries(randen).every(([pg, x]) => (pg === 'vandaag' || x.a !== null) && (x.a === null || Math.abs(x.a - x.bel) <= 1)), 'web: alertbalk eindigt op elke pagina bij de bel (ook Acties en Inspecties)', randen);
     check(randen.beheer.bel === randen.planning.bel && randen.planning.bel === randen.acties.bel && randen.acties.bel === randen.inspecties.bel && randen.inspecties.bel === randen.kwartaal.bel, 'web: bel op Beheer, Planning, Acties, Inspecties en Kwartaal op dezelfde plek', randen);
@@ -449,7 +449,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
         return { vs: kol(vs), pl: kol(pl), vkL: Math.round(r(vk).left), vkW: Math.round(r(vk).width), pkL: pk ? Math.round(r(pk).left) : null, pkW: pk ? Math.round(r(pk).width) : null, krap, sw: document.documentElement.scrollWidth, iw: innerWidth }; });
       check(maat.vs === maat.pl && maat.vkL === maat.pkL && maat.vkW === maat.pkW && maat.krap === 0 && maat.sw <= maat.iw, w + 'px: voorstelkaarten even breed en in lijn met de planningkaarten, namen passen in de keuzelijst', maat);
       if (w === 1440) {
-        const al = await p.evaluate(() => { const a = document.getElementById('alert'), r = (e) => e.getBoundingClientRect(); return { a: a.classList.contains('hidden') ? null : Math.round(r(a).right), view: Math.round(r(document.getElementById('view')).right - parseFloat(getComputedStyle(document.getElementById('view')).paddingRight)), bel: Math.round(r(document.querySelector('.topbar')).right - parseFloat(getComputedStyle(document.querySelector('.topbar')).paddingRight)) }; });
+        const al = await p.evaluate(() => { const a = document.getElementById('alert'), r = (e) => e.getBoundingClientRect(); return { a: a.classList.contains('hidden') ? null : Math.round(r(a).right), view: Math.round(r(document.getElementById('view')).right - parseFloat(getComputedStyle(document.getElementById('view')).paddingRight) * (+getComputedStyle(document.documentElement).zoom || 1)), bel: Math.round(r(document.querySelector('.topbar')).right - parseFloat(getComputedStyle(document.querySelector('.topbar')).paddingRight) * (+getComputedStyle(document.documentElement).zoom || 1)) }; });
         check(al.a === null || (Math.abs(al.a - al.view) <= 1 && Math.abs(al.a - al.bel) <= 1), 'web planning: alertbalk eindigt op dezelfde rechterrand als de inhoud en de bel', al);
       }
     }

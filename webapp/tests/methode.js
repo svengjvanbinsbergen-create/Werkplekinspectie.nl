@@ -93,6 +93,7 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
   ok(a1.herkomst === "Voorstel" && a1.label.includes("Voorstel") && a1.veld === "Hijsband afkeuren en vervangen", "actietekst van de AI staat als Voorstel in het veld (" + a1.herkomst + ", " + JSON.stringify(a1.label) + ")");
   ok(__promptsBevatGeenOordeel(await ev(() => window.__prompts.slice(1)), true), "de actie-prompt zegt dat de AI geen oordeel geeft");
   ok(!(await ev(async () => (await WPI.DB.getAll("acties")).some((a) => !a.demo && a.tekst === "Hijsband afkeuren en vervangen"))), "vóór bevestigen bestaat er nog geen actie");
+  if (await p.locator("#kv-tp-groep").count()) await p.locator("#kv-tp-groep .kvlak").nth(3).click();   // direct gevaar: eerst "Wat heb je ter plaatse gedaan?" kiezen (vastleggen zonder antwoord kan niet meer, js/inspectie.js)
   await p.click("text=Actievoorstel vastleggen"); await wacht(300);
   // tweede waarneming: direct gecorrigeerd ter plaatse (toegestane uitzondering in M5/M6)
   await ev(() => { App.caps.sample = null; });

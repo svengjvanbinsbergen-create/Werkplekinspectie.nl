@@ -40,7 +40,7 @@ h2{font-size:17px;font-weight:650;margin:22px 0 10px}
 
 <h2>Supabase / backend</h2>
 <div class="grid">
-  <div class="card"><div class="h"><span class="n">Row Level Security op elke tabel</span><span class="t done">AL GEDAAN</span></div><div class="d">RLS aan; geen policy = geen toegang. Inspecteur ziet eigen, coördinator/hoofd alles (schema.sql).</div></div>
+  <div class="card"><div class="h"><span class="n">Row Level Security op elke tabel</span><span class="t done">AL GEDAAN</span></div><div class="d">RLS aan; geen policy = geen toegang. Het hele team (hoofden, coördinatoren, QHSE-manager, beheerder) ziet alles, de beheerrollen met tweestapsverificatie als die verplicht is; wat iemand mag wijzigen hangt af van de rol (schema.sql, 0008).</div></div>
   <div class="card"><div class="h"><span class="n">AVG-dataminimalisatie in het model</span><span class="t done">AL GEDAAN</span></div><div class="d">Geen namen van geïnspecteerde medewerkers in vrije tekst; alleen de app-gebruiker.</div></div>
   <div class="card"><div class="h"><span class="n">service_role key alleen server-side</span><span class="t must">MUST</span></div><div class="d">Nooit in de client, browser of repo; anders omzeilt iemand alle RLS.</div></div>
   <div class="card"><div class="h"><span class="n">EU-regio + ondertekende DPA</span><span class="t must">MUST</span></div><div class="d">Project in EU-regio aanmaken en de Supabase-verwerkersovereenkomst tekenen (AVG).</div></div>

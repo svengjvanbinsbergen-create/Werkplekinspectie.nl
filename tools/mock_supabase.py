@@ -461,7 +461,7 @@ class Handler(SimpleHTTPRequestHandler):
                 for r in (b if isinstance(b, list) else [b]):
                     if r.get("actie_id") not in STATE["tables"]["acties"]:
                         return self.fout(403, "42501", "new row violates row-level security policy for table \"actie_log\"")
-                    STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["actie_id"], "t": nu_iso(), "wie": x["id"], "wat": str(r.get("wat", ""))[:2000]})
+                    STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["actie_id"], "t": nu_iso(), "wie": x["id"], "wat": str(r.get("wat", ""))[:2000], "bron": "client"})
                 return self.stuur(201)
         if tabel not in STATE["tables"]:
             return self.fout(404, "42P01", "relation \"public.%s\" does not exist" % tabel)
@@ -490,9 +490,9 @@ class Handler(SimpleHTTPRequestHandler):
                 if tabel == "acties":
                     nieuw["aangemaakt_door"] = oud.get("aangemaakt_door") or x["id"]
                     if not oud.get("status"):
-                        STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["id"], "t": nu_iso(), "wie": x["id"], "wat": "Aangemaakt met status %s" % nieuw["status"]})
+                        STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["id"], "t": nu_iso(), "wie": x["id"], "wat": "Aangemaakt met status %s" % nieuw["status"], "bron": "server"})
                     elif oud.get("status") != nieuw["status"]:
-                        STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["id"], "t": nu_iso(), "wie": x["id"], "wat": "Status: %s → %s" % (oud["status"], nieuw["status"])})
+                        STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["id"], "t": nu_iso(), "wie": x["id"], "wat": "Status: %s → %s" % (oud["status"], nieuw["status"]), "bron": "server"})
                 T[r["id"]] = nieuw
                 uit.append(nieuw)
             return self.stuur(201, uit) if "return=representation" in self.headers.get("Prefer", "") else self.stuur(201)
@@ -510,7 +510,7 @@ class Handler(SimpleHTTPRequestHandler):
                 oud = T[i]
                 nieuw = dict(r, updated_at=nu_iso())
                 if tabel == "acties" and oud.get("status") != nieuw.get("status"):
-                    STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": i, "t": nu_iso(), "wie": x["id"], "wat": "Status: %s → %s" % (oud.get("status"), nieuw.get("status"))})
+                    STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": i, "t": nu_iso(), "wie": x["id"], "wat": "Status: %s → %s" % (oud.get("status"), nieuw.get("status")), "bron": "server"})
                 T[i] = nieuw
                 uit.append(nieuw)
             return self.stuur(200, uit) if "return=representation" in self.headers.get("Prefer", "") else self.stuur(204)

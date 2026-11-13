@@ -131,7 +131,7 @@
     # Scripts strikt: alleen eigen bestanden, geen inline <script>/javascript:-URL's/eval en geen inline handler-attributen
     # (script-src-attr 'none'; de app gebruikt event-delegatie, zie js/kern.js). Nog open: 'unsafe-inline' in style-src (style="…").
     # VERPLICHT bij livegang: "project-ref" vervangen door de echte Supabase-ref (zie _headers en js/config.js).
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"

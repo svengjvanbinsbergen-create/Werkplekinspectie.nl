@@ -267,6 +267,6 @@ fi
 
 kop "Samenvatting"
 echo "  $FOUT FOUT · $LETOP LET OP"
-echo "  Handmatig (zie webapp/docs/beveiliging-periodiek.md): Supabase Security Advisor, Auth-logs en security_events/audit_log bekijken, MFA van het hoofd, gebruikerslijst (wie is nog actief?)."
+echo "  Handmatig (zie webapp/docs/beveiliging-periodiek.md): Supabase Security Advisor, Auth-logs en security_events/audit_log bekijken, MFA van de beheerrollen (hoofden, QHSE-manager, beheerder), gebruikerslijst (wie is nog actief?)."
 [ "$FOUT" -gt 0 ] && exit 1
 exit 0

@@ -84,14 +84,21 @@
         : perm === "denied" ? `<div class="hint" style="margin-top:12px">Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</div>`
         : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de balk bovenin het scherm.</div>`
         : `<button class="btn primary" style="margin-top:14px"${act("meldingenAan")}>${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
-      this.openModal("Meldingen", "Acties en inspecties die aandacht vragen.",
-        // één signaal per regel: groene stip = ongelezen; de status als rustige pil (warm oranje alleen voor "te laat",
-        // net als op de Planning en Vandaag; nooit de kleur van een oordeel)
-        (M.length ? `<div class="listcard">${M.map((m) => { const nieuw = !gelezen.has(m.id), laat = m.soort !== "week";
-            return `<div class="row mrij ${m.soort} ${nieuw ? "nieuw" : "gelezen"}"${act("leesMelding", m.id, m.actie || "")}>
+      // drie blokken onder elkaar, elk met een gekleurde kop en het aantal: te laat (rood), niet gedaan (oranje),
+      // binnenkort (blauw). Elke melding is een eigen tegel in de kleur van zijn blok; lege blokken vallen weg.
+      // Nieuw/gelezen: stip + vette titel (nieuw) of rustige titel (gelezen). Tik = openen + gelezen.
+      const BLOK = [["laat", "Acties te laat"], ["gemist", "Inspecties niet gedaan"], ["week", "Acties binnenkort"]];
+      const tegel = (m) => { const nieuw = !gelezen.has(m.id), laat = m.soort !== "week";
+        return `<div class="row mrij ${m.soort} ${nieuw ? "nieuw" : "gelezen"}"${act("leesMelding", m.id, m.actie || "")}>
             <span class="mstip" ${nieuw ? 'role="img" aria-label="Nieuw"' : 'aria-hidden="true"'}></span>
-            <span class="grow"><span class="t">${esc(m.titel)}</span><span class="mmeta"><span class="mpil${laat ? " laat" : ""}">${esc(m.pil || (laat ? "te laat" : "binnenkort"))}</span><span class="s">${esc(m.tekst)}</span></span></span></div>`; }).join("")}</div>
-            <button class="btn ghost sm" style="margin-top:10px"${act("allesGelezen")}>Alles gelezen</button>`
+            <span class="grow"><span class="t">${esc(m.titel)}</span><span class="mmeta"><span class="mpil${laat ? " laat" : ""}">${esc(m.pil || (laat ? "te laat" : "binnenkort"))}</span><span class="s">${esc(m.tekst)}</span></span></span></div>`; };
+      const blokken = BLOK.map(([soort, kop]) => { const L = M.filter((m) => m.soort === soort); if (!L.length) return "";
+        const nNieuw = L.filter((m) => !gelezen.has(m.id)).length;
+        return `<section class="mblok ${soort}" aria-labelledby="mkop-${soort}"><h3 class="mkop" id="mkop-${soort}"><span class="mkt">${kop}</span><span class="mnr">${L.length}<span class="sr-only"> ${L.length === 1 ? "melding" : "meldingen"}${nNieuw ? ", " + nNieuw + " nieuw" : ""}</span></span></h3>
+          <div class="mtegels">${L.map(tegel).join("")}</div></section>`; }).join("");
+      this.openModal("Meldingen", "Acties en inspecties die aandacht vragen.",
+        (M.length ? `<div class="mblokken">${blokken}</div>
+            <button class="btn ghost sm" style="margin-top:12px"${act("allesGelezen")}>Alles gelezen</button>`
           : `<div class="s">Geen meldingen. Alle acties en inspecties liggen op schema.</div>`) + permHtml
         + `<p class="s mritme">Acties: een week vóór de plandatum, daarna elke 2 dagen zolang ze te laat zijn. Inspecties die nog niet gedaan zijn: de dag erna, daarna elke 2 dagen.</p>`);
     },

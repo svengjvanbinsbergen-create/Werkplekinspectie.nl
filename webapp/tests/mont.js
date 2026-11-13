@@ -10,9 +10,13 @@ const mons=await p.evaluate(()=>App.state.inspectie.monteurs);console.log('monte
 await p.evaluate(()=>{App.state.inspectie.stap='klaar';App.route()});await p.waitForTimeout(300);
 await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(600);
 await p.evaluate(()=>{App.closeModal();App.go('inspecties')});await p.waitForTimeout(600);await p.screenshot({path:'m2.png'});
-await p.selectOption('select.filtersel >> nth=1','Bert Jansen');await p.waitForTimeout(500);await p.screenshot({path:'m3.png'});
-const nk=await p.locator('.ikaart').count();console.log('kaarten na filter',nk);if(nk<1)errs.push('monteurfilter vindt de inspectie niet');
-await p.evaluate(()=>{App.inspFilter={insp:'',mont:''};});
+// geen filter per monteur meer (alleen per inspecteur); de monteurs blijven aan de inspectie gekoppeld en staan op de kaart
+const nsel=await p.locator('select.filtersel').count();console.log('filters',nsel);if(nsel!==1)errs.push('er hoort alleen een filter per inspecteur te zijn, gevonden: '+nsel);
+if(await p.locator('select[aria-label="Alle monteurs"]').count())errs.push('filter per monteur staat er nog');
+await p.selectOption('select.filtersel','Carla Proef');await p.waitForTimeout(500);await p.screenshot({path:'m3.png'});
+const kaart=p.locator('.ikaart',{hasText:'Bert Jansen'});const nk=await kaart.count();console.log('kaarten met Bert Jansen na inspecteursfilter',nk);if(nk<1)errs.push('inspectie met monteur Bert Jansen niet gevonden via het inspecteursfilter');
+const lab=await p.locator('.ikaart .ilabel').first().evaluate(e=>[e.className,e.innerText.trim()]).catch(()=>null);console.log('label',lab);if(!lab||!/\bik\d\b/.test(lab[0])||!/Carla Proef/.test(lab[1]))errs.push('inspecteur niet als gekleurd naamlabel: '+JSON.stringify(lab));
+await p.evaluate(()=>{App.inspFilter={insp:''};});
 await p.setViewportSize({width:1440,height:900});await p.evaluate(()=>App.route());await p.waitForTimeout(500);await p.screenshot({path:'m4.png'});
 const id=await p.evaluate(async()=>{const a=await new Promise(r=>{const q=indexedDB.open('wpi');q.onsuccess=()=>{const g=q.result.transaction('inspecties').objectStore('inspecties').getAll();g.onsuccess=()=>r(g.result)}});return a[a.length-1].id});
 await p.evaluate((id)=>{location.hash='#/rapport/'+id},id);await p.waitForTimeout(600);

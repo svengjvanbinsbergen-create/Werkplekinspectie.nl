@@ -153,6 +153,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await p.click('text=Volgende: koppel aan de TRA'); await p.waitForTimeout(500);
     await p.locator('.q .pick').first().click(); await p.waitForTimeout(300);
     await p.click('.seg button.t-A'); await p.waitForTimeout(600);
+    if (await p.locator('#kv-tp-groep').count()) await p.locator('#kv-tp-groep .kvlak').nth(3).click();   // direct gevaar: eerst "Wat heb je ter plaatse gedaan?" kiezen (vastleggen zonder antwoord kan niet meer, js/inspectie.js)
     await p.click('text=Actievoorstel vastleggen'); await p.waitForTimeout(300);
     await p.click('text=Nee, naar het gesprek met de monteurs'); await p.waitForTimeout(300);
     await p.click('text=Naar afronden'); await p.waitForTimeout(300);
@@ -293,6 +294,21 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(await totdat(async () => p.evaluate(async () => (await WPI.DB.get('acties', 'ACT-hdr2')).status === 'Vervallen' && App.syncWachtrij() === 0)), 'actie 2: toestel toont "Vervallen"');
     await p.evaluate(async () => { App.closeModal(); for (const c of App.syncConflicten().filter((c) => c.open)) await App.syncConflictWeg(c.cid); App.closeModal(); App.syncConflictSluit(); });
     ok(await p.evaluate(() => !App.syncConflicten().some((c) => c.open)), '"Weggooien" sluit het conflict');
+
+    // ---------- 6e2. verloop: serverregels herkenbaar, nagemaakte statusregel van het toestel wordt een toelichting ----------
+    ok(await totdat(async () => p.evaluate(async () => ((await WPI.DB.get('acties', 'ACT-hdr2')).log || []).some((l) => l.bron === 'server' && /^Status: /.test(l.wat)))),
+      'verloop: statusregel van de server houdt bron "server" op het toestel');
+    const vl = await p.evaluate(async () => { App.acties = await WPI.DB.getAll('acties'); App.openActie('ACT-hdr2');
+      const rij = [...document.querySelectorAll('.tijdlijn div')], srv = rij.filter((d) => /Status: /.test(d.textContent)), eigen = rij.filter((d) => /Klaar voor toetsing gemeld \(ACT-hdr2\)/.test(d.textContent));
+      const r = { srv: srv.length && srv.every((d) => /automatisch/.test(d.textContent)), eigen: eigen.length && eigen.every((d) => !/automatisch/.test(d.textContent)) }; App.closeModal(); return r; });
+    ok(vl.srv && vl.eigen, 'verloop: serverregels tonen "automatisch", eigen regels niet: ' + JSON.stringify(vl));
+    await p.evaluate(async () => { const a = await WPI.DB.get('acties', 'ACT-hdr1');
+      (a.log = a.log || []).push({ t: new Date().toISOString(), wie: App.user.full_name, wat: 'Status️: Klaar voor toetsing → Afgerond' },
+        { t: new Date().toISOString(), wie: App.user.full_name, wat: '  　️⠀' });
+      await WPI.DB.put('acties', a); App.syncNu && App.syncNu(); });
+    ok(await totdat(async () => (await state()).actie_log.some((l) => l.actie_id === 'ACT-hdr1' && l.wat === 'Toelichting: Status: Klaar voor toetsing → Afgerond')),
+      'verloop: "Status<VS16>: …" van het toestel gaat als "Toelichting: Status: …" (zonder variatiekiezer) naar de server');
+    ok(!(await state()).actie_log.some((l) => l.actie_id === 'ACT-hdr1' && !/\S/.test(l.wat.replace(/[ 　️⠀]/g, ''))), 'verloop: een regel zonder zichtbaar teken wordt niet verstuurd');
 
     // ---------- 6f. planning met een productcode die niet in de kennisbank staat ----------
     ok(await rest(wtok, 'planning?on_conflict=id', [{ id: 'PL-onbekend', datum: new Date().toISOString().slice(0, 10), code: 'BESTAAT-NIET', project: 'P26-777', locatie: 'Onbekend', monteurs: 1, inspecteur: I, toelichting: '', status: 'gepland' }]) === 201, 'planning met onbekende productcode via de API');
@@ -788,6 +804,8 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(/Nieuwe Collega/.test(tl) && /Nog geen rol/.test(tl) && /Carla Proef/.test(tl), 'Team en rollen: lijst van de server, ook wie nog geen rol heeft', tl.slice(0, 200));
     const opties = await R.locator('#bh-team select').first().locator('option').allInnerTexts();
     ok(opties.length >= 4 && !opties.some((t) => /Inspecteur/i.test(t)) && opties.includes('QHSE-manager') && opties.includes('Beheerder'), 'Team en rollen: rolkeuze zonder "Inspecteur" ' + JSON.stringify(opties));
+    const uitnodig = await R.locator('#bh-team .bhuitnodig').evaluate((e) => e.textContent).catch(() => '');
+    ok(/Invite user/.test(uitnodig) && !/inspecteur/i.test(uitnodig) && /QHSE-manager of beheerder/.test(uitnodig), 'Team en rollen: "Nieuwe collega uitnodigen" noemt de rol inspecteur niet meer', uitnodig);
     ok(await R.locator('.bhteamrij', { hasText: 'Hanna Hypothese' }).locator('select').count() === 0, 'Team en rollen: je eigen rol kies je niet zelf');
     await R.locator('.bhteamrij', { hasText: 'Nieuwe Collega' }).locator('select').selectOption('coordinator'); await R.waitForTimeout(1200);
     ok(rolVan(await state(), 'norol@noardling.test') === 'coordinator' && /Nieuwe Collega is nu Coördinator/.test(await R.locator('#view').innerText()), 'Team en rollen: rol gekozen en op de server opgeslagen');

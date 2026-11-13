@@ -8,30 +8,31 @@
   const ov = (o) => ({ C: "C", A: "A", V: "V", NVT: "NVT" }[o] === o ? o : "");
   Object.assign(window.App, {
     // ---------------- INSPECTIES ----------------
-    inspFilter: { insp: "", mont: "" },
-    zetInspFilter(k, waarde) { this.inspFilter[k] = waarde; this.route(); },
-    wisInspFilter() { this.inspFilter = { insp: "", mont: "" }; this.route(); },
+    // filter per inspecteur (geen filter per monteur: monteurs blijven wel aan de inspectie gekoppeld en staan op de kaart)
+    inspFilter: { insp: "" },
+    zetInspFilter(k, waarde) { if (k !== "insp") return; this.inspFilter[k] = waarde; this.route(); },
+    wisInspFilter() { this.inspFilter = { insp: "" }; this.route(); },
     async view_inspecties() {
       const v = $("view"), mine = !WPI.mag("zietAlles"), f = this.inspFilter;   // iedereen in het team ziet alle inspecties
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
       const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({
-        eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, monteurs: r.monteurs || [],
+        eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, inspecteur_id: r.inspecteur_id || null, monteurs: r.monteurs || [],
         sub: ((n) => n + (n === 1 ? " waarneming" : " waarnemingen"))(r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length) + (r.handtekening ? " · ondertekend" : "") }))
         .concat(mine ? [] : (this.data.voorbeelddata.wpis || []).map((w) => ({ eigen: false, id: w.nr, titel: w.product + " · " + (w.locatie || ""), datum: w.datum, inspecteur: w.inspecteur, monteurs: this.demoMonteurs(w), sub: w.nr + " · " + (w.ingang || "") })))
         .sort((a, b) => b.datum.localeCompare(a.datum));
-      const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
-      const lijst = rijen.filter((r) => (!f.insp || r.inspecteur === f.insp) && (!f.mont || r.monteurs.includes(f.mont)));
+      const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort();
+      const lijst = rijen.filter((r) => !f.insp || r.inspecteur === f.insp);
       v.appendChild(el(`<div><div class="hi">${mine ? "Jouw inspecties" : "Alle inspecties"}</div><h1 class="groot">Inspecties</h1></div>`));
       const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}" aria-label="${esc(lab)}"${op("change", "zetInspFilter", k, WAARDE)}><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
-      v.appendChild(el(`<div class="filterbalk">${mine ? "" : sel("insp", inspecteurs, "Alle inspecteurs")}${sel("mont", monteurs, "Alle monteurs")}
-        ${f.insp || f.mont ? `<button class="linkje"${act("wisInspFilter")}>Wis filter</button>` : ""}</div>`));
-      v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.mont ? ` waarbij ${esc(f.mont)} aan het werk was` : ""}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
+      if (!mine) v.appendChild(el(`<div class="filterbalk">${sel("insp", inspecteurs, "Alle inspecteurs")}
+        ${f.insp ? `<button class="linkje"${act("wisInspFilter")}>Wis filter</button>` : ""}</div>`));
+      v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
       v.appendChild(el(lijst.length ? `<div class="ikaarten">${lijst.map((r) => `<div class="ikaart"${r.eigen ? ` style="cursor:pointer"${act("go", "rapport/" + r.id)}` : ""}>
           <div class="boven"><span class="dchip">📅 ${dagLabel(r.datum)}</span>${r.eigen ? `<span class="badge b-done">op dit toestel</span>` : `<span class="s">voorbeeld</span>`}</div>
           <div class="titel">${esc(r.titel)}</div><div class="s">${esc(r.sub)}</div>
-          <div class="onder"><span class="mini-av">${esc((r.inspecteur || "?")[0])}</span><span>${esc(r.inspecteur || "")}</span></div>
-          ${r.monteurs.length ? `<div class="monteurs">${r.monteurs.map((n) => `<span class="mchip${n === f.mont ? " aan" : ""}">${esc(n)}</span>`).join("")}</div>` : ""}</div>`).join("")}</div>`
+          <div class="onder"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</div>
+          ${r.monteurs.length ? `<div class="monteurs"><span class="sr-only">Monteurs:</span>${r.monteurs.map((n) => `<span class="mchip">${esc(n)}</span>`).join("")}</div>` : ""}</div>`).join("")}</div>`
         : `<div class="leeg"><span class="bol">🔍</span><div class="t">Geen inspecties gevonden</div><div class="s">${mine ? "Start er een via Vandaag." : "Pas het filter aan."}</div></div>`));
     },
     async view_rapport(parts) {
@@ -73,7 +74,7 @@
       v.appendChild(el(`<div id="rap">
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
         <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
-        <div class="s" style="margin-bottom:14px">Project ${esc(r.project || "–")} · inspecteur ${esc(r.inspecteur)}</div>
+        <div class="s rapkop">Project ${esc(r.project || "–")} · inspecteur ${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</div>
         ${kop("Getoetst tijdens bezoek")}<div class="card"><div class="s">${taken.map(esc).join(" · ")}</div>
           <div class="s" style="margin-top:6px">Monteurs: ${(r.monteurs || []).length ? (r.monteurs || []).map(esc).join(", ") : "niet vastgelegd"}</div></div>
         ${kop("Waarnemingen")}<div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>

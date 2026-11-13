@@ -59,7 +59,7 @@ const onbekend = fs.readdirSync(__dirname).filter((f) => f.endsWith(".js")).map(
 // ---------- kleine statische server (zelfde gedrag als python3 -m http.server voor de app) ----------
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
   ".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".svg": "image/svg+xml", ".ico": "image/x-icon",
-  ".webmanifest": "application/manifest+json", ".pdf": "application/pdf", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8" };
+  ".webmanifest": "application/manifest+json", ".pdf": "application/pdf", ".woff2": "font/woff2", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8" };
 function server() {
   const s = http.createServer((req, res) => {
     let p; try { p = decodeURIComponent(new URL(req.url, "http://x").pathname); } catch (e) { res.writeHead(400); return res.end(); }

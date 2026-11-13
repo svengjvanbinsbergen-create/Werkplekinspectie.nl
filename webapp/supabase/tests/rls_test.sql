@@ -1207,7 +1207,8 @@ select tests.raakt('foto: inspecteur 1 kan zijn ongebruikte foto toch verwijdere
   $q$delete from storage.objects where name = 'a0000000-0000-4000-a000-000000000011/los.jpg'$q$, 1);
 
 -- 21i. namen: geen onzichtbare tekens, sleutel gelijk aan beheer.js
-:Q
+-- (als coördinator: monteur_aanmelden is sinds 0008 alleen voor wie inspecteert)
+:W
 select tests.faalt('naam: monteur met zero-width-spatie geweigerd',
   format('select public.monteur_aanmelden(%L)', E'Henk​ Voorbeeld'), '%onzichtbare%');
 select tests.faalt('naam: monteur met richtingteken geweigerd',
@@ -2009,6 +2010,7 @@ update public.profiles set role = 'hoofd', functie = 'Manager Projects' where id
 \set B2 'reset role; select tests.als(''B'', ''aal2''); set role authenticated;'
 \set Q2 'reset role; select tests.als(''Q'', ''aal2''); set role authenticated;'
 \set M  'reset role; select tests.als(''M'');  set role authenticated;'
+\set M2 'reset role; select tests.als(''M'', ''aal2''); set role authenticated;'
 \set NR 'reset role; select tests.als(''NR''); set role authenticated;'
 select tests.klopt('rollen: enum kent beheerder (en nog steeds inspecteur, voor compatibiliteit)',
   enum_range(null::public.user_role)::text[] @> array['inspecteur', 'coordinator', 'hoofd', 'qhse', 'beheerder']);
@@ -2108,13 +2110,82 @@ select tests.faalt('planning: daarna aan de QHSE-manager toewijzen geweigerd',
   $q$update public.planning set inspecteur = 'd0000000-0000-4000-a000-000000000021' where id = 'PL-26m'$q$, '%als inspecteur worden ingepland%');
 :D
 select tests.lukt('qhse: houder meldt klaar voor toetsing', $q$update public.acties set status = 'Klaar voor toetsing' where id = 'ACT-26q'$q$);
+-- 26c2. nagemaakte serverregels in het verloop (critic: variatiekiezers, lookalikes, onzichtbare tekst). D is
+--       actiehouder van ACT-26q, dat nu echt op 'Klaar voor toetsing' staat: precies de situatie uit de melding.
+select tests.faalt('verloop-spoof: VS16 na het woord ("Status<VS16>: Klaar voor toetsing → Afgerond", melding van de critic) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\FE0F: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: VS16 midden in het woord geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Sta\FE0Ftus: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: VS1 (U+FE00) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\FE00: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: VS15 (U+FE0E) na een letter geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\FE0E: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: Mongoolse variatiekiezer U+180B geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\180B: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: Mongoolse variatiekiezer U+180F geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\180F: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: braillespatie U+2800 geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\2800: Klaar voor toetsing \2192 Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: "Aangemaakt<VS16> met status" geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Aangemaakt\FE0F met status Open')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: "Actiehouder<VS16>, toetser of plandatum gewijzigd" geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Actiehouder\FE0F, toetser of plandatum gewijzigd')$q$, '%onzichtbare%');
+select tests.faalt('verloop-spoof: RATIO U+2236 als dubbele punt geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\2236 Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: modifier letter colon U+A789 geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Status\A789 Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: Cyrillische S (U+0405) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\0405tatus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: helemaal Cyrillisch/Grieks (Ѕτατυѕ) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\0405\03C4\03B1\03C4\03C5\0455: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: wiskundige vette S (U+1D412) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\+01D412tatus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: spaties tussen de letters geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', 'S t a t u s : Klaar voor toetsing → Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: met accent (Stätus) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'St\00E4tus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: emoji ervoor geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\2705 Status: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-spoof: "Aangemaakt∶ met status" geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Aangemaakt\2236 met status Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-leeg: alleen "ho<VS16>i" geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', 'ho' || U&'\FE0F' || 'i')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen VS1 geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\FE00')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen U+180F geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\180F')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen een braillespatie geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\2800')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen U+3000 geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\3000')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen spaties geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', '   ')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen U+00A0 geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\00A0')$q$, '%onzichtbare%');
+select tests.faalt('verloop-leeg: alleen een ZWJ en VS16 geweigerd (geen zichtbaar teken of losse variatiekiezer)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'\200D\FE0F')$q$, '%onzichtbare%');
+select tests.lukt('verloop-spoof: gewone regels van de app mogen ("Klaar voor toetsing gemeld", ook met "status" verderop)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', 'Klaar voor toetsing gemeld, met na-foto'),
+     ('ACT-26q', 'Toelichting: status volgens de ploeg in orde')$q$);
+select tests.lukt('verloop-spoof: emoji met VS16, VS15 na een pijl en een toetsdop (1️⃣) mogen',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-26q', U&'Top \2764\FE0F 1\FE0F\20E3 \2194\FE0E klaar')$q$);
+select tests.klopt('verloop-spoof: geen enkele clientregel van ACT-26q lijkt op een serverregel of bevat een losse variatiekiezer',
+  not exists (select 1 from public.actie_log where actie_id = 'ACT-26q' and bron = 'client'
+              and (public.verloop_lijkt_serverregel(wat) or not public.verloop_tekens_ok(wat))));
+select tests.klopt('verloop-spoof: de echte statusregels van ACT-26q staan er wel, met bron server',
+  exists (select 1 from public.actie_log where actie_id = 'ACT-26q' and bron = 'server' and wat like 'Status: % → Klaar voor toetsing'));
 :Q
 select tests.lukt('qhse: rondt als toetser af (Afgerond pas na toetsing)', $q$update public.acties set status = 'Afgerond' where id = 'ACT-26q'$q$);
 
 -- 26d. MFA (aal2) voor ALLE beheerrollen zodra die verplicht is
 :PG
 update public.instellingen set waarde = 'true' where sleutel = 'mfa_verplicht_hoofd';
+update public.monteurs set actief = false where naam = 'Quirine Qlijst';
 :B
+select tests.faalt('beheerder zonder MFA (aal1): nieuwe monteur via monteur_aanmelden geweigerd',
+  $q$select public.monteur_aanmelden('Mfa Beheer Nieuw')$q$, '%Alleen wie inspecteert%');
+select tests.faalt('beheerder zonder MFA (aal1): non-actieve monteur via monteur_aanmelden weer actief maken geweigerd',
+  $q$select public.monteur_aanmelden('Quirine Qlijst')$q$, '%Alleen wie inspecteert%');
 select tests.faalt('beheerder zonder MFA (aal1): monteur toevoegen geweigerd', $q$insert into public.monteurs (naam) values ('Zonder Mfa B')$q$, '%row-level security%');
 select tests.raakt('beheerder zonder MFA (aal1): rol wijzigen raakt niets',
   $q$update public.profiles set role = 'hoofd' where id = 'f0000000-0000-4000-a000-000000000047'$q$, 0);
@@ -2122,20 +2193,77 @@ select tests.telt('beheerder zonder MFA (aal1): auditlog niet leesbaar', $q$sele
 select tests.klopt('beheerder zonder MFA (aal1): geen volledige inzage', not public.mag_alles_lezen() and not public.is_beheer_admin());
 select tests.telt('beheerder zonder MFA (aal1): leest geen inspecties', $q$select * from public.inspecties$q$, 0);
 :Q
+select tests.faalt('qhse zonder MFA (aal1): nieuwe monteur via monteur_aanmelden geweigerd',
+  $q$select public.monteur_aanmelden('Mfa Qhse Nieuw')$q$, '%Alleen wie inspecteert%');
+select tests.faalt('qhse zonder MFA (aal1): non-actieve monteur via monteur_aanmelden weer actief maken geweigerd',
+  $q$select public.monteur_aanmelden('Quirine Qlijst')$q$, '%Alleen wie inspecteert%');
 select tests.faalt('qhse zonder MFA (aal1): instelling wijzigen geweigerd',
   $q$insert into public.instellingen (sleutel, waarde) values ('doel_conform', '70') on conflict (sleutel) do update set waarde = excluded.waarde$q$, '%row-level security%');
 select tests.telt('qhse zonder MFA (aal1): leest geen inspecties', $q$select * from public.inspecties$q$, 0);
 :M
 select tests.faalt('tweede hoofd zonder MFA (aal1): monteur toevoegen geweigerd', $q$insert into public.monteurs (naam) values ('Zonder Mfa M')$q$, '%row-level security%');
+select tests.faalt('tweede hoofd zonder MFA (aal1): monteur_aanmelden geweigerd (nieuw)',
+  $q$select public.monteur_aanmelden('Mfa Hoofd Nieuw')$q$, '%tweestapsverificatie%');
+select tests.faalt('tweede hoofd zonder MFA (aal1): monteur_aanmelden geweigerd (weer actief maken)',
+  $q$select public.monteur_aanmelden('Quirine Qlijst')$q$, '%tweestapsverificatie%');
 :W
 select tests.lukt('coördinator (geen beheerrol): monteur toevoegen blijft mogen zonder MFA', $q$insert into public.monteurs (naam) values ('Coor Dinator Lijst')$q$);
+select tests.klopt('coördinator (geen beheerrol): monteur_aanmelden tijdens een inspectie blijft mogen zonder MFA',
+  (select (public.monteur_aanmelden('Coor Aanmeld Nieuw') ->> 'nieuw')::boolean));
 :B2
 select tests.lukt('beheerder met MFA (aal2): monteur toevoegen', $q$insert into public.monteurs (naam) values ('Met Mfa B')$q$);
 select tests.klopt('beheerder met MFA (aal2): volledige inzage', public.mag_alles_lezen() and public.is_beheer_admin());
+select tests.faalt('beheerder met MFA (aal2): monteur_aanmelden blijft geweigerd (inspecteert niet; beheer via de lijst)',
+  $q$select public.monteur_aanmelden('Mfa Beheer Nieuw')$q$, '%Alleen wie inspecteert%');
 :Q2
 select tests.lukt('qhse met MFA (aal2): monteur toevoegen', $q$insert into public.monteurs (naam) values ('Met Mfa Q')$q$);
+select tests.faalt('qhse met MFA (aal2): monteur_aanmelden blijft geweigerd (inspecteert niet)',
+  $q$select public.monteur_aanmelden('Quirine Qlijst')$q$, '%Alleen wie inspecteert%');
+:M2
+select tests.klopt('tweede hoofd met MFA (aal2): monteur_aanmelden maakt een non-actieve monteur weer actief',
+  (select (public.monteur_aanmelden('Quirine Qlijst') ->> 'heractiveerd')::boolean));
 :PG
+select tests.klopt('monteur_aanmelden: de geweigerde aanroepen hebben niets toegevoegd',
+  not exists (select 1 from public.monteurs where naam in ('Mfa Beheer Nieuw', 'Mfa Qhse Nieuw', 'Mfa Hoofd Nieuw')));
 update public.instellingen set waarde = 'false' where sleutel = 'mfa_verplicht_hoofd';
+:B
+select tests.faalt('beheerder (MFA niet verplicht): monteur_aanmelden geweigerd (inspecteert niet)',
+  $q$select public.monteur_aanmelden('Geen Mfa Beheer')$q$, '%Alleen wie inspecteert%');
+
+-- 26d2. "geen doel" zoals PostgREST het schrijft: {"waarde": null} in de body wordt SQL NULL (json_populate_recordset)
+:B2
+select tests.lukt('doel: "geen doel" via de PostgREST-route (JSON null in de body → SQL NULL) wordt opgeslagen',
+  $q$insert into public.instellingen (sleutel, waarde)
+     select sleutel, waarde from json_populate_recordset(null::public.instellingen, '[{"sleutel":"doel_conform","waarde":null}]')
+     on conflict (sleutel) do update set waarde = excluded.waarde$q$);
+select tests.klopt('doel: daarna staat er JSON null (bewust geen doel), niet de standaard 85',
+  (select waarde = 'null'::jsonb from public.instellingen where sleutel = 'doel_conform')
+  and jsonb_typeof(public.dashboard_cijfers() -> 'doel_conform') = 'null');
+select tests.lukt('doel: PATCH met waarde null (PostgREST) wordt ook JSON null',
+  $q$update public.instellingen set waarde = null where sleutel = 'doel_conform'$q$);
+select tests.lukt('doel: weer een getal (85) via dezelfde route',
+  $q$insert into public.instellingen (sleutel, waarde)
+     select sleutel, waarde from json_populate_recordset(null::public.instellingen, '[{"sleutel":"doel_conform","waarde":85}]')
+     on conflict (sleutel) do update set waarde = excluded.waarde$q$);
+select tests.klopt('doel: staat weer op 85', (select (public.dashboard_cijfers() ->> 'doel_conform')::int = 85));
+select tests.faalt('doel: NULL voor een andere instelling (mfa_verplicht_hoofd) blijft geweigerd',
+  $q$update public.instellingen set waarde = null where sleutel = 'mfa_verplicht_hoofd'$q$, '%null value%');
+
+-- 26d3. wie een niet-inspecterende rol krijgt, staat niet meer als inspecteur in de open planning
+:M2
+select tests.lukt('planning: het hoofd plant een coördinator in',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-atkT', current_date, 'X', 'c0000000-0000-4000-a000-000000000004')$q$);
+select tests.faalt('rollen: die coördinator QHSE-manager maken zolang de planning openstaat geweigerd',
+  $q$update public.profiles set role = 'qhse' where id = 'c0000000-0000-4000-a000-000000000004'$q$, '%in de planning%');
+select tests.faalt('rollen: of beheerder maken geweigerd',
+  $q$update public.profiles set role = 'beheerder' where id = 'c0000000-0000-4000-a000-000000000004'$q$, '%in de planning%');
+select tests.faalt('rollen: of de rol weghalen geweigerd',
+  $q$update public.profiles set role = null where id = 'c0000000-0000-4000-a000-000000000004'$q$, '%in de planning%');
+select tests.lukt('rollen: hoofd maken mag wel (inspecteert ook)',
+  $q$update public.profiles set role = 'hoofd' where id = 'c0000000-0000-4000-a000-000000000004'$q$);
+select tests.lukt('rollen: en weer coördinator',
+  $q$update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000004'$q$);
+select tests.raakt('planning: inspectie weer weghalen', $q$delete from public.planning where id = 'PL-atkT'$q$, 1);
 
 -- 26e. verloop (actie_log.wat): dezelfde tekenregel als alle vrije tekst (tekst_tekens_ok)
 :M
@@ -2148,7 +2276,26 @@ select tests.faalt('verloop-tekens: opvuller U+3164 geweigerd',
   format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Toelichting' || chr(12644)), '%onzichtbare%');
 select tests.lukt('verloop-tekens: emoji met zero-width joiner (U+200D) mag',
   format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Gedaan ' || chr(128119) || chr(8205) || chr(9792) || chr(65039)));
+select tests.lukt('verloop-tekens: ook 👩🏽‍💻 (huidskleur), ❤️‍🔥 (VS16 vóór de ZWJ) en 🧑‍🤝‍🧑 (twee ZWJ) mogen',
+  format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t',
+         'Top ' || chr(128105) || chr(127997) || chr(8205) || chr(128187) || ' ' || chr(10084) || chr(65039) || chr(8205) || chr(128293)
+         || ' ' || chr(129489) || chr(8205) || chr(129309) || chr(8205) || chr(129489)));
+:W
+select tests.faalt('verloop-tekens: nagemaakte statusregel "Status<ZWJ>: Open → Afgerond" geweigerd (ZWJ niet tussen emoji)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', 'Status' || U&'\200D' || ': Open → Afgerond')$q$, '%onzichtbare%');
+select tests.faalt('verloop-tekens: controle: "Status: Open → Afgerond" geweigerd (alleen de server)',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', 'Status: Open → Afgerond')$q$, '%alleen de server%');
+select tests.faalt('verloop-tekens: alleen een ZWJ geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\200D')$q$, '%onzichtbare%');
+select tests.faalt('verloop-tekens: ZWJ midden in een woord ("ho<ZWJ>i") geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', 'ho' || U&'\200D' || 'i')$q$, '%onzichtbare%');
+select tests.faalt('verloop-tekens: ZWJ tussen tekst en emoji ("a<ZWJ>👷") geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', 'a' || U&'\200D' || chr(128119))$q$, '%onzichtbare%');
+select tests.faalt('verloop-tekens: twee ZWJ achter elkaar tussen emoji geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', chr(128119) || U&'\200D\200D' || chr(9792))$q$, '%onzichtbare%');
 :PG
+select tests.faalt('verloop-tekens: de CHECK weigert een losse ZWJ ook bij beheer via SQL (postgres)',
+  $q$insert into public.actie_log (actie_id, wat, bron) values ('ACT-11', 'Status' || U&'\200D' || ': Open', 'server')$q$, '%actie_log_wat_tekens%');
 select tests.klopt('verloop-tekens: CHECK actie_log_wat_tekens bestaat (ook voor beheer via SQL)',
   exists (select 1 from pg_constraint where conrelid = 'public.actie_log'::regclass and conname = 'actie_log_wat_tekens'));
 select tests.klopt('verloop-tekens: regel van de app = tekst_tekens_ok voor elk codepunt U+0001–U+FFFF en U+E0000–U+E01EF',
@@ -2171,7 +2318,16 @@ insert into public.acties (id, tekst, oordeel, status, handmatig, foto_pad, crea
   ('ACT-nieuw7', 'Recente actie met dezelfde foto', '–', 'Voorstel', true, 'b0000000-0000-4000-a000-000000000001/gedeeld.jpg', now(), now());
 insert into public.planning (id, datum, code, inspecteur, status, created_at, updated_at) values
   ('PL-oud7', current_date - 3000, 'DAM', 'b0000000-0000-4000-a000-000000000001', 'gepland', now() - interval '8 years', now() - interval '8 years');
+-- een actie die nog loopt (Open), 8 jaar niet gewijzigd: blijft staan, met haar verloop
+insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum, created_at, updated_at, uitvoerders) values
+  ('ACT-loopt-oud', 'lopend', '–', true, 'Open', 'c0000000-0000-4000-a000-000000000003', 'b0000000-0000-4000-a000-000000000001',
+   current_date - 2900, now() - interval '8 years', now() - interval '8 years', array['c0000000-0000-4000-a000-000000000003'::uuid]);
 insert into public.actie_log (actie_id, wat, bron, t) values ('ACT-oud7', 'Oude verloopregel', 'server', now() - interval '8 years');
+insert into public.actie_log (actie_id, t, wie, wat, bron) values
+  ('ACT-loopt-oud', now() - interval '8 years', 'c0000000-0000-4000-a000-000000000002', 'Verloop van een lopende actie', 'client'),
+  -- verloop van acties die een hoofd al eerder verwijderde (het verloop bleef toen staan): oud weg, recent blijft
+  ('ACT-weg-oud', now() - interval '8 years', 'c0000000-0000-4000-a000-000000000002', 'Opmerking met een naam erin', 'client'),
+  ('ACT-weg-nieuw', now() - interval '1 year', 'c0000000-0000-4000-a000-000000000002', 'Recente opmerking', 'client');
 insert into public.audit_log (tabel, record_id, actie, nieuw, t) values
   ('acties', 'ACT-oud7', 'INSERT', '{"tekst":"Oude actie"}', now() - interval '8 years'),
   ('inspecties', 'WPI-oud7', 'INSERT', '{"titel":"Oude inspectie"}', now() - interval '8 years');
@@ -2201,6 +2357,12 @@ select tests.klopt('bewaartermijn: alles wat jonger is dan 7 jaar staat er nog',
 select tests.klopt('bewaartermijn: geen verloop- of auditregels van de verwijderde records meer (ook niet van de verwijdering zelf)',
   not exists (select 1 from public.actie_log where actie_id in ('ACT-oud7', 'ACT-oud7b'))
   and not exists (select 1 from public.audit_log where record_id in ('WPI-oud7', 'ACT-oud7', 'ACT-oud7b', 'PL-oud7')));
+select tests.klopt('bewaartermijn: een actie die nog loopt (Open) blijft staan, hoe oud ook, met haar verloop',
+  exists (select 1 from public.acties where id = 'ACT-loopt-oud')
+  and exists (select 1 from public.actie_log where actie_id = 'ACT-loopt-oud'));
+select tests.klopt('bewaartermijn: oud verloop van een al verwijderde actie is weg, recent verloop daarvan blijft',
+  not exists (select 1 from public.actie_log where actie_id = 'ACT-weg-oud')
+  and exists (select 1 from public.actie_log where actie_id = 'ACT-weg-nieuw'));
 select tests.klopt('bewaartermijn: de foto''s die nergens meer gebruikt worden staan klaar voor de Storage-API',
   (select array_agg(pad order by pad) from public.bewaartermijn_fotos)
     = array['b0000000-0000-4000-a000-000000000001/oud-act.jpg', 'b0000000-0000-4000-a000-000000000001/oud-insp.jpg']);
@@ -2211,6 +2373,26 @@ select tests.faalt('bewaartermijn: daarna is de onderhoudsmodus weer uit (actie_
 select tests.faalt('bewaartermijn: niet vanuit de app (ook niet als hoofd)', $q$select public.bewaartermijn_opschonen()$q$, '%permission denied%');
 :SR
 select tests.faalt('bewaartermijn: niet met de service_role', $q$select public.bewaartermijn_opschonen()$q$, '%permission denied%');
+
+-- 26g. de laatste hoofd kan ook niet worden VERWIJDERD (service_role, of het account wissen in het dashboard)
+:SR
+select tests.faalt('laatste hoofd: service_role verwijdert alle hoofden geweigerd',
+  $q$delete from public.profiles where role::text = 'hoofd'$q$, '%minstens één actief hoofd%');
+:PG
+select tests.faalt('laatste hoofd: de auth-accounts van alle hoofden wissen (cascade) geweigerd',
+  $q$delete from auth.users where id in (select id from public.profiles where role::text = 'hoofd')$q$, '%minstens één actief hoofd%');
+select tests.klopt('laatste hoofd: na de pogingen zijn er nog steeds actieve hoofden',
+  (select count(*) from public.profiles where role::text = 'hoofd' and actief) >= 2);
+-- een niet-hoofd zonder gegevens verwijderen mag gewoon (AVG), ook het profiel van een inactief hoofd blijft verwijderbaar
+begin;
+insert into auth.users (id, email, raw_user_meta_data, invited_at) values
+  ('b0000000-0000-4000-a000-000000000099', 'oudhoofd@test.invalid', '{"full_name":"Oud Hoofd"}', now());
+update public.profiles set role = 'hoofd', actief = false where id = 'b0000000-0000-4000-a000-000000000099';
+commit;
+select tests.raakt('laatste hoofd: een inactief hoofd zonder gegevens verwijderen mag',
+  $q$delete from auth.users where id = 'b0000000-0000-4000-a000-000000000099'$q$, 1);
+select tests.klopt('laatste hoofd: trigger profiles_laatste_hoofd bestaat (BEFORE DELETE)',
+  exists (select 1 from pg_trigger where tgrelid = 'public.profiles'::regclass and tgname = 'profiles_laatste_hoofd' and not tgisinternal));
 
 -- =====================================================================
 -- Resultaat

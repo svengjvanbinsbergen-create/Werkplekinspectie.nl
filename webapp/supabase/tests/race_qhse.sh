@@ -2,7 +2,9 @@
 # Gelijktijdigheidstest: een coördinator maakt iemand actiehouder terwijl het hoofd
 # diezelfde persoon tegelijk QHSE-manager (en daarna: beheerder) maakt. Verwacht (beide volgordes en
 # beide rollen): nooit een QHSE-manager of beheerder als actiehouder van een lopende actie; precies één
-# van de twee lukt (migratie 0008: beide rollen zijn nooit actiehouder).
+# van de twee lukt (migratie 0008: beide rollen zijn nooit actiehouder). Daarna hetzelfde voor de planning: een
+# coördinator plant iemand in als inspecteur terwijl het hoofd die persoon QHSE-manager/beheerder maakt; nooit een
+# QHSE-manager of beheerder als inspecteur van open planning.
 #   Gebruik: sh supabase/tests/race_qhse.sh [basisnaam]   (PGHOST/PGPORT/PGUSER zoals run.sh)
 set -eu
 DIR=$(cd "$(dirname "$0")/.." && pwd)
@@ -47,9 +49,19 @@ select pg_sleep($1);
 commit;
 SQL
 }
+inplannen() {   # $1 = planning-id, $2 = wachttijd binnen de transactie
+  psql -X -q -d "$DB" -v ON_ERROR_STOP=1 2>&1 <<SQL
+begin;
+select set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-a000-0000000000a2","role":"authenticated"}', true) is null;
+set local role authenticated;
+insert into public.planning (id, datum, code, inspecteur) values ('$1', current_date + 2, 'DAM', 'b0000000-0000-4000-a000-0000000000a3');
+select pg_sleep($2);
+commit;
+SQL
+}
 terug() {
   $P -c "update public.profiles set role = 'coordinator' where id = 'b0000000-0000-4000-a000-0000000000a3'" >/dev/null
-  $P -c "set session_replication_role = replica; delete from public.acties" >/dev/null
+  $P -c "set session_replication_role = replica; delete from public.acties; delete from public.planning" >/dev/null
 }
 OUT=$(mktemp)
 GOED=0
@@ -75,10 +87,31 @@ SLECHT=$(psql -X -At -d "$DB" -c "select count(*) from public.acties a join publ
 echo "  $ROL, volgorde 2: fouten=$FOUT, qhse/beheerder-houders=$SLECHT ($(grep -ho 'ERROR: .*' "$OUT.1" "$OUT.2" | head -1))"
 terug
 done
+PLQ="select count(*) from public.planning pl join public.profiles p on p.id = pl.inspecteur where pl.status = 'gepland' and p.role::text in ('qhse', 'beheerder')"
+for ROL in qhse beheerder; do
+inplannen PL-r1-$ROL 2 > "$OUT.1" & P1=$!
+sleep 0.5
+qhse 0 > "$OUT.2" & P2=$!
+wait $P1 || true; wait $P2 || true
+FOUT=$(cat "$OUT.1" "$OUT.2" | grep -c "ERROR" || true)
+SLECHT=$(psql -X -At -d "$DB" -c "$PLQ")
+[ "$FOUT" = "1" ] && [ "$SLECHT" = "0" ] && GOED=$((GOED + 1))
+echo "  planning $ROL, volgorde 1: fouten=$FOUT, qhse/beheerder-inspecteurs=$SLECHT ($(grep -ho 'ERROR: .*' "$OUT.1" "$OUT.2" | head -1))"
+terug
+qhse 2 > "$OUT.1" & P1=$!
+sleep 0.5
+inplannen PL-r2-$ROL 0 > "$OUT.2" & P2=$!
+wait $P1 || true; wait $P2 || true
+FOUT=$(cat "$OUT.1" "$OUT.2" | grep -c "ERROR" || true)
+SLECHT=$(psql -X -At -d "$DB" -c "$PLQ")
+[ "$FOUT" = "1" ] && [ "$SLECHT" = "0" ] && GOED=$((GOED + 1))
+echo "  planning $ROL, volgorde 2: fouten=$FOUT, qhse/beheerder-inspecteurs=$SLECHT ($(grep -ho 'ERROR: .*' "$OUT.1" "$OUT.2" | head -1))"
+terug
+done
 rm -f "$OUT" "$OUT.1" "$OUT.2"
 dropdb --if-exists "$DB"
-if [ "$GOED" = "4" ]; then
-  echo "race QHSE-/beheerdersrol: OK (in beide volgordes nooit een QHSE-manager of beheerder als actiehouder)"
+if [ "$GOED" = "8" ]; then
+  echo "race QHSE-/beheerdersrol: OK (in beide volgordes nooit een QHSE-manager of beheerder als actiehouder of als inspecteur in de planning)"
 else
   echo "race QHSE-/beheerdersrol: FOUT"
   exit 1

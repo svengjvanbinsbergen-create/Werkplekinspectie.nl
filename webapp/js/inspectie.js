@@ -451,7 +451,7 @@
         const inf = this.regelInfo(id), r = rangVan(id), voorgesteld = vs.ids.includes(id), k = kand.find((x) => x.id === id);
         const w = r && r.woorden && r.woorden.length ? "je zei " + r.woorden.map((x) => "“" + esc(x) + "”").join(", ")
           : voorgesteld ? this.waarom(cur.tekst, k ? k.doc + " " + k.naam : inf.titel, vs.bron) : "";
-        const tag = id === id0 ? (sterk ? "Beste match" : "Mogelijk") : voorgesteld ? "Mogelijk" : "Ook bij deze taak";
+        const tag = id === id0 ? (sterk ? `<span class="lbl kmatch sterk">Sterke match</span>` : "Mogelijk") : voorgesteld ? "Mogelijk" : "Ook bij deze taak";
         return `<button class="pick vpick kpick${id === id0 ? " k1" : ""}"${act("kiesRegel", id)}><span class="vp-top"><span class="vp-ref">${esc(inf.ref)}</span><span class="ktag">${tag}</span>
           <span class="vp-meer">Kies deze ›</span></span><span class="t">${esc(inf.titel)}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}</button>`;
       };
@@ -481,14 +481,14 @@
       else if (sterk) {
         // sterke match: de beste regel en DIRECT daaronder je oordeel (boven de vouw, één hand). Doorvraag, maatregelen
         // en de twee andere regels van de taak staan onder de oordeelknoppen.
-        kaartHtml = `${this.vsKop("klopt dit?", vs.bron)}<div class="kmatchrij">${match}</div>${kaart(id0, 0)}`;
+        kaartHtml = `${this.vsKop("klopt dit?", vs.bron)}${kaart(id0, 0)}`;   // label "Sterke match" staat op de kaart zelf
         const anders = toon.filter((id) => id !== id0);
         onder = (doorvraag || mr ? `<div class="q kna">${doorvraag}${mr}</div>` : "")
           + (anders.length || algId ? `<section class="q kook" aria-labelledby="kook-t"><div class="kook-t" id="kook-t">Of past een van deze beter?</div>${anders.map((id, i) => kaart(id, i + 1)).join("")}${algKaart()}</section>` : "");
       } else if (een) kaartHtml = `${this.vsKop("welke regel klopt?", vs.bron)}<div class="kmatchrij">${match}<span class="kzwak">${zwakTekst}</span></div>${toon.map(kaart).join("")}${algKaart()}${doorvraag}`;
       else kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies zelf. Dit zijn de belangrijkste risico's van deze taak; de rest staat hieronder, of leg het vast als buiten de TRA.</div>${toon.map(kaart).join("")}${algKaart()}`;
       v.appendChild(el(`<div class="stapwrap kstap">
-        ${this.insHead(ins, "Taak · " + ins.taak, vraag)}
+        ${this.insHead(ins, "Taak · " + String(ins.taak || "").replace(/\s*\(.*$/, ""), vraag)}
         <div class="q jijkaart">${this.citaat(cur)}</div>
         <div class="q vskaart${vs.bezig ? " bezig" : ""}" aria-live="polite">${kaartHtml}</div>
         ${this.oordeelBlok(cur, sterk ? "bevestig" : een ? "zwak" : vs.bezig ? "bezig" : "wacht", ref0)}
@@ -530,9 +530,14 @@
         : modus === "zwak" ? `Jouw oordeel <span>· tik eerst hierboven de regel aan die klopt</span>`
         : modus === "bezig" ? `Jouw oordeel <span>· zodra het voorstel er is</span>`
         : modus === "wacht" ? `Jouw oordeel <span>· kies eerst hieronder een regel</span>` : `Jouw oordeel <span>· alleen jij beslist</span>`;
+      const knoppen = `<div class="seg stapel orij" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>`;
+      const nvt = `<button class="linkknop nvt"${act(fn, "NVT")}${uit}>Niet van toepassing</button>`;
+      // sterke match: C/A/V plakken onderin beeld (sticky) tot je bij hun plek bent, ook bij een lange risicozin of in
+      // de veldmodus (grotere letters); NVT staat er direct onder in de gewone stroom
+      if (modus === "bevestig") return `<section class="dock odock kplak" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>${knoppen}</section><div class="knvt">${nvt}</div>`;
       return `<section class="dock odock vlak${uit ? " uit" : ""}" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>
-        <div class="seg stapel orij" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
-        <button class="linkknop nvt"${act(fn, "NVT")}${uit}>Niet van toepassing</button></section>`;
+        ${knoppen}
+        ${nvt}</section>`;
     },
     // Voorstel + oordeel in één tik (alleen bij een sterke match): de inspecteur bevestigt de koppeling door zelf C/A/V/NVT te kiezen
     bevestigOordeel(o) {
@@ -634,14 +639,15 @@
       const uitleg = a.terPlaatse === "maatregel" && a.stilgelegd ? "Het werk ligt stil: niemand is nu in gevaar. De actie blijft open tot de oorzaak is opgelost en getoetst."
         : a.terPlaatse === "maatregel" ? "Een direct genomen maatregel maakt alleen het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
         : gecorr ? "De ploeg heeft het ter plaatse opgelost en jij hebt het gezien. Het wordt vastgelegd als afgerond, met jou als toetser."
-        : gv && !a.terPlaatse ? "Nog niet gekozen. Bij direct gevaar laat je eerst het werk stilleggen."
+        : gv && !a.terPlaatse ? (a.tpMis ? "" : "Nog niet gekozen. Bij direct gevaar laat je eerst het werk stilleggen.")
         : gv && a.terPlaatse === "niets" ? "Er is nog niets gedaan terwijl het gevaar er is: laat het werk stilleggen en pas dit daarna aan." : "";
       const prioVs = a.prioVoorstel && !a.prioGekozen && a.prio === a.prioVoorstel;
       const prioBlok = `<div class="otitel" id="kv-prio">Hoe dringend vind jij het?</div>
           ${prioVs ? `<div class="kv-vs"><span class="lbl vs">Voorstel</span><span class="s">Direct, want dit is direct gevaar · pas gerust aan</span></div>` : ""}
           <div class="kvlakken" role="group" aria-labelledby="kv-prio">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>`;
       const tpBlok = gv ? `<div class="otitel" id="kv-terplaatse">Wat heb je ter plaatse gedaan?</div>
-          <div class="kvlakken vier" id="kv-tp-groep" role="group" aria-labelledby="kv-terplaatse">${tp("stilgelegd", "Werk stilgelegd", "niemand meer in gevaar")}${tp("gecorrigeerd", "Direct verholpen", "jij zag het herstel")}${tp("maatregel", "Maatregel genomen", "tijdelijk veilig")}${tp("niets", "Nog niets", "")}</div>`
+          <div class="kvlakken vier${a.tpMis && !a.terPlaatse ? " kvmis-groep" : ""}" id="kv-tp-groep" role="group" aria-labelledby="kv-terplaatse">${tp("stilgelegd", "Werk stilgelegd", "niemand meer in gevaar")}${tp("gecorrigeerd", "Direct verholpen", "jij zag het herstel")}${tp("maatregel", "Maatregel genomen", "tijdelijk veilig")}${tp("niets", "Nog niets", "")}</div>
+          ${a.tpMis && !a.terPlaatse ? `<div class="kvmis" role="alert">Kies eerst wat je ter plaatse hebt gedaan. Nog niets gebeurd? Tik dan ‘Nog niets’.</div>` : ""}`
         : `<div class="otitel" id="kv-terplaatse">Ter plaatse</div>
           <div class="kvlakken" role="group" aria-labelledby="kv-terplaatse">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen")}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>`;
       const tekstBlok = `<div class="arij">${kop}<button class="wijzig arij-k" id="btn-av"${act("actieVoorstel")}${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
@@ -680,7 +686,7 @@
     zetTerPlaatse(val) {
       if (!["stilgelegd", "gecorrigeerd", "maatregel", "niets"].includes(val)) return;
       const a = this.state.inspectie.cur.actie;
-      Object.assign(a, { terPlaatse: val === "stilgelegd" ? "maatregel" : val, stilgelegd: val === "stilgelegd", tpGekozen: true });
+      Object.assign(a, { terPlaatse: val === "stilgelegd" ? "maatregel" : val, stilgelegd: val === "stilgelegd", tpGekozen: true, tpMis: false });
       tril(15); const y = window.scrollY; this.route(); window.scrollTo(0, y);
     },
     async actieVoorstel() {
@@ -717,7 +723,16 @@
       const ins = this.state.inspectie, cur = ins.cur, a = cur.actie;
       this.logKeuze("actietekst", a.vsTekst ? (a.tekst.trim() === a.vsTekst.trim() ? "voorstel gebruikt" : "voorstel aangepast") : "zelf geschreven", a.tekst);
       if (a.prioVoorstel) this.logKeuze("prioriteit", a.prio === a.prioVoorstel ? "voorstel gebruikt" : "voorstel aangepast", a.prio);
-      if (!a.terPlaatse) a.terPlaatse = "niets";   // vraag niet beantwoord: er is (nog) niets ter plaatse gedaan
+      // direct gevaar: "Wat heb je ter plaatse gedaan?" is verplicht. Niet beantwoord = niet vastleggen; "Nog niets"
+      // komt alleen in het dossier als de inspecteur dat zelf koos (nooit stilzwijgend bij een hangende last).
+      if (a.gevaar && !a.terPlaatse) {
+        a.tpMis = true; this.route();
+        const g = $("kv-terplaatse"); if (g) window.scrollTo(0, Math.max(0, g.getBoundingClientRect().top + window.scrollY - 140));
+        if (window.WPI.zeg) window.WPI.zeg("Kies eerst wat je ter plaatse hebt gedaan.");
+        tril([40, 60, 40]); return;
+      }
+      delete a.tpMis;
+      if (!a.terPlaatse) a.terPlaatse = "niets";   // gewoon risico: de standaard "Niets gedaan" stond zichtbaar aan
       a.status = a.terPlaatse === "gecorrigeerd" ? "Afgerond" : "Voorstel";
       tril([20, 40, 20]);
       const terug = cur.onderwerp ? "algemeen" : "meer";
@@ -880,18 +895,20 @@
     // knoppen, velden en hun acties (data-action) blijven dezelfde elementen. Lukt iets niet, dan blijft het venster zoals het was.
     verrijkActie(id) {
       const a = (this.acties || []).find((x) => x.id === id), mod = $("mod"), ov = $("ov");
-      const kop = mod && mod.firstElementChild, titel = kop && kop.firstElementChild;
+      const kop = mod && mod.querySelector(":scope > .modkop"), titel = kop && kop.querySelector("#modtitel");   // vaste kopregel uit App.openModal
       if (!a || !titel || !this.user) return;
       const { USERS, stBadge, dagLabel, dagenTot } = window.WPI, me = this.user.id;
-      const persoon = (pid) => { const u = USERS.find((x) => x.id === pid); return u ? `<span class="mini-av">${esc(u.full_name[0])}</span><span>${esc(u.full_name)}</span>${pid === me ? `<span class="jijtag">jij</span>` : ""}` : `<span class="leegw">nog niet gekozen</span>`; };
+      const persoon = (pid) => { const u = USERS.find((x) => x.id === pid); return u ? `${WPI.persLabel(u.id)}${pid === me ? `<span class="jijtag">jij</span>` : ""}` : `<span class="leegw">nog niet gekozen</span>`; };
       const voorstel = a.status === "Voorstel", loopt = a.status === "Open" || a.status === "In uitvoering";
       const ow = a.oordeel === "A" ? "Afwijking" : a.oordeel === "V" ? "Verbeterpunt" : "Actie";
       mod.classList.add("actiemod"); if (ov) ov.classList.add("actie");
+      // vaste kopregel compact (soort + status); de (lange) titel staat er direct onder en scrolt mee
+      const sub = kop.nextElementSibling; if (!sub) return;
       titel.removeAttribute("style"); titel.className = "aw-kop";
-      titel.innerHTML = `<div class="aw-kick"><span>${esc(a.handmatig ? "Actie" : "Actie · " + ow)}</span>${stBadge(a.status)}</div>
-        <div class="aw-titel" id="aw-titel">${esc(voorstel ? "Instellen: wie en wanneer" : a.tekst || "Actie")}</div>`;
+      titel.innerHTML = `<div class="aw-kick"><span>${esc(a.handmatig ? "Actie" : "Actie · " + ow)}</span>${stBadge(a.status)}</div>`;
+      kop.after(el(`<div class="aw-titel" id="aw-titel">${esc(voorstel ? "Instellen: wie en wanneer" : a.tekst || "Actie")}</div>`));
       mod.setAttribute("aria-labelledby", "aw-titel");   // venster heet kort naar de titel; soort en status staan in de kop zelf (niet dubbel voorlezen)
-      const x = kop.querySelector("button"); if (x && !x.getAttribute("aria-label")) x.setAttribute("aria-label", "Sluiten");
+      const x = kop.querySelector(".modsluit"); if (x && !x.getAttribute("aria-label")) x.setAttribute("aria-label", "Sluiten");
       // wanneer: datum + rustige of warme (te laat / vandaag) aanduiding
       let wanneer = `<span class="leegw">nog niet gekozen</span>`;
       if (a.plandatum) {
@@ -915,7 +932,6 @@
       const P = window.WPI.PRIO[a.prio], prio = P ? `<span class="pchip p-${esc(a.prio)}"><span class="pbol" aria-hidden="true"></span>${esc(P.lab.split(" · ")[0])}</span>${P.lab.includes(" · ") ? `<span class="leegw">${esc(P.lab.split(" · ")[1])}</span>` : ""}` : `<span class="leegw">niet opgegeven</span>`;
       const blok = el(`<div class="aw-blok">${this.actieStappen(a)}<div class="aw-regel">${regel}</div>
         ${voorstel ? "" : `<dl class="aw-feiten"><div><dt>Actiehouder</dt><dd>${persoon(a.houder)}</dd></div><div><dt>Toetser</dt><dd>${persoon(a.toetser)}</dd></div><div><dt>Plandatum</dt><dd>${wanneer}</dd></div><div><dt>Prioriteit</dt><dd>${prio}</dd></div></dl>`}</div>`);
-      const sub = kop.nextElementSibling; if (!sub) return;
       const herkomst = sub.nextElementSibling, wrij = herkomst && herkomst.nextElementSibling;
       sub.after(blok);
       if (herkomst && wrij && wrij.querySelector(".lbl.jij")) { wrij.classList.add("aw-waarn"); herkomst.classList.add("aw-herkomst"); wrij.after(herkomst); }

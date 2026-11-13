@@ -170,6 +170,60 @@
   // webversie = groot scherm (computer/tablet liggend); telefoon = de veld-app zonder dashboard en trendanalyse
   const isWeb = () => window.matchMedia("(min-width: 900px)").matches;
   const naam = (id) => { const u = USERS.find((x) => x.id === id); return u ? u.full_name : id ? String(id) : "–"; };
+  // ---- persoonslabel: elke persoon een eigen, VASTE kleur (per profiel-id, niet per plek in een lijst) ----
+  // Eén helper voor alle plekken waar een persoon staat: inspecteur (inspecties, planning, dashboard, rapport),
+  // actiehouder en toetser (acties, actievenster) en het team (Beheer). Eén beeldtaal voor mensen.
+  // Kleuren bewust ver van de statuskleuren: geen groen/geel/rood (C/A/V) en geen rood/oranje/blauw (meldingen).
+  // Vier tinten die onderling én ten opzichte van die statuskleuren ver uit elkaar liggen (violet, petrol, pruim,
+  // leisteen), elk in twee vormen: licht (gekleurde tekst op een lichte tint) en vol (witte tekst op de kleur).
+  // Dat geeft 8 duidelijk verschillende labels (css: .ilabel.ik0 … .ik7, AA-contrast, ook in zonmodus).
+  // Bekende demo-id's een vaste plek. Elk ander id: een vaste startplek via een hash (FNV-1a); valt die samen met
+  // iemand anders in het team (WPI.USERS), dan de eerstvolgende vrije plek. Zo heeft een team van maximaal 8
+  // mensen altijd 8 verschillende labels; pas bij meer dan 8 mensen komt een kleur twee keer voor (naam en
+  // voorletter staan er altijd bij). Volgorde van de toewijzing: op id, dus niet afhankelijk van een lijst op het scherm.
+  // (De fictieve voorbeeld-inspecties hebben alleen een rolnaam: die volgen de kleur van de bijbehorende demo-rol.)
+  // De vier inspecteurs in de demo: violet, petrol, leisteen licht en pruim vol (de twee paarsachtige tinten dus in
+  // een verschillende vorm, zodat ze naast elkaar nooit op elkaar lijken).
+  const INSP_KLEUR = Object.freeze({ "u-hoofd": 0, "u-hoofd2": 1, "u-coord1": 6, "u-coord2": 3, "u-qhse": 7, "u-beheer": 5,
+    "Directielid (fictief)": 0, "Coördinator 1 (fictief)": 6, "Coördinator 2 (fictief)": 3 });
+  const N_KLEUR = 8;
+  const hashNr = (s) => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % N_KLEUR; };
+  let kleurCache = { sleutel: null, kaart: null };
+  const teamKaart = () => {   // id → kleurnummer voor het hele team, opnieuw berekend zodra het team verandert
+    const ids = USERS.map((u) => u.id).filter(Boolean).sort(), sleutel = ids.join("|");
+    if (kleurCache.sleutel === sleutel) return kleurCache.kaart;
+    const kaart = Object.create(null), bezet = new Set();
+    ids.forEach((id) => { if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, id)) { kaart[id] = INSP_KLEUR[id]; bezet.add(INSP_KLEUR[id]); } });
+    ids.forEach((id) => {
+      if (kaart[id] !== undefined) return;
+      let k = hashNr(id);
+      if (bezet.size < N_KLEUR) while (bezet.has(k)) k = (k + 1) % N_KLEUR;
+      kaart[id] = k; bezet.add(k);
+    });
+    kleurCache = { sleutel, kaart }; return kaart;
+  };
+  const kleurNr = (sleutel) => {
+    sleutel = String(sleutel || "");
+    if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, sleutel)) return INSP_KLEUR[sleutel];
+    const kaart = teamKaart(); if (kaart[sleutel] !== undefined) return kaart[sleutel];
+    return hashNr(sleutel);
+  };
+  const persSleutel = (id, tekst) => {
+    let u = id ? USERS.find((x) => x.id === id) : null;
+    if (!u && tekst) u = USERS.find((x) => x.full_name === tekst) || null;
+    return { u, nm: String(tekst || (u ? u.full_name : id || "")).trim(), sleutel: u ? u.id : id || String(tekst || "").trim() };
+  };
+  // inspLabel(id) of inspLabel(id, naam) of inspLabel(null, naam) (oude records en voorbeelden met alleen een naam)
+  const inspLabel = (id, tekst) => {
+    const { nm, sleutel } = persSleutel(id, tekst);
+    if (!nm) return `<span class="ilabel leeg">–</span>`;
+    return `<span class="ilabel ik${kleurNr(sleutel)}"><span class="ini" aria-hidden="true">${esc(nm[0])}</span><span class="nm">${esc(nm)}</span></span>`;
+  };
+  // alleen het gekleurde rondje met de voorletter (lijsten met de naam ernaast, zoals het team in Beheer)
+  const persIni = (id, tekst) => {
+    const { nm, sleutel } = persSleutel(id, tekst);
+    return `<span class="pini ik${kleurNr(sleutel)}" aria-hidden="true">${esc((nm || "?")[0])}</span>`;
+  };
 
   // ---- eenvoudige trefwoord-matching (terugval als Claude niet beschikbaar is) ----
   const STOP = new Set(("de het een en van in op te is dat die niet met voor bij aan zijn er als ook om of door naar uit " +
@@ -229,9 +283,13 @@
   // focusSleutel/zoekSleutel: hetzelfde element (id, of data-action + data-args) in nieuw getekende HTML terugvinden
   // (zonder id/data-action, zoals de monteurchips uit js/beheer.js: zelfde soort knop met dezelfde tekst, zonder "✓ ")
   const knopTekst = (x) => (x.textContent || "").replace(/^\s*✓\s*/, "").replace(/\s+/g, " ").trim();
-  const focusSleutel = (x) => ({ id: x.id || "", act: x.getAttribute("data-action") || "", args: x.getAttribute("data-args") || "", tag: x.tagName, tekst: knopTekst(x) });
+  // (keuzelijsten zoals de filters op Inspecties en Dashboard: via data-change + data-change-args, zodat de focus na
+  // het opnieuw tekenen op DEZELFDE keuzelijst blijft en pijltje-omlaag niet naar de kop springt, WCAG 3.2.2)
+  const focusSleutel = (x) => ({ id: x.id || "", act: x.getAttribute("data-action") || "", args: x.getAttribute("data-args") || "", tag: x.tagName, tekst: knopTekst(x),
+    chg: x.getAttribute("data-change") || "", chgArgs: x.getAttribute("data-change-args") || "" });
   const zoekSleutel = (root, k) => {
     if (k.id) return root.querySelector("#" + CSS.escape(k.id));
+    if (!k.act && k.chg) return [...root.querySelectorAll("[data-change]")].find((x) => x.tagName === k.tag && x.getAttribute("data-change") === k.chg && (x.getAttribute("data-change-args") || "") === k.chgArgs) || null;
     if (!k.act) return k.tag === "BUTTON" && k.tekst ? [...root.querySelectorAll("button")].find((x) => knopTekst(x) === k.tekst) || null : null;
     return [...root.querySelectorAll("[data-action]")].find((x) => x.getAttribute("data-action") === k.act && (x.getAttribute("data-args") || "") === k.args) || null;
   };
@@ -443,13 +501,23 @@
       const mod = $("mod"), ov = $("ov"), open = ov.classList.contains("on"), a = document.activeElement;
       const sleutel = open && a && a !== mod && mod.contains(a) ? focusSleutel(a) : null;
       if (!open) this._modTerug = a && a !== document.body ? a : null;
-      mod.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div id="modtitel" role="heading" aria-level="2" style="font-size:20px;font-weight:700">${esc(title)}</div>
-        <button type="button" class="modsluit"${act("closeModal")} aria-label="Sluiten" style="background:#F3F4F6;width:44px;height:44px;flex:none;border-radius:50%;font-size:20px;color:#4A5565">×</button></div>
-        ${sub ? `<div class="muted" style="font-size:13px;margin:4px 0 14px">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
+      // vaste kopregel (blijft staan als de inhoud scrolt): links "‹ <scherm waar je vandaan kwam>", de titel, rechts ×.
+      // Beide sluiten het venster. De kop is het EERSTE kind van #mod (.modkop); de titel heeft id modtitel.
+      const terugNm = this.terugNaam();
+      mod.innerHTML = `<div class="modkop">
+        <button type="button" class="modterug"${act("closeModal")}><span class="pijl" aria-hidden="true">‹</span>${terugNm ? `<span class="sr-only">Terug naar </span><span class="tn">${esc(terugNm)}</span>` : `<span class="tn">Terug</span>`}</button>
+        <div id="modtitel" role="heading" aria-level="2">${esc(title)}</div>
+        <button type="button" class="modsluit"${act("closeModal")} aria-label="Sluiten">×</button></div>
+        ${sub ? `<div class="muted modsub">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
+      mod.scrollTop = open ? mod.scrollTop : 0;
       ov.classList.add("on"); achtergrond(true);
       const terug = sleutel && zoekSleutel(mod, sleutel);
       try { (terug || mod).focus({ preventScroll: !terug }); } catch (e) {}
+    },
+    // naam van het scherm achter het venster (voor de terugknop in de kopregel); "" = onbekend (dan alleen "‹ Terug")
+    terugNaam() {
+      const p = this.user ? this._page : "", t = TABS.find((x) => x.id === p);
+      return t ? t.lab : ({ rapport: "Rapport", inspectie: "Inspectie", beheer: "Beheer", oefen: "Oefenen", alleenweb: "Vandaag" })[p] || "";
     },
     closeModal() {
       const ov = $("ov"), was = ov.classList.contains("on"), mod = $("mod");
@@ -483,10 +551,28 @@
   // gedeelde helpers voor de andere modules (js/*.js)
   const WPI = window.WPI = {
     $, el, esc, MND, mlabel, IC, svg, DB, fotoDataURL, USERS, ROL, ROLLEN, INSPECTEURS, RECHTEN, TABS, mag, staf, kandidaten, personenOpties, nietKiesbaar,
-    isWeb, naam, STOP, SYN, toks, overlap,
+    isWeb, naam, inspLabel, persLabel: inspLabel, persIni, kleurNr, STOP, SYN, toks, overlap,
     OW_KEYS, splitMaatregelen, kort, dag0, isoDag, plusDagen, dagLabel, dagenTot, PRIO, ST_CLS, stBadge, tril,
     eigenWoorden, act, actSluit, op, WAARDE, ELEMENT, EVENT, zeg
   };
+
+  // ---- "alles groter" op grote schermen: de hele app schaalt vloeiend mee (CSS zoom op <html>, zie styles.css) ----
+  // Telefoon en gewone laptops (< 1280px breed) blijven 1:1. Daarboven groeit alles evenredig: 1366 → 1,05,
+  // 1920 → 1,35, 2560 → 1,7 (max 2). Ook begrensd op de hoogte (≥ 760 px aan inhoud), zodat een laag venster
+  // geen afgekapte vensters geeft. Zoom (geen transform) = scherpe tekst en grafieken; media queries blijven op de
+  // echte schermbreedte (isWeb).
+  const schaal = () => {
+    const w = window.innerWidth || 0, h = window.innerHeight || 0;
+    let z = w >= 1280 ? Math.min(1 + 0.7 * (w - 1280) / 1280, 2, Math.max(1, h / 760)) : 1;
+    z = Math.max(1, Math.round(z * 100) / 100);
+    const r = document.documentElement;
+    if (r.style.getPropertyValue("--zoom") !== String(z)) r.style.setProperty("--zoom", String(z));
+  };
+  schaal(); window.addEventListener("resize", schaal);
+  // vaste kopbalk: schaduwlijn zodra er iets onder doorschuift; idem voor de kopregel van een venster
+  const kopSchaduw = () => { const t = document.querySelector(".topbar"); if (t) t.classList.toggle("schaduw", window.scrollY > 2); };
+  window.addEventListener("scroll", kopSchaduw, { passive: true });
+  document.addEventListener("scroll", (e) => { const m = e.target; if (m && m.id === "mod") { const k = m.querySelector(":scope > .modkop"); if (k) k.classList.toggle("schaduw", m.scrollTop > 2); } }, { passive: true, capture: true });
 
   // ---- de delegatielaag (zie act/op hierboven): één luisteraar per eventsoort op document ----
   const NAAM_OK = /^[A-Za-z_$][\w$]*$/;

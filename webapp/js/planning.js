@@ -44,7 +44,7 @@
       this.openModal(p ? "Inspectie wijzigen" : "Inspectie inplannen", "Wie inspecteert wat, waar en wanneer.",
         `${veld("Product", `<select id="pl-code" class="fin"><option value="">Kies…</option>${prod}</select>`)}
          <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div>${veld("Project", `<input id="pl-project" class="fin" placeholder="P26-…" value="${esc(p ? p.project : "")}">`)}</div>
-           <div>${veld("Monteurs", `<input id="pl-mont" class="fin" type="number" min="0" placeholder="aantal" value="${esc(p && p.monteurs ? p.monteurs : "")}">`)}</div></div>
+           <div>${veld("Aantal monteurs", `<input id="pl-mont" class="fin" type="number" min="0" inputmode="numeric" placeholder="aantal" value="${esc(p && p.monteurs ? p.monteurs : "")}">`)}</div></div>
          ${veld("Locatie", `<input id="pl-loc" class="fin" placeholder="Bijv. RWZI Voorbeeldstad" value="${esc(p ? p.locatie : "")}">`)}
          ${veld("Datum", `<input id="pl-datum" type="date" class="fin" value="${esc(p ? p.datum : plusDagen(1))}"><div class="chips" style="margin-top:8px">${snel}</div>`)}
          ${veld("Inspecteur", `<select id="pl-insp" class="fin">${mens}</select>`)}
@@ -82,7 +82,7 @@
       // inplannen en het programma-voorstel: alleen wie plant (hoofden, coördinatoren); QHSE-manager en beheerder kijken mee
       if (mag("plant")) v.appendChild(el(`<button id="pl-nieuwknop" class="btn primary" style="margin-bottom:16px"${act("planForm")}>${svg("plus", 18)} Inspectie inplannen</button>`));
       if (mag("plant")) this.progBlok(v);
-      const g = (l, lijst, warm) => lijst.length ? `<h2 class="${warm ? "warmkop" : ""}">${l} <span class="s">${lijst.length}</span></h2><div class="pkaarten">${lijst.map((p) => this.planKaart(p, vandaag)).join("")}</div>` : "";
+      const g = (l, lijst, warm) => lijst.length ? `<h2 class="${warm ? "warmkop" : ""}">${l} <span class="s">${lijst.length}</span></h2><div class="pkaarten plijst">${lijst.map((p) => this.planKaart(p, vandaag)).join("")}</div>` : "";
       const gp = zicht.filter((p) => p.status === "gepland").sort((a, b) => a.datum.localeCompare(b.datum));
       const html = g("Nog niet gedaan", gp.filter((p) => p.datum < vandaag), true) + g("Vandaag", gp.filter((p) => p.datum === vandaag))
         + g("Komende 7 dagen", gp.filter((p) => p.datum > vandaag && dagenTot(p.datum) <= 7)) + g("Later", gp.filter((p) => dagenTot(p.datum) > 7))
@@ -302,14 +302,14 @@
             <button class="btn ghost"${act("progAnnuleer")}>${n ? "Annuleren" : "Sluiten"}</button></div></section>`));
     },
     planKaart(p, vandaag) {
-      const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum), u = USERS.find((x) => x.id === p.inspecteur);
+      const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum);
       const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
       return `<div class="pkaart"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
           ${p.status === "gepland" && mag("plant") ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzig planning: ${esc(this.productNaam(p.code))} · ${esc(dl)}">Wijzig</button>` : ""}</div>
         <div class="titel">${esc(this.productNaam(p.code))}</div>
         <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + esc(p.monteurs) + " monteurs" : ""}</div>
         ${p.toelichting && !(p.bron === "programma" && /^Inspectieprogramma /.test(p.toelichting)) ? `<div class="s" style="margin-top:4px">“${esc(p.toelichting)}”</div>` : ""}
-        <div class="onder"><span class="mini-av">${u ? esc(u.full_name[0]) : "?"}</span><span>${u ? esc(u.full_name) : "–"}</span>
+        <div class="onder"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(p.inspecteur)}
           ${magStarten ? `<button class="btn primary sm" style="margin-left:auto"${act("startGepland", p.id)}>Start</button>` : ""}
           ${p.status === "uitgevoerd" && p.inspectie_id ? `<a class="s" style="margin-left:auto;color:var(--accent);font-weight:800" href="#/rapport/${esc(p.inspectie_id)}">Rapport ›</a>` : ""}</div></div>`;
     },

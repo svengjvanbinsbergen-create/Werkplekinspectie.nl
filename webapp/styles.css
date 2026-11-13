@@ -1,4 +1,10 @@
 /* Werkplekinspectie.nl — app-stijl (ontleend aan het goedgekeurde ontwerp) */
+/* Nunito, zelf gehost (fonts/, SIL Open Font License: fonts/OFL.txt): variabel lettertype, alle diktes 200–1000
+   in één bestand (ook 650/750); geen verzoek naar Google Fonts (privacy). */
+@font-face{font-family:Nunito;font-style:normal;font-weight:200 1000;font-display:swap;
+  src:url(fonts/nunito-latin-wght-normal.woff2) format("woff2-variations"),url(fonts/nunito-latin-wght-normal.woff2) format("woff2")}
+/* "alles groter" op grote schermen: js/kern.js zet --zoom (1 tot 1280px breed, daarboven vloeiend tot 1,7 bij 2560) */
+html{zoom:var(--zoom,1)}
 :root{
   --ink:#2A2622; --soft:#72665A; --line:#EFE6DA; --dark:#2A2622; --bg:#FAF6EF;
   --accent:#2F5D50; --accent-bg:#DCEBE3; --accent-ink:#2F5D50; --warm:#FCEBD3; --warm-ink:#8F5409;
@@ -108,7 +114,8 @@ h2{font-size:18px;font-weight:650;margin:22px 0 12px}
 /* modal */
 #ov{position:fixed;inset:0;background:rgba(20,26,34,.38);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
 #ov.on{display:flex}
-#mod{background:#fff;border-radius:22px;max-width:780px;width:100%;max-height:84vh;overflow:auto;padding:22px 24px;box-shadow:0 20px 60px rgba(20,26,34,.28)}
+#mod{--mpx:24px;background:#fff;border-radius:22px;max-width:780px;width:100%;max-height:92%;overflow:auto;padding:0 var(--mpx) 22px;box-shadow:0 20px 60px rgba(20,26,34,.28);scroll-padding-top:100px}
+body.veld #mod{scroll-padding-top:108px}   /* veldmodus: kopregel 80px hoog (knoppen 56px) + rand/focusring van een tekstvak */
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;color:var(--soft);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:9px 10px;border-bottom:1px solid var(--line)}
@@ -333,16 +340,14 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
   .sidebrand small{display:block;font-size:12.5px;color:var(--soft);font-weight:700}
   .sidebrand .logo{width:38px;height:38px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
   .topbar .brand{visibility:hidden}
-  #app:not(.nonav) .topbar,#app:not(.nonav) .alertbar{max-width:1320px}
   .topbar{padding:18px 36px 6px}
   .alertbar{margin:4px 36px 10px}
   .view{padding:8px 36px 48px}
-  /* rustige pagina's gecentreerd op leesbreedte */
-  .view:not([data-page=dashboard]){max-width:820px}
-  #app.nonav .view,#app.nonav .topbar{max-width:780px;margin-left:auto;margin-right:auto}
-  .view[data-page=dashboard]{max-width:1320px}
+  /* alle schermen gebruiken de volle breedte naast het menu (geen lege rechterhelft op een groot scherm);
+     alleen de inspectie zelf (zonder menu) blijft één gecentreerde kolom: een gesprek, geen formulier */
+  #app.nonav .view,#app.nonav .topbar{max-width:860px;margin-left:auto;margin-right:auto}
   /* Power BI-raster */
-  .dashgrid{grid-template-columns:1fr 1fr}
+  .dashgrid{grid-template-columns:minmax(0,1fr)}
   .dashgrid .card{padding:20px 22px}
   .dashgrid svg{max-height:240px}
   .view[data-page=dashboard] .kpis{grid-template-columns:repeat(5,1fr)}
@@ -350,10 +355,20 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
   .hero .t{font-size:26px}
   #mod{max-width:720px}
 }
-@media(min-width:1500px){.dashgrid{grid-template-columns:1fr 1fr 1fr}}
+/* twee gelijke kolommen vanaf 1200px; kaarten in een rij even hoog (stretch), zodat er geen lege gaten vallen:
+   rij 1 de trend over de volle breedte, rij 2 de twee staafgrafieken (zelfde opbouw, zelfde hoogte),
+   rij 3 de ring (ring en legenda naast elkaar) naast de klassen. Geen derde kolom: dan worden de grafieken
+   zo smal dat de maandnamen de kleinste tekst op het scherm zijn. */
+@media(min-width:1200px){
+  .dashgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .dashgrid .grafiek{display:flex;flex-direction:column}
+  .dashgrid .grafiek>.legend{margin-top:auto;padding-top:8px}
+  .dashgrid .grafiek>.donut{flex:1;align-content:center;justify-content:center;gap:28px}
+  .dashgrid .grafiek>.donut .donutleg{flex:0 1 260px}
+  .dashgrid .grafiek>.kbars{flex:1;justify-content:space-around;padding-bottom:4px}
+}
 @media(min-width:900px){
-  .dashgrid{align-items:start}
-  #app:not(.nonav):not([data-page=dashboard]) .topbar,#app:not(.nonav):not([data-page=dashboard]) .alertbar{max-width:820px}
+  .dashgrid{align-items:stretch}
   #app.nonav .topbar .brand{visibility:visible}
 }
 @media(min-width:900px){#app.nonav .view,#app.nonav .topbar{width:100%}}
@@ -392,6 +407,28 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .atabel tbody tr{cursor:pointer}.atabel tbody tr:hover td{background:#FCF9F4}
 .atabel .at{font-weight:800;line-height:1.3}
 .pers{display:inline-flex;align-items:center;gap:8px;font-weight:700;white-space:nowrap}
+.atabel .pers .ilabel{max-width:220px}
+.atabel .atcel{min-width:240px}.atabel .atst{margin-bottom:5px}.atabel td:not(.atcel){white-space:nowrap}
+/* Acties, groot scherm (≥ 1500px): lijst links, overzicht rechts (js/acties.js actieZij) */
+.agrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:24px;align-items:start}
+.azij{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--tb) + 16px)}
+.azkaart{padding:18px 20px}
+.azkop{font-size:15px;font-weight:800;margin:0 0 10px}
+.azstand{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.azstand div{display:flex;flex-direction:column;padding:10px 12px;border-radius:14px;background:#FBF7F1}
+.azstand div:last-child:nth-child(odd){grid-column:1/-1}
+.azstand b{font-size:22px;font-weight:800;line-height:1.1}
+.azstand span{font-size:12.5px;font-weight:700;color:#6E6255}
+.azlijst{list-style:none;padding:0;margin:0;display:flex;flex-direction:column}
+.azlijst li{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;border-top:1px solid #F4EDE3}
+.azlijst li:first-child{border-top:0}
+.aztal{display:inline-flex;align-items:center;gap:8px;flex:none}
+.aztal b{min-width:20px;text-align:right;font-size:15px}
+.azactie{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 0;text-align:left}
+.azactie .azt{flex:1;min-width:0;font-size:13.5px;font-weight:700;line-height:1.3}
+.azactie:hover .azt{color:var(--accent)}
+body.zon .azstand div{background:#fff;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .azstand span{color:#141A22}
 
 /* ---- kwartaalrapportage ---- */
 .kwrap{display:flex;flex-direction:column;gap:14px}
@@ -412,12 +449,7 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .kwnoot p{line-height:1.6}
 .kwteken{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:16px;padding-top:14px;border-top:1px dashed #E8DDCD}
 .lijntje{border-bottom:1.5px solid #CFC2B0;height:26px}
-@media(min-width:900px){.view[data-page=kwartaal]{max-width:1100px}
-  #app:not(.nonav):not([data-page=dashboard]):not([data-page=kwartaal]) .topbar{max-width:820px}
-  #app:not(.nonav):not(.x)[data-page=kwartaal] .topbar,#app:not(.nonav):not(.x)[data-page=kwartaal] .alertbar{max-width:1100px}
-  .view[data-page=acties]{max-width:1100px}
-  #app:not(.nonav):not(.x)[data-page=acties] .topbar,#app:not(.nonav):not(.x)[data-page=acties] .alertbar{max-width:1100px}
-  .kwgrid{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.kwgrid{grid-template-columns:1fr 1fr}}
 @media print{
   .tabbar,.topbar,.alertbar,.noprint{display:none!important}
   #app{padding-left:0!important}
@@ -445,10 +477,21 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .pkaart .wijzig{margin-left:auto;font-size:13px;font-weight:800;color:var(--accent)}
 h2.warmkop{color:var(--warm-ink)}
 h2 .s{font-size:14px;font-weight:700}
-@media(min-width:900px){.view[data-page=planning]{max-width:1100px}
-  #app:not(.nonav):not(.x)[data-page=planning] .topbar,#app:not(.nonav):not(.x)[data-page=planning] .alertbar{max-width:1100px}}
 .pkaart .btn.sm{width:auto;min-height:38px;padding:0 18px}
 @media(min-width:900px){.view[data-page=planning]>.btn.primary{width:auto;padding:0 28px}}
+/* groot scherm: elke geplande inspectie één brede rij (datum · wat en waar · inspecteur · wijzig), zodat een
+   rubriek met één of twee inspecties de breedte vult in plaats van een derde van een raster */
+@media(min-width:1100px){
+  .plijst{grid-template-columns:minmax(0,1fr);gap:10px}
+  .plijst>.pkaart{display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr) minmax(200px,300px);column-gap:24px;align-items:center;position:relative;padding:14px 24px;border-radius:20px;min-height:76px}
+  .plijst>.pkaart>.boven{grid-column:1;grid-row:1/span 3}
+  .plijst>.pkaart>.titel{grid-column:2;margin:0;font-size:17px}
+  .plijst>.pkaart>.s{grid-column:2}
+  .plijst>.pkaart>.onder{grid-column:3;grid-row:1/span 3;margin:0}
+  .plijst>.pkaart:has(.wijzig){padding-right:118px}
+  .plijst>.pkaart .wijzig{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;min-height:44px;margin:0;padding:0 14px;border-radius:999px}
+  .plijst>.pkaart .wijzig:hover{background:var(--accent-bg)}
+}
 
 /* ---- inspecties met filter ---- */
 .filterbalk{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
@@ -463,17 +506,15 @@ h2 .s{font-size:14px;font-weight:700}
 .monteurs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .mchip{font-size:12px;font-weight:700;background:#F4EDE3;color:#6E6255;border-radius:999px;padding:3px 9px}
 .mchip.aan{background:var(--accent);color:#fff}
-@media(min-width:900px){.view[data-page=inspecties]{max-width:1100px}
-  #app:not(.nonav):not(.x)[data-page=inspecties] .topbar,#app:not(.nonav):not(.x)[data-page=inspecties] .alertbar{max-width:1100px}}
 
 /* ================= Vandaag · rustig, één blik, starten in de duimzone ================= */
 .vkop .hi{margin-top:6px;color:#6E6255}
 .view[data-page=vandaag] h1.groot{font-size:27px;line-height:1.15;margin:2px 0 16px}
 .vsectie{font-size:13px;font-weight:800;color:#6E6255;letter-spacing:.04em;text-transform:uppercase;margin:22px 4px 8px}
 .vplan .hero{margin-bottom:0}
-.vplan svg,#mijnact svg,.vmeer svg,.vdock svg{width:auto;display:inline-block;flex:none}
+.vplan svg,#mijnact svg,.vmeer svg,.vdock svg,.vbinnen svg,.vlaatst svg{width:auto;display:inline-block;flex:none}
 .hero .meta,.vrij .meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;font-size:14.5px;font-weight:700;color:#3F5E54}
-.hero .meta span,.vrij .meta span{display:inline-flex;align-items:center;gap:5px}
+.hero .meta span,.vrij .meta>span{display:inline-flex;align-items:center;gap:5px}
 .hero .meta svg,.vrij .meta svg{opacity:.75;flex:none}
 .hero .t{font-size:26px;line-height:1.15}
 .hero .nogte,.vrij .nogte{color:var(--warm-ink)}
@@ -563,7 +604,7 @@ body.zon .heroknop .hk-balk{background:#141A22;box-shadow:none}
 .ih-vraag{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ih-vraag h1{margin:2px 0 4px;min-width:0}
 .gevaarknop{flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;min-height:52px;padding:0 14px;border-radius:999px;background:#fff;color:var(--red);font-weight:800;font-size:15px;box-shadow:inset 0 0 0 2px var(--red)}
-.gevaarbalk svg{flex:none}.gevaarbalk span{flex:1;min-width:0}
+.gevaarbalk svg{flex:none;width:20px;height:20px}.gevaarbalk span{flex:1;min-width:0}   /* svg niet 100% breed (globale svg-regel): anders duwt het pictogram de tekst uit beeld op 390px */
 .gevaarknop:active{background:var(--red-bg);transform:scale(.97)}
 .gevaarbalk{display:flex;align-items:center;justify-content:flex-start;text-align:left;gap:10px;margin-top:10px;padding:12px 14px;border-radius:18px;background:var(--red);color:#fff;font-weight:800;font-size:15px}
 /* het scherm vult de hoogte; de vang-knoppen staan onderin, binnen bereik van de duim */
@@ -751,7 +792,7 @@ body.zon .seg.stapel button.on-C{background:var(--green-bg)}body.zon .seg.stapel
 .aw-dock .fout{margin:0 0 8px}.aw-dock .fout:empty{display:none}
 @media(max-width:899px){
   #ov.actie{align-items:flex-end;padding:0}
-  #ov.actie #mod{border-radius:28px 28px 0 0;max-height:92vh;max-height:92dvh;padding:18px 20px 22px}
+  #ov.actie #mod{--mpx:20px;border-radius:28px 28px 0 0;max-height:92vh;max-height:92dvh;padding:0 20px 22px}
   #ov.actie #mod:has(.aw-dock){padding-bottom:0}
   #ov.actie .aw-dock{margin:16px -20px 0;padding-left:20px;padding-right:20px}
 }
@@ -937,5 +978,84 @@ body.zon #mod:focus,body.zon #view:focus,body.zon h1[tabindex="-1"]:focus{outlin
   html:has(body.veld){scroll-padding-bottom:calc(90px + env(safe-area-inset-bottom))}
   html:has(#tabbar.hidden .dock:not(.odock)),html:has(.view .dock:not(.odock)){scroll-padding-bottom:calc(112px + env(safe-area-inset-bottom))}
 }
-html:has(.alertbar:not(.hidden)){scroll-padding-top:56px}
+/* boven: nooit onder de vaste kopbalk (en de alertbalk eronder) eindigen bij ankers en toetsenbordfocus */
+/* +24px: ook de rand, binnenruimte en focusring van een tekstvak (Chrome scrolt naar de cursorregel, niet naar de bovenrand) */
+html{scroll-padding-top:calc(var(--tb) + env(safe-area-inset-top) + 24px)}
+html:has(.alertbar:not(.hidden)){scroll-padding-top:calc(var(--tb) + env(safe-area-inset-top) + 80px)}
 #mod:has(.aw-dock){scroll-padding-bottom:104px}
+
+/* ================= Vaste kopbalk: Demo-label, bel en account altijd in beeld (telefoon en computer) ================= */
+:root{--tb:60px}
+@media(min-width:900px){:root{--tb:68px}}
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);height:calc(var(--tb) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);padding-bottom:0;transition:box-shadow .15s}
+.topbar.schaduw{box-shadow:0 1px 0 var(--line),0 6px 16px rgba(120,90,50,.07)}
+body.zon .topbar{background:#fff}body.zon .topbar.schaduw{box-shadow:0 2px 0 #141A22}
+/* de alertbalk plakt direct onder de kopbalk (niet eronder verstopt). Een "rok" in de achtergrondkleur (twee
+   schaduwen zonder vervaging) dekt de smalle strook erboven en de marges links en rechts af: geen inhoud die
+   tussen kopbalk en alertbalk of ernaast doorschemert tijdens het scrollen. */
+.alertbar{--ask:20px;top:calc(var(--tb) + env(safe-area-inset-top) + 4px);
+  box-shadow:var(--shadow),calc(8px - var(--ask)) 0 0 8px var(--bg),calc(var(--ask) - 8px) 0 0 8px var(--bg)}
+@media(min-width:720px){.alertbar{--ask:24px}}
+@media(min-width:900px){.alertbar{--ask:36px}}
+@media print{.topbar{position:static}}
+
+/* ================= Venster: vaste kopregel "‹ scherm · titel · ×" (blijft staan als de inhoud scrolt) ================= */
+.modkop{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;margin:0 calc(-1 * var(--mpx));padding:14px var(--mpx) 10px calc(var(--mpx) - 8px);min-height:72px;background:#fff;transition:box-shadow .15s}
+.modkop.schaduw{box-shadow:0 1px 0 var(--line),0 6px 14px rgba(120,90,50,.07)}
+.modterug{flex:none;display:inline-flex;align-items:center;gap:2px;min-height:48px;max-width:42%;padding:0 14px 0 8px;border-radius:999px;background:var(--accent-bg);color:var(--accent);font-weight:800;font-size:15px;line-height:1.1}
+.modterug .pijl{font-size:26px;line-height:1;margin:-3px 2px 0 0;font-weight:700}
+.modterug .tn{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modterug:active{filter:brightness(.95);transform:scale(.97)}
+#modtitel{flex:1;min-width:0;font-size:20px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
+.modsluit{flex:none;width:48px;height:48px;border-radius:50%;background:#F3F4F6;font-size:24px;line-height:1;color:#4A5565;display:grid;place-items:center}
+.modsluit:active{background:#E7E9ED}
+.modsub{font-size:13px;margin:0 0 14px}
+.modkop .aw-kop{flex:1;min-width:0}
+.modkop .aw-kick{letter-spacing:.03em}
+#mod>.aw-titel{margin:2px 0 6px}
+@media(max-width:440px){#modtitel{font-size:18px}.modterug{font-size:14px;padding-right:12px}}
+body.veld .modterug,body.veld .modsluit{min-height:56px}body.veld .modsluit{width:56px;height:56px}
+body.zon .modkop{background:#fff}body.zon .modkop.schaduw{box-shadow:0 2px 0 #141A22}
+body.zon .modterug{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .modsluit{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+
+/* ================= Vandaag op een groot scherm: twee kolommen (inspecties links, acties en Meer rechts) ================= */
+@media(min-width:1100px){
+  .vgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0 28px;align-items:start}
+  .vrechts>:first-child>.vsectie:first-child,.vrechts>.oef-tipplek+#mijnact>.vsectie:first-child{margin-top:0}
+  .vrechts .oef-hint{margin-top:0}
+}
+/* Vandaag, groot scherm: binnenkort gepland en laatste inspecties onder de grote kaart (js/vandaag.js) */
+.alleenbreed{display:none}
+@media(min-width:1100px){.alleenbreed{display:block}}
+.vtel{display:inline-grid;place-items:center;min-width:22px;height:20px;margin-left:4px;padding:0 6px;border-radius:999px;background:#F0E8DC;color:#5E544A;font-size:12px;letter-spacing:0;vertical-align:1px}
+.vkbreed .vdat{flex:none;width:44px;height:48px;border-radius:14px;background:var(--accent-bg);color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.vkbreed .vdat .w{font-size:11.5px;font-weight:800;text-transform:lowercase}
+.vkbreed .vdat .d{font-size:19px;font-weight:800;margin-top:2px}
+.vkbreed .vkwie{flex:none;max-width:42%;display:flex}
+.vkbreed .cirkel{background:#F4EDE3;color:#6E6255}
+body.zon .vkbreed .vdat,body.zon .vkbreed .cirkel{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+
+/* ================= Persoonslabel: elke persoon een vaste eigen kleur (WPI.inspLabel / WPI.persIni in js/kern.js) =================
+   Eén beeldtaal voor mensen (inspecteur, actiehouder, toetser, team). Vier tinten ver van de statuskleuren
+   (geen groen/geel/rood van C/A/V, geen rood/oranje/blauw van de meldingen): violet, petrol, pruim, leisteen;
+   elk licht (ik0–ik3) en vol (ik4–ik7). Contrast: tekst op tint ≥ 5.9:1, wit op de kleur ≥ 7:1 (AA). */
+span.ilabel{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:26px;padding:2px 10px 2px 3px;border-radius:999px;font-size:13px;font-weight:800;line-height:1.2;vertical-align:middle;background:var(--ib);color:var(--ic)}
+span.ilabel>span.ini,.pini{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:11.5px;font-weight:800;line-height:1;background:var(--ic);color:#fff}
+span.ilabel>span.nm{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+span.ilabel.leeg{padding:2px 10px;background:#F4EDE3;color:#6E6255}
+.pini{width:26px;height:26px;font-size:12.5px}
+.ik0,.ik4{--ic:#5B2E91;--ib:#EFE7F8}   /* violet   */
+.ik1,.ik5{--ic:#0A6363;--ib:#DDF0EF}   /* petrol   */
+.ik2,.ik6{--ic:#7B2470;--ib:#F7E6F3}   /* pruim    */
+.ik3,.ik7{--ic:#3D4A58;--ib:#E7EBEF}   /* leisteen */
+/* volle vorm: witte naam op de kleur, rondje omgekeerd */
+span.ilabel.ik4,span.ilabel.ik5,span.ilabel.ik6,span.ilabel.ik7{background:var(--ic);color:#fff}
+span.ilabel.ik4>span.ini,span.ilabel.ik5>span.ini,span.ilabel.ik6>span.ini,span.ilabel.ik7>span.ini{background:#fff;color:var(--ic)}
+.pini.ik4,.pini.ik5,.pini.ik6,.pini.ik7{background:#fff;color:var(--ic);box-shadow:inset 0 0 0 2.5px var(--ic)}
+body.zon span.ilabel{background:#fff;box-shadow:inset 0 0 0 2px var(--ic)}
+body.zon span.ilabel.ik4,body.zon span.ilabel.ik5,body.zon span.ilabel.ik6,body.zon span.ilabel.ik7{background:var(--ic);box-shadow:none}
+body.zon span.ilabel.leeg{color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+.ikaart .onder .ilabel,.pkaart .onder .ilabel{max-width:calc(100% - 80px)}
+.rapkop{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin-bottom:14px}
+@media(min-width:900px){body.veld .tabbar a{font-size:15px;padding:12px 14px}}   /* veldmodus: zijmenu op de computer niet kleiner */

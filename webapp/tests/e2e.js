@@ -21,6 +21,7 @@ await p.locator('.q .pick').first().click();await p.waitForTimeout(300);
 await p.click('.seg button.t-A');await p.waitForTimeout(700);
 console.log('actie tekst:', await p.inputValue('#f-actie'));
 await S('t3-actie');
+if (await p.locator('#kv-tp-groep').count()) await p.locator('#kv-tp-groep .kvlak').nth(3).click();   // direct gevaar: eerst "Wat heb je ter plaatse gedaan?" kiezen (vastleggen zonder antwoord kan niet meer, js/inspectie.js)
 await p.click('text=Actievoorstel vastleggen');await p.waitForTimeout(300);
 await p.click('text=Nee, naar het gesprek met de monteurs');await p.waitForTimeout(300);
 await p.click('text=Naar afronden');await p.waitForTimeout(300);

@@ -74,9 +74,9 @@
         <div class="s" style="margin-top:6px">Een open rondje = minder dan 5 waarnemingen in die maand: te weinig voor een percentage.</div></div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Oordelen per maand</h2>${this.chartOordeel(D.maanden, D.om)}
         ${leg([[PAL.C, "Conform"], [PAL.V, "Verbeterpunt"], [PAL.A, "Afwijking"]])}</div>`));
-      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Verdeling oordelen</h2>${this.chartDonut(D.oordeel)}</div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Inspectieprogramma <span class="sub">verplichte WPI’s per maand</span></h2>${this.chartProg()}
         ${leg([[PAL.C, "Uitgevoerd"], [PAL.A, "Gemist"], ["#E6DCCD", "Loopt nog"]])}</div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Verdeling oordelen</h2>${this.chartDonut(D.oordeel)}</div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Waar zitten de aandachtspunten? <span class="sub">per klasse</span></h2>${this.klasseBars(D.klasse)}
         ${leg([[PAL.A, "Afwijking"], [PAL.V, "Verbeterpunt"]])}</div>`));
       v.appendChild(chartCard);
@@ -210,8 +210,9 @@
           [["Conform", v.Conform || 0], ["Afwijking", v.Afwijking || 0], ["Verbeterpunt", v.Verbeterpunt || 0], ["Totaal gezien", v.tot || 0]].map((r) => [`<span class="badge b-${r[0] === "Totaal gezien" ? "N" : r[0][0]}">${esc(r[0])}</span>`, r[1]])));
       }
       if (key === "inspecties") {
-        const rows = Object.entries(c.per_wpi).sort().map(([nr, w]) => [esc(nr), esc(w.ingang || ""), oc(w.oord || {})]);
-        return this.openModal("Inspecties", c.n_wpi + " WPI’s in de periode.", tbl(["WPI", "Ingang", "Oordelen"], rows));
+        const wmap = {}; (this.data.voorbeelddata.wpis || []).forEach((w) => { wmap[w.nr] = w; });
+        const rows = Object.entries(c.per_wpi).sort().map(([nr, w]) => [esc(nr), wmap[nr] && wmap[nr].inspecteur ? WPI.inspLabel(null, wmap[nr].inspecteur) : "–", esc(w.ingang || ""), oc(w.oord || {})]);
+        return this.openModal("Inspecties", c.n_wpi + " WPI’s in de periode.", `<div class="tablewrap">${tbl(["WPI", "Inspecteur", "Ingang", "Oordelen"], rows)}</div>`);
       }
       if (key === "acties") {
         const rows = this.data.trendacties.map((a) => [esc(a.nr), esc(a.onderwerp), esc(a.actiehouder), esc(a.termijn), `<span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span>`]);

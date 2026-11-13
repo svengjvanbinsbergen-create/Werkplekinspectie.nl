@@ -9,14 +9,14 @@
      geen eval en GEEN inline handler-attributen (script-src-attr 'none'). Klikken, invoer, formulieren en de
      microfoon lopen via event-delegatie in js/kern.js (data-action="naam" + data-args, zie WPI.act/WPI.op).
      Nog open: style-src houdt 'unsafe-inline' vanwege style="…"-attributen in de gegenereerde HTML.
+     Lettertype: font-src 'self' (Nunito zelf gehost in fonts/).
      Gelijk houden met _headers, netlify.toml en vercel.json ("project-ref" bij livegang vervangen). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; connect-src 'self' https://project-ref.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; connect-src 'self' https://project-ref.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="theme-color" content="#FAF6EF">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<!-- lettertype Nunito staat op de eigen server (fonts/, OFL-licentie): geen verzoek naar Google (privacy/AVG) -->
+<link rel="preload" href="fonts/nunito-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="css/beheer.css">
 <link rel="stylesheet" href="css/oefen.css">

@@ -257,7 +257,7 @@
               ${p.role && ROL[p.role] ? "" : `<option value="" selected disabled>Nog geen rol</option>`}
               ${this.TEAM_ROLLEN.map((r) => `<option value="${r}"${p.role === r ? " selected" : ""}>${esc(ROL[r])}</option>`).join("")}</select>`
           : `<span class="bhroltekst">${esc(rolTekst)}${zelf ? " · jij" : ""}</span>`;
-        return `<div class="row bhrij bhteamrij${p.actief ? "" : " uit"}"><span class="mini-av">${esc(p.full_name[0] || "?")}</span>
+        return `<div class="row bhrij bhteamrij${p.actief ? "" : " uit"}">${window.WPI.persIni(p.id, p.full_name)}
           <span class="grow"><span class="t">${esc(p.full_name)}</span><span class="s bhfunctie">${esc(p.functie || "")}${p.actief ? "" : (p.functie ? " · " : "") + "non-actief"}</span></span>
           <span class="bhrolvak">${keuze}${echt && !zelf ? `<button class="bhknop"${act("teamActief", p.id, !p.actief)}>${p.actief ? "Op non-actief" : "Weer actief"}<span class="bhvh"> ${esc(p.full_name)}</span></button>` : ""}</span></div>`;
       };
@@ -297,16 +297,19 @@
       v.appendChild(el(`<div class="vkop"><div class="hi">${groet} ${esc(vn)} · ${esc(datum)}</div><h1 class="groot">Overzicht van het team</h1></div>`));
       v.appendChild(el(`<p class="s bhoverzicht">Je kijkt mee met alle inspecties, acties en de planning${magBeheer() ? " en beheert het team" : ""}. Inspecteren doen de hoofden en de coördinatoren.</p>`));
       const plan = el(`<div class="vplan"></div>`), acties = el(`<div class="bhteamacties"></div>`), meer = el(`<div class="vmeer"></div>`);
-      v.appendChild(plan); v.appendChild(acties); v.appendChild(meer);
+      const grid = el(`<div class="vgrid"><div class="vlinks"></div><div class="vrechts"></div></div>`); v.appendChild(grid);   // groot scherm: twee kolommen (styles.css)
+      grid.firstElementChild.appendChild(plan); grid.lastElementChild.appendChild(acties); grid.lastElementChild.appendChild(meer);
       this.laadPlanning().then(() => {
         if (!document.body.contains(plan)) return;
         const vandaag = isoDag(new Date()), P = (this.planning || []).filter((p) => p.status === "gepland" && p.datum);
         const nu = P.filter((p) => p.datum === vandaag), gemist = P.filter((p) => p.datum < vandaag);
         const r = (p) => `<div class="vrij"><span class="grow"><span class="k">${p.datum < vandaag ? `<span class="nogte">Nog niet gedaan · ${esc(dagLabel(p.datum))}</span>` : "Vandaag"}${p.project ? " · " + esc(p.project) : ""}</span>
-          <span class="t">${esc(this.productNaam(p.code))}</span><span class="meta"><span>${esc(window.WPI.naam(p.inspecteur))}</span>${p.locatie ? `<span>${esc(p.locatie)}</span>` : ""}</span></span></div>`;
+          <span class="t">${esc(this.productNaam(p.code))}</span><span class="meta"><span>${window.WPI.inspLabel(p.inspecteur)}</span>${p.locatie ? `<span>${esc(p.locatie)}</span>` : ""}</span></span></div>`;
         plan.innerHTML = `<h2 class="vsectie">Inspecties vandaag</h2>` + (nu.length || gemist.length
           ? `<div class="listcard vlijst">${gemist.concat(nu).slice(0, 8).map(r).join("")}</div>`
           : `<div class="listcard vlijst"><div class="vrij"><span class="grow"><span class="t">Niets gepland vandaag</span></span></div></div>`);
+        // groot scherm: ook wat er binnenkort gepland staat (zelfde blok als op Vandaag), zodat de linkerkolom niet leeg blijft
+        if (window.matchMedia("(min-width: 1100px)").matches) { const bk = el(`<div class="vbinnen alleenbreed"></div>`); plan.appendChild(bk); this.vandaagBinnenkort(bk, vandaag); }
       });
       this.laadActies().then(() => {
         if (!document.body.contains(acties)) return;
@@ -370,7 +373,7 @@
           <div class="bhlijst" id="bh-teamlijst">${this._teamHtml()}</div>
           <p class="s bhregels">Inspecteren en plannen: de hoofden en de coördinatoren. Actiehouder: een hoofd of coördinator. Toetser: een hoofd, coördinator of de QHSE-manager, nooit de actiehouder. De QHSE-manager en de beheerder kijken overal mee en beheren, maar inspecteren niet.</p>
           <details class="bhuitnodig"><summary>Nieuwe collega uitnodigen</summary>
-            <p class="s">${sbAan() ? "Uitnodigen gaat via Supabase: <b>Authentication › Users › Invite user</b> (alleen het e-mailadres). Na het accepteren staat de collega hier met <b>Nog geen rol</b> en heeft nog nergens toegang; kies dan de rol. De rol inspecteur bestaat niet meer: kies hoofd, coördinator, QHSE-manager of beheerder."
+            <p class="s">${sbAan() ? "Uitnodigen gaat via Supabase: <b>Authentication › Users › Invite user</b> (alleen het e-mailadres). Na het accepteren staat de collega hier met <b>Nog geen rol</b> en heeft nog nergens toegang; kies dan de rol: hoofd, coördinator, QHSE-manager of beheerder."
               : "In de voorbeeldmodus is er geen server: rollen bekijken kan, uitnodigen en wijzigen kan in de echte omgeving (via Supabase › Authentication › Invite user, daarna de rol kiezen in deze lijst)."}</p></details>
         </section>`));
         if (sbAan() && !this._team) this.teamLaad();

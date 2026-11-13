@@ -58,6 +58,12 @@
       const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
+      // groot scherm (≥ 1500px): rechts een rustig overzicht (wie heeft wat, wat komt eraan), zodat een korte lijst geen
+      // halve lege pagina geeft. Smaller: alles onder elkaar zoals altijd.
+      const zij = isWeb() && window.matchMedia("(min-width: 1500px)").matches;
+      let v2 = v;
+      if (zij) { const g = el(`<div class="agrid"><div class="ahoofd"></div></div>`); v.appendChild(g); v2 = g.firstElementChild; g.appendChild(el(this.actieZij())); }
+      { const v = v2;   // de rest van het scherm in de hoofdkolom
       v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
       const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: mag("zietAlles") ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
@@ -67,6 +73,23 @@
       if (isWeb() && lijst.length) { v.appendChild(el(this.actieTabel(lijst))); return; }
       v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
         : `<div class="leeg"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
+      }
+    },
+    // zijpaneel op een groot scherm: lopende acties per actiehouder en de eerstvolgende plandata (zelfde reikwijdte als "Alle")
+    actieZij() {
+      const A = mag("zietAlles") ? (this.acties || []) : this.bakjes().alle, loopt = (a) => a.status === "Open" || a.status === "In uitvoering";
+      const lopend = A.filter(loopt), per = {};
+      lopend.forEach((a) => { const k = a.houder || ""; (per[k] = per[k] || { n: 0, laat: 0 }).n++; if (a.plandatum && dagenTot(a.plandatum) < 0) per[k].laat++; });
+      const wie = Object.entries(per).sort((x, y) => y[1].laat - x[1].laat || y[1].n - x[1].n || naam(x[0]).localeCompare(naam(y[0]), "nl"));
+      const tel = (st) => A.filter((a) => a.status === st).length;
+      const komt = lopend.filter((a) => a.plandatum && dagenTot(a.plandatum) >= 0).sort((x, y) => x.plandatum.localeCompare(y.plandatum)).slice(0, 4);
+      const stand = [["Voorstel", "In te stellen"], ["Open", "Open"], ["In uitvoering", "In uitvoering"], ["Klaar voor toetsing", "Klaar voor toetsing"], ["Afgerond", "Afgerond"]];
+      return `<aside class="azij" aria-label="Overzicht van de acties">
+        <section class="card azkaart"><h2 class="azkop">Stand van zaken</h2><div class="azstand">${stand.map(([st, l]) => `<div><b>${tel(st)}</b><span>${l}</span></div>`).join("")}</div></section>
+        <section class="card azkaart"><h2 class="azkop">Lopend per actiehouder</h2>${wie.length ? `<ul class="azlijst">${wie.map(([id, x]) => `<li>${id ? WPI.persLabel(id) : `<span class="s">nog geen actiehouder</span>`}
+            <span class="aztal">${x.laat ? `<span class="dchip warm">${x.laat} te laat</span>` : ""}<b>${x.n}</b><span class="sr-only"> lopend</span></span></li>`).join("")}</ul>` : `<p class="s">Geen lopende acties.</p>`}</section>
+        <section class="card azkaart"><h2 class="azkop">Eerstvolgende plandata</h2>${komt.length ? `<ul class="azlijst">${komt.map((a) => `<li><button class="azactie"${act("openActie", a.id)}><span class="dchip${dagenTot(a.plandatum) === 0 ? " warm" : ""}">${dagenTot(a.plandatum) === 0 ? "vandaag" : esc(dagLabel(a.plandatum))}</span><span class="azt">${esc(kort(a.tekst || "", 70))}</span></button></li>`).join("")}</ul>` : `<p class="s">Niets ingepland.</p>`}</section>
+      </aside>`;
     },
     actieKaart(a) {
       const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
@@ -77,7 +100,7 @@
       return `<button class="akaart"${act("openActie", a.id)}>
         <div class="boven">${stBadge(a.status)}${plan}${prioChip(a.prio)}</div>
         <div class="titel">${esc(kort(a.tekst || "(geen tekst)", 110))}</div>
-        <div class="onder"><span class="mini-av">${h ? esc(h.full_name[0]) : "?"}</span><span>${h ? esc(h.full_name) : "nog geen actiehouder"}</span><span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
+        <div class="onder">${h ? WPI.persLabel(h.id) : `<span>nog geen actiehouder</span>`}<span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
     },
     actieRij(a) { return this.actieKaart(a); },
     // foto's bij de waarneming: a.foto (hoofdfoto, ook in oude acties) + a.extraFotos [{ foto }] (zie fotoLijst in inspectie.js)
@@ -89,10 +112,13 @@
     actieTabel(lijst) {
       const plan = (a) => { const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
         return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip warm">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : dagLabel(a.plandatum); };
-      const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers"><span class="mini-av">${esc(u.full_name[0])}</span>${esc(u.full_name)}</span>` : `<span class="s">–</span>`; };
-      return `<div class="card tabelkaart"><div class="tablewrap"><table class="atabel"><thead><tr><th>Status</th><th>Actie</th><th>Actiehouder</th><th>Toetser</th><th>Plandatum</th><th>Herkomst</th></tr></thead><tbody>
-        ${lijst.map((a) => `<tr${act("openActie", a.id)}><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${PRIO[a.prio] ? " · prio " + esc(prioTekst(a.prio).split(" · ")[0].toLowerCase()) : ""}</div></td>
-          <td>${persoon(a.houder)}</td><td>${persoon(a.toetser)}</td><td>${plan(a)}</td><td class="s">${esc(a.handmatig ? "Handmatig" : (a.inspectie_titel || "").replace(/^Voorbeeld · /, "").split(" · ")[0])}${a.demo ? " · voorbeeld" : ""}</td></tr>`).join("")}
+      const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers">${WPI.persLabel(u.id)}</span>` : `<span class="s">–</span>`; };
+      // status boven de actietekst (niet in een eigen smalle kolom) en de herkomst in de grijze regel: de actietekst krijgt
+      // de ruimte, ook naast het overzicht rechts op een groot scherm
+      const herkomst = (a) => (a.handmatig ? "Handmatig" : (a.inspectie_titel || "").replace(/^Voorbeeld · /, "").split(" · ")[0]) + (a.demo ? " · voorbeeld" : "");
+      return `<div class="card tabelkaart"><div class="tablewrap"><table class="atabel"><thead><tr><th>Actie</th><th>Actiehouder</th><th>Toetser</th><th>Plandatum</th></tr></thead><tbody>
+        ${lijst.map((a) => `<tr${act("openActie", a.id)}><td class="atcel"><div class="atst">${stBadge(a.status)}</div><div class="at">${esc(kort(a.tekst || "", 140))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${PRIO[a.prio] ? " · prio " + esc(prioTekst(a.prio).split(" · ")[0].toLowerCase()) : ""}${herkomst(a) ? " · " + esc(herkomst(a)) : ""}</div></td>
+          <td>${persoon(a.houder)}</td><td>${persoon(a.toetser)}</td><td>${plan(a)}</td></tr>`).join("")}
       </tbody></table></div></div>`;
     },
     // telefoon: zelf een actie aanmaken (los van een inspectie)
@@ -126,7 +152,7 @@
       const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
       const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
       const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
-      let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
+      let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + WPI.inspLabel(a.inspecteur_id || null, a.inspecteur) : ""}</div>
         <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${this.actieFotos(a)}</div>`;
       if (a.status === "Voorstel") {
         {
@@ -169,7 +195,7 @@
             <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" aria-label="Nieuwe plandatum" value="${/^\d{4}-\d{2}-\d{2}$/.test(a.plandatum || "") ? a.plandatum : ""}"><button class="btn ghost sm"${act("wijzigPlan", a.id)}>Opslaan</button></div></details>`;
         }
       }
-      h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${esc(l.wat)}</div>`).join("")}</div>`;
+      h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${l.bron === "server" ? '<b class="dchip" title="Vastgelegd door de server, niet door een persoon getypt">automatisch</b> ' : ""}${esc(l.wat)}</div>`).join("")}</div>`;
       this.openModal(kort(a.tekst || "Actie", 60), a.demo ? "Voorbeeldactie (fictief)" : "", h);
     },
     async bewaarActie(a, wat) {
