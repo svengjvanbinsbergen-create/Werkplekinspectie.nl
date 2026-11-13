@@ -445,6 +445,7 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .pkaart .wijzig{margin-left:auto;font-size:13px;font-weight:800;color:var(--accent)}
 h2.warmkop{color:var(--warm-ink)}
 h2 .s{font-size:14px;font-weight:700}
+.card h2.rapkop{font:inherit;letter-spacing:inherit;color:inherit;margin:0}   /* rapport §1: echte kop, oogt als de tekstregel ervoor */
 @media(min-width:900px){.view[data-page=planning]{max-width:1100px}
   #app:not(.nonav):not(.x)[data-page=planning] .topbar,#app:not(.nonav):not(.x)[data-page=planning] .alertbar{max-width:1100px}}
 .pkaart .btn.sm{width:auto;min-height:38px;padding:0 18px}
@@ -929,3 +930,12 @@ body.zon :focus-visible{outline:3px solid #141A22;outline-offset:2px}
 /* opslagstatus: "opnieuw" is een echte knop */
 .opnieuwlink{text-decoration:underline;font-weight:700;color:inherit;padding:0 2px;min-height:24px}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/* focus nooit (helemaal) achter een vaste of plakkende balk (WCAG 2.4.11): de browser scrolt het element
+   met toetsenbordfocus dan tot boven de onderste tabbalk, de plakkende knoppenbalk (.dock) of de modalbalk (.aw-dock) */
+@media(max-width:899px){
+  html{scroll-padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  html:has(body.veld){scroll-padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+  html:has(#tabbar.hidden .dock:not(.odock)),html:has(.view .dock:not(.odock)){scroll-padding-bottom:calc(112px + env(safe-area-inset-bottom))}
+}
+html:has(.alertbar:not(.hidden)){scroll-padding-top:56px}
+#mod:has(.aw-dock){scroll-padding-bottom:104px}

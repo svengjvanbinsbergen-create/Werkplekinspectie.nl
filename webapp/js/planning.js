@@ -46,15 +46,15 @@
          ${veld("Datum", `<input id="pl-datum" type="date" class="fin" value="${esc(p ? p.datum : plusDagen(1))}"><div class="chips" style="margin-top:8px">${snel}</div>`)}
          ${veld("Inspecteur", `<select id="pl-insp" class="fin">${mens}</select>`)}
          ${veld("Toelichting (optioneel)", `<textarea id="pl-toel" class="fin" rows="2" placeholder="Bijv. let op hijswerk met mobiele kraan">${esc(p ? p.toelichting : "")}</textarea>`)}
-         <div id="ai-fout" class="fout"></div>
+         <div id="ai-fout" class="fout" role="alert"></div>
          <button class="btn primary" style="margin-top:8px"${act("bewaarPlan", p ? p.id : null)}>${p ? "Opslaan" : "Inplannen"}</button>
          ${p ? `<button class="btn ghost" style="margin-top:10px;width:100%"${act("verwijderPlan", p.id)}>Uit de planning halen</button>` : ""}`);
     },
     zetPlanDatum(d) { document.getElementById("pl-datum").value = d; },   // snelkeuze Vandaag/Morgen/Over een week
     async bewaarPlan(id) {
       const code = $("pl-code").value, datum = $("pl-datum").value, insp = $("pl-insp").value;
-      if (!code) return this.fout("Kies een product.");
-      if (!datum) return this.fout("Kies een datum.");
+      if (!code) return this.fout("Kies een product.", "pl-code");
+      if (!datum) return this.fout("Kies een datum.", "pl-datum");
       await this.laadPlanning();
       let p = id ? this.planning.find((x) => x.id === id) : null;
       if (!p) { p = { id: this.nieuwPlanId(), status: "gepland", gemaakt_door: this.user.id }; this.planning.push(p); }
@@ -291,7 +291,7 @@
           : V.weg || nWeg ? `<div class="leeg"><span class="bol">🌿</span><div class="t">Alle voorstellen weggehaald</div><div class="s">Er is niets ingepland voor ${esc(mn)}.</div></div>`
           : `<div class="leeg"><span class="bol">🌿</span><div class="t">Geen voorstellen</div><div class="s">Alle verplichte inspecties voor ${esc(mn)} staan al in de planning.</div></div>`}
           ${nWeg ? `<p class="s progweg">${nWeg === 1 ? "1 voorstel" : nWeg + " voorstellen"} weggehaald; ${nWeg === 1 ? "komt" : "komen"} deze maand niet terug. <button class="bhlinkk"${act("progTerug")}>Terugzetten</button></p>` : ""}
-          <div id="prog-fout" class="fout"></div>
+          <div id="prog-fout" class="fout" role="alert"></div>
           <div class="vsacties">${n ? `<button id="prog-alles" class="btn primary"${act("progAllesInplannen")}>${svg("check", 18)} Alles inplannen (${n})</button>` : ""}
             <button class="btn ghost"${act("progAnnuleer")}>${n ? "Annuleren" : "Sluiten"}</button></div></section>`));
     },

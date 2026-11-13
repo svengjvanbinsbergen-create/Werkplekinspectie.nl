@@ -93,9 +93,12 @@
         b.disabled = !ok;
       });
     },
-    invoer(key, ph) {
-      return `<div class="inbox"><textarea id="f-${key}" placeholder="${esc(ph)}"${op("input", "setVeld", key, WAARDE)}>${esc(this.veld(key))}</textarea>
-        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" aria-label="Inspreken: ingedrukt houden of aantikken" title="Ingedrukt houden = praten, loslaten = klaar. Kort tikken = aan/uit.">${svg("mic", 24)}</button></div>
+    // naam = de zichtbare vraag bij het veld (toegankelijke naam van het tekstvak én van de microfoonknop);
+    // labelId = id van die zichtbare vraag, als die vlak boven het veld staat (aria-labelledby)
+    invoer(key, ph, naam, labelId) {
+      const nm = naam || "Tekst";
+      return `<div class="inbox"><textarea id="f-${key}" placeholder="${esc(ph)}"${labelId ? ` aria-labelledby="${labelId}"` : ` aria-label="${esc(nm)}"`}${op("input", "setVeld", key, WAARDE)}>${esc(this.veld(key))}</textarea>
+        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" aria-label="Inspreken bij: ${esc(nm)}" aria-pressed="${this.micKey === key}" title="Ingedrukt houden = praten, loslaten = klaar. Kort tikken = aan/uit.">${svg("mic", 24)}</button></div>
         <div class="partial" id="p-${key}"></div>`;
     },
 
@@ -316,7 +319,7 @@
       const regels = this.data.kennisbank[ins.code].regels, taken = [...new Set(regels.map((r) => r.taak))];
       v.appendChild(el(this.insHead(ins, ins.taken.length ? "Volgende taak" : "Begeleide inspectie · momentopname", "Wat doen de monteurs nu?")));
       v.appendChild(el(`<div class="q"><div class="qs" style="margin-top:0">Vertel het in je eigen woorden. De app stelt de taak voor; jij bevestigt.</div>
-        ${this.invoer("taak", "Bijv. ze halen de damwand eruit met de kraan")}
+        ${this.invoer("taak", "Bijv. ze halen de damwand eruit met de kraan", "Wat doen de monteurs nu?")}
         <div id="taakvs"></div>
         <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Zelf kiezen uit alle taken (${taken.length})</summary>
           <div class="chips" style="margin-top:8px">${taken.map((t) => `<button class="chipb"${act("kiesTaak", t)}>${esc(t)}</button>`).join("")}</div></details></div>`));
@@ -346,8 +349,8 @@
           <div class="vangrij">
             <button class="micgroot${aan ? " on" : ""}" data-mic="zie" aria-describedby="mg-uitleg" aria-pressed="${!!aan}">
               <span class="mg-ic">${svg("mic", 28)}</span>
-              <span class="mg-t"><b class="m-uit">Inspreken</b><b class="m-aan">Luistert…</b><small class="m-uit">Houd vast en praat</small><small class="m-aan">Loslaten = klaar</small><span id="mg-uitleg" class="sr-only">Houd vast en praat, of tik (of Enter) voor aan en uit</span></span>
-            </button>
+              <span class="mg-t"><b class="m-uit">Inspreken</b><b class="m-aan">Luistert…</b><small class="m-uit">Houd vast en praat</small><small class="m-aan">Loslaten = klaar</small></span>
+            </button><span id="mg-uitleg" class="sr-only">Houd vast en praat, of tik (of Enter) voor aan en uit</span>
             <button class="fotogroot"${act("addFoto")} aria-label="${nf ? "Extra foto maken" : "Foto maken"}"${vol ? " disabled" : ""}>${svg("cam", 28)}<span>${nf ? "Extra" : "Foto"}</span></button>
           </div>
           <button class="btn primary volgknop" data-need="zie,foto"${act("koppel")}>${ow ? "Volgende: beoordelen" : "Volgende: koppel aan de TRA"}</button>
@@ -453,7 +456,7 @@
         : modus === "bezig" ? `Jouw oordeel <span>· zodra het voorstel er is</span>`
         : modus === "wacht" ? `Jouw oordeel <span>· kies eerst hieronder een regel</span>` : `Jouw oordeel <span>· alleen jij beslist</span>`;
       return `<section class="dock odock vlak${uit ? " uit" : ""}" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>
-        <div class="seg stapel" role="group" aria-labelledby="oordeel-lab">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
+        <div class="seg stapel" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
         <button class="linkknop nvt"${act(fn, "NVT")}${uit}>Niet van toepassing</button></section>`;
     },
     // Voorstel + oordeel in één tik: de inspecteur bevestigt de (best passende) koppeling door zelf C/A/V/NVT te kiezen
@@ -535,11 +538,11 @@
         <div class="q akaart2">${this.citaat(cur)}
           <div class="arij">${kop}<button class="wijzig arij-k" id="btn-av"${act("actieVoorstel")}${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
           ${a.herkomst === "Voorstel" && !a.bezig ? `<div class="waarom arij-w">Via ${esc(a.vsBron || "de app")}${a.vsWaarom ? " · waarom: " + esc(a.vsWaarom) : ""}</div>` : ""}
-          ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting")}
-          <div class="otitel">Hoe dringend vind jij het?</div>
-          <div class="kvlakken">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>
-          <div class="otitel">Ter plaatse</div>
-          <div class="kvlakken">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen")}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
+          ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting", "Wat moet er gebeuren?")}
+          <div class="otitel" id="kv-prio">Hoe dringend vind jij het?</div>
+          <div class="kvlakken" role="group" aria-labelledby="kv-prio">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>
+          <div class="otitel" id="kv-terplaatse">Ter plaatse</div>
+          <div class="kvlakken" role="group" aria-labelledby="kv-terplaatse">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen")}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
           ${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}
           <div class="hierna"><div class="hierna-t">Hierna</div>${gecorr
             ? this.actieStappen({ status: "Afgerond" }, { gecorr: true }) + `<div class="aw-regel">Jij zag het herstel: jij bent de toetser. Geen verdere instelling nodig.</div>`
@@ -639,12 +642,12 @@
       const gekozen = ins.monteurs || [], lijst = this.monteursLijst();
       v.appendChild(el(`<div class="q"><div class="qt">Wie waren er aan het werk?</div><div class="qs">Tik de monteurs aan die je hebt geïnspecteerd. Alleen de naam wordt vastgelegd.</div>
         <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}"${act("togMonteur", n)} aria-pressed="${gekozen.includes(n)}">${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
-        <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" placeholder="Andere naam toevoegen" style="flex:1"${op("enter", "voegMonteurToe")}><button class="btn ghost sm"${act("voegMonteurToe")}>${svg("plus", 16)} Toevoegen</button></div>
+        <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" aria-label="Andere naam toevoegen" placeholder="Andere naam toevoegen" style="flex:1"${op("enter", "voegMonteurToe")}><button class="btn ghost sm"${act("voegMonteurToe")}>${svg("plus", 16)} Toevoegen</button></div>
         ${gekozen.length ? `<div class="s" style="margin-top:10px;font-weight:700">${gekozen.length} monteur${gekozen.length === 1 ? "" : "s"} gekoppeld</div>` : ""}</div>`));
-      v.appendChild(el(`<div class="q"><div class="qt">Wat heb je besproken en hoe reageerden ze?</div><div class="qs">Ideeën van de monteurs komen in het rapport.</div>
-        ${this.invoer("gesprek", "Bijv. besproken dat de gasmeter bij de man hoort; monteurs stelden een clip aan het harnas voor")}</div>`));
-      v.appendChild(el(`<div class="q"><div class="qt">Wat ging opvallend goed?</div><div class="qs">Elk rapport bevat ten minste één positieve bevinding.</div>
-        ${this.invoer("positief", "Bijv. LOTOTO netjes toegepast: sloten van opdrachtgever en Noardling hingen erop")}
+      v.appendChild(el(`<div class="q"><div class="qt" id="q-gesprek">Wat heb je besproken en hoe reageerden ze?</div><div class="qs">Ideeën van de monteurs komen in het rapport.</div>
+        ${this.invoer("gesprek", "Bijv. besproken dat de gasmeter bij de man hoort; monteurs stelden een clip aan het harnas voor", "Wat heb je besproken en hoe reageerden ze?", "q-gesprek")}</div>`));
+      v.appendChild(el(`<div class="q"><div class="qt" id="q-positief">Wat ging opvallend goed?</div><div class="qs">Elk rapport bevat ten minste één positieve bevinding.</div>
+        ${this.invoer("positief", "Bijv. LOTOTO netjes toegepast: sloten van opdrachtgever en Noardling hingen erop", "Wat ging opvallend goed?", "q-positief")}
         <button class="btn primary" style="margin-top:14px"${act("stap", "klaar")}>Naar afronden</button></div>`));
     },
     vastgelegdLijst(ins) {
@@ -765,7 +768,8 @@
       mod.classList.add("actiemod"); if (ov) ov.classList.add("actie");
       titel.removeAttribute("style"); titel.className = "aw-kop";
       titel.innerHTML = `<div class="aw-kick"><span>${esc(a.handmatig ? "Actie" : "Actie · " + ow)}</span>${stBadge(a.status)}</div>
-        <div class="aw-titel">${esc(voorstel ? "Instellen: wie en wanneer" : a.tekst || "Actie")}</div>`;
+        <div class="aw-titel" id="aw-titel">${esc(voorstel ? "Instellen: wie en wanneer" : a.tekst || "Actie")}</div>`;
+      mod.setAttribute("aria-labelledby", "aw-titel");   // venster heet kort naar de titel; soort en status staan in de kop zelf (niet dubbel voorlezen)
       const x = kop.querySelector("button"); if (x && !x.getAttribute("aria-label")) x.setAttribute("aria-label", "Sluiten");
       // wanneer: datum + rustige of warme (te laat / vandaag) aanduiding
       let wanneer = `<span class="leegw">nog niet gekozen</span>`;
@@ -809,7 +813,7 @@
   function koppelActieVenster() {
     const A = window.App, open0 = A.openActie, modal0 = A.openModal;
     if (!open0 || open0._verrijkt) return;
-    A.openModal = function () { const m = $("mod"), o = $("ov"); if (m) m.classList.remove("actiemod"); if (o) o.classList.remove("actie"); return modal0.apply(this, arguments); };
+    A.openModal = function () { const m = $("mod"), o = $("ov"); if (m) { m.classList.remove("actiemod"); m.setAttribute("aria-labelledby", "modtitel"); } if (o) o.classList.remove("actie"); return modal0.apply(this, arguments); };
     A.openActie = function (id) { const r = open0.apply(this, arguments); try { this.verrijkActie(id); } catch (e) { /* venster blijft zoals getekend */ } return r; };
     A.openActie._verrijkt = true;
   }

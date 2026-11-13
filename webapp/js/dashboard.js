@@ -136,20 +136,22 @@
         p += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" font-size="15" font-weight="800" fill="${P.ink}">${labels[i][0]}</text>`;
         p += ` <text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
         p += `<rect x="${pad + gap * i}" y="0" width="${gap}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer" aria-label="${esc(labels[i][0] + " " + labels[i][1] + " · details")}"${actieFn(i)}>${p}</g>`;
+        g += `<g style="cursor:pointer" aria-label="${esc(labels[i][0] + " " + labels[i][1] + (labels[i][2] ? ": " + labels[i][2] : "") + " · details")}"${actieFn(i)}>${p}</g>`;   // [2]: uitsplitsing voor de schermlezer (zichtbare tekst blijft vooraan, WCAG 2.5.3)
       });
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },
     chartOordeel(mnd, om) {
       const P = this.PAL, tot = mnd.map((m) => ["Conform", "Verbeterpunt", "Afwijking"].reduce((a, k) => a + ((om[m] || {})[k] || 0), 0));
       return this.staven(mnd.map((m) => [[(om[m] || {}).Conform, P.C], [(om[m] || {}).Verbeterpunt, P.V], [(om[m] || {}).Afwijking, P.A]]),
-        Math.max(...tot, 1), mnd.map((m, i) => [tot[i], mlabel(m)]), (i) => act("drill", "oordeelmaand", mnd[i]));
+        Math.max(...tot, 1), mnd.map((m, i) => { const o = om[m] || {};
+          return [tot[i], mlabel(m), `van de ${tot[i]} oordelen ${o.Conform || 0} conform, ${o.Verbeterpunt || 0} verbeterpunt, ${o.Afwijking || 0} afwijking`]; }), (i) => act("drill", "oordeelmaand", mnd[i]));
     },
     chartProg() {
       const P = this.PAL, c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
       const kol = mnd.map((m) => { const d = vm[m] || {}; return [[d.ok || 0, P.C], [(d.y || 0) - (d.ok || 0), P.A], [d.lopend || 0, "#EFE6D8", true]]; });
       const max = Math.max(...mnd.map((m) => ((vm[m] || {}).y || 0) + ((vm[m] || {}).lopend || 0)), 1);
-      return this.staven(kol, max, mnd.map((m) => [((vm[m] || {}).ok || 0) + "/" + ((vm[m] || {}).y || 0), mlabel(m)]), (i) => act("drill", "programma", mnd[i]));
+      return this.staven(kol, max, mnd.map((m) => { const d = vm[m] || {};
+        return [(d.ok || 0) + "/" + (d.y || 0), mlabel(m), `${d.ok || 0} van ${d.y || 0} verplichte inspecties uitgevoerd${d.lopend ? `, ${d.lopend} nog lopend` : ""}`]; }), (i) => act("drill", "programma", mnd[i]));
     },
     // ring met verdeling, conform-% in het midden
     chartDonut(o) {

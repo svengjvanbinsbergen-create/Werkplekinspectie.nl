@@ -55,7 +55,7 @@
       const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
-      v.appendChild(el(`<div class="tabs">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)}>${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
+      v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
       const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen.", alle: "" }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
@@ -102,15 +102,15 @@
          ${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts}</select>`)}
          ${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts}</select>`)}
          ${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen(14)}">`)}
-         <div id="ai-fout" class="fout"></div>
+         <div id="ai-fout" class="fout" role="alert"></div>
          <button class="btn primary" style="margin-top:10px"${act("maakActie")}>Actie aanmaken</button>`);
     },
     async maakActie() {
       const tekst = $("na-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
-      if (!tekst) return this.fout("Beschrijf wat er moet gebeuren.");
-      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.");
-      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.");
-      if (!plan) return this.fout("Kies een plandatum.");
+      if (!tekst) return this.fout("Beschrijf wat er moet gebeuren.", "na-tekst");
+      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.", houder ? "ai-toetser" : "ai-houder");
+      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.", "ai-toetser");
+      if (!plan) return this.fout("Kies een plandatum.", "ai-plan");
       await this.laadActies();
       const a = { id: "ACT-" + Date.now(), handmatig: true, inspectie_titel: "Handmatig aangemaakt", ref: "Handmatig", oordeel: "–", waarneming: $("na-aanl").value.trim(),
         foto: null, tekst, prio: null, status: "Open", houder, toetser, plandatum: plan, log: [] };
@@ -134,10 +134,10 @@
               <div>${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts(null)}</select>`)}</div>
               <div>${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen((PRIO[a.prio] || PRIO.kort).d)}">`)}</div></div>
             <div class="s" style="margin-top:6px">De inspecteur vond het: <b>${esc((PRIO[a.prio] || {}).lab || "–")}</b>. De plandatum staat daarop voorgesteld; pas gerust aan.</div>
-            <div id="ai-fout" class="fout"></div>
+            <div id="ai-fout" class="fout" role="alert"></div>
             <button class="btn primary" style="margin-top:12px"${act("stelIn", a.id)}>Actie instellen</button>
             <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Geen actie nodig?</summary>
-              <textarea id="ai-reden" class="fin" rows="2" placeholder="Reden, bijv. al opgelost via trendactie T-04"></textarea>
+              <textarea id="ai-reden" class="fin" rows="2" aria-label="Reden waarom geen actie nodig is" placeholder="Reden, bijv. al opgelost via trendactie T-04"></textarea>
               <button class="btn ghost sm" style="margin-top:8px"${act("vervalVoorstel", a.id)}>Voorstel laten vervallen</button></details>`;
         }
       } else {
@@ -157,7 +157,7 @@
         }
         if (a.status === "Klaar voor toetsing") {
           if (isToetser && !isHouder) h += `<button class="btn primary"${act("akkoord", a.id)}>${svg("check", 18)} Akkoord na toetsing · afronden</button>
-            <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord" aria-label="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout"></div>
+            <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord" aria-label="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout" role="alert"></div>
             <button class="btn danger" style="width:100%;margin-top:8px"${act("nietAkkoord", a.id)}>Niet akkoord · terug naar actiehouder</button>`;
           else h += `<div class="hint">Wacht op toetsing door <b>${esc(naam(a.toetser))}</b>. Alleen de toetser kan afronden.</div>`;
         }
@@ -174,15 +174,35 @@
       try { await DB.put("acties", a); } catch (e) { alert("Opslaan mislukt op dit toestel."); }
       this.checkMeldingen();
     },
-    fout(t) { const f = $("ai-fout"); if (f) f.textContent = t; tril([40, 40, 40]); },
+    // foutmelding in een formulier (modal): tekst in #ai-fout (role=alert, wordt voorgelezen), het veld krijgt
+    // aria-invalid + aria-describedby naar de melding en de focus, zodat je meteen kunt verbeteren (WCAG 3.3.1, 4.1.3)
+    fout(t, veld) {
+      const f = $("ai-fout"); tril([40, 40, 40]); if (!f) return;
+      const bak = $("mod") || document;
+      bak.querySelectorAll('[aria-invalid="true"]').forEach((e) => {
+        e.removeAttribute("aria-invalid");
+        const d = (e.getAttribute("aria-describedby") || "").split(/\s+/).filter((x) => x && x !== "ai-fout");
+        if (d.length) e.setAttribute("aria-describedby", d.join(" ")); else e.removeAttribute("aria-describedby");
+      });
+      if (!f.hasAttribute("role")) f.setAttribute("role", "alert");
+      // dezelfde melding nog eens: eerst leegmaken, anders leest de schermlezer hem niet opnieuw voor
+      if (f.textContent === t) { f.textContent = ""; setTimeout(() => { f.textContent = t; }, 80); } else f.textContent = t;
+      const e = veld && $(veld);
+      if (e) {
+        e.setAttribute("aria-invalid", "true");
+        const d = (e.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+        if (!d.includes("ai-fout")) e.setAttribute("aria-describedby", d.concat(["ai-fout"]).join(" "));
+        try { e.focus(); } catch (x) {}
+      }
+    },
     async stelIn(id) {
       const a = this.acties.find((x) => x.id === id); if (!a) return;
       const tekst = $("ai-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
-      if (!tekst) return this.fout("Vul de actietekst in.");
-      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.");
-      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.");
-      if ((USERS.find((u) => u.id === houder) || {}).role === "qhse") return this.fout("De QHSE-manager kan geen actiehouder zijn.");
-      if (!plan) return this.fout("Kies een plandatum.");
+      if (!tekst) return this.fout("Vul de actietekst in.", "ai-tekst");
+      if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.", houder ? "ai-toetser" : "ai-houder");
+      if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.", "ai-toetser");
+      if ((USERS.find((u) => u.id === houder) || {}).role === "qhse") return this.fout("De QHSE-manager kan geen actiehouder zijn.", "ai-houder");
+      if (!plan) return this.fout("Kies een plandatum.", "ai-plan");
       const aangepast = tekst !== a.tekst; Object.assign(a, { tekst, houder, toetser, plandatum: plan, status: "Open" });
       await this.bewaarActie(a, `Ingesteld${aangepast ? " (tekst aangepast)" : ""}: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);
       tril(30); this.closeModal(); this.route();
@@ -214,7 +234,7 @@
     },
     async nietAkkoord(id) {
       const a = (this.acties || []).find((x) => x.id === id), r = ($("ai-reden") || {}).value || ""; if (!a || a.toetser !== this.user.id || a.status !== "Klaar voor toetsing") return;
-      if (!r.trim()) return this.fout("Geef een reden, zodat de actiehouder weet wat er nog moet gebeuren.");
+      if (!r.trim()) return this.fout("Geef een reden, zodat de actiehouder weet wat er nog moet gebeuren.", "ai-reden");
       a.status = "In uitvoering"; await this.bewaarActie(a, "Niet akkoord na toetsing: " + r.trim()); this.closeModal(); this.route();
     },
     async wijzigPlan(id) {

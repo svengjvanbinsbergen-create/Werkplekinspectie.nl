@@ -85,7 +85,10 @@ const EIGEN = {
   "modal-focus-niet-in-dialoog": "Bij openen van de modal gaat de focus niet naar de dialoog (WCAG 2.4.3)",
   "sluitknop-zonder-naam": "Sluitknop \"×\" heeft geen aria-label (schermlezer leest \"maal\")",
   "modal-esc-sluit-niet": "Escape sluit de modal niet (WCAG 2.1.2 / gangbaar dialoogpatroon)",
+  "modal-tab-ontsnapt": "Tab of Shift+Tab in de modal verlaat de dialoog, blijft hangen of keert niet rond naar het eerste/laatste element (focus-trap, WCAG 2.4.3 / 2.1.2)",
+  "modal-achtergrond-bereikbaar": "Bij een open modal is de pagina erachter nog focusbaar of zichtbaar voor schermlezers (geen inert/aria-hidden; aria-modal alleen is niet genoeg)",
 };
+const EIGEN_IMPACT = { "klik-zonder-toetsenbord": "serious", "modal-tab-ontsnapt": "serious" };
 const SCHERMEN = [
   ["login", async (p) => { await ev(p, () => { App.closeModal(); App.logout(); }); await wacht(p, 300); }],
   ["vandaag", async (p) => { await login("u-coord1")(p); }],
@@ -95,6 +98,8 @@ const SCHERMEN = [
   ["acties", async (p) => { await ev(p, () => { App.closeModal(); App.actFilter = "alle"; App.go("acties"); }); await wacht(p, 700); }],
   ["actie-modal-voorstel", async (p) => { await ev(p, () => App.openActie("ACT-demo4")); await wacht(p, 250); }],
   ["actie-modal-open", async (p) => { await ev(p, () => { App.closeModal(); App.openActie("ACT-demo2"); }); await wacht(p, 250); }],
+  // klaar voor toetsing, bekeken door de actiehouder (niet de toetser): laatste focusbare element is de DICHTE details "Plandatum wijzigen"
+  ["actie-modal-toetsing", async (p) => { await ev(p, () => { App.closeModal(); App.openActie("ACT-demo3"); }); await wacht(p, 250); }],
   ["nieuwe-actie-modal", async (p) => { await ev(p, () => { App.closeModal(); App.nieuweActie(); }); await wacht(p, 250); }],
   ["meldingen-modal", async (p) => { await ev(p, () => { App.closeModal(); return App.openMeldingen(); }); await wacht(p, 300); }],
   ["zoeken-modal", async (p) => { await ev(p, () => { App.closeModal(); return App.openSearch(); }); await p.fill("#zq", "dam"); await wacht(p, 250); }],
@@ -118,6 +123,13 @@ const SCHERMEN = [
   ["ins-controle-modal", async (p) => { await ev(p, () => App.bewaarInspectie()); await wacht(p, 300); }],
   ["rapport", async (p) => { await ev(p, () => { App.closeModal(); return App.bewaarInspectie(true); }); await wacht(p, 600);
     await ev(p, async () => { App.closeModal(); const a = await WPI.DB.all(); location.hash = "#/rapport/" + a[a.length - 1].id; }); await wacht(p, 800); }],
+  // het gewone pad: een ondertekend rapport (handtekening als afbeelding; "rapport" hierboven is niet ondertekend)
+  ["rapport-ondertekend", async (p) => { await ev(p, () => { App.closeModal(); App.startInspectie("DAM", "P26-168", "Damwand · RWZI Voorbeeldstad", true);
+      App.kiesTaak(App.data.kennisbank.DAM.regels[0].taak); App.setVeld("zie", "hijsband netjes gekeurd, ploeg staat buiten de last"); App.stap("klaar"); }); await wacht(p, 500);
+    await ev(p, () => App.sigNaam()); await wacht(p, 200);
+    await ev(p, () => App.bewaarInspectie(true)); await wacht(p, 600);
+    await ev(p, async () => { App.closeModal(); const a = await WPI.DB.all(); location.hash = "#/rapport/" + a[a.length - 1].id; }); await wacht(p, 800);
+    if (!(await ev(p, () => !!document.querySelector("#view img[src^='data:image/png']")))) throw new Error("geen handtekening in het rapport"); }],
   ["vandaag-zonmodus", async (p) => { await ev(p, () => { App.pref = { veld: true, zon: true }; App.pasPrefToe(); App.go("vandaag"); }); await wacht(p, 700); }],
   ["ins-zie-zonmodus", async (p) => { await ev(p, () => { App.startInspectie("DAM", "x", "Damwand test", true); App.kiesTaak(App.data.kennisbank.DAM.regels[0].taak); }); await wacht(p, 500); }],
   ["beheer", async (p) => { await ev(p, () => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.state.inspectie = null; App.bewaarConcept(true); }); await login("u-hoofd")(p); await ga("beheer")(p); }],
@@ -141,11 +153,58 @@ async function eigen(p) {
     if (ov.classList.contains("on")) {
       if (!mod.matches('[role="dialog"],[role="alertdialog"]') && !ov.matches('[role="dialog"]')) uit.push({ id: "modal-zonder-dialog-rol", target: "#mod", html: "geen role=dialog / aria-modal" });
       if (!mod.contains(document.activeElement)) uit.push({ id: "modal-focus-niet-in-dialoog", target: "#mod", html: "focus staat op " + (document.activeElement ? document.activeElement.tagName.toLowerCase() + (document.activeElement.id ? "#" + document.activeElement.id : "") : "–") });
+      // achtergrond: niets buiten de overlay mag focusbaar of voor schermlezers zichtbaar zijn (inert of aria-hidden)
+      const weg = (e) => e.closest("[inert]") || e.closest('[aria-hidden="true"]');
+      const bg = [...document.querySelectorAll('a[href],button,input,select,textarea,summary,[tabindex],h1,h2,[role="heading"],nav,main,header')]
+        .filter((e) => !ov.contains(e) && !weg(e) && e.getClientRects().length && !(e.disabled));
+      if (bg.length) uit.push({ id: "modal-achtergrond-bereikbaar", target: "#app", html: bg.length + " elementen achter de modal bereikbaar, o.a. " + bg.slice(0, 3).map((e) => e.tagName.toLowerCase() + (e.id ? "#" + e.id : "")).join(", ") });
       const x = [...mod.querySelectorAll("button")].find((b) => b.textContent.trim() === "×");
       if (x && !x.getAttribute("aria-label")) uit.push({ id: "sluitknop-zonder-naam", target: '#mod button "×"', html: x.outerHTML.slice(0, 140) });
     }
     return uit;
   });
+}
+// Tab-rondgang in de open modal, alleen met het toetsenbord: vanaf de dialoog Tab tot de focus terug is op het
+// eerste element (nooit buiten #mod), daarna Shift+Tab: eerst naar het LAATSTE element en zo de hele ronde terug.
+// Vangt een focus-trap die een element mist (bijv. <summary>) of een verborgen element (in een dichte <details>) meetelt.
+async function tabRond(p) {
+  if (!(await p.evaluate(() => document.getElementById("ov").classList.contains("on")))) return null;
+  const stand = () => p.evaluate(() => {
+    const a = document.activeElement, mod = document.getElementById("mod"), w = window.__tabIds || (window.__tabIds = new WeakMap());
+    const wat = a && a !== document.body ? a.tagName.toLowerCase() + (a.id ? "#" + a.id : "") + (a.getAttribute("aria-label") || a.textContent ? " \"" + (a.getAttribute("aria-label") || a.textContent).replace(/\s+/g, " ").trim().slice(0, 30) + "\"" : "") : "body";
+    if (!a || a === mod || !mod.contains(a)) return { uit: a !== mod, wat, id: a === mod ? 0 : -1 };
+    if (!w.has(a)) w.set(a, (window.__tabN = (window.__tabN || 0) + 1));
+    return { uit: false, wat, id: w.get(a) };
+  });
+  await p.evaluate(() => { window.__voorTab = document.activeElement; document.getElementById("mod").focus(); });
+  const fout = [], vooruit = [];
+  try {
+    let rond = false;
+    for (let i = 0; i < 80 && !rond; i++) {
+      await p.keyboard.press("Tab"); const s = await stand();
+      if (s.uit || s.id <= 0) { fout.push("Tab na " + (vooruit.length ? vooruit[vooruit.length - 1].wat : "de dialoog") + " gaat naar " + s.wat + " (buiten de dialoog)"); break; }
+      if (vooruit.length && s.id === vooruit[0].id) rond = true;
+      else if (!vooruit.length || vooruit[vooruit.length - 1].id !== s.id) vooruit.push(s);   // datumveld: Tab door dag/maand/jaar = zelfde element
+    }
+    if (!fout.length && !rond) fout.push("Tab keert na 80 keer niet terug naar het eerste element");
+    if (!fout.length) {
+      const terug = [];
+      let vorige = vooruit[0], rond2 = false;
+      for (let i = 0; i < 80 && !rond2; i++) {
+        await p.keyboard.press("Shift+Tab"); const s = await stand();
+        if (s.uit || s.id <= 0) { fout.push("Shift+Tab na " + vorige.wat + " gaat naar " + s.wat + " (buiten de dialoog)"); break; }
+        if (i === 0 && s.id !== vooruit[vooruit.length - 1].id) { fout.push("Shift+Tab op het eerste element (" + vooruit[0].wat + ") gaat naar " + s.wat + ", niet naar het laatste (" + vooruit[vooruit.length - 1].wat + ")"); break; }
+        if (s.id === vorige.id && !/^input/.test(s.wat)) { fout.push("Shift+Tab blijft staan op " + s.wat); break; }
+        if (s.id === vooruit[0].id) rond2 = true; else if (s.id !== vorige.id) terug.push(s);
+        vorige = s;
+      }
+      if (!fout.length && !rond2) fout.push("Shift+Tab keert na 80 keer niet terug naar het eerste element");
+      if (!fout.length && terug.length !== vooruit.length - 1) fout.push("Shift+Tab bezoekt " + terug.length + " elementen, Tab " + (vooruit.length - 1));
+    }
+  } finally {
+    await p.evaluate(() => { const t = window.__voorTab; window.__voorTab = null; try { (t && t.isConnected ? t : document.getElementById("mod")).focus(); } catch (e) {} });
+  }
+  return fout;
 }
 async function escSluit(p) {
   if (!(await p.evaluate(() => document.getElementById("ov").classList.contains("on")))) return null;
@@ -188,7 +247,9 @@ async function axe(p) {
       try { await binnen(zet(p), 30000); } catch (e) { errs.push(scherm + " opzetten: " + e.message.split("\n")[0]); continue; }
       let v; try { v = await binnen(axe(p), 60000); } catch (e) { errs.push(scherm + " axe: " + e.message.split("\n")[0]); continue; }
       try {
-        for (const x of await eigen(p)) v.push({ id: x.id, impact: x.id.startsWith("klik") ? "serious" : "moderate", help: EIGEN[x.id], helpUrl: "(eigen controle)", tags: ["eigen"], nodes: [{ target: x.target, html: x.html, summary: "" }] });
+        for (const x of await eigen(p)) v.push({ id: x.id, impact: EIGEN_IMPACT[x.id] || "moderate", help: EIGEN[x.id], helpUrl: "(eigen controle)", tags: ["eigen"], nodes: [{ target: x.target, html: x.html, summary: "" }] });
+        if (/modal/.test(naam)) { const t = await tabRond(p); if (t && t.length) v.push({ id: "modal-tab-ontsnapt", impact: "serious", help: EIGEN["modal-tab-ontsnapt"], helpUrl: "(eigen controle)", tags: ["eigen"], nodes: [{ target: "#mod", html: t.join(" ; ").slice(0, 160), summary: t.join(" ; ").slice(0, 200) }] });
+          if (t && t.length) console.log("  " + scherm + ": " + t.join(" ; ")); }
         if (/modal/.test(naam)) { const d = await escSluit(p); if (d === false) v.push({ id: "modal-esc-sluit-niet", impact: "moderate", help: EIGEN["modal-esc-sluit-niet"], helpUrl: "(eigen controle)", tags: ["eigen"], nodes: [{ target: "#ov", html: "Escape laat de modal open", summary: "" }] });
           if (d) { try { await zet(p); } catch (e) {} } }
       } catch (e) { errs.push(scherm + " eigen controles: " + e.message.split("\n")[0]); }

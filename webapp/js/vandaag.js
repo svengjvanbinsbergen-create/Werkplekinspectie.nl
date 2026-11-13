@@ -54,11 +54,11 @@
         }
         if (!lo && !mijn.length) html += this.heroKnop("hero rustig", act("kiesProduct"), "Vandaag", "Geen inspectie gepland",
           `<span class="s">Start er spontaan een, of plan er een in.</span>`, "Inspectie starten", "plus");
-        if (rest.length) html += `<div class="vsectie">${lo ? "Daarna" : "Ook te doen"}</div><div class="listcard vlijst">${rest.map(rij).join("")}</div>`;
+        if (rest.length) html += `<h2 class="vsectie">${lo ? "Daarna" : "Ook te doen"}</h2><div class="listcard vlijst">${rest.map(rij).join("")}</div>`;
         plan.innerHTML = html;
         // overige keuzes: rustig onderaan
         const spontaan = lo || mijn.length;
-        ander.innerHTML = `<div class="vsectie">Meer</div><div class="listcard vlijst">
+        ander.innerHTML = `<h2 class="vsectie">Meer</h2><div class="listcard vlijst">
             <button class="vknop"${act("planForm")}><span class="cirkel">${svg("cal", 20)}</span><span class="grow"><span class="t">Inspectie inplannen</span></span>${svg("chev", 18)}</button>
             ${spontaan ? `<button class="vknop"${act("kiesProduct")}><span class="cirkel">${svg("plus", 20)}</span><span class="grow"><span class="t">Andere inspectie starten</span></span>${svg("chev", 18)}</button>` : ""}</div>`;
       });
@@ -71,7 +71,7 @@
         const nLaat = B.telaat.length;
         const uitleg = [B.instellen.length ? B.instellen.length + " in te stellen" : "", B.toetsen.length ? B.toetsen.length + " te toetsen" : "", B.gepland.length ? B.gepland.length + " lopend" : ""].filter(Boolean).join(" · ");
         const laatTekst = laat.length === 1 ? meer(-laat[0].d, "dag", "dagen") + " over de plandatum · " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 40)) : "Over de plandatum · hele team";
-        actKaart.innerHTML = `<div class="vsectie">Acties</div><div class="listcard vlijst">
+        actKaart.innerHTML = `<h2 class="vsectie">Acties</h2><div class="listcard vlijst">
             ${nLaat ? `<button class="vknop warm"${act("naarActies", "telaat")}><span class="nr">${nLaat}</span><span class="grow"><span class="t">${nLaat === 1 ? "Actie" : "Acties"} te laat</span><span class="s">${laatTekst}</span></span>${svg("chev", 18)}</button>` : ""}
             <button class="vknop"${act("naarActies", null)}><span class="nr${voorJou ? "" : " nul"}">${voorJou ? voorJou : svg("check", 18, 2.6)}</span><span class="grow"><span class="t">${voorJou ? (voorJou === 1 ? "Actie" : "Acties") + " voor jou" : "Geen acties voor jou"}</span><span class="s">${voorJou ? uitleg : "Alles ligt op schema"}</span></span>${svg("chev", 18)}</button></div>`;
       });
@@ -86,7 +86,7 @@
     kiesProduct() {
       tril(12);
       this.openModal("Andere inspectie starten", "Kies wat je gaat bekijken. Je start meteen.",
-        `<input id="zoek" class="fin" placeholder="Zoek product…"${op("input", "filterProd", WAARDE)} autocomplete="off" style="margin-bottom:10px">
+        `<input id="zoek" class="fin" aria-label="Zoek product" placeholder="Zoek product…"${op("input", "filterProd", WAARDE)} autocomplete="off" style="margin-bottom:10px">
          <div class="listcard" id="prodlist">${this.productKeuzeRows()}</div>`);
       if (isWeb()) { const z = $("zoek"); if (z) z.focus(); }
     },

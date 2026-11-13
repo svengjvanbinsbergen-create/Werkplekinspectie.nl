@@ -187,12 +187,18 @@
     if (!k.act) return k.tag === "BUTTON" && k.tekst ? [...root.querySelectorAll("button")].find((x) => knopTekst(x) === k.tekst) || null : null;
     return [...root.querySelectorAll("[data-action]")].find((x) => x.getAttribute("data-action") === k.act && (x.getAttribute("data-args") || "") === k.args) || null;
   };
+  // achtergrond(true): bij een open dialoog is de rest van de pagina (skiplink, kop, menu, scherm) inert:
+  // niet focusbaar en niet zichtbaar voor schermlezers (aria-modal alleen houdt de virtuele cursor niet binnen).
+  // De live-regio #meldtekst staat daarom BUITEN #app (index.html), zodat meldingen in een dialoog hoorbaar blijven.
+  const achtergrond = (aan) => { for (const n of [$("app"), document.querySelector(".skiplink")]) if (n) { if (aan) n.setAttribute("inert", ""); else n.removeAttribute("inert"); } };
   // zeg("…"): tekst in de verborgen live-regio #meldtekst (index.html), bijv. bij een toast of zoekresultaat
   let zegTimer = null;
   const zeg = (t) => {
     const m = $("meldtekst"); if (!m) return;
     m.textContent = ""; clearTimeout(zegTimer);
-    if (t) zegTimer = setTimeout(() => { m.textContent = String(t); }, 60);   // leegmaken + kort wachten: dezelfde tekst wordt ook opnieuw voorgelezen
+    if (t) zegTimer = setTimeout(() => { m.textContent = String(t);   // leegmaken + kort wachten: dezelfde tekst wordt ook opnieuw voorgelezen
+      // na het voorlezen weer leeg, zodat een oude melding ("✓ Vastgelegd …") niet blijft hangen op latere schermen
+      zegTimer = setTimeout(() => { if (m.textContent === String(t)) m.textContent = ""; }, 7000); }, 60);
   };
 
   const App = {
@@ -320,7 +326,7 @@
     route() {
       // focus na het opnieuw tekenen: menu → blijft op het menu; stond hij in de inhoud (of nergens) → naar de kop
       // van het nieuwe scherm (in de inspectie: de nieuwe vraag), zodat toetsenbord en schermlezer meegaan
-      const fa = document.activeElement, inMenu = fa && $("tabbar").contains(fa);
+      const fa = document.activeElement, inMenu = fa && $("tabbar").contains(fa), y0 = window.scrollY;
       const naarKop = !inMenu && (!fa || fa === document.body || $("view").contains(fa));
       // zelfde scherm opnieuw getekend (bijv. een keuzechip aan/uit): focus terug op hetzelfde element
       const h0 = $("view").querySelector("h1"), zelfde = { page: this._page, kop: h0 ? h0.textContent : null, sleutel: fa && fa !== document.body && $("view").contains(fa) ? focusSleutel(fa) : null };
@@ -339,15 +345,24 @@
       this._page = page; this.checkMeldingen();
       const fn = this["view_" + page];
       $("view").innerHTML = "";
-      if (fn) fn.call(this, parts.slice(1));
-      else this.view_vandaag();
+      const nr = this._routeNr = (this._routeNr || 0) + 1;
+      const r = fn ? fn.call(this, parts.slice(1)) : this.view_vandaag();
       window.scrollTo(0, 0);
-      if (inMenu) { const a = $("tabbar").querySelector("a.on"); if (a) a.focus({ preventScroll: true }); }
-      else if (naarKop && this.user) {
+      const herstel = () => {
+        if (nr !== this._routeNr || !this.user) return;   // intussen alweer een ander scherm getekend
         const h1 = $("view").querySelector("h1"), a = document.activeElement;
         const terug = zelfde.sleutel && zelfde.page === page && h1 && h1.textContent === zelfde.kop && (!a || a === document.body) ? zoekSleutel($("view"), zelfde.sleutel) : null;
-        if (terug) { try { terug.focus({ preventScroll: true }); } catch (e) {} } else this.focusKop();
-      }
+        if (terug) {
+          // zelfde scherm opnieuw getekend (bijv. een keuzechip of tabblad): scrollpositie terug en het element met
+          // focus in beeld (ook in een horizontaal scrollende rij tabbladen), zodat de focus niet buiten beeld valt (WCAG 2.4.11)
+          window.scrollTo(0, y0);
+          try { terug.focus({ preventScroll: true }); terug.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) {}
+        } else this.focusKop();
+      };
+      if (inMenu) { const a = $("tabbar").querySelector("a.on"); if (a) a.focus({ preventScroll: true }); }
+      // asynchrone schermen (Acties, Inspecties …) tekenen pas na het laden: focus pas daarna terugzetten,
+      // anders valt de toetsenbordfocus na bijv. een tabblad-knop op <body>
+      else if (naarKop && this.user) { if (r && typeof r.then === "function") r.then(herstel); else herstel(); }
     },
     renderTabs(active) {
       $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo" aria-hidden="true">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
@@ -383,13 +398,13 @@
         <div id="modtitel" role="heading" aria-level="2" style="font-size:20px;font-weight:700">${esc(title)}</div>
         <button type="button" class="modsluit"${act("closeModal")} aria-label="Sluiten" style="background:#F3F4F6;width:44px;height:44px;flex:none;border-radius:50%;font-size:20px;color:#4A5565">×</button></div>
         ${sub ? `<div class="muted" style="font-size:13px;margin:4px 0 14px">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
-      ov.classList.add("on");
+      ov.classList.add("on"); achtergrond(true);
       const terug = sleutel && zoekSleutel(mod, sleutel);
       try { (terug || mod).focus({ preventScroll: !terug }); } catch (e) {}
     },
     closeModal() {
       const ov = $("ov"), was = ov.classList.contains("on"), mod = $("mod");
-      ov.classList.remove("on");
+      ov.classList.remove("on"); achtergrond(false);
       if (!was) return;
       const t = this._modTerug, a = document.activeElement; this._modTerug = null;
       if (!a || a === document.body || mod.contains(a)) {
@@ -490,9 +505,17 @@
   // Eén plek voor alle gegenereerde HTML: krijgt role="button" en tabindex="0" (Enter/spatie: zie hierboven).
   // SVG-delen zonder naam krijgen hun <title> of tekst als aria-label.
   const NATIEF = new Set(["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "LABEL", "SUMMARY", "OPTION"]);
+  // Wat Tab werkelijk bereikt, in documentvolgorde: ook <summary>; niet wat in een DICHTE <details> zit
+  // (Chrome geeft die inhoud nog wel afmetingen, maar focus() lukt er niet), niet inert/verborgen, geen tabindex -1.
   function focusbaar(root) {
-    return [...root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
-      .filter((x) => x.getClientRects().length && getComputedStyle(x).visibility !== "hidden");
+    return [...root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]')]
+      .filter((x) => {
+        if (x.tabIndex < 0 || x.closest("[inert]")) return false;
+        for (let d = x.closest("details:not([open])"); d; d = d.parentElement && d.parentElement.closest("details:not([open])"))
+          if (!(x.tagName === "SUMMARY" && x.parentElement === d)) return false;   // alleen de eigen summary van een dichte details
+        if (typeof x.checkVisibility === "function") return x.checkVisibility({ visibilityProperty: true, contentVisibilityAuto: true });
+        return x.getClientRects().length > 0 && getComputedStyle(x).visibility !== "hidden";
+      });
   }
   function maakBedienbaar(x) {
     if (NATIEF.has(x.tagName) || x.id === "ov" || x.hasAttribute("data-geen-knop")) return;

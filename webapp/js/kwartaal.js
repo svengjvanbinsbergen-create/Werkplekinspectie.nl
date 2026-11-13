@@ -31,7 +31,7 @@
       const delta = (nu, toen, eenheid) => nu == null || toen == null ? "" : nu === toen ? `<span class="delta">= gelijk aan ${V.q}</span>` : `<span class="delta ${nu > toen ? "op" : "neer"}">${nu > toen ? "▲" : "▼"} ${Math.abs(nu - toen)}${eenheid} t.o.v. ${V.q}</span>`;
       const lopend = K.mnd.some((m) => m >= isoDag(new Date()).slice(0, 7));
       v.appendChild(el(`<div class="noprint"><div class="hi">Voor de directie · VCA 7.1 en 7.2</div><h1 class="groot">Kwartaalrapportage</h1>
-        <div class="tabs" style="margin-bottom:16px">${qs.map((q) => `<button class="tabp${q === this.kwartaal ? " on" : ""}"${act("kiesKwartaal", q)}>${q}</button>`).join("")}
+        <div class="tabs" style="margin-bottom:16px"><span role="group" aria-label="Kwartaal kiezen" style="display:contents">${qs.map((q) => `<button class="tabp${q === this.kwartaal ? " on" : ""}"${act("kiesKwartaal", q)} aria-pressed="${q === this.kwartaal}">${q}</button>`).join("")}</span>
         <button class="tabp" style="margin-left:auto"${act("printen")}>${svg("doc", 16)} Opslaan als PDF</button></div></div>`));
       const top3 = Object.entries(K.klasse).filter(([, x]) => x.AV).sort((a, b) => b[1].AV - a[1].AV).slice(0, 3);
       const goed = Object.entries(K.klasse).filter(([, x]) => x.C >= 3).sort((a, b) => (b[1].C / (b[1].C + b[1].AV)) - (a[1].C / (a[1].C + a[1].AV)) || b[1].C - a[1].C).slice(0, 3);

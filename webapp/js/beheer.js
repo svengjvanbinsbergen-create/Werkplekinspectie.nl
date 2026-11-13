@@ -37,7 +37,7 @@
   window.App.renderTabs = function (active) {
     tabsOrig.call(this, active);
     const tb = $("tabbar");
-    if (tb && isHoofd() && isWeb()) tb.insertAdjacentHTML("beforeend", `<a href="#/beheer" class="bhtab${active === "beheer" ? " on" : ""}"><span class="ic">${svg("tand", 24)}</span>Beheer</a>`);
+    if (tb && isHoofd() && isWeb()) tb.insertAdjacentHTML("beforeend", `<a href="#/beheer" class="bhtab${active === "beheer" ? " on" : ""}"${active === "beheer" ? ' aria-current="page"' : ""}><span class="ic">${svg("tand", 24)}</span>Beheer</a>`);
   };
 
   // Inspectie, stap "Gesprek met de monteurs": de chips opnieuw opbouwen met de DOM in plaats van een naam in een
@@ -238,7 +238,7 @@
         <section class="card bhkaart" id="bh-monteurs">
           <h2 class="bhkop">Monteurs <span class="sub">${actieven.length} actief</span></h2>
           <p class="s bhuitleg">Uit deze lijst kiest de inspecteur wie er aan het werk was.</p>
-          <div class="bhtoevoeg"><input id="bh-nieuw" class="fin" placeholder="Naam van de monteur" autocomplete="off" maxlength="80" value="${esc(b.nieuw || "")}"${op("enter", "beheerToevoegen")}>
+          <div class="bhtoevoeg"><input id="bh-nieuw" class="fin" aria-label="Naam van de monteur" placeholder="Naam van de monteur" autocomplete="off" maxlength="80" value="${esc(b.nieuw || "")}"${op("enter", "beheerToevoegen")}>
             <button class="btn primary sm"${act("beheerToevoegen")}>${svg("plus", 16)} Toevoegen</button></div>
           <div id="bh-fout" class="fout">${esc(b.fout || "")}</div>
           <div class="bhlijst">${actieven.length ? actieven.map((n, i) => rij(n, i, true)).join("") : `<div class="s" style="padding:12px 0">Nog geen actieve monteurs.</div>`}</div>
@@ -260,8 +260,13 @@
     // fout tonen zonder wat er getypt is kwijt te raken
     _beheerFout(t, k) {
       const w = (id) => { const i = $(id); return i ? i.value : undefined; };
+      const hernoem = !k && !!$("bh-hernoem");
       this._beheer = Object.assign({}, this._beheer, { [k || "fout"]: t, nieuw: w("bh-nieuw"), hernoemWaarde: w("bh-hernoem"), doelWaarde: w("bh-doel-in") });
       this.route();
+      // het scherm is opnieuw getekend: melding voorlezen, veld als ongeldig markeren (gekoppeld aan de melding) en focussen
+      const veld = $(k === "doelFout" ? "bh-doel-in" : hernoem ? "bh-hernoem" : "bh-nieuw");
+      if (veld) { veld.setAttribute("aria-invalid", "true"); veld.setAttribute("aria-describedby", k === "doelFout" ? "bh-doel-fout" : "bh-fout"); try { veld.focus(); } catch (e) {} }
+      window.WPI.zeg(t);
     },
     beheerToevoegen() {
       if (!isHoofd()) return;
