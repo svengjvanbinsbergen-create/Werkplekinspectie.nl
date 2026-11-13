@@ -166,6 +166,10 @@ grant select on seed_monteurs to authenticated;
 \ir testdata.sql
 update public.profiles set role = 'qhse' where id = 'd0000000-0000-4000-a000-000000000021';
 update public.profiles set actief = false where id = 'e0000000-0000-4000-a000-000000000031';
+-- I1/I2 hebben de OUDE rol inspecteur: de app kent hem niet meer en niemand kan hem nog toekennen (0008), maar
+-- de database ondersteunt bestaande rijen nog. Zo blijven de regels voor een lid zonder staf-rechten getoetst.
+-- (Een nieuw profiel heeft sinds 0008 geen rol: zonder deze regel hadden I1/I2 geen toegang.)
+update public.profiles set role = 'inspecteur' where id in ('a0000000-0000-4000-a000-000000000011', 'a0000000-0000-4000-a000-000000000012');
 
 -- psql-macro's: rol wisselen zoals PostgREST
 \set ANON 'reset role; select set_config(''request.jwt.claims'', '''', false) is null; set role anon;'
@@ -208,12 +212,12 @@ select tests.klopt('structuur: authenticated heeft geen TRUNCATE op tabellen in 
 select tests.klopt('seed: Björn is hoofd, Winfred/Douwe coordinator',
   (select count(*) from public.profiles where (full_name, role) in
      (('Björn Sloos', 'hoofd'), ('Winfred Loerts', 'coordinator'), ('Douwe de Boer', 'coordinator'))) = 3);
-select tests.klopt('seed: GEEN voorbeeldmonteurs en GEEN vooraf ingesteld doel_conform (leeg = geen doel)',
+select tests.klopt('seed: GEEN voorbeeldmonteurs; doel_conform = 85 (besluit producteigenaar, 0008)',
   (select n from seed_monteurs) = 0
-  and not exists (select 1 from public.instellingen where sleutel = 'doel_conform'));
+  and (select waarde from public.instellingen where sleutel = 'doel_conform') = '85'::jsonb);
 select tests.klopt('testdata: 5 fictieve monteurs (alleen lokaal)', (select count(*) from public.monteurs) = 5);
-select tests.klopt('auth: rol uit user_metadata wordt genegeerd (nieuw account = inspecteur)',
-  (select role from public.profiles where id = 'f0000000-0000-4000-a000-000000000041') = 'inspecteur');
+select tests.klopt('auth: rol uit user_metadata wordt genegeerd (nieuw account = nog geen rol)',
+  (select role is null from public.profiles where id = 'f0000000-0000-4000-a000-000000000041'));
 select tests.klopt('auth: niet-uitgenodigde aanmelding krijgt een INACTIEF profiel',
   (select not actief from public.profiles where id = 'f0000000-0000-4000-a000-000000000041'));
 select tests.klopt('auth: uitgenodigde gebruikers zijn actief',
@@ -348,8 +352,8 @@ select tests.raakt('inspecteur: profiel van een ander wijzigen geweigerd (0 rije
 select tests.faalt('inspecteur: profiel invoegen geweigerd',
   $q$insert into public.profiles (id, full_name) values ('f0000000-0000-4000-a000-000000000041', 'x')$q$, '%permission denied%');
 :W
-select tests.faalt('coordinator: monteur toevoegen geweigerd (alleen hoofd)',
-  $q$insert into public.monteurs (naam) values ('Nep Monteur')$q$, '%row-level security%');
+select tests.lukt('coordinator: monteur toevoegen en weer weghalen mag (0008: lijst van hoofden en coördinatoren)',
+  $q$insert into public.monteurs (naam) values ('Nep Monteur'); delete from public.monteurs where naam = 'Nep Monteur'$q$);
 select tests.raakt('coordinator: rol van een ander wijzigen geweigerd (0 rijen)',
   $q$update public.profiles set role = 'hoofd' where id = 'a0000000-0000-4000-a000-000000000011'$q$, 0);
 :H
@@ -374,9 +378,14 @@ select tests.klopt('profiel: naam genormaliseerd (dubbele spatie weg)',
   (select full_name from public.profiles where id = 'a0000000-0000-4000-a000-000000000011') = 'Inspecteur Eén');
 select tests.faalt('profiel: dubbele naam geweigerd (ook met andere hoofdletters/accenten)',
   $q$update public.profiles set full_name = 'bjorn  SLOOS' where id = 'a0000000-0000-4000-a000-000000000012'$q$, '%profiles_naam_uniek%');
-select tests.lukt('hoofd: rol wijzigen (inspecteur 2 -> coordinator en terug)',
-  $q$update public.profiles set role = 'coordinator' where id = 'a0000000-0000-4000-a000-000000000012';
-     update public.profiles set role = 'inspecteur' where id = 'a0000000-0000-4000-a000-000000000012'$q$);
+select tests.lukt('hoofd: rol wijzigen (inspecteur 2 -> coordinator)',
+  $q$update public.profiles set role = 'coordinator' where id = 'a0000000-0000-4000-a000-000000000012'$q$);
+select tests.faalt('hoofd: de oude rol inspecteur weer toekennen geweigerd (0008: niemand krijgt hem nog)',
+  $q$update public.profiles set role = 'inspecteur' where id = 'a0000000-0000-4000-a000-000000000012'$q$, '%inspecteur wordt niet meer toegekend%');
+:PG
+-- (terug naar de oude rol kan alleen als eigenaar: I2 test verder de regels voor een lid zonder staf-rechten)
+update public.profiles set role = 'inspecteur' where id = 'a0000000-0000-4000-a000-000000000012';
+:H
 select tests.faalt('hoofd: laatste actieve hoofd kan zichzelf niet degraderen',
   $q$update public.profiles set role = 'coordinator' where id = auth.uid()$q$, '%minstens één actief hoofd%');
 -- MFA afdwingen voor beheerroutes
@@ -651,9 +660,9 @@ select tests.klopt('auditlog: wie = auth.uid() van de wijziger',
   exists (select 1 from public.audit_log where tabel = 'instellingen' and wie = auth.uid()));
 select tests.telt('security_events: hoofd ziet 10 meldingen + 1 rate-limitmarkering van inspecteur 1',
   $q$select * from public.security_events where wie = 'a0000000-0000-4000-a000-000000000011'$q$, 11);
--- 3x seed (Björn/Winfred/Douwe) + QHSE + inactief + 2x hoofd + 2x upsert-robuustheidstest = 9
+-- 3x seed (Björn/Winfred/Douwe) + QHSE + inactief + 2x oude rol inspecteur (I1/I2) + 2x hoofd + 2x upsert-robuustheidstest = 11
 select tests.telt('security_events: elke rol-/activeringswijziging automatisch gelogd',
-  $q$select * from public.security_events where soort = 'rol_gewijzigd'$q$, 9);
+  $q$select * from public.security_events where soort = 'rol_gewijzigd'$q$, 11);
 select tests.faalt('auditlog: hoofd kan niet UPDATEn', $q$update public.audit_log set tabel = 'x'$q$, '%permission denied%');
 select tests.faalt('auditlog: hoofd kan niet DELETEn', $q$delete from public.audit_log$q$, '%permission denied%');
 select tests.faalt('security_events: hoofd kan niet DELETEn', $q$delete from public.security_events$q$, '%permission denied%');
@@ -685,7 +694,8 @@ select tests.klopt('dashboard: coordinator telt alle inspecties en waarnemingen'
 :I2
 select tests.faalt('dashboard: inspecteur geweigerd (dashboard alleen staf, web)', $q$select public.dashboard_cijfers()$q$, '%alleen voor de coördinatoren%');
 :Q
-select tests.faalt('dashboard: QHSE geweigerd', $q$select public.dashboard_cijfers()$q$, '%alleen voor de coördinatoren%');
+select tests.klopt('dashboard: QHSE-manager ziet het dashboard (0008: volledige inzage)',
+  (select (d ->> 'inspecties')::int = 2 and d ->> 'doel_conform' = '85' from (select public.dashboard_cijfers() d) x));
 :X
 select tests.faalt('dashboard: inactief account geweigerd', $q$select public.dashboard_cijfers()$q$, '%alleen voor de coördinatoren%');
 
@@ -706,8 +716,8 @@ select tests.klopt('verwijderen: acties blijven bestaan, koppeling leeg, status 
 -- iemand meldt zich zelf aan met de naam van het hoofd én het voorbeeldadres uit seed.sql
 insert into auth.users (id, email, raw_user_meta_data) values
   ('f0000000-0000-4000-a000-000000000042', 'bjorn.sloos@VUL-IN.invalid', '{"full_name":"Björn Sloos"}');
-select tests.klopt('escalatie: aanmelding als "Björn Sloos" krijgt een NEUTRALE naam (bezet geen naam), rol inspecteur en is INACTIEF',
-  (select full_name like 'Niet-uitgenodigd account f0000000%' and role = 'inspecteur' and not actief and not uitgenodigd
+select tests.klopt('escalatie: aanmelding als "Björn Sloos" krijgt een NEUTRALE naam (bezet geen naam), geen rol en is INACTIEF',
+  (select full_name like 'Niet-uitgenodigd account f0000000%' and role is null and not actief and not uitgenodigd
    from public.profiles where id = 'f0000000-0000-4000-a000-000000000042'),
   (select full_name from public.profiles where id = 'f0000000-0000-4000-a000-000000000042'));
 -- seed.sql opnieuw draaien: zowel het origineel (voorbeeldadressen) als de ingevulde versie
@@ -715,7 +725,7 @@ select tests.klopt('escalatie: aanmelding als "Björn Sloos" krijgt een NEUTRALE
 \i :seed
 select tests.klopt('escalatie: seed.sql opnieuw draaien maakt niemand anders hoofd (koppelt op e-mail + uitnodiging)',
   (select count(*) from public.profiles where role = 'hoofd') = 1
-  and (select role from public.profiles where id = 'f0000000-0000-4000-a000-000000000042') = 'inspecteur'
+  and (select role is null from public.profiles where id = 'f0000000-0000-4000-a000-000000000042')
   and (select role from public.profiles where id = 'a0000000-0000-4000-a000-000000000011') = 'inspecteur');
 -- uitnodiging zoals Supabase Auth het doet: eerst de gebruiker, daarna invited_at, in
 -- DEZELFDE transactie (GoTrue invite-handler)
@@ -811,8 +821,9 @@ select tests.faalt('A3b: eerder houder -> zichzelf toetser maken geweigerd (ook 
 select tests.lukt('A3b: houder wisselen mag (staf, tijdens uitvoering)', $q$update public.acties set houder = 'a0000000-0000-4000-a000-000000000012' where id = 'ACT-a3b'$q$);
 select tests.faalt('A3b: oud-houder (coordinator) daarna als toetser geweigerd',
   $q$update public.acties set toetser = 'c0000000-0000-4000-a000-000000000002' where id = 'ACT-a3b'$q$, '%niet zelf aan de uitvoering%');
-select tests.faalt('QHSE als toetser geweigerd (QHSE blijft onafhankelijk, zoals de app)',
-  $q$update public.acties set toetser = 'd0000000-0000-4000-a000-000000000021' where id = 'ACT-a3b'$q$, '%QHSE%');
+select tests.lukt('QHSE-manager als toetser mag (besluit producteigenaar, 0008; nooit actiehouder)',
+  $q$update public.acties set toetser = 'd0000000-0000-4000-a000-000000000021' where id = 'ACT-a3b';
+     update public.acties set toetser = 'a0000000-0000-4000-a000-000000000011' where id = 'ACT-a3b'$q$);
 -- A4: toetser zet zelf de uitvoeringsstappen
 select tests.lukt('A4: actie met houder inspecteur 2 en toetser Douwe',
   $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
@@ -1475,35 +1486,51 @@ select tests.lukt('null: instellen van het systeemvoorstel mag wel (iedereen mag
   $q$update public.acties set status = 'Open', houder = 'c0000000-0000-4000-a000-000000000002',
        toetser = 'c0000000-0000-4000-a000-000000000003', plandatum = current_date + 3 where id = 'ACT-s1'$q$);
 
--- 23b. QHSE nooit actiehouder of toetser, ook niet na een rolwijziging
+-- 23b. QHSE-manager en beheerder nooit actiehouder, beheerder nooit toetser (QHSE mag toetsen; 0008), ook niet na
+--      een rolwijziging. T is een coördinator die alleen toetser is (nergens actiehouder).
+:PG
+insert into tests.gebruiker values ('T', 'c0000000-0000-4000-a000-000000000004');
+begin;
+insert into auth.users (id, email, raw_user_meta_data) values ('c0000000-0000-4000-a000-000000000004', 'toetser@test.invalid', '{"full_name":"Toet Ser"}');
+update auth.users set invited_at = now() where id = 'c0000000-0000-4000-a000-000000000004';
+commit;
+update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000004';
+\set T 'reset role; select tests.als(''T'');  set role authenticated;'
 :W
-select tests.lukt('qhse-rol: actie ingesteld met inspecteur 2 als houder en Douwe als toetser',
+select tests.lukt('qhse-rol: actie ingesteld met inspecteur 2 als houder en T als toetser',
   $q$insert into public.acties (id, tekst, oordeel, status, handmatig, houder, toetser, plandatum)
      values ('ACT-qr', 'Hek repareren', '–', 'Open', true, 'a0000000-0000-4000-a000-000000000012',
-             'c0000000-0000-4000-a000-000000000003', current_date + 4)$q$);
+             'c0000000-0000-4000-a000-000000000004', current_date + 4)$q$);
 :I2
 select tests.lukt('qhse-rol: houder start en meldt klaar',
   $q$update public.acties set status = 'In uitvoering' where id = 'ACT-qr';
      update public.acties set status = 'Klaar voor toetsing' where id = 'ACT-qr'$q$);
 :H2
-select tests.faalt('qhse-rol: hoofd maakt de toetser van een lopende actie QHSE-manager: geweigerd',
-  $q$update public.profiles set role = 'qhse' where id = 'c0000000-0000-4000-a000-000000000003'$q$, '%QHSE-manager is nooit actiehouder of toetser%');
 select tests.faalt('qhse-rol: hoofd maakt de houder van een lopende actie QHSE-manager: geweigerd',
-  $q$update public.profiles set role = 'qhse' where id = 'a0000000-0000-4000-a000-000000000012'$q$, '%QHSE-manager is nooit actiehouder of toetser%');
+  $q$update public.profiles set role = 'qhse' where id = 'a0000000-0000-4000-a000-000000000012'$q$, '%nooit actiehouder%');
+select tests.faalt('qhse-rol: hoofd maakt de houder van een lopende actie beheerder: geweigerd',
+  $q$update public.profiles set role = 'beheerder' where id = 'a0000000-0000-4000-a000-000000000012'$q$, '%nooit actiehouder%');
+select tests.faalt('qhse-rol: hoofd maakt de toetser van een lopende actie beheerder: geweigerd',
+  $q$update public.profiles set role = 'beheerder' where id = 'c0000000-0000-4000-a000-000000000004'$q$, '%beheerder is nooit toetser%');
 -- tweede verdedigingslinie: rol buiten de controle om gewijzigd (bv. noodcorrectie in SQL)
 :PG
 set session_replication_role = replica;
-update public.profiles set role = 'qhse' where id = 'c0000000-0000-4000-a000-000000000003';
+update public.profiles set role = 'beheerder' where id = 'c0000000-0000-4000-a000-000000000004';
 set session_replication_role = origin;
-:D
-select tests.faalt('qhse-rol: toetser die (toch) QHSE-manager werd, kan niet afronden',
-  $q$update public.acties set status = 'Afgerond' where id = 'ACT-qr'$q$, '%QHSE-manager kan geen toetser zijn%');
+:T
+select tests.faalt('qhse-rol: toetser die (toch) beheerder werd, kan niet afronden',
+  $q$update public.acties set status = 'Afgerond' where id = 'ACT-qr'$q$, '%beheerder kan geen toetser zijn%');
 :PG
 set session_replication_role = replica;
-update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000003';
+update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000004';
 set session_replication_role = origin;
-:D
-select tests.lukt('qhse-rol: weer coordinator: afronden lukt', $q$update public.acties set status = 'Afgerond' where id = 'ACT-qr'$q$);
+:H2
+select tests.lukt('qhse-rol: de toetser van een lopende actie QHSE-manager maken mag (de QHSE-manager mag toetsen)',
+  $q$update public.profiles set role = 'qhse' where id = 'c0000000-0000-4000-a000-000000000004'$q$);
+:T
+select tests.lukt('qhse-rol: QHSE-manager rondt als toetser af', $q$update public.acties set status = 'Afgerond' where id = 'ACT-qr'$q$);
+:H2
+select tests.lukt('qhse-rol: weer coordinator', $q$update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000004'$q$);
 
 -- 23c. uitnodiging: alleen een account uit DEZELFDE transactie wordt actief
 :PG
@@ -1958,6 +1985,232 @@ select tests.raakt('bewijs: het hoofd verwijdert de foto (AVG/bewaartermijn)',
 :I2
 select tests.faalt('bewijs: na verwijderen een andere foto onder dezelfde naam zetten geweigerd',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/bewijs-ev2.jpg', auth.uid())$q$, '%row-level security%');
+
+-- =====================================================================
+-- 26. Rollen van het echte team (0008): beheerder, QHSE-manager, tweede hoofd, nog geen rol,
+--     MFA voor de beheerrollen, verloop-tekens en de bewaartermijn van 7 jaar
+-- =====================================================================
+:PG
+insert into tests.gebruiker values
+  ('B',  'd0000000-0000-4000-a000-000000000022'),  -- beheerder
+  ('M',  'b0000000-0000-4000-a000-000000000002'),  -- tweede hoofd, functie Manager Projects
+  ('NR', 'f0000000-0000-4000-a000-000000000047');  -- uitgenodigd, nog geen rol
+begin;
+insert into auth.users (id, email, raw_user_meta_data) values
+  ('d0000000-0000-4000-a000-000000000022', 'beheer@test.invalid',  '{"full_name":"Beheer Der"}'),
+  ('b0000000-0000-4000-a000-000000000002', 'manager@test.invalid', '{"full_name":"Manager Projecten"}'),
+  ('f0000000-0000-4000-a000-000000000047', 'norol@test.invalid',   '{"full_name":"Nog Geen Rol"}');
+update auth.users set invited_at = now()
+ where id in ('d0000000-0000-4000-a000-000000000022', 'b0000000-0000-4000-a000-000000000002', 'f0000000-0000-4000-a000-000000000047');
+commit;
+update public.profiles set role = 'beheerder', functie = 'Applicatiebeheerder' where id = 'd0000000-0000-4000-a000-000000000022';
+update public.profiles set role = 'hoofd', functie = 'Manager Projects' where id = 'b0000000-0000-4000-a000-000000000002';
+\set B  'reset role; select tests.als(''B'');  set role authenticated;'
+\set B2 'reset role; select tests.als(''B'', ''aal2''); set role authenticated;'
+\set Q2 'reset role; select tests.als(''Q'', ''aal2''); set role authenticated;'
+\set M  'reset role; select tests.als(''M'');  set role authenticated;'
+\set NR 'reset role; select tests.als(''NR''); set role authenticated;'
+select tests.klopt('rollen: enum kent beheerder (en nog steeds inspecteur, voor compatibiliteit)',
+  enum_range(null::public.user_role)::text[] @> array['inspecteur', 'coordinator', 'hoofd', 'qhse', 'beheerder']);
+select tests.klopt('rollen: uitgenodigd profiel is actief maar heeft nog geen rol',
+  (select actief and role is null from public.profiles where id = 'f0000000-0000-4000-a000-000000000047'));
+
+-- 26a. nog geen rol = nog geen toegang (wel de eigen rij, zodat de app "nog geen rol" kan zeggen)
+:NR
+select tests.telt('nog geen rol: ziet alleen het eigen profiel', $q$select * from public.profiles$q$, 1);
+select tests.telt('nog geen rol: ziet geen monteurs', $q$select * from public.monteurs$q$, 0);
+select tests.telt('nog geen rol: ziet geen inspecties', $q$select * from public.inspecties$q$, 0);
+select tests.faalt('nog geen rol: actie aanmaken geweigerd', $q$insert into public.acties (id, tekst) values ('ACT-nr', 'x')$q$, '%row-level security%');
+select tests.faalt('nog geen rol: dashboard geweigerd', $q$select public.dashboard_cijfers()$q$, '%alleen voor de coördinatoren%');
+:W
+select tests.faalt('nog geen rol: kan geen actiehouder zijn',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
+     values ('ACT-nr2', 'x', '–', true, 'Open', 'f0000000-0000-4000-a000-000000000047', 'c0000000-0000-4000-a000-000000000003', current_date + 3)$q$,
+  '%nog geen rol%');
+
+-- 26b. beheerder: ziet alles en beheert, maar inspecteert en plant niet
+:B
+select tests.klopt('beheerder: mag alles lezen en beheren, is geen staf en inspecteert niet',
+  public.mag_alles_lezen() and public.is_beheer_admin() and not public.is_staf() and not public.mag_inspecteren());
+select tests.klopt('beheerder: leest alle inspecties (zoals een coördinator)',
+  (select count(*) from public.inspecties) > 0);
+select tests.klopt('beheerder: ziet het dashboard', (select public.dashboard_cijfers() ? 'inspecties'));
+select tests.klopt('beheerder: leest de auditlog en de beveiligingsgebeurtenissen',
+  exists (select 1 from public.audit_log) and exists (select 1 from public.security_events));
+select tests.telt('beheerder: ziet ook het profiel zonder rol en de niet-uitgenodigde aanmelding (beheer)',
+  $q$select * from public.profiles where id in ('f0000000-0000-4000-a000-000000000047', 'f0000000-0000-4000-a000-000000000042')$q$, 2);
+select tests.lukt('beheerder: monteur toevoegen', $q$insert into public.monteurs (naam) values ('Bert Beheerlijst')$q$);
+select tests.lukt('beheerder: doel_conform wijzigen (80) en terug (85)',
+  $q$update public.instellingen set waarde = '80' where sleutel = 'doel_conform';
+     update public.instellingen set waarde = '85' where sleutel = 'doel_conform'$q$);
+select tests.lukt('beheerder: een uitgenodigd profiel een rol geven (coördinator)',
+  $q$update public.profiles set role = 'coordinator', functie = 'Montage Coördinator' where id = 'f0000000-0000-4000-a000-000000000047'$q$);
+select tests.faalt('beheerder: de oude rol inspecteur toekennen geweigerd',
+  $q$update public.profiles set role = 'inspecteur' where id = 'f0000000-0000-4000-a000-000000000047'$q$, '%inspecteur wordt niet meer toegekend%');
+select tests.faalt('beheerder: eigen rol naar hoofd zetten geweigerd (geen zelfpromotie)',
+  $q$update public.profiles set role = 'hoofd' where id = auth.uid()$q$, '%eigen rol%');
+select tests.faalt('beheerder: zichzelf deactiveren geweigerd',
+  $q$update public.profiles set actief = false where id = auth.uid()$q$, '%eigen rol%');
+select tests.faalt('beheerder: inspectie aanmaken geweigerd (inspecteert niet)',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-b1', 'x', '{}')$q$, '%row-level security%');
+select tests.faalt('beheerder: planning maken geweigerd (leest alleen)',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-b1', current_date + 1, 'DAM', 'c0000000-0000-4000-a000-000000000002')$q$, '%row-level security%');
+select tests.raakt('beheerder: planning wijzigen raakt niets', $q$update public.planning set locatie = 'x'$q$, 0);
+-- de laatste-hoofd-bescherming geldt ook voor de beheerder
+select tests.lukt('beheerder: tweede hoofd (Manager Projects) tijdelijk coördinator maken',
+  $q$update public.profiles set role = 'coordinator' where id = 'b0000000-0000-4000-a000-000000000002'$q$);
+select tests.faalt('beheerder: het laatste actieve hoofd degraderen geweigerd',
+  $q$update public.profiles set role = 'qhse' where id = 'b0000000-0000-4000-a000-000000000001'$q$, '%minstens één actief hoofd%');
+select tests.faalt('beheerder: het laatste actieve hoofd deactiveren geweigerd',
+  $q$update public.profiles set actief = false where id = 'b0000000-0000-4000-a000-000000000001'$q$, '%minstens één actief hoofd%');
+select tests.lukt('beheerder: Manager Projects weer hoofd',
+  $q$update public.profiles set role = 'hoofd' where id = 'b0000000-0000-4000-a000-000000000002'$q$);
+:M
+select tests.klopt('tweede hoofd (Manager Projects): dezelfde rechten als het hoofd',
+  public.is_hoofd() and public.is_staf() and public.mag_inspecteren() and public.is_beheer_admin());
+select tests.faalt('tweede hoofd: zichzelf degraderen geweigerd (eigen rol)',
+  $q$update public.profiles set role = 'coordinator' where id = auth.uid()$q$, '%eigen rol%');
+
+-- 26c. QHSE-manager: ziet alles en beheert; toetser ja, actiehouder nooit; inspecteert niet
+:Q
+select tests.klopt('qhse: mag alles lezen en beheren, is geen staf en inspecteert niet',
+  public.mag_alles_lezen() and public.is_beheer_admin() and not public.is_staf() and not public.mag_inspecteren());
+select tests.lukt('qhse: monteur toevoegen (beheer)', $q$insert into public.monteurs (naam) values ('Quirine Qlijst')$q$);
+select tests.lukt('qhse: functie van een collega wijzigen (beheer)',
+  $q$update public.profiles set functie = 'Montage Coördinator' where id = 'f0000000-0000-4000-a000-000000000047'$q$);
+select tests.faalt('qhse: eigen rol naar coördinator zetten geweigerd (dan zou ze actiehouder kunnen worden)',
+  $q$update public.profiles set role = 'coordinator' where id = auth.uid()$q$, '%eigen rol%');
+select tests.faalt('qhse: inspectie aanmaken geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-q1', 'x', '{}')$q$, '%row-level security%');
+:W
+select tests.lukt('qhse: als toetser van een nieuwe actie',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
+     values ('ACT-26q', 'Leuning plaatsen', '–', true, 'Open', 'c0000000-0000-4000-a000-000000000003', 'd0000000-0000-4000-a000-000000000021', current_date + 3)$q$);
+select tests.faalt('beheerder: als actiehouder geweigerd',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
+     values ('ACT-26b', 'x', '–', true, 'Open', 'd0000000-0000-4000-a000-000000000022', 'c0000000-0000-4000-a000-000000000003', current_date + 3)$q$,
+  '%beheerder kan geen actiehouder%');
+select tests.faalt('beheerder: als toetser geweigerd',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status, houder, toetser, plandatum)
+     values ('ACT-26c', 'x', '–', true, 'Open', 'c0000000-0000-4000-a000-000000000003', 'd0000000-0000-4000-a000-000000000022', current_date + 3)$q$,
+  '%beheerder kan geen toetser%');
+select tests.faalt('beheerder: later als toetser kiezen geweigerd',
+  $q$update public.acties set toetser = 'd0000000-0000-4000-a000-000000000022' where id = 'ACT-26q'$q$, '%beheerder kan geen toetser%');
+select tests.faalt('planning: de beheerder als inspecteur inplannen geweigerd',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-26b', current_date + 2, 'DAM', 'd0000000-0000-4000-a000-000000000022')$q$,
+  '%als inspecteur worden ingepland%');
+select tests.faalt('planning: de QHSE-manager als inspecteur inplannen geweigerd',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-26q', current_date + 2, 'DAM', 'd0000000-0000-4000-a000-000000000021')$q$,
+  '%als inspecteur worden ingepland%');
+select tests.lukt('planning: het tweede hoofd (Manager Projects) inplannen mag',
+  $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-26m', current_date + 2, 'DAM', 'b0000000-0000-4000-a000-000000000002')$q$);
+select tests.faalt('planning: daarna aan de QHSE-manager toewijzen geweigerd',
+  $q$update public.planning set inspecteur = 'd0000000-0000-4000-a000-000000000021' where id = 'PL-26m'$q$, '%als inspecteur worden ingepland%');
+:D
+select tests.lukt('qhse: houder meldt klaar voor toetsing', $q$update public.acties set status = 'Klaar voor toetsing' where id = 'ACT-26q'$q$);
+:Q
+select tests.lukt('qhse: rondt als toetser af (Afgerond pas na toetsing)', $q$update public.acties set status = 'Afgerond' where id = 'ACT-26q'$q$);
+
+-- 26d. MFA (aal2) voor ALLE beheerrollen zodra die verplicht is
+:PG
+update public.instellingen set waarde = 'true' where sleutel = 'mfa_verplicht_hoofd';
+:B
+select tests.faalt('beheerder zonder MFA (aal1): monteur toevoegen geweigerd', $q$insert into public.monteurs (naam) values ('Zonder Mfa B')$q$, '%row-level security%');
+select tests.raakt('beheerder zonder MFA (aal1): rol wijzigen raakt niets',
+  $q$update public.profiles set role = 'hoofd' where id = 'f0000000-0000-4000-a000-000000000047'$q$, 0);
+select tests.telt('beheerder zonder MFA (aal1): auditlog niet leesbaar', $q$select * from public.audit_log$q$, 0);
+select tests.klopt('beheerder zonder MFA (aal1): geen volledige inzage', not public.mag_alles_lezen() and not public.is_beheer_admin());
+select tests.telt('beheerder zonder MFA (aal1): leest geen inspecties', $q$select * from public.inspecties$q$, 0);
+:Q
+select tests.faalt('qhse zonder MFA (aal1): instelling wijzigen geweigerd',
+  $q$insert into public.instellingen (sleutel, waarde) values ('doel_conform', '70') on conflict (sleutel) do update set waarde = excluded.waarde$q$, '%row-level security%');
+select tests.telt('qhse zonder MFA (aal1): leest geen inspecties', $q$select * from public.inspecties$q$, 0);
+:M
+select tests.faalt('tweede hoofd zonder MFA (aal1): monteur toevoegen geweigerd', $q$insert into public.monteurs (naam) values ('Zonder Mfa M')$q$, '%row-level security%');
+:W
+select tests.lukt('coördinator (geen beheerrol): monteur toevoegen blijft mogen zonder MFA', $q$insert into public.monteurs (naam) values ('Coor Dinator Lijst')$q$);
+:B2
+select tests.lukt('beheerder met MFA (aal2): monteur toevoegen', $q$insert into public.monteurs (naam) values ('Met Mfa B')$q$);
+select tests.klopt('beheerder met MFA (aal2): volledige inzage', public.mag_alles_lezen() and public.is_beheer_admin());
+:Q2
+select tests.lukt('qhse met MFA (aal2): monteur toevoegen', $q$insert into public.monteurs (naam) values ('Met Mfa Q')$q$);
+:PG
+update public.instellingen set waarde = 'false' where sleutel = 'mfa_verplicht_hoofd';
+
+-- 26e. verloop (actie_log.wat): dezelfde tekenregel als alle vrije tekst (tekst_tekens_ok)
+:M
+select tests.lukt('verloop-tekens: eigen handmatige actie', $q$insert into public.acties (id, tekst, status) values ('ACT-26t', 'Tekentest', 'Voorstel')$q$);
+select tests.faalt('verloop-tekens: Unicode-tag-teken (U+E0041) geweigerd',
+  format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Toelichting' || chr(917569)), '%onzichtbare%');
+select tests.faalt('verloop-tekens: variatiekiezer U+E0100 geweigerd',
+  format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Toelichting' || chr(917760)), '%onzichtbare%');
+select tests.faalt('verloop-tekens: opvuller U+3164 geweigerd',
+  format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Toelichting' || chr(12644)), '%onzichtbare%');
+select tests.lukt('verloop-tekens: emoji met zero-width joiner (U+200D) mag',
+  format('insert into public.actie_log (actie_id, wie, wat) values (%L, auth.uid(), %L)', 'ACT-26t', 'Gedaan ' || chr(128119) || chr(8205) || chr(9792) || chr(65039)));
+:PG
+select tests.klopt('verloop-tekens: CHECK actie_log_wat_tekens bestaat (ook voor beheer via SQL)',
+  exists (select 1 from pg_constraint where conrelid = 'public.actie_log'::regclass and conname = 'actie_log_wat_tekens'));
+select tests.klopt('verloop-tekens: regel van de app = tekst_tekens_ok voor elk codepunt U+0001–U+FFFF en U+E0000–U+E01EF',
+  not exists (select 1 from generate_series(1, 917999) cp
+              where (cp < 65536 or cp >= 917504) and cp not between 55296 and 57343
+                and public.tekst_tekens_ok('a' || chr(cp)) is distinct from
+                    (('a' || chr(cp)) !~ '[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F­͏؜؀-؅۝܏࢐࢑࣢ᅟᅠ឴឵᠎​‌‎‏ -‮⁠-⁯ㅤ﻿ﾠ￹-￻\U000E0000-\U000E007F\U000E0100-\U000E01EF]')));
+
+-- 26f. bewaartermijn 7 jaar: inspecties, acties, planning, verloop, auditregels en foto's
+:PG
+-- oude rijen maken (triggers even uit, alleen in de test, om tijdstempels van 8 jaar terug te kunnen zetten)
+set session_replication_role = replica;
+insert into public.inspecties (id, inspecteur_id, titel, opgeslagen, record, created_at, updated_at) values
+  ('WPI-oud7', 'b0000000-0000-4000-a000-000000000001', 'Oude inspectie', now() - interval '8 years',
+   '{"waarnemingen":[{"oordeel":"A","foto":"b0000000-0000-4000-a000-000000000001/oud-insp.jpg"}]}',
+   now() - interval '8 years', now() - interval '8 years');
+insert into public.acties (id, tekst, oordeel, status, handmatig, foto_pad, created_at, updated_at) values
+  ('ACT-oud7', 'Oude actie', '–', 'Vervallen', true, 'b0000000-0000-4000-a000-000000000001/oud-act.jpg', now() - interval '8 years', now() - interval '8 years'),
+  ('ACT-oud7b', 'Oude actie met gedeelde foto', '–', 'Vervallen', true, 'b0000000-0000-4000-a000-000000000001/gedeeld.jpg', now() - interval '8 years', now() - interval '8 years'),
+  ('ACT-nieuw7', 'Recente actie met dezelfde foto', '–', 'Voorstel', true, 'b0000000-0000-4000-a000-000000000001/gedeeld.jpg', now(), now());
+insert into public.planning (id, datum, code, inspecteur, status, created_at, updated_at) values
+  ('PL-oud7', current_date - 3000, 'DAM', 'b0000000-0000-4000-a000-000000000001', 'gepland', now() - interval '8 years', now() - interval '8 years');
+insert into public.actie_log (actie_id, wat, bron, t) values ('ACT-oud7', 'Oude verloopregel', 'server', now() - interval '8 years');
+insert into public.audit_log (tabel, record_id, actie, nieuw, t) values
+  ('acties', 'ACT-oud7', 'INSERT', '{"tekst":"Oude actie"}', now() - interval '8 years'),
+  ('inspecties', 'WPI-oud7', 'INSERT', '{"titel":"Oude inspectie"}', now() - interval '8 years');
+set session_replication_role = origin;
+create temp table bt_voor as select (select count(*) from public.inspecties) as ins, (select count(*) from public.acties) as act,
+  (select count(*) from public.planning) as pl;
+select tests.klopt('bewaartermijn: proefrun telt 1 inspectie, 2 acties, 1 planning en 2 foto''s (de gedeelde foto blijft)',
+  (select (r ->> 'inspecties')::int = 1 and (r ->> 'acties')::int = 2 and (r ->> 'planning')::int = 1
+          and r -> 'fotos' = '["b0000000-0000-4000-a000-000000000001/oud-act.jpg", "b0000000-0000-4000-a000-000000000001/oud-insp.jpg"]'::jsonb
+     from (select public.bewaartermijn_opschonen(p_proef => true) r) x),
+  (select public.bewaartermijn_opschonen(p_proef => true)::text));
+select tests.klopt('bewaartermijn: proefrun verwijdert niets',
+  exists (select 1 from public.inspecties where id = 'WPI-oud7') and exists (select 1 from public.acties where id = 'ACT-oud7')
+  and not exists (select 1 from public.bewaartermijn_fotos));
+select tests.klopt('bewaartermijn: opschonen',
+  (select (r ->> 'inspecties')::int = 1 and (r ->> 'acties')::int = 2 and (r ->> 'actie_log')::int >= 1
+     from (select public.bewaartermijn_opschonen() r) x));
+select tests.klopt('bewaartermijn: oude inspectie, acties en planning zijn weg; de recente actie met dezelfde foto blijft',
+  not exists (select 1 from public.inspecties where id = 'WPI-oud7')
+  and not exists (select 1 from public.acties where id in ('ACT-oud7', 'ACT-oud7b'))
+  and not exists (select 1 from public.planning where id = 'PL-oud7')
+  and exists (select 1 from public.acties where id = 'ACT-nieuw7'));
+select tests.klopt('bewaartermijn: alles wat jonger is dan 7 jaar staat er nog',
+  (select ins - 1 from bt_voor) = (select count(*) from public.inspecties)
+  and (select act - 2 from bt_voor) = (select count(*) from public.acties)
+  and (select pl - 1 from bt_voor) = (select count(*) from public.planning));
+select tests.klopt('bewaartermijn: geen verloop- of auditregels van de verwijderde records meer (ook niet van de verwijdering zelf)',
+  not exists (select 1 from public.actie_log where actie_id in ('ACT-oud7', 'ACT-oud7b'))
+  and not exists (select 1 from public.audit_log where record_id in ('WPI-oud7', 'ACT-oud7', 'ACT-oud7b', 'PL-oud7')));
+select tests.klopt('bewaartermijn: de foto''s die nergens meer gebruikt worden staan klaar voor de Storage-API',
+  (select array_agg(pad order by pad) from public.bewaartermijn_fotos)
+    = array['b0000000-0000-4000-a000-000000000001/oud-act.jpg', 'b0000000-0000-4000-a000-000000000001/oud-insp.jpg']);
+select tests.faalt('bewaartermijn: korter dan 7 jaar geweigerd', $q$select public.bewaartermijn_opschonen(6)$q$, '%minstens 7 jaar%');
+select tests.faalt('bewaartermijn: daarna is de onderhoudsmodus weer uit (actie_log append-only)',
+  $q$delete from public.actie_log where actie_id = 'ACT-26t'$q$, '%append-only%');
+:H2
+select tests.faalt('bewaartermijn: niet vanuit de app (ook niet als hoofd)', $q$select public.bewaartermijn_opschonen()$q$, '%permission denied%');
+:SR
+select tests.faalt('bewaartermijn: niet met de service_role', $q$select public.bewaartermijn_opschonen()$q$, '%permission denied%');
 
 -- =====================================================================
 -- Resultaat

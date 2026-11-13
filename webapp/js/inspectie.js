@@ -276,10 +276,14 @@
       const box = $("taakvs"), ins = this.state.inspectie; if (!box || !ins) return;
       const regels = this.data.kennisbank[ins.code].regels, taken = [...new Set(regels.map((r) => r.taak))];
       const docVan = (t) => t + " " + regels.filter((r) => r.taak === t).map((r) => (r.taakstap || "") + " " + (r.risico || "")).join(" ");
-      const vs = ins.taakTekst.trim() ? this.lokaalVoorstel(ins.taakTekst, taken.map((t) => ({ id: t, naam: t, doc: docVan(t) }))).slice(0, 2) : [];
+      // werkwoorden van de bouwplaats ("ze slaan de planken erin" → Plaatsen) via js/koppel.js; anders de oude trefwoorden
+      const K = WPI.koppel, tekst = ins.taakTekst.trim();
+      const rang = tekst && K ? K.taakRang(tekst, taken, regels, [this.data.kennisbank[ins.code].naam || ""]).slice(0, 2) : null;
+      const vs = !tekst ? [] : rang ? rang.map((x) => x.id) : this.lokaalVoorstel(ins.taakTekst, taken.map((t) => ({ id: t, naam: t, doc: docVan(t) }))).slice(0, 2);
+      const waarom = (t) => { const r = rang && rang.find((x) => x.id === t); return r && r.woorden.length ? "je zei " + r.woorden.slice(0, 3).map((x) => "“" + esc(x) + "”").join(", ") : this.waarom(ins.taakTekst, docVan(t)); };
       this._taakVs = vs;
       box.innerHTML = vs.length ? this.vsKop("is dit de taak?") +
-        vs.map((t) => this.vsPick(act("kiesTaak", t), esc(t), regels.filter((r) => r.taak === t).length + " risicoregels in de TRA", this.waarom(ins.taakTekst, docVan(t)))).join("") : "";
+        vs.map((t) => this.vsPick(act("kiesTaak", t), esc(t), regels.filter((r) => r.taak === t).length + " risicoregels in de TRA", waarom(t))).join("") : "";
     },
 
     // --- schermen ---
@@ -387,41 +391,95 @@
           bron = "Claude";
         } catch (e) { if (e && (e.code === "not_granted" || e.code === "sampling_disabled")) this.caps.sample = null; }
       }
-      if (!ids.length) { const l = this.lokaalVoorstel(cur.tekst, kand); if (l.length) { ids = l; bron = bron ? bron + " + trefwoorden" : "trefwoorden"; } }
+      // eigen rangschikking (gevaarzinnen boven losse woorden, js/koppel.js): terugval zonder Claude, en controle erop
+      const rang = this.koppelRang(ins, cur.tekst);
+      let sterk = false, reden = rang ? rang.reden : "geen", enkel = rang ? rang.enkel : "";
+      if (ids.length) {
+        // Claude koppelde: alleen sterk als de gevaarzinnen dezelfde regel sterk aanwijzen, anders één bevestigingstik
+        sterk = !!(rang && rang.sterk && rang.top === ids[0]);
+        if (!sterk) { reden = "controle"; enkel = ""; }
+      } else if (rang && rang.lijst.length) {
+        ids = rang.lijst.filter((x, i) => i === 0 || !x.alg).slice(0, 3).map((x) => x.id);
+        sterk = rang.sterk; bron = bron ? bron + " + gevaarwoorden" : "gevaarwoorden";
+      } else if (!rang) {
+        const l = this.lokaalVoorstel(cur.tekst, kand); if (l.length) { ids = l; bron = bron ? bron + " + trefwoorden" : "trefwoorden"; }
+      }
       if (this.state.inspectie !== ins || ins.stap !== "koppel") return;
-      ins.voorstel = { ids, bron, bezig: false, vraag }; this.route();
+      ins.voorstel = { ids, bron, bezig: false, vraag, sterk, reden, enkel,
+        rang: rang ? rang.lijst.slice(0, 6).map((x) => ({ id: x.id, alg: x.alg, woorden: x.woorden.slice(0, 4) })) : [] };
+      this.route();
     },
-    // "Klopt dit?": jouw woorden, het Voorstel en direct daaronder jouw oordeel, op één scherm.
-    // Eén manier om te bevestigen: je oordeel (C/A/V/NVT) bevestigt de voorgestelde regel (de kop boven de
-    // knoppen zegt dat). Niets is voorgekozen; de AI koppelt alleen voor en oordeelt nooit. Welke maatregel je
-    // zag kun je (optioneel) in de Voorstel-kaart aantikken. Past een andere regel beter, of staat het niet in
-    // de TRA: één lijst eronder ("Andere regel kiezen"). De regelkaart zelf aantikken = de hele regel lezen.
+    // rangschikking voor de lopende taak (js/koppel.js); null als die module ontbreekt
+    koppelRang(ins, tekst) {
+      const K = WPI.koppel; if (!K || !String(tekst || "").trim()) return null;
+      const kb = this.data.kennisbank[ins.code] || {};
+      return K.rangschik(tekst, { regels: this.regelsVanTaak(ins), alg: this.onderwerpen(), generiek: [kb.naam || "", ins.taak || ""] });
+    },
+    // altijd drie regels van de taak in beeld: eerst het Voorstel, dan wat de rangschikking nog vond, dan de
+    // regels met direct gevaar (vallende last, val van hoogte, gas, spanning), dan de TRA-volgorde
+    koppelTop3(ins, vs) {
+      const regels = this.regelsVanTaak(ins), K = WPI.koppel;
+      const gevaar = (r) => (K && K.directGevaar(r.risico, "") ? 0 : 1);
+      const vul = regels.slice().sort((a, b) => gevaar(a) - gevaar(b)).map((r) => r.id);
+      const uit = [];
+      [].concat(vs.ids || [], (vs.rang || []).filter((x) => !x.alg).map((x) => x.id), vul).forEach((id) => { if (id && !uit.includes(id)) uit.push(id); });
+      return uit.slice(0, 3);
+    },
+    // risicokop (vóór de dubbele punt): "Vallen van de last"
+    risicoKop(titel) { const t = String(titel || ""), i = t.search(/[:;]/); return kort(i > 0 ? t.slice(0, i) : t, 60); },
+    // "Klopt dit?": jouw woorden, het Voorstel en jouw oordeel, op één scherm. Altijd drie regels van de taak,
+    // elk met de VOLLEDIGE risicozin (niet afgekapt) en als groot aanraakvlak (handschoenen).
+    // STERKE match (een gevaarzin wijst één regel aan): je oordeel (C/A/V/NVT) bevestigt die regel in één tik; de
+    // kop boven de knoppen noemt regel én risico. ZWAKKE match (één los woord, twijfel tussen regels, of Claude en
+    // de gevaarwoorden zijn het oneens): label "Zwakke match" en C/A/V staat uit tot je de regel zelf aantikt.
+    // Niets is voorgekozen; de AI en de trefwoorden koppelen alleen voor en oordelen nooit. Past niets: één lijst
+    // eronder ("Andere regel kiezen", ook buiten de TRA).
     ins_koppel(ins, v) {
       const cur = ins.cur, vs = ins.voorstel || { ids: [], bezig: true };
       const kand = this.kandidaten(ins), regels = this.regelsVanTaak(ins), ows = this.onderwerpen();
-      const een = !vs.bezig && vs.ids.length >= 1;   // er is een (best passend) Voorstel om te bevestigen
+      const een = !vs.bezig && vs.ids.length >= 1;   // er is een (best passend) Voorstel
+      const sterk = een && vs.sterk === true;        // alleen dan bevestigt een oordeeltik de regel
       const id0 = een ? vs.ids[0] : null, info0 = id0 ? this.regelInfo(id0) : null;
-      const pick = (id) => { const i = this.regelInfo(id), k = kand.find((x) => x.id === id), w = this.waarom(cur.tekst, k ? k.doc + " " + k.naam : i.titel, vs.bron);
-        return `<button class="pick vpick een"${act("kiesRegel", id)}><span class="vp-top"><span class="vp-ref">${esc(i.ref)}</span>
-          <span class="vp-meer">Details ›</span></span>
-          <span class="t">${esc(kort(i.titel, 120))}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}</button>`; };
+      const toon = vs.bezig ? [] : this.koppelTop3(ins, vs);
+      const rangVan = (id) => (vs.rang || []).find((x) => x.id === id);
+      const kaart = (id, i) => {
+        const inf = this.regelInfo(id), r = rangVan(id), voorgesteld = vs.ids.includes(id), k = kand.find((x) => x.id === id);
+        const w = r && r.woorden && r.woorden.length ? "je zei " + r.woorden.map((x) => "“" + esc(x) + "”").join(", ")
+          : voorgesteld ? this.waarom(cur.tekst, k ? k.doc + " " + k.naam : inf.titel, vs.bron) : "";
+        const tag = id === id0 ? (sterk ? "Beste match" : "Mogelijk") : voorgesteld ? "Mogelijk" : "Ook bij deze taak";
+        return `<button class="pick vpick kpick${id === id0 ? " k1" : ""}"${act("kiesRegel", id)}><span class="vp-top"><span class="vp-ref">${esc(inf.ref)}</span><span class="ktag">${tag}</span>
+          <span class="vp-meer">Kies deze ›</span></span><span class="t">${esc(inf.titel)}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}</button>`;
+      };
       const zelf = (id, ref, titel) => `<button class="zpick"${act("kiesRegel", id)}><span class="vp-ref">${esc(ref)}</span><span class="t">${esc(kort(titel, 90))}</span></button>`;
-      // maatregelen van de voorgestelde regel: optioneel aantikken, ook als je meteen je oordeel kiest
+      // maatregelen van de voorgestelde regel: optioneel aantikken, ook als je meteen je oordeel kiest (alleen bij een sterke match)
       const mrGezien = cur.mrVoor === id0 ? cur.maatregelen || [] : [];
-      const mr = info0 && info0.maatregelen.length ? `<details class="vs-mr"${mrGezien.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${mrGezien.length ? `<span class="n">${mrGezien.length} gezien</span>` : ""}</summary>
+      const mr = sterk && info0.maatregelen.length ? `<details class="vs-mr"${mrGezien.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${mrGezien.length ? `<span class="n">${mrGezien.length} gezien</span>` : ""}</summary>
           <div class="chips">${info0.maatregelen.map((m, i) => `<button class="chipb${mrGezien.includes(m) ? " on" : ""}"${act("togVsMaatregel", i, ELEMENT)} aria-pressed="${mrGezien.includes(m)}">${esc(m)}</button>`).join("")}</div></details>` : "";
+      const zwakTekst = vs.reden === "een-woord" && vs.enkel ? `Alleen “${esc(vs.enkel)}” past bij een regel. Tik de regel aan die klopt; daarna kies je je oordeel.`
+        : vs.reden === "twijfel" ? "Twee regels passen ongeveer even goed. Tik de regel aan die klopt; daarna kies je je oordeel."
+        : vs.reden === "controle" ? "Controleer het voorstel: tik de regel aan die klopt; daarna kies je je oordeel."
+        : "Weinig aanwijzingen in je woorden. Tik de regel aan die klopt; daarna kies je je oordeel.";
+      const match = sterk ? `<span class="lbl kmatch sterk">Sterke match</span>` : `<span class="lbl kmatch zwak">Zwakke match</span>`;
       // één lijst met alle andere mogelijkheden (ook voorgesteld, de taak, algemene onderwerpen, buiten de TRA)
-      const ook = een ? vs.ids.slice(1) : [], rest = regels.filter((r) => !vs.ids.includes(r.id)), owRest = ows.filter((o) => !vs.ids.includes("ALG-" + o.ref));
+      const ook = (een ? vs.ids : []).concat((vs.rang || []).filter((x) => x.alg).map((x) => x.id)).filter((id, i, a) => !toon.includes(id) && a.indexOf(id) === i);
+      const rest = regels.filter((r) => !toon.includes(r.id) && !ook.includes(r.id)), owRest = ows.filter((o) => !toon.includes("ALG-" + o.ref) && !ook.includes("ALG-" + o.ref));
       const vraag = een ? "Klopt dit?" : "Waar hoort dit bij?";
+      const ref0 = een ? info0.ref + (String(id0).startsWith("ALG-") ? "" : " (" + this.risicoKop(info0.titel) + ")") : "";
+      let kaartHtml, onder = "";
+      if (vs.bezig) kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">Even koppelen aan de TRA…</span></div><div class="vpick-leeg" aria-hidden="true"></div>`;
+      else if (sterk) {
+        // sterke match: de beste regel, dan meteen je oordeel; de twee andere regels van de taak eronder
+        kaartHtml = `${this.vsKop("klopt dit?", vs.bron)}<div class="kmatchrij">${match}</div>${kaart(id0, 0)}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}${mr}`;
+        const anders = toon.filter((id) => id !== id0);
+        if (anders.length) onder = `<section class="q kook" aria-labelledby="kook-t"><div class="kook-t" id="kook-t">Of past een van deze beter?</div>${anders.map((id, i) => kaart(id, i + 1)).join("")}</section>`;
+      } else if (een) kaartHtml = `${this.vsKop("welke regel klopt?", vs.bron)}<div class="kmatchrij">${match}<span class="kzwak">${zwakTekst}</span></div>${toon.map(kaart).join("")}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}`;
+      else kaartHtml = `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies zelf. Dit zijn de belangrijkste risico's van deze taak; de rest staat hieronder, of leg het vast als buiten de TRA.</div>${toon.map(kaart).join("")}`;
       v.appendChild(el(`<div class="stapwrap kstap">
         ${this.insHead(ins, "Taak · " + ins.taak, vraag)}
         <div class="q jijkaart">${this.citaat(cur)}</div>
-        <div class="q vskaart${vs.bezig ? " bezig" : ""}" aria-live="polite">
-          ${vs.bezig ? `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">Even koppelen aan de TRA…</span></div><div class="vpick-leeg" aria-hidden="true"></div>`
-            : een ? `${this.vsKop("klopt dit?", vs.bron)}${pick(id0)}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}${mr}`
-            : `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies hieronder zelf uit de TRA, of leg het vast als buiten de TRA.</div>`}
-        </div>
-        ${this.oordeelBlok(cur, een ? "bevestig" : vs.bezig ? "bezig" : "wacht", een ? info0.ref : "")}
+        <div class="q vskaart${vs.bezig ? " bezig" : ""}" aria-live="polite">${kaartHtml}</div>
+        ${this.oordeelBlok(cur, sterk ? "bevestig" : een ? "zwak" : vs.bezig ? "bezig" : "wacht", ref0)}
+        ${onder}
         <div class="kzelf">
           <details class="zelfkies"${!vs.bezig && !vs.ids.length ? " open" : ""}><summary>${een ? "Andere regel kiezen" : "Zelf kiezen uit de TRA"} <span class="n">${ook.length + rest.length + owRest.length}</span></summary>
             <div class="zlijst">${ook.length ? `<div class="zkop">Ook voorgesteld${vs.bron ? " · via " + esc(vs.bron) : ""}</div>${ook.map((id) => { const i = this.regelInfo(id); return zelf(id, i.ref, i.titel); }).join("")}` : ""}
@@ -448,22 +506,25 @@
         else if (n) n.remove();
       } else this.route();
     },
-    // oordeelknoppen C/A/V (+ NVT), groot. modus: "oordeel" (koppeling staat), "bevestig" (één Voorstel: je
-    // oordeel bevestigt het), "wacht"/"bezig" (nog geen koppeling: knoppen zichtbaar maar uit). Nooit voorgekozen.
+    // oordeelknoppen C/A/V (+ NVT), groot. modus: "oordeel" (koppeling staat), "bevestig" (sterke match: je
+    // oordeel bevestigt de regel), "zwak" (zwakke match: eerst de regel aantikken), "wacht"/"bezig" (nog geen
+    // koppeling). Bij zwak/wacht/bezig zijn de knoppen zichtbaar maar uit. Nooit voorgekozen.
     oordeelBlok(cur, modus, ref) {
       const O = { C: ["Conform", "In orde, zoals het hoort"], A: ["Afwijking", "Niet in orde, moet opgelost"], V: ["Verbeterpunt", "In orde, maar kan beter"] };
-      const fn = modus === "bevestig" ? "bevestigOordeel" : "oordeel", uit = modus === "wacht" || modus === "bezig" ? " disabled" : "";
+      const fn = modus === "bevestig" ? "bevestigOordeel" : "oordeel", uit = modus === "wacht" || modus === "bezig" || modus === "zwak" ? " disabled" : "";
       const kop = modus === "bevestig" ? `Juiste regel? Kies dan je oordeel <span>· dat bevestigt ${ref ? esc(ref) : "het voorstel"}</span>`
+        : modus === "zwak" ? `Jouw oordeel <span>· tik eerst hierboven de regel aan die klopt</span>`
         : modus === "bezig" ? `Jouw oordeel <span>· zodra het voorstel er is</span>`
         : modus === "wacht" ? `Jouw oordeel <span>· kies eerst hieronder een regel</span>` : `Jouw oordeel <span>· alleen jij beslist</span>`;
       return `<section class="dock odock vlak${uit ? " uit" : ""}" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>
         <div class="seg stapel" role="group" aria-label="Oordeel: C, A of V">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act(fn, o)} aria-pressed="${cur.oordeel === o}"${uit}><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
         <button class="linkknop nvt"${act(fn, "NVT")}${uit}>Niet van toepassing</button></section>`;
     },
-    // Voorstel + oordeel in één tik: de inspecteur bevestigt de (best passende) koppeling door zelf C/A/V/NVT te kiezen
+    // Voorstel + oordeel in één tik (alleen bij een sterke match): de inspecteur bevestigt de koppeling door zelf C/A/V/NVT te kiezen
     bevestigOordeel(o) {
       const ins = this.state.inspectie; if (!ins || ins.stap !== "koppel" || !ins.cur || !["C", "A", "V", "NVT"].includes(o)) return;
       const vs = ins.voorstel; if (!vs || vs.bezig || !Array.isArray(vs.ids) || !vs.ids.length) return;
+      if (vs.sterk !== true) return;   // een zwakke match bevestigt de inspecteur altijd met een tik op de regel zelf
       const cur = ins.cur, id = vs.ids[0];
       this.logKeuze("TRA-regel", "voorstel gebruikt", id);
       // aangetikte maatregelen (Voorstel-kaart) horen bij deze regel en blijven staan: het actievoorstel gebruikt ze
@@ -505,13 +566,31 @@
     oordeel(o) {
       const ins = this.state.inspectie, cur = ins.cur; cur.oordeel = o; tril(o === "C" ? 25 : [25, 60, 25]);
       if (o === "A" || o === "V") {
-        if (!cur.actie.prio) cur.actie.prio = cur.direct ? "direct" : o === "A" ? "kort" : "planmatig";
+        const a = cur.actie, gv = o === "A" ? this.gevaarVan(cur) : "";
+        a.gevaar = gv;
+        // urgentie als Voorstel: bij direct gevaar (vallende/hangende last, val, gas, spanning) of na "Werk is
+        // stilgelegd" de hoogste prioriteit; de inspecteur kan het veranderen (dan telt zijn keuze)
+        if (!a.prioGekozen) { a.prio = cur.direct || gv ? "direct" : o === "A" ? "kort" : "planmatig"; a.prioVoorstel = !cur.direct && gv ? "direct" : null; }
+        // bij direct gevaar eerst de vraag "Wat heb je ter plaatse gedaan?": niet stilzwijgend "Niets gedaan".
+        // Alleen wat de inspecteur zelf al meldde ("Werk is stilgelegd") staat al aan.
+        if (!a.tpGekozen) {
+          if (cur.direct) Object.assign(a, { terPlaatse: "maatregel", stilgelegd: true });
+          else if (gv) Object.assign(a, { terPlaatse: null, stilgelegd: false });
+          else Object.assign(a, { terPlaatse: "niets", stilgelegd: false });
+        }
         this.stap("actie");
         if (!cur.actie.tekst.trim()) this.actieVoorstel();   // voorstel op basis van wat de inspecteur zei
         return;
       }
       const terug = cur.onderwerp ? "algemeen" : "meer";
       this.bewaarWaarneming(); this.stap(terug);
+    },
+    // direct gevaar bij deze waarneming? → label (risicokop of wat je zag), anders ""
+    gevaarVan(cur) {
+      const K = WPI.koppel; if (!K || !cur) return cur && cur.direct ? "door jou gemeld" : "";
+      const r = !cur.buiten && cur.regel_id && !String(cur.regel_id).startsWith("ALG-")
+        ? ((this.data.kennisbank[this.state.inspectie.code] || { regels: [] }).regels.find((x) => x.id === cur.regel_id) || {}).risico : "";
+      return K.directGevaar(r || "", cur.tekst || "") || (cur.direct ? "door jou gemeld" : "");
     },
     bewaarWaarneming() {
       const ins = this.state.inspectie, cur = ins.cur; if (!cur) return;
@@ -525,26 +604,38 @@
       ins.waarnemingen = ins.waarnemingen.filter((x) => x !== w); w.oordeel = null; ins.cur = w; ins.laatste = null;
       this.stap("oordeel");
     },
-    // "Wat moet er gebeuren?": wat (tekst) boven, twee korte keuzes als grote vlakken, hierna-strook met de toetsregel, vastleggen onderin (duimzone)
+    // "Wat moet er gebeuren?": wat (tekst) boven, twee korte keuzes als grote vlakken, hierna-strook met de toetsregel, vastleggen onderin (duimzone).
+    // Bij direct gevaar (A op vallende/hangende last, val van hoogte, gas, spanning, of "Werk is stilgelegd"): eerst
+    // "Wat heb je ter plaatse gedaan?" (niets voorgekozen) en prioriteit Direct als Voorstel; de inspecteur kan alles wijzigen.
     ins_actie(ins, v) {
       const cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten), a = cur.actie;
-      const gecorr = a.terPlaatse === "gecorrigeerd";
+      const gecorr = a.terPlaatse === "gecorrigeerd", gv = a.gevaar || (cur.direct ? "door jou gemeld" : "");
       const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}"${act("zetActie", k, val)} aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${u}</span>` : ""}</button>`;
+      const tpAan = (val) => val === "stilgelegd" ? a.terPlaatse === "maatregel" && !!a.stilgelegd : val === "maatregel" ? a.terPlaatse === "maatregel" && !a.stilgelegd : a.terPlaatse === val;
+      const tp = (val, w, u) => `<button class="kvlak${tpAan(val) ? " on" : ""}"${act("zetTerPlaatse", val)} aria-pressed="${tpAan(val)}"><span class="w">${w}</span>${u ? `<span class="u">${u}</span>` : ""}</button>`;
       const kop = a.bezig ? `<span class="lbl vs">Voorstel</span><span class="s">wordt gemaakt…</span>`
         : a.herkomst === "Voorstel" ? `<span class="lbl vs">Voorstel</span><span class="s">pas gerust aan</span>`
         : `<span class="arij-t">Actie</span>`;
-      const uitleg = a.terPlaatse === "maatregel" ? "Een direct genomen maatregel maakt alleen het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
-        : gecorr ? "De ploeg heeft het ter plaatse opgelost en jij hebt het gezien. Het wordt vastgelegd als afgerond, met jou als toetser." : "";
+      const uitleg = a.terPlaatse === "maatregel" && a.stilgelegd ? "Het werk ligt stil: niemand is nu in gevaar. De actie blijft open tot de oorzaak is opgelost en getoetst."
+        : a.terPlaatse === "maatregel" ? "Een direct genomen maatregel maakt alleen het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
+        : gecorr ? "De ploeg heeft het ter plaatse opgelost en jij hebt het gezien. Het wordt vastgelegd als afgerond, met jou als toetser."
+        : gv && !a.terPlaatse ? "Nog niet gekozen. Bij direct gevaar laat je eerst het werk stilleggen."
+        : gv && a.terPlaatse === "niets" ? "Er is nog niets gedaan terwijl het gevaar er is: laat het werk stilleggen en pas dit daarna aan." : "";
+      const prioVs = a.prioVoorstel && !a.prioGekozen && a.prio === a.prioVoorstel;
+      const prioBlok = `<div class="otitel" id="kv-prio">Hoe dringend vind jij het?</div>
+          ${prioVs ? `<div class="kv-vs"><span class="lbl vs">Voorstel</span><span class="s">Direct, want dit is direct gevaar · pas gerust aan</span></div>` : ""}
+          <div class="kvlakken" role="group" aria-labelledby="kv-prio">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>`;
+      const tpBlok = gv ? `<div class="otitel" id="kv-terplaatse">Wat heb je ter plaatse gedaan?</div>
+          <div class="kvlakken vier" id="kv-tp-groep" role="group" aria-labelledby="kv-terplaatse">${tp("stilgelegd", "Werk stilgelegd", "niemand meer in gevaar")}${tp("gecorrigeerd", "Direct verholpen", "jij zag het herstel")}${tp("maatregel", "Maatregel genomen", "tijdelijk veilig")}${tp("niets", "Nog niets", "")}</div>`
+        : `<div class="otitel" id="kv-terplaatse">Ter plaatse</div>
+          <div class="kvlakken" role="group" aria-labelledby="kv-terplaatse">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen")}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>`;
+      const tekstBlok = `<div class="arij">${kop}<button class="wijzig arij-k" id="btn-av"${act("actieVoorstel")}${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
+          ${a.herkomst === "Voorstel" && !a.bezig ? `<div class="waarom arij-w">Via ${esc(a.vsBron || "de app")}${a.vsWaarom ? " · waarom: " + esc(a.vsWaarom) : ""}</div>` : ""}
+          ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting", "Wat moet er gebeuren?")}`;
       v.appendChild(el(`<div class="stapwrap">${this.insHead(ins, info.ref + " · " + (cur.oordeel === "A" ? "Afwijking" : "Verbeterpunt"), "Wat moet er gebeuren?")}
         <div class="q akaart2">${this.citaat(cur)}
-          <div class="arij">${kop}<button class="wijzig arij-k" id="btn-av"${act("actieVoorstel")}${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
-          ${a.herkomst === "Voorstel" && !a.bezig ? `<div class="waarom arij-w">Via ${esc(a.vsBron || "de app")}${a.vsWaarom ? " · waarom: " + esc(a.vsWaarom) : ""}</div>` : ""}
-          ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting", "Wat moet er gebeuren?")}
-          <div class="otitel" id="kv-prio">Hoe dringend vind jij het?</div>
-          <div class="kvlakken" role="group" aria-labelledby="kv-prio">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>
-          <div class="otitel" id="kv-terplaatse">Ter plaatse</div>
-          <div class="kvlakken" role="group" aria-labelledby="kv-terplaatse">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen")}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
-          ${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}
+          ${gv ? `<div class="kgevaar" role="note">${svg("warn", 20)}<span><b>Direct gevaar</b> · ${esc(gv)}</span></div>${tpBlok}${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}${tekstBlok}${prioBlok}`
+            : `${tekstBlok}${prioBlok}${tpBlok}${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}`}
           <div class="hierna"><div class="hierna-t">Hierna</div>${gecorr
             ? this.actieStappen({ status: "Afgerond" }, { gecorr: true }) + `<div class="aw-regel">Jij zag het herstel: jij bent de toetser. Geen verdere instelling nodig.</div>`
             : this.actieStappen({ status: "Voorstel" }) + `<div class="aw-regel">Iedereen in het team kan het voorstel instellen (Acties › In te stellen): actiehouder, toetser en plandatum kiezen. <b>Afgerond pas na toetsing</b>; de toetser is nooit de actiehouder.</div>`}</div>
@@ -564,7 +655,19 @@
         return `<li class="${st}"${st === "nu" ? ' aria-current="step"' : ""}><span class="bol">${st === "klaar" ? svg("check", 14, 3) : i + 1}</span><span class="n">${n}</span>${w ? `<span class="w">${esc(w)}</span>` : ""}</li>`;
       }).join("")}</ol>`;
     },
-    zetActie(k, val) { this.state.inspectie.cur.actie[k] = val; tril(15); const y = window.scrollY; this.route(); window.scrollTo(0, y); },
+    zetActie(k, val) {
+      const a = this.state.inspectie.cur.actie; a[k] = val;
+      if (k === "prio") a.prioGekozen = true;
+      if (k === "terPlaatse") { a.tpGekozen = true; a.stilgelegd = false; }
+      tril(15); const y = window.scrollY; this.route(); window.scrollTo(0, y);
+    },
+    // "Wat heb je ter plaatse gedaan?" bij direct gevaar: "Werk stilgelegd" is een genomen maatregel (actie blijft open)
+    zetTerPlaatse(val) {
+      if (!["stilgelegd", "gecorrigeerd", "maatregel", "niets"].includes(val)) return;
+      const a = this.state.inspectie.cur.actie;
+      Object.assign(a, { terPlaatse: val === "stilgelegd" ? "maatregel" : val, stilgelegd: val === "stilgelegd", tpGekozen: true });
+      tril(15); const y = window.scrollY; this.route(); window.scrollTo(0, y);
+    },
     async actieVoorstel() {
       const ins = this.state.inspectie, cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten);
       cur.actie.bezig = true; const btn = $("btn-av"); if (btn) { btn.disabled = true; btn.textContent = "Even denken…"; }
@@ -598,6 +701,8 @@
     bevestigActie() {
       const ins = this.state.inspectie, cur = ins.cur, a = cur.actie;
       this.logKeuze("actietekst", a.vsTekst ? (a.tekst.trim() === a.vsTekst.trim() ? "voorstel gebruikt" : "voorstel aangepast") : "zelf geschreven", a.tekst);
+      if (a.prioVoorstel) this.logKeuze("prioriteit", a.prio === a.prioVoorstel ? "voorstel gebruikt" : "voorstel aangepast", a.prio);
+      if (!a.terPlaatse) a.terPlaatse = "niets";   // vraag niet beantwoord: er is (nog) niets ter plaatse gedaan
       a.status = a.terPlaatse === "gecorrigeerd" ? "Afgerond" : "Voorstel";
       tril([20, 40, 20]);
       const terug = cur.onderwerp ? "algemeen" : "meer";
@@ -739,7 +844,7 @@
         nieuw.push({ id, inspectie_id: rec.id, inspectie_titel: rec.titel, inspecteur: rec.inspecteur, ref: this.infoVoor(rec.code, w.regel_id, w.buiten).ref,
           waarneming: (w.tekst || "").trim(), foto: w.foto || null, extraFotos: this.fotoLijst(w).slice(1).map((foto) => ({ foto })), oordeel: w.oordeel, tekst: w.actie.tekst, prio: w.actie.prio, terPlaatse: w.actie.terPlaatse,
           status: gecorr ? "Afgerond" : "Voorstel", houder: null, toetser: gecorr ? this.user.id : null, plandatum: gecorr ? isoDag(new Date()) : null,
-          log: [{ t: nu, wie: rec.inspecteur, wat: gecorr ? "Ter plaatse gecorrigeerd en door de inspecteur gezien" : "Actievoorstel uit de inspectie" + (w.actie.herkomst === "Voorstel" ? " (tekst voorgesteld door de app)" : "") }] });
+          log: [{ t: nu, wie: rec.inspecteur, wat: gecorr ? "Ter plaatse gecorrigeerd en door de inspecteur gezien" : (w.actie.stilgelegd ? "Werk ter plaatse stilgelegd; actievoorstel uit de inspectie" : "Actievoorstel uit de inspectie") + (w.actie.herkomst === "Voorstel" ? " (tekst voorgesteld door de app)" : "") }] });
       });
       let ok = true;
       try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }

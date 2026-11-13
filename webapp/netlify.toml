@@ -1,17 +1,19 @@
 # Werkplekinspectie — Netlify. In de Netlify-instellingen: Base directory = "webapp", Publish directory = "webapp/dist"
 # (volgt uit publish hieronder). Staat dit bestand in de root van de repo, gebruik dan base = "webapp".
-# Headers staan in _headers (zelfde map); de regels hieronder doen hetzelfde, voor als
-# _headers per ongeluk niet wordt meegenomen. Bij dubbele headers wint netlify.toml.
+# LET OP: de app gaat online met de API-deploy (tools/deploy_netlify.sh, zonder Netlify-build). Die past ALLEEN
+# _headers toe; dit bestand (build, headers én redirects) wordt dan NIET gebruikt. Alleen bij een Netlify-build
+# vanuit git geldt dit bestand naast _headers (bij dubbele headers wint dan netlify.toml). Houd beide gelijk.
 
 [build]
   # ALLOWLIST: alleen wat de app nodig heeft gaat naar dist/ en alleen dist/ wordt gepubliceerd. Nieuwe interne
   # bestanden (docs, tests, supabase, tools, *.md, *.sql, *.py, *.sh, losse .html-pagina's, .env, .git) kunnen zo nooit
   # per ongeluk online komen; ook niet als iemand ze later in webapp/ zet. Daarna blijven alleen bestandstypen over
-  # die de app gebruikt (html/css/js/json/png) en alleen index.html als pagina. _headers gaat mee (Netlify en
+  # die de app gebruikt (html/css/js/json/png) en alleen index.html als pagina; .well-known/assetlinks.json (Android-app)
+  # gaat mee (de map .well-known is de enige toegestane punt-map). _headers gaat mee (Netlify en
   # Cloudflare Pages lezen hem uit de publicatiemap). DEZELFDE opdracht staat in vercel.json en in _headers
   # (Cloudflare Pages); tests/exposed.js --config voert ze uit en controleert de inhoud van dist/.
   publish = "dist"
-  command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
+  command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
 
 # --- HTTP → HTTPS. Netlify stuurt zelf door zodra het certificaat er is; deze regels gelden ALLEEN voor de twee
 # domeinen hieronder. Komt de app op een ander adres, pas ze aan. Controleer na de deploy met
@@ -143,6 +145,10 @@
   [headers.values]
     Cache-Control = "no-cache"
 [[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
   for = "/index.html"
   [headers.values]
     Cache-Control = "no-cache"
@@ -150,3 +156,8 @@
   for = "/js/*"
   [headers.values]
     Cache-Control = "no-cache"
+# Digital Asset Links voor de Android-app (Trusted Web Activity): Android eist application/json
+[[headers]]
+  for = "/.well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json"

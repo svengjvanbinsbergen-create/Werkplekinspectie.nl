@@ -6,7 +6,7 @@
 //    base-uri, geen 'unsafe-inline'/'unsafe-eval' in script-src, geen wildcard-Supabase) en de browser dwingt hem
 //    echt af: een geïnjecteerd onerror-attribuut en een geïnjecteerd inline <script> worden NIET uitgevoerd
 //    (securitypolicyviolation). Geen scripts van andere domeinen.
-// 2. Geen inline handlers: alle schermen en vensters doorlopen (telefoon: inspecteur; computer: coördinator en
+// 2. Geen inline handlers: alle schermen en vensters doorlopen (telefoon: hoofd dat inspecteert; computer: coördinator en
 //    hoofd, incl. dashboard, rapportage, beheer, inspectie, oefenen) en na elk scherm de DOM scannen op on*-
 //    attributen, inline <script>, javascript:-URL's, <iframe>/<object>/<embed>. Ook geen CSP-meldingen.
 // 3. Productie: met een (nep) ingevulde config.js (page.route) is de voorbeeld-login weg en onbereikbaar:
@@ -135,11 +135,11 @@ async function vulAlles(p, n, metEnter = true) {
     const dl = await dp.locator('#view').innerText();
     ok(/Kies je account/.test(dl) && /Voorbeeld/.test(dl), 'voorbeeldmodus: accountkiezer met "Voorbeeld"-uitleg');
     await scan(dp, 'inlogscherm (voorbeeld)');
-    await dp.evaluate(() => App.login('u-insp')); await dp.waitForTimeout(500);
+    await dp.evaluate(() => App.login('u-hoofd2')); await dp.waitForTimeout(500);   // telefoon: een hoofd dat inspecteert (geen rol inspecteur meer)
     ok(await dp.locator('#acct .demolabel').innerText().then((t) => t.trim() === 'Demo').catch(() => false), 'voorbeeldmodus: rustig "Demo"-label bovenin na het inloggen');
     ok(await dp.evaluate(() => getComputedStyle(document.querySelector('#acct .demolabel')).color === 'rgb(47, 93, 80)'), 'voorbeeldmodus: Demo-label in de groene accentkleur (geen oranje "te laat"-kleur)');
 
-    // ================= 2 + 5. schermen doorlopen (telefoon, inspecteur) met XSS in elk tekstveld =================
+    // ================= 2 + 5. schermen doorlopen (telefoon, hoofd dat inspecteert) met XSS in elk tekstveld =================
     const tel = [
       ['vandaag', () => dp.evaluate(() => App.go('vandaag'))],
       ['planning', () => dp.evaluate(() => App.go('planning'))],
@@ -257,6 +257,13 @@ async function vulAlles(p, n, metEnter = true) {
     await hp.evaluate(() => App.openAccount()); await hp.waitForTimeout(300);
     await scan(hp, 'computer · account (hoofd)');
     await hp.evaluate(() => App.closeModal && App.closeModal());
+    // QHSE-manager en beheerder (inspecteren niet): het overzicht op Vandaag, Beheer met Team en rollen, de Planning
+    for (const u of ['u-qhse', 'u-beheer']) {
+      await hp.evaluate((u) => App.login(u), u); await hp.waitForTimeout(500);
+      for (const h of ['vandaag', 'beheer', 'planning', 'acties']) { await hp.evaluate((x) => App.go(x), h); await hp.waitForTimeout(500); await scan(hp, 'computer · ' + u + ' · ' + h); }
+    }
+    ok(await hp.evaluate(() => { App.go('inspectie'); return true; }) && await hp.waitForTimeout(400).then(() => hp.evaluate(() => location.hash !== '#/inspectie')), 'beheerder: #/inspectie stuurt terug (inspecteert niet)');
+    await hp.evaluate(() => App.login('u-hoofd')); await hp.waitForTimeout(500);
     // weerspiegelde XSS via het adres: payload als routeparameter van elk scherm (#/rapport/<payload> enz.) en
     // routenamen die naar iets anders dan een scherm wijzen (constructor, __proto__): niets uitgevoerd of ingevoegd
     const HP = encodeURIComponent(PAYLOAD(18));
@@ -270,7 +277,7 @@ async function vulAlles(p, n, metEnter = true) {
     const pp = await pagina(b, TEL, 'productie', { productie: true, consoleFoutMag: true, init: () => { try { localStorage.setItem('wpi_user', JSON.stringify({ id: 'u-hoofd' })); } catch (e) {} } });
     const pl = await pp.locator('#view').innerText();
     ok(await pp.locator('#l-mail').count() === 1 && await pp.locator('#l-ww').count() === 1, 'productie: echt inlogscherm (e-mail + wachtwoord)');
-    ok(!/Kies je account|Voorbeeld|Björn Sloos|Bram Voorbeeld|Carla Proef|Dirk Demo|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
+    ok(!/Kies je account|Voorbeeld|Björn Sloos|Bram Voorbeeld|Femke Fictief|Carla Proef|Dirk Demo|Gijs Gefingeerd|Hanna Hypothese|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
     ok(await pp.evaluate(() => App.user === null), 'productie: "wpi_user" uit localStorage genegeerd (niemand ingelogd)');
     ok(await pp.evaluate(() => localStorage.getItem('wpi_user') === null), 'productie: oude "wpi_user" opgeruimd');
     ok(await pp.evaluate(() => WPI.USERS.length === 0), 'productie: geen fictieve accounts in WPI.USERS');

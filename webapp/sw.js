@@ -7,6 +7,7 @@ const SHELL = [
   "js/acties.js", "js/meldingen.js", "js/dashboard.js", "js/kwartaal.js", "js/start.js",
   "js/config.js", "js/sync.js", "js/auth.js", "js/beheer.js", "css/beheer.css",
   "js/oefen.js", "css/oefen.css",
+  "js/koppel.js", "css/koppel.css",
   "icon-192.png", "icon-512.png",
   "data/cijfers.json", "data/kennisbank.json", "data/voorbeelddata.json", "data/trendacties.json",
 ];

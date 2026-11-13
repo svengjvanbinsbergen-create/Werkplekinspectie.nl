@@ -18,6 +18,8 @@ U=c0000000-0000-4000-a000-0000000000f1
 $P <<SQL
 insert into auth.users (id, email, raw_user_meta_data, invited_at) values
   ('$U', 'race@test.invalid', '{"full_name":"Inspecteur Race"}', now());
+-- een nieuw profiel heeft sinds 0008 nog geen rol: een coördinator (inspecteert, geen beheerrol)
+update public.profiles set role = 'coordinator' where id = '$U';
 SQL
 ALS="select set_config('request.jwt.claims', '{\"sub\":\"$U\",\"role\":\"authenticated\"}', true) is null; set local role authenticated;"
 

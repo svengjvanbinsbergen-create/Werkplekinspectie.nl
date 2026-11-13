@@ -17,10 +17,13 @@ client uitmaakt volgt de mock de ECHTE regels, ook als die ruimer zijn (bijv. pl
 inplannen, ook voor een ander — 0003_rls_rechten.sql), zodat tests geen strengere server veronderstellen.
 Alleen voor lokaal testen: python3 tools/mock_supabase.py --port 8331 [--dir webapp] [--demo]
 
-Testaccounts (wachtwoord voor allemaal: Veilig-Wachtwoord-2026):
-  inspecteur@noardling.test  (inspecteur)   winfred@noardling.test (coordinator)
-  douwe@noardling.test       (coordinator)  bjorn@noardling.test   (hoofd, MFA verplicht)
-  inactief@noardling.test    (inspecteur, actief=false)
+Testaccounts (wachtwoord voor allemaal: Veilig-Wachtwoord-2026; namen fictief, zoals de voorbeeldmodus van de app):
+  carla@noardling.test   (coordinator)  winfred@noardling.test (coordinator)
+  douwe@noardling.test   (coordinator)  bjorn@noardling.test   (hoofd, MFA verplicht in de app)
+  qhse@noardling.test    (qhse, MFA)    beheer@noardling.test  (beheerder, MFA)
+  norol@noardling.test   (actief, nog GEEN rol: migratie 0008)
+  inactief@noardling.test (coordinator, actief=false)
+De rol "inspecteur" bestaat alleen nog in de database (compatibiliteit); de mock kent geen gebruiker met die rol.
 """
 import argparse
 import base64
@@ -84,11 +87,14 @@ def nieuwe_state():
     def u(n, mail, naam, rol, functie, actief=True):
         return {"id": "00000000-0000-4000-8000-%012d" % n, "email": mail, "password": WACHTWOORD,
                 "profiel": {"full_name": naam, "role": rol, "functie": functie, "actief": actief}, "factors": []}
-    users = [u(1, "inspecteur@noardling.test", "Ingrid Inspecteur", "inspecteur", "Inspecteur op locatie"),
+    users = [u(1, "carla@noardling.test", "Carla Proef", "coordinator", "Montage Coördinator"),
              u(2, "winfred@noardling.test", "Winfred Loerts", "coordinator", "Montage Coördinator"),
              u(3, "douwe@noardling.test", "Douwe de Boer", "coordinator", "Montage Coördinator"),
              u(4, "bjorn@noardling.test", "Björn Sloos", "hoofd", "Hoofd Service & Montage"),
-             u(5, "inactief@noardling.test", "Oud Medewerker", "inspecteur", "Inspecteur", actief=False)]
+             u(5, "inactief@noardling.test", "Oud Medewerker", "coordinator", "Montage Coördinator", actief=False),
+             u(6, "qhse@noardling.test", "Gijs Gefingeerd", "qhse", "QHSE-manager"),
+             u(7, "beheer@noardling.test", "Hanna Hypothese", "beheerder", "Applicatiebeheerder"),
+             u(8, "norol@noardling.test", "Nieuwe Collega", None, "")]
     return {"users": {x["email"]: x for x in users}, "sessions": {}, "refresh": {}, "challenges": {},
             "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "security_events": [],
             "fotos": {}, "recover": [], "pkce": {}, "logins": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
@@ -418,6 +424,27 @@ class Handler(SimpleHTTPRequestHandler):
 
         if tabel == "profiles" and m == "GET":
             return self.stuur(200, [r for r in (profiel_rij(u) for u in STATE["users"].values()) if past(r)])
+        if tabel == "profiles" and m == "PATCH":
+            # 0008 (profiles_update + profiles_bewaak): alleen de beheerrollen (met aal2, zoals mfa_verplicht_hoofd = true);
+            # geen rol "inspecteur", niemand wijzigt zijn eigen rol/activering, minstens één actief hoofd. Zonder recht:
+            # 0 rijen (RLS), zoals PostgREST.
+            b = self.jbody()
+            if not isinstance(b, dict) or set(b) - {"role", "actief", "functie", "full_name"}:
+                return self.fout(400, "PGRST204", "Could not find the column in the schema cache")
+            if prof["role"] not in ("hoofd", "qhse", "beheerder") or c.get("aal") != "aal2":
+                return self.stuur(204)
+            for u in [u for u in STATE["users"].values() if past(profiel_rij(u))]:
+                nieuw = dict(u["profiel"], **b)
+                if "role" in b and b["role"] not in ("hoofd", "coordinator", "qhse", "beheerder"):
+                    return self.fout(400, "23514", "De rol inspecteur wordt niet meer toegekend; kies hoofd, coördinator, QHSE-manager of beheerder"
+                                     if b["role"] == "inspecteur" else "invalid input value for enum user_role")
+                if u["id"] == x["id"] and (nieuw["role"], nieuw["actief"]) != (u["profiel"]["role"], u["profiel"]["actief"]):
+                    return self.fout(403, "42501", "Je eigen rol of activering wijzig je niet zelf; dat doet een ander hoofd, de QHSE-manager of de beheerder")
+                if u["profiel"]["role"] == "hoofd" and u["profiel"]["actief"] and (nieuw["role"] != "hoofd" or not nieuw["actief"]) \
+                        and not any(v is not u and v["profiel"]["role"] == "hoofd" and v["profiel"]["actief"] for v in STATE["users"].values()):
+                    return self.fout(400, "23514", "Er moet altijd minstens één actief hoofd zijn")
+                u["profiel"].update(b)
+            return self.stuur(204)
         if tabel == "actie_log":
             if m == "GET":
                 zicht = set(self.zichtbaar("acties", x))
@@ -484,7 +511,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def zichtbaar(self, tabel, x):
         T, rol, uid = STATE["tables"][tabel], x["profiel"]["role"], x["id"]
-        if rol in ("hoofd", "coordinator", "qhse"):
+        if rol in ("hoofd", "coordinator", "qhse", "beheerder"):
             return list(T)
         if tabel == "inspecties":
             return [i for i, r in T.items() if r.get("inspecteur_id") == uid]
@@ -533,6 +560,12 @@ class Handler(SimpleHTTPRequestHandler):
             for k, wat in (("houder", "Actiehouder"), ("toetser", "Toetser")):
                 if r.get(k) and not actief_profiel(r[k]):
                     return 409, "23503", "insert or update on table \"acties\" violates foreign key constraint \"acties_%s_fkey\"" % k
+            # 0008 acties_controle_personen: QHSE-manager en beheerder nooit actiehouder, beheerder nooit toetser
+            rol_van = lambda pid: (user_by_id(pid) or {}).get("profiel", {}).get("role")
+            if r.get("houder") and rol_van(r["houder"]) in ("qhse", "beheerder"):
+                return 400, "23514", "De QHSE-manager kan geen actiehouder zijn" if rol_van(r["houder"]) == "qhse" else "De beheerder kan geen actiehouder zijn"
+            if r.get("toetser") and rol_van(r["toetser"]) == "beheerder":
+                return 400, "23514", "De beheerder kan geen toetser zijn"
             if oud and oud.get("status") in ("Klaar voor toetsing", "Afgerond", "Vervallen") and (r.get("houder", oud.get("houder")) != oud.get("houder") or r.get("toetser", oud.get("toetser")) != oud.get("toetser")):
                 return 403, "42501", "Actiehouder en toetser liggen vast zodra de actie klaar voor toetsing is"
             if r.get("houder") and r.get("houder") == r.get("toetser"):
@@ -552,6 +585,11 @@ class Handler(SimpleHTTPRequestHandler):
             # planning wijzigen mag alleen wie hem maakte of een coördinator/hoofd
             if not actief_profiel(r.get("inspecteur")):
                 return 409, "23503", "Inspecteur onbekend of niet actief"
+            # 0008: plannen doet wie inspecteert, en alleen een inspecterende rol wordt ingepland
+            if x["profiel"]["role"] not in ("hoofd", "coordinator", "inspecteur"):
+                return 403, "42501", "new row violates row-level security policy for table \"planning\""
+            if (not oud or r.get("inspecteur") != oud.get("inspecteur")) and user_by_id(r["inspecteur"])["profiel"]["role"] not in ("hoofd", "coordinator", "inspecteur"):
+                return 400, "23514", "Alleen een hoofd of coördinator kan als inspecteur worden ingepland (de QHSE-manager en de beheerder inspecteren niet)"
             if oud and r.get("inspecteur") != oud.get("inspecteur") and not staf and oud.get("gemaakt_door") != uid:
                 return 403, "42501", "Alleen wie de planning maakte (of een coördinator/hoofd) mag de inspecteur wijzigen"
         return None

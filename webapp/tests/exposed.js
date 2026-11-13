@@ -3,7 +3,8 @@
 //   node tests/exposed.js http://localhost:8418                 bereikbaarheid (lokaal of gedeployd)
 //   node tests/exposed.js --headers https://werkplekinspectie.nl  headers van een gedeployde site
 //   node tests/exposed.js --config                               deploy-config: allowlist-build (echt uitgevoerd), 404-regels, CSP gelijk,
-//                                                                beveiligingsheaders + no-cache + http→https in _headers/netlify.toml/vercel.json
+//                                                                beveiligingsheaders + no-cache (ook "/") + http→https in _headers/netlify.toml/vercel.json,
+//                                                                /.well-known/assetlinks.json gepubliceerd als application/json (Android-app)
 //   node tests/exposed.js --alles https://...                    alle drie
 //   --strict  → exitcode 1 als iets gevoeligs bereikbaar is of een verplichte header ontbreekt
 //
@@ -162,9 +163,12 @@ function leesConfig() {
   return { vercel, toml, hdr, netlifyCmd, netlifyPublish, cfCmd: cfCmd.trim() };
 }
 const SHELL = () => { const t = fs.readFileSync(path.join(WEBAPP, "sw.js"), "utf8"); return [...(t.match(/const SHELL = \[([\s\S]*?)\];/) || [, ""])[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).filter((x) => x !== "./"); };
-const MAG_IN_DIST = (rel) => NODIG(rel) || rel === "_headers";
+// .well-known/assetlinks.json: Digital Asset Links voor de Android-app (Trusted Web Activity); moet online staan
+const ASSETLINKS = ".well-known/assetlinks.json";
+const MAG_IN_DIST = (rel) => NODIG(rel) || rel === "_headers" || rel === ASSETLINKS;
 const LOKAAS = [".env", "geheim.sql", "script.py", "deploy.sh", "NOTITIE.md", "intern.html", "tests/lokaas.js", "docs/lokaas.md",
-  "supabase/lokaas.sql", "js/README.md", "js/.env", "data/export.sql", "css/oud.css.bak", "js/debug.py", "data/.DS_Store"];
+  "supabase/lokaas.sql", "js/README.md", "js/.env", "data/export.sql", "css/oud.css.bak", "js/debug.py", "data/.DS_Store",
+  ".well-known/notitie.md", ".well-known/.env", ".git/HEAD"];
 function kopieer(van, naar) {
   fs.mkdirSync(naar, { recursive: true });
   for (const d of fs.readdirSync(van, { withFileTypes: true })) {
@@ -182,7 +186,7 @@ function bouwDist(opdracht, uitmap = "dist") {
     const dist = path.join(werk, uitmap);
     const lijst = fs.existsSync(dist) ? bestanden(dist) : [];
     const fout = lijst.filter((f) => !MAG_IN_DIST(f));
-    const mist = SHELL().filter((f) => !lijst.includes(f));
+    const mist = SHELL().concat(fs.existsSync(path.join(WEBAPP, ASSETLINKS)) ? [ASSETLINKS] : []).filter((f) => !lijst.includes(f));
     return { ok: !!lijst.length && !fout.length && !mist.length, bestanden: lijst, fout, mist };
   } catch (e) {
     return { ok: false, bestanden: [], fout: ["build mislukt: " + String(e.stderr || e.message).slice(0, 200)], mist: [] };
@@ -220,16 +224,16 @@ function headerBlokken() {
   // _headers: het blok onder de regel "/*" (ingesprongen "Naam: waarde"-regels)
   const blok = (pad) => { const r = c.hdr.split(/\r?\n/), h = {}; let i = r.findIndex((x) => x.trim() === pad && !/^\s/.test(x)); if (i < 0) return null;
     for (i++; i < r.length && (/^\s+\S/.test(r[i]) || /^\s*#/.test(r[i])); i++) { const m = r[i].match(/^\s+([A-Za-z-]+):\s*(.*)$/); if (m) h[m[1].toLowerCase()] = m[2].trim(); } return h; };
-  uit["_headers"] = { alles: blok("/*"), index: blok("/index.html"), sw: blok("/sw.js") };
+  uit["_headers"] = { alles: blok("/*"), index: blok("/index.html"), sw: blok("/sw.js"), root: blok("/"), al: blok("/" + ASSETLINKS) };
   // netlify.toml: [[headers]] for = "<pad>" met [headers.values]
   const tom = (pad) => { const m = [...c.toml.matchAll(/\[\[headers\]\]([\s\S]*?)(?=\n\[\[|$)/g)].find((x) => new RegExp('for\\s*=\\s*"' + pad.replace(/[*.]/g, "\\$&") + '"').test(x[1]));
     if (!m) return null; const h = {}; for (const r of m[1].split(/\n/)) { const k = r.match(/^\s*([A-Za-z-]+)\s*=\s*"(.*)"\s*$/); if (k && k[1] !== "for") h[k[1].toLowerCase()] = k[2]; } return h; };
-  uit["netlify.toml"] = { alles: tom("/*"), index: tom("/index.html"), sw: tom("/sw.js") };
+  uit["netlify.toml"] = { alles: tom("/*"), index: tom("/index.html"), sw: tom("/sw.js"), root: tom("/"), al: tom("/" + ASSETLINKS) };
   // vercel.json: routes met headers; een pad krijgt de headers van elke route met "continue" die erop past
   const ver = (pad) => { if (!c.vercel) return null; const h = {}; let n = 0;
     for (const r of c.vercel.routes || []) if (r.headers && r.continue && new RegExp("^" + r.src + "$").test(pad)) { n++; for (const [k, v] of Object.entries(r.headers)) h[k.toLowerCase()] = v; }
     return n ? h : null; };
-  uit["vercel.json"] = { alles: ver("/"), index: ver("/index.html"), sw: ver("/sw.js") };
+  uit["vercel.json"] = { alles: ver("/"), index: ver("/index.html"), sw: ver("/sw.js"), root: ver("/"), al: ver("/" + ASSETLINKS) };
   return { blokken: uit, c };
 }
 function headerConfigCheck() {
@@ -238,10 +242,12 @@ function headerConfigCheck() {
     if (!b.alles) { uit.push({ bron, header: '(blok voor "/*")', status: "ONTBREEKT", detail: "" }); continue; }
     const r = []; beoordeelHeaders((k) => b.alles[k.toLowerCase()], true, r);
     for (const x of r) if (x.header !== "Server / X-Powered-By") uit.push(Object.assign({ bron }, x));
-    for (const [naam, h] of [["index.html", b.index], ["sw.js", b.sw]]) {
+    for (const [naam, h] of [["index.html", b.index], ["sw.js", b.sw], ["", b.root]]) {
       const cc = h && h["cache-control"];
       uit.push({ bron, header: "Cache-Control /" + naam, status: cc && /no-cache|no-store|max-age=0/.test(cc) ? "ok" : "ONTBREEKT", detail: cc || "" });
     }
+    const ct = b.al && b.al["content-type"];
+    uit.push({ bron, header: "Content-Type /" + ASSETLINKS, status: ct && /^application\/json\b/i.test(ct) ? "ok" : "ONTBREEKT", detail: ct || "(Android verwacht application/json)" });
   }
   // De regel noemt vaste domeinen (from = "http://<domein>/*"): op een ander adres (app.<domein>.nl, *.netlify.app)
   // doet hij niets en stuurt Netlify zelf door zodra het certificaat er is. Daarom de domeinen in de uitvoer, en na de
@@ -276,6 +282,14 @@ function configCheck() {
     // er staan alleen de publieke beveiligingsheaders in, geen geheimen.
     const f = !c.cfCmd ? "GEEN BUILD" : p === "/_headers" ? "door host verwerkt" : cf && cf.ok && !inDist(cf, p) ? "niet in dist" : "BEREIKBAAR";
     uit.push({ pad: p, vercel: v, netlify: n, cloudflare: f });
+  }
+  // wat juist WEL online moet: de app zelf en assetlinks.json (niet door een 404-regel geblokkeerd, wel in dist/)
+  for (const p of ["/", "/index.html", "/" + ASSETLINKS]) {
+    const r = c.vercel && (c.vercel.routes || []).find((x) => x.src && !x.continue && x.status && new RegExp("^" + x.src + "$").test(p));
+    const inD = (b) => p === "/" ? inDist(b, "/index.html") : inDist(b, p);
+    uit.push({ pad: p, moet: true, vercel: !c.vercel ? "geen vercel.json" : r ? "GEBLOKKEERD (" + r.status + ")" : inD(ver) ? "online" : "ONTBREEKT",
+      netlify: !c.toml ? "geen netlify.toml" : reds.some((x) => netGlob(x.from, p)) ? "GEBLOKKEERD (404)" : inD(net) ? "online" : "ONTBREEKT",
+      cloudflare: !c.cfCmd ? "GEEN BUILD" : inD(cf) ? "online" : "ONTBREEKT" });
   }
   const builds = [["netlify.toml", net, c.netlifyCmd], ["vercel.json", ver, vercelCmd], ["_headers (Cloudflare)", cf, c.cfCmd]].map(([naam, b, cmd]) => ({
     host: naam, ok: !!(b && b.ok), detail: !cmd ? "geen build-opdracht (dan wordt alles gepubliceerd)" : b.ok ? b.bestanden.length + " bestanden in dist/, alleen app-bestanden" : [b.fout.length ? "niet toegestaan: " + b.fout.join(", ") : "", b.mist.length ? "ontbreekt (SHELL): " + b.mist.join(", ") : ""].filter(Boolean).join(" · ") }));
@@ -321,7 +335,7 @@ if (require.main === module) {
       const hc = headerConfigCheck();
       console.log("\n=== Beveiligingsheaders in de hostconfiguraties (voor alle paden \"/*\") ===");
       for (const x of hc) console.log(`${x.status.padEnd(13)} ${x.bron.padEnd(14)} ${x.header.padEnd(36)} ${String(x.detail || "").slice(0, 70)}`);
-      slecht += c.filter((x) => /BEREIKBAAR|GEEN BUILD/.test(x.vercel + x.netlify + x.cloudflare)).length + c.builds.filter((b) => !b.ok).length + (c.gelijk ? 0 : 1)
+      slecht += c.filter((x) => /BEREIKBAAR|GEEN BUILD|GEBLOKKEERD|ONTBREEKT/.test(x.vercel + x.netlify + x.cloudflare)).length + c.builds.filter((b) => !b.ok).length + (c.gelijk ? 0 : 1)
         + csp.filter((x) => x.oordeel !== "ok").length + hc.filter((x) => /ONTBREEKT|ZWAK|FOUT|AANDACHT/.test(x.status)).length;
     }
     console.log(strict && slecht ? `\nSTRICT: ${slecht} problemen` : "");

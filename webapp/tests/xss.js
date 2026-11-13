@@ -139,7 +139,7 @@ async function scenario(b, [pnaam, pf]) {
     await scan("planning (na inplannen)");
     await ev(() => App.planForm()); await wacht(250);
     await p.selectOption("#pl-code", "POM"); await vul("#pl-project", 19); await vul("#pl-loc", 20);
-    await ev(() => { document.getElementById("pl-datum").value = WPI.plusDagen(-2); }); await p.selectOption("#pl-insp", "u-insp");
+    await ev(() => { document.getElementById("pl-datum").value = WPI.plusDagen(-2); }); await p.selectOption("#pl-insp", "u-hoofd2");
     await klik("#mod button.primary"); await wacht(400);
     await route("planning"); await scan("planning");
     const id = await ev(() => App.planning.find((x) => !x.demo && x.code === "DAM").id);
@@ -261,7 +261,7 @@ async function scenario(b, [pnaam, pf]) {
       const w = { id: "w1", taak: "Damwand trekken", tekst: P[23], foto: P[22], regel_id: null, buiten: true, maatregelen: [P[23]], oordeel: "A",
         actie: { tekst: P[23], herkomst: "Jij", prio: "kort", terPlaatse: "niets", actie_id: "ACT-sync1" } };
       await WPI.DB.put("inspecties", { id: "WPI-sync1", versie: 3, titel: P[23], code: "DAM", project: P[23], taken: [P[23]], taak: P[23], waarnemingen: [w],
-        gesprek: P[23], positief: P[23], handtekening: P[21], keuzes: [], monteurs: [P[25]], open_punten: [P[23]], inspecteur: P[23], inspecteur_id: "u-insp",
+        gesprek: P[23], positief: P[23], handtekening: P[21], keuzes: [], monteurs: [P[25]], open_punten: [P[23]], inspecteur: P[23], inspecteur_id: "u-hoofd2",
         start: new Date().toISOString(), opgeslagen: new Date().toISOString() });
       await WPI.DB.put("acties", { id: "ACT-sync1", inspectie_id: "WPI-sync1", inspectie_titel: P[23], inspecteur: P[23], ref: P[23], waarneming: P[23], foto: P[22],
         oordeel: "A", tekst: P[23], prio: "kort", status: "Open", houder: "u-coord2", toetser: "u-coord1", plandatum: WPI.plusDagen(-1), log: [{ t: new Date().toISOString(), wie: P[24], wat: P[24] }] });
@@ -285,7 +285,7 @@ async function scenario(b, [pnaam, pf]) {
       const nu = new Date().toISOString(), ww = (n, extra) => Object.assign({ id: "wnt" + n, taak: "Damwand trekken", tekst: "waarneming " + n, foto: null, regel_id: null, buiten: true,
         maatregelen: [], oordeel: "A", actie: { tekst: "actie " + n, herkomst: "Jij", prio: "kort", terPlaatse: "niets", actie_id: "ACT-nt" + n } }, extra);
       const ins = (id, ws, extra) => WPI.DB.put("inspecties", Object.assign({ id, versie: 3, titel: "Niet-tekst " + id, code: "DAM", project: "p", taken: ["Damwand trekken"], taak: "Damwand trekken",
-        waarnemingen: ws, gesprek: "", positief: "", handtekening: null, keuzes: [], monteurs: [], open_punten: [], inspecteur: "Inspecteur (demo)", inspecteur_id: "u-insp", start: nu, opgeslagen: nu }, extra));
+        waarnemingen: ws, gesprek: "", positief: "", handtekening: null, keuzes: [], monteurs: [], open_punten: [], inspecteur: "Femke Fictief", inspecteur_id: "u-hoofd2", start: nu, opgeslagen: nu }, extra));
       await ins("WPI-nt1", [ww(1, { oordeel: X }), ww(2, { actie: { tekst: "a", herkomst: "Jij", prio: X, terPlaatse: X, actie_id: "ACT-nt2" } }), ww(3, { regel_id: X, buiten: false })]);
       await ins("WPI-nt2", [ww(4)], { inspecteur_id: X, plan_id: X, start: X, opgeslagen: X, versie: X });
       const act = (id, extra) => WPI.DB.put("acties", Object.assign({ id, inspectie_id: "WPI-nt1", inspectie_titel: "nt", inspecteur: "x", ref: "r", waarneming: "w", foto: null, oordeel: "A", tekst: "t " + id,
@@ -368,6 +368,12 @@ async function scenario(b, [pnaam, pf]) {
       await scan("ins-monteurs " + tag);
       await ev(() => { App.state.inspectie = null; App.bewaarConcept(true); App.closeModal(); });
     });
+    // beheerder (inspecteert niet): Vandaag als overzicht van het team, Beheer met team en rollen
+    await stap("alles " + tag + ": overzicht en team (beheerder)", async () => {
+      await ev(() => { App.closeModal(); return App.login("u-beheer"); }); await wacht(700);
+      await route("vandaag"); await scan("overzicht-beheerder " + tag);
+      await route("beheer"); await scan("beheer-beheerder " + tag);
+    });
   }
 
   // ===== 9. na herladen (alles uit IndexedDB/localStorage) =====
@@ -380,8 +386,8 @@ async function scenario(b, [pnaam, pf]) {
   await stap("profielen", async () => {
     await ev((P) => {
       const U = WPI.USERS;
-      for (const id of ["u-hoofd", "u-coord2", "u-coord1", "u-insp"]) { const u = U.find((x) => x.id === id); if (u) { u.full_name = P[26] + " " + id; u.functie = P[27]; } }
-      U.push({ id: "u-xssprof", full_name: P[26], role: "inspecteur", functie: P[27] });
+      for (const id of ["u-hoofd", "u-coord2", "u-coord1", "u-hoofd2", "u-qhse", "u-beheer"]) { const u = U.find((x) => x.id === id); if (u) { u.full_name = P[26] + " " + id; u.functie = P[27]; } }
+      U.push({ id: "u-xssprof", full_name: P[26], role: "coordinator", functie: P[27] });
     }, { 26: P(26), 27: P(27) });
     gevuld.add(26); gevuld.add(27);
   });

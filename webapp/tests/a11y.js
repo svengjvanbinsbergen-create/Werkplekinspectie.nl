@@ -133,6 +133,9 @@ const SCHERMEN = [
   ["vandaag-zonmodus", async (p) => { await ev(p, () => { App.pref = { veld: true, zon: true }; App.pasPrefToe(); App.go("vandaag"); }); await wacht(p, 700); }],
   ["ins-zie-zonmodus", async (p) => { await ev(p, () => { App.startInspectie("DAM", "x", "Damwand test", true); App.kiesTaak(App.data.kennisbank.DAM.regels[0].taak); }); await wacht(p, 500); }],
   ["beheer", async (p) => { await ev(p, () => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.state.inspectie = null; App.bewaarConcept(true); }); await login("u-hoofd")(p); await ga("beheer")(p); }],
+  // QHSE-manager (inspecteert niet): Vandaag als overzicht van het team, en Beheer (team en rollen, doel)
+  ["overzicht-qhse", async (p) => { await login("u-qhse")(p); await ga("vandaag")(p); }],
+  ["beheer-qhse", ga("beheer")],
 ];
 
 // Eigen controles die axe niet doet: klikbare elementen zonder toetsenbordbediening en modal-semantiek.

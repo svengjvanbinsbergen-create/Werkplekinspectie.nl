@@ -55,7 +55,7 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
 
   // ---------------- M1 + M2: begeleid gesprek met een AI die probeert te oordelen ----------------
   console.log("M1/M2 oordeel door de inspecteur, AI alleen Voorstel");
-  await login("u-insp");
+  await login("u-hoofd2");   // inspecteert (hoofd, Manager Projects); de rol inspecteur bestaat niet meer
   await ev(() => {
     window.__prompts = [];
     App.caps.sample = { json: async (prompt) => {
@@ -115,7 +115,7 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
   const vs = na.acties.find((a) => a.tekst === "Hijsband afkeuren en vervangen");
   ok(vs && vs.status === "Voorstel" && !vs.houder && !vs.toetser, "AI-actietekst werd een actie met status Voorstel, zonder actiehouder/toetser: " + JSON.stringify(vs && { status: vs.status, houder: vs.houder, toetser: vs.toetser }));
   const gc = na.acties.find((a) => a.tekst === "Afzetting rond de bouwput dicht houden");
-  ok(gc && gc.status === "Afgerond" && gc.toetser === "u-insp" && !gc.houder, "direct gecorrigeerd: afgerond met de inspecteur als toetser, zonder actiehouder: " + JSON.stringify(gc && { status: gc.status, houder: gc.houder, toetser: gc.toetser }));
+  ok(gc && gc.status === "Afgerond" && gc.toetser === "u-hoofd2" && !gc.houder, "direct gecorrigeerd: afgerond met de inspecteur als toetser, zonder actiehouder: " + JSON.stringify(gc && { status: gc.status, houder: gc.houder, toetser: gc.toetser }));
   const id = vs ? vs.id : null;
   if (!id) { console.log("errs", errs); await b.close(); process.exit(1); }
 

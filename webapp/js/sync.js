@@ -724,7 +724,8 @@
       if (uit.verloren && uit.verloren.length) nieuw.push(("Niet doorgevoerd vanaf het toestel (intussen door iemand anders gewijzigd): "
         + uit.verloren.map((k) => VELDNAAM[veldVan(k)] || veldVan(k)).join(", ") + ". Bewaard bij de gebruiker.").slice(0, 2000));
       if (nieuw.length) await sb("/rest/v1/actie_log", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: json(nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat: schoonTekst(wat).replace(/[\u00AD\u200D]/g, "") }))) });
+        // zelfde tekenregel als de server (actie_log.wat → tekst_tekens_ok, migratie 0008): schoonTekst, verder niets
+        body: json(nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat: schoonTekst(wat) }))) });
       await zetMeta("logn:" + rec.id, (rec.log || []).length);
     }
     return uit;
@@ -1049,8 +1050,8 @@
   }
   const telOud = (o) => STORES.reduce((n, s) => n + o[s].length, 0) + (o.concepten || []).length;
   const DAG = 86400000;
-  // een echte, actieve collega (uit public.profiles) die actiehouder/toetser mag zijn
-  const bekend = (id) => !!vUuid(id) && (window.WPI.USERS || []).some((x) => x.id === id && x.role !== "qhse");
+  // een echte, actieve collega (uit public.profiles) met dit recht: "houder", "toetser" of "inspecteert" (js/kern.js, RECHTEN)
+  const bekend = (id, recht) => !!vUuid(id) && (window.WPI.USERS || []).some((x) => x.id === id && window.WPI.mag(recht, x));
   // wat kan de server aannemen? (supabase/migrations/0002: inspecties_controle_nieuw, acties_controle_nieuw)
   async function overnamePlan(o, u) {
     const recent = (r) => { const t = Date.parse(r.opgeslagen || ""); return !isNaN(t) && t > Date.now() - 29 * DAG && t < Date.now() + 5 * 60000; };
@@ -1357,7 +1358,7 @@
       for (const r of pl.inspecties) { r.inspecteur_id = u.id; r.inspecteur = u.full_name; try { await DB.put("inspecties", r); } catch (e) {} }
       for (const a of pl.acties) {
         const was = a.status || "Voorstel";
-        const mensenOk = bekend(a.houder) && bekend(a.toetser) && a.houder !== a.toetser;
+        const mensenOk = bekend(a.houder, "houder") && bekend(a.toetser, "toetser") && a.houder !== a.toetser;
         // ter plaatse gecorrigeerd in je eigen (overgenomen) inspectie: de inspecteur zag het herstel zelf en is de toetser
         const terPlaatse = was === "Afgerond" && a.terPlaatse === "gecorrigeerd" && !a.houder && a.inspectie_id && pl.mijn.has(a.inspectie_id);
         if (terPlaatse) { a.toetser = u.id; a.houder = null; }
@@ -1373,7 +1374,7 @@
         try { await DB.put("acties", a); } catch (e) {}
       }
       for (const p of pl.planning) {
-        if (!bekend(p.inspecteur)) p.inspecteur = u.id;
+        if (!bekend(p.inspecteur, "inspecteert")) p.inspecteur = u.id;
         if (p.inspectie_id && !pl.mijn.has(p.inspectie_id)) p.inspectie_id = null;   // alleen je eigen inspectie koppelen
         try { await DB.put("planning", p); } catch (e) {}
       }

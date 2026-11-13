@@ -5,7 +5,8 @@ const errs=[];p.on('pageerror',e=>errs.push('PAGEERR '+e.message));p.on('console
 const S=(n)=>p.screenshot({path:n+'.png'});
 const ev=(f,a)=>p.evaluate(f,a);
 await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(800);
-await ev(()=>App.login('u-insp'));await p.waitForTimeout(400);
+await ev(()=>App.login('u-hoofd2'));   // inspecteert: hoofd met functie Manager Projects (de rol inspecteur bestaat niet meer)
+await p.waitForTimeout(400);
 await ev(()=>App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad'));await p.waitForTimeout(300);
 await p.fill('#f-taak','ze halen de damwand eruit met de kraan');await p.waitForTimeout(200);
 console.log('taakvs', await p.locator('#taakvs .pick').count(), await p.locator('#taakvs .waarom').first().textContent().catch(()=>'-'));

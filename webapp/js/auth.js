@@ -14,15 +14,17 @@
      en hoort hij bij een ander account dan wie hier bewaard ingelogd is, dan wordt hij geweigerd
      (geen "inloggen als een ander" via een link van een buitenstaander). Zie verwerkLink().
    - rol uit public.profiles (nooit uit de client); inactieve profielen komen er niet in.
-   - het hoofd moet tweestapsverificatie (TOTP, aal2) doorlopen; zonder gekoppelde app wordt die
-     eerst ingesteld (QR-code). RLS dwingt aal2 af voor beheerroutes (public.mfa_ok()).
+   - de beheerrollen (hoofd, QHSE-manager, beheerder) moeten tweestapsverificatie (TOTP, aal2) doorlopen;
+     zonder gekoppelde app wordt die eerst ingesteld (QR-code). RLS dwingt aal2 af voor beheerroutes en volledige
+     inzage (public.mfa_ok(), is_beheer_admin(), migratie 0008). Een profiel zonder rol (nieuw uitgenodigd) of met
+     de oude rol "inspecteur" komt er niet in: een hoofd, de QHSE-manager of de beheerder kiest eerst een rol.
    - sessie: access-JWT alleen in het geheugen; refresh-token standaard in sessionStorage (weg zodra
      de app/het tabblad sluit). Alleen met "Ingelogd blijven" (standaard UIT; de keuze wordt per
      toestel onthouden) in localStorage. Afweging: een inspecteur in het veld moet de app zonder bereik
      opnieuw kunnen openen, en daarvoor moet het token de herstart overleven; maar XSS kan alles in
      localStorage/sessionStorage lezen (script-src is inmiddels strikt: 'self', geen inline handlers,
      zie _headers; XSS blijft toch de grootste dreiging) en een gestolen refresh-token is een langdurige overname. Daarom:
-     - het Hoofd S&M (MFA, beheerrechten) krijgt NOOIT een bewaard refresh-token, ook niet met het vinkje;
+     - de beheerrollen (MFA, beheerrechten) krijgen NOOIT een bewaard refresh-token, ook niet met het vinkje;
      - het token wordt pas bewaard na een volledige login (profiel + rol + zo nodig MFA);
      - korte JWT (Supabase: 1 uur), refresh-token-rotatie met hergebruikdetectie, "Overal uitloggen";
      - VERPLICHT in Supabase (Auth → Sessions): "Time-box user sessions" (bijv. 7 dagen) en een
@@ -35,6 +37,11 @@
    - twee tabbladen tegelijk op één toestel: logt in het ene tabblad iemand anders in (wpi_laatste_uid
      verandert), dan logt het andere meteen uit — zonder de gegevens in IndexedDB of de bewaarde sessie
      van die ander te wissen. Ook bij terugkomen in een tabblad dat het event miste (zie ook js/sync.js, punt 6).
+     Omgekeerd wist een NIEUW tabblad (of een link uit een e-mail) nooit iets zolang er in een ander tabblad iemand
+     ingelogd is: elk ingelogd tabblad houdt een slot vast (Web Locks "wpi-actief:<uid>", vanzelf weg als het
+     tabblad sluit; terugval: BroadcastChannel), en een tabblad zonder eigen sessie kijkt dat eerst na. Met
+     "Ingelogd blijven" uit staat de sessie per tabblad (sessionStorage): zonder deze controle wiste een tweede
+     tabblad op "/" de opgehaalde gegevens van wie in het eerste tabblad aan het werk was (zie actiefElders()).
    - gedeeld toestel: na het sluiten zonder uitloggen (geen sessie meer bij het openen) en bij een andere
      gebruiker dan de vorige (localStorage "wpi_laatste_uid") worden eerst de servergegevens op dit
      toestel gewist (App.syncWisLokaal), pas daarna komt er iets op het scherm.
@@ -65,8 +72,8 @@
   const K_KEUZE = "wpi_ingelogd_blijven";   // alleen de keuze van het vinkje (geen geheim)
   const K_LAATSTE = "wpi_laatste_uid";       // wie het laatst op dit toestel was ingelogd (geen geheim)
   const K_PKCE = "wpi_pkce";                 // code_verifier van de laatste herstelaanvraag in deze browser (PKCE)
-  const ROLLEN = ["hoofd", "coordinator", "inspecteur"];
-  const MFA_ROLLEN = ["hoofd"];
+  const ROLLEN = window.WPI.ROLLEN;                    // hoofd, coordinator, qhse, beheerder (js/kern.js)
+  const MFA_ROLLEN = ["hoofd", "qhse", "beheerder"];    // beheerrollen: altijd tweestapsverificatie
 
   // ---------------- sessie ----------------
   // klaar = volledige login voltooid; pas dan mag het refresh-token worden bewaard
@@ -137,6 +144,40 @@
   }
   const anderIngelogd = () => uitElders("Er is in een ander venster op dit toestel iemand anders ingelogd. Je bent hier uitgelogd.");
   const keuzeOnthoud = () => { try { return localStorage.getItem(K_KEUZE) === "1"; } catch (e) { return false; } };
+
+  // ---------------- welke tabbladen zijn nu ingelogd? (een nieuw tabblad of een link wist dan niets) ----------------
+  // Elk ingelogd tabblad houdt een GEDEELD slot "wpi-actief:<uid>" vast zolang het ingelogd is; de browser laat het
+  // vanzelf los als het tabblad sluit of vastloopt. Een tabblad zonder eigen sessie vraagt eerst welke sloten er zijn.
+  // Terugval zonder Web Locks: een vraag via BroadcastChannel ("wie is er?"), waarop ingelogde tabbladen antwoorden.
+  const SLOT = "wpi-actief:";
+  let slotLos = null, slotUid = null, authKanaal = null;
+  try { authKanaal = window.BroadcastChannel ? new BroadcastChannel("wpi-auth") : null; } catch (e) {}
+  if (authKanaal) authKanaal.onmessage = (e) => { if (e.data && e.data.t === "wie" && App.user && slotUid === App.user.id) authKanaal.postMessage({ t: "hier", uid: App.user.id }); };
+  function houdSlot(uid) {
+    if (!uid || slotUid === uid) return;
+    laatSlot(); slotUid = uid;
+    const ik = uid;   // het slot kan pas na laatSlot() worden toegekend: dan meteen weer loslaten
+    try { if (navigator.locks && navigator.locks.request) navigator.locks.request(SLOT + uid, { mode: "shared" }, () => new Promise((res) => { if (slotUid !== ik) res(); else slotLos = res; })).catch(() => {}); } catch (e) {}
+  }
+  function laatSlot() { const l = slotLos; slotLos = null; slotUid = null; if (l) try { l(); } catch (e) {} }
+  // uid's die in een ANDER tabblad van deze app ingelogd zijn (alleen zinvol als dit tabblad zelf niemand heeft)
+  async function actiefElders() {
+    if (slotUid) return [];
+    try {
+      if (navigator.locks && navigator.locks.query) {
+        const q = await navigator.locks.query();
+        return [...new Set((q.held || []).map((l) => String(l.name || "")).filter((n) => n.startsWith(SLOT)).map((n) => n.slice(SLOT.length)).filter(Boolean))];
+      }
+    } catch (e) {}
+    if (!window.BroadcastChannel) return [];
+    return new Promise((res) => {
+      let c = null; const uit = new Set();
+      try { c = new BroadcastChannel("wpi-auth"); } catch (e) { return res([]); }
+      c.onmessage = (e) => { if (e.data && e.data.t === "hier" && typeof e.data.uid === "string") uit.add(e.data.uid); };
+      c.postMessage({ t: "wie" });
+      setTimeout(() => { try { c.close(); } catch (e) {} res([...uit]); }, 300);
+    });
+  }
 
   let vBezig = null;
   // true = nieuwe tokens; false = (nog) niet (geen netwerk, of sessie ongeldig → S.rt leeg)
@@ -225,7 +266,7 @@
         <label class="flab" for="l-ww">Wachtwoord</label>
         <input id="l-ww" class="fin" type="password" autocomplete="current-password" required maxlength="200">
         <label style="display:flex;gap:10px;align-items:center;margin:14px 0 4px;font-size:14px"><input type="checkbox" id="l-onthoud"${keuzeOnthoud() ? " checked" : ""} style="width:20px;height:20px;accent-color:var(--accent)"> Ingelogd blijven op dit toestel</label>
-        <div class="muted" style="margin:0 0 10px 30px;font-size:13px;line-height:1.4">Nodig om de app zonder bereik opnieuw te openen. Alleen aanzetten op je eigen telefoon, nooit op een gedeeld toestel. Voor het Hoofd S&amp;M geldt de login altijd alleen zolang de app open is.</div>
+        <div class="muted" style="margin:0 0 10px 30px;font-size:13px;line-height:1.4">Nodig om de app zonder bereik opnieuw te openen. Alleen aanzetten op je eigen telefoon, nooit op een gedeeld toestel. Voor de hoofden, de QHSE-manager en de beheerder geldt de login altijd alleen zolang de app open is.</div>
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" id="l-knop" type="submit" style="margin-top:8px">Inloggen</button>
       </form>
@@ -311,11 +352,17 @@
         vergeetGeheugen(); S.scherm = "login"; S.melding = NIET_BEREIKBAAR; return false;   // sessie op de server blijft geldig
       }
     } else if (fout) {   // echte weigering (bijv. 403): geen toegang tot het eigen profiel
-      await uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = "Je profiel kon niet worden geladen. Neem contact op met het Hoofd Service & Montage."; return false;
+      await uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = "Je profiel kon niet worden geladen. Neem contact op met een hoofd of de beheerder."; return false;
     }
     // definitief antwoord van de server: geen profiel (RLS toont een inactief profiel niet) of actief = false
-    if (!p || p.actief === false) { await uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = "Je account is (nog) niet actief. Neem contact op met het Hoofd Service & Montage."; return false; }
-    if (!ROLLEN.includes(p.role)) { await uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = "Voor jouw rol is nog geen scherm in deze app. Neem contact op met het Hoofd Service & Montage."; return false; }
+    if (!p || p.actief === false) { await uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = "Je account is (nog) niet actief. Neem contact op met een hoofd of de beheerder."; return false; }
+    if (!ROLLEN.includes(p.role)) {
+      // nieuw uitgenodigd (nog geen rol) of de oude rol "inspecteur": eerst een rol laten kiezen in Beheer
+      await uitloggenServer("local"); wisSessie(); S.scherm = "login";
+      S.melding = p.role == null ? "Je account heeft nog geen rol. Vraag een hoofd, de QHSE-manager of de beheerder om je in Beheer een rol te geven."
+        : "Je rol bestaat niet meer in deze app. Vraag een hoofd, de QHSE-manager of de beheerder om je in Beheer een nieuwe rol te geven.";
+      return false;
+    }
     if (MFA_ROLLEN.includes(p.role) && S.aal !== "aal2") { await startMfa(p); return false; }
     await rondAf(p, herstel);
     return true;
@@ -345,7 +392,7 @@
     }
     S.anderOk = false; S.wacht = null;
     const prof = profielVoorApp(p);
-    // pas nu (profiel, rol en zo nodig MFA in orde) het refresh-token bewaren; het hoofd nooit blijvend
+    // pas nu (profiel, rol en zo nodig MFA in orde) het refresh-token bewaren; de beheerrollen nooit blijvend
     if (MFA_ROLLEN.includes(p.role)) S.onthoud = false;
     S.klaar = true; schrijf(K_RT, { rt: S.rt, uid: S.uid });
     const mail = ((lees(K_PROF) || {}).v || {}).email;
@@ -360,8 +407,10 @@
     await wisAlsAnder(prof.id);   // andere gebruiker dan de vorige op dit toestel: eerst diens servergegevens weg
     if (herstel) App.user = prof;
     else await loginKern.call(App, prof.id, prof);   // de echte login; App.login zelf is in productie dicht (zie onderaan)
+    houdSlot(prof.id);   // dit tabblad is ingelogd: andere tabbladen en links wissen nu niets (actiefElders)
     if (App.syncStart) setTimeout(() => App.syncStart(), 0);
-    if (!herstel && S.vraagToestel && prof.role === "inspecteur") setTimeout(() => App.authToestelVraag(), 600);
+    // alleen wie in het veld inspecteert en geen beheerrol heeft (die bewaart nooit een refresh-token): de coördinatoren
+    if (!herstel && S.vraagToestel && window.WPI.mag("inspecteert", prof) && !MFA_ROLLEN.includes(prof.role)) setTimeout(() => App.authToestelVraag(), 600);
     S.vraagToestel = false;
   }
   async function uitloggenServer(scope) {
@@ -372,7 +421,7 @@
   // Twee vormen:
   //  - PKCE (de herstelmail die deze app aanvraagt): ?code=… — alleen in te wisselen met de code_verifier die DEZE
   //    browser bij het aanvragen bewaarde (K_PKCE). Een link van iemand anders werkt hier dus nooit.
-  //  - impliciet: #access_token=…&type=recovery|invite (uitnodiging door het hoofd, of herstel via het dashboard).
+  //  - impliciet: #access_token=…&type=recovery|invite (uitnodiging door een beheerder, of herstel via het dashboard).
   //    Alleen type recovery of invite, en het token wordt EERST bij de server gecontroleerd (GET /auth/v1/user).
   // Een link verandert nooit iets aan wat er al is: geen wisSessie/wisOpslag, geen syncWisLokaal. Bij een ongeldige
   // link, of een link van een ander account dan wie hier bewaard ingelogd is, gaat de app gewoon verder met de
@@ -387,6 +436,9 @@
     q.delete("code");
     try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "")); } catch (e) { location.hash = ""; }
     const bw = lees(K_RT), bewaardUid = bw && bw.v && bw.v.rt ? bw.v.uid : null;
+    // in een ANDER tabblad ingelogd (sessie alleen in dat tabblad: "Ingelogd blijven" uit)? Dan geldt die gebruiker
+    // net zo als een bewaarde sessie hier: een link van een ander account wordt geweigerd en er wordt niets gewist
+    const elders = bewaardUid ? [] : await actiefElders(), actiefUid = bewaardUid || elders[0] || null;
     const weiger = (m) => { vergeetGeheugen(); S.link = null; if (bewaardUid) S.linkMelding = m; else { S.scherm = "vergeten"; S.melding = m; } return false; };
     if (h.get("error") || h.get("error_code")) return weiger(LINK_VERLOPEN);
     if (!navigator.onLine) return weiger("Geen verbinding. Open de link opnieuw zodra je bereik hebt.");
@@ -409,13 +461,13 @@
       d = { access_token: at, refresh_token: h.get("refresh_token"), expires_in: +h.get("expires_in") || 3600, user: u };
     }
     const uid = (d.user && d.user.id) || jwt(d.access_token).sub;
-    if (bewaardUid && uid !== bewaardUid) {
+    if (actiefUid && !(bewaardUid ? uid === bewaardUid : elders.includes(uid))) {
       // niet als een ander inloggen; de sessie uit de link meteen intrekken (alleen die)
       try { await metTimeout(sb("/auth/v1/logout?scope=local", { method: "POST", auth: false, headers: { Authorization: "Bearer " + d.access_token } }), 5000); } catch (e) {}
       return weiger("Deze link hoort bij een ander account dan waarmee je hier bent ingelogd en is niet gebruikt. Log eerst uit als het jouw link is.");
     }
     zetSessie(d, false);   // alleen in het geheugen (S.klaar blijft false: er wordt niets bewaard)
-    S.link = { uid, email: (d.user && d.user.email) || jwt(d.access_token).email || "", soort, bewaard: !!bewaardUid };
+    S.link = { uid, email: (d.user && d.user.email) || jwt(d.access_token).email || "", soort, bewaard: !!actiefUid };
     S.scherm = "nieuwww"; S.melding = "";
     return true;
   }
@@ -449,7 +501,7 @@
       if (!S.rt) { S.melding = "Je sessie is verlopen. Log opnieuw in."; return; }
     }
     // geen verbinding: verder met de bewaarde gegevens; vernieuwen zodra er weer bereik is
-    if (prof && prof.id === S.uid && ROLLEN.includes(prof.role)) { App.user = profielVoorApp(prof); if (!USERS.some((u) => u.id === prof.id)) USERS.push(App.user); }
+    if (prof && prof.id === S.uid && ROLLEN.includes(prof.role)) { App.user = profielVoorApp(prof); if (!USERS.some((u) => u.id === prof.id)) USERS.push(App.user); houdSlot(prof.id); }
   }
 
   // ---------------- koppelingen met kern.js ----------------
@@ -462,10 +514,12 @@
       // Geen sessie te herstellen (tabblad/app gesloten zonder uitloggen, sessie verlopen): de servergegevens van de
       // vorige gebruiker horen niet op het inlogscherm van een gedeeld toestel. NIET bij een link uit een e-mail terwijl
       // er een bewaarde sessie (van hetzelfde account) is: een link mag nooit iets wissen (zie verwerkLink).
-      if (!App.user) { if (App.syncWisLokaal && !(S.link && S.link.bewaard)) await App.syncWisLokaal(laatsteUid()); }
+      // Ook niet als er in een ANDER tabblad iemand ingelogd is (tweede tabblad op "/", of een link uit een e-mail,
+      // met "Ingelogd blijven" uit): dan zijn de gegevens op het toestel van die ingelogde gebruiker.
+      if (!App.user) { if (App.syncWisLokaal && !(S.link && S.link.bewaard) && !(await actiefElders()).length) await App.syncWisLokaal(laatsteUid()); }
       else { await wisAlsAnder(App.user.id); toonLinkMelding(); }   // (zonder bereik hersteld: zelfde controle als bij inloggen)
     },
-    // eenmalig na de eerste login van een inspecteur op dit toestel met het vinkje uit
+    // eenmalig na de eerste login van een coördinator (inspecteert, geen beheerrol) op dit toestel met het vinkje uit
     authToestelVraag() {
       if (!App.user || App._page === "inspectie" || ($("ov") && $("ov").classList.contains("on"))) return;
       App.openModal("Is dit je eigen telefoon?", "Dan kun je ingelogd blijven, zodat je de app ook zonder bereik opnieuw kunt openen (bijv. op een locatie zonder signaal).",
@@ -493,6 +547,7 @@
     authVernieuw: () => vernieuw(),
     authLogout() {
       if (!actief()) return;
+      laatSlot();   // dit tabblad is niet meer ingelogd
       const scope = S.scope || "local", uid = S.uid || (App.user && App.user.id);
       uitloggenServer(scope);   // niet wachten
       if (S.elders) { vergeetGeheugen(); wisEigenOpslag(uid); S.elders = false; }   // zie uitElders()
@@ -551,7 +606,7 @@
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) return fout("Vul een geldig e-mailadres in.");
       if (!navigator.onLine) return fout("Geen verbinding. Inloggen kan alleen met internet; daarna werkt de app ook zonder bereik.");
       S.onthoud = !!($("l-onthoud") || {}).checked; S.email = mail; S.melding = ""; S.klaar = false;
-      // nog nooit een keuze gemaakt op dit toestel en het vinkje uit: na de login één keer vragen (alleen inspecteur)
+      // nog nooit een keuze gemaakt op dit toestel en het vinkje uit: na de login één keer vragen (alleen wie inspecteert, zonder beheerrol)
       let eerder = true; try { eerder = localStorage.getItem(K_KEUZE) !== null; } catch (e) {}
       S.vraagToestel = !eerder && !S.onthoud;
       try { if (eerder || S.onthoud) localStorage.setItem(K_KEUZE, S.onthoud ? "1" : "0"); } catch (e) {}

@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete",
+  "buildCommand": "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete",
   "outputDirectory": "dist",
   "installCommand": "",
   "framework": null,
@@ -21,9 +21,16 @@
       "continue": true
     },
     {
-      "src": "/(sw\\.js|index\\.html|js/.*)",
+      "src": "/(sw\\.js|index\\.html|js/.*)?",
       "headers": {
         "Cache-Control": "no-cache"
+      },
+      "continue": true
+    },
+    {
+      "src": "/\\.well-known/assetlinks\\.json",
+      "headers": {
+        "Content-Type": "application/json"
       },
       "continue": true
     },
@@ -35,7 +42,7 @@
       }
     },
     {
-      "src": "/(.*/)?\\.[^/]*(/.*)?",
+      "src": "/(?!\\.well-known/assetlinks\\.json$)(.*/)?\\.[^/]*(/.*)?",
       "status": 404,
       "headers": {
         "X-Robots-Tag": "noindex, nofollow"

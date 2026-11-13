@@ -121,15 +121,16 @@
   //   staf         ingestelde acties inhoudelijk wijzigen (plandatum)         hoofd, coördinator
   //   zietAlles    alle inspecties, acties en planning; dashboard/rapportage  iedereen in het team
   //   team         bij Acties het lopende werk van het hele team              hoofd, QHSE-manager, beheerder
-  //   beheer       Beheer: team en rollen, monteurs, doel % conform           hoofd, QHSE-manager, beheerder
+  //   beheer       Beheer: team en rollen, doel % conform                     hoofd, QHSE-manager, beheerder
+  //   monteurs     Beheer: de monteurslijst                                   iedereen in het team (ook coördinatoren)
   //   houder       kan actiehouder zijn                                       hoofd, coördinator (QHSE-manager nooit)
   //   toetser      kan toetser zijn                                           hoofd, coördinator, QHSE-manager
   // De beheerder is geen actiehouder en geen toetser, inspecteert niet en telt niet als inspecteur.
   const RECHTEN = {
-    hoofd: { inspecteert: true, plant: true, staf: true, zietAlles: true, team: true, beheer: true, houder: true, toetser: true },
-    coordinator: { inspecteert: true, plant: true, staf: true, zietAlles: true, houder: true, toetser: true },
-    qhse: { zietAlles: true, team: true, beheer: true, toetser: true },
-    beheerder: { zietAlles: true, team: true, beheer: true },
+    hoofd: { inspecteert: true, plant: true, staf: true, zietAlles: true, team: true, beheer: true, monteurs: true, houder: true, toetser: true },
+    coordinator: { inspecteert: true, plant: true, staf: true, zietAlles: true, monteurs: true, houder: true, toetser: true },
+    qhse: { zietAlles: true, team: true, beheer: true, monteurs: true, toetser: true },
+    beheerder: { zietAlles: true, team: true, beheer: true, monteurs: true },
   };
   const ROLLEN = Object.freeze(Object.keys(RECHTEN));
   const INSPECTEURS = ["hoofd", "coordinator"];
@@ -148,7 +149,7 @@
     { id: "kwartaal", lab: "Rapportage", ic: "doc", rollen: ["hoofd", "coordinator", "qhse", "beheerder"], web: true },
   ];
   // schermen buiten de tabs die een recht vragen (de route stuurt anders terug naar Vandaag)
-  const SCHERM_RECHT = { inspectie: "inspecteert", beheer: "beheer" };
+  const SCHERM_RECHT = { inspectie: "inspecteert", beheer: "monteurs" };   // Beheer: kaarten per recht (js/beheer.js)
   const staf = () => mag("staf");
   // Eén helper voor ALLE keuzelijsten met personen (actiehouder, toetser, inspecteur in de planning):
   // alleen wie dat recht heeft, zonder `uitsluit`. opties(): de <option>'s, met "Kies…" voorop (leeg: null = geen).
@@ -345,7 +346,7 @@
     openAccount() {
       const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
-        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${mag("beheer", u) ? r("tand", "Beheer", "Team en rollen, monteurs en doel % conform", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${mag("monteurs", u) ? r("tand", "Beheer", mag("beheer", u) ? "Team en rollen, monteurs en doel % conform" : "Monteurs", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
