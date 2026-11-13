@@ -36,11 +36,25 @@
     open() {
       if (this._db) return Promise.resolve(this._db);
       return new Promise((res, rej) => {
-        const r = indexedDB.open("wpi", 3);
-        r.onupgradeneeded = () => { ["inspecties", "acties", "concept", "planning"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
-        r.onsuccess = () => { this._db = r.result; res(this._db); };
+        const r = indexedDB.open("wpi", 4);   // v4: + outbox en syncmeta (js/sync.js); bestaande stores en data blijven
+        r.onupgradeneeded = () => { ["inspecties", "acties", "concept", "planning", "outbox", "syncmeta"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
+        r.onblocked = () => this.melding("Sluit andere vensters of tabbladen van Werkplekinspectie: de app wordt bijgewerkt en wacht daarop.");
+        r.onsuccess = () => {
+          this._db = r.result; this.melding(null);
+          // een nieuwere versie (ander venster) wil bijwerken: loslaten, anders blijft die hangen
+          this._db.onversionchange = () => { try { this._db.close(); } catch (e) {} this._db = null; this.melding("Werkplekinspectie is in een ander venster bijgewerkt. Laad deze pagina opnieuw om verder te gaan.", true); };
+          res(this._db);
+        };
         r.onerror = () => rej(r.error);
       });
+    },
+    // melding bovenin bij een geblokkeerde of verouderde database (null = weghalen)
+    melding(t, herlaad) {
+      let m = document.getElementById("dbmelding");
+      if (!t) { if (m && !m.dataset.herlaad) m.remove(); return; }
+      if (!m) { m = document.createElement("div"); m.id = "dbmelding"; m.setAttribute("role", "alert"); m.style.cssText = "position:fixed;left:12px;right:12px;top:12px;z-index:9999;background:#fff;border-radius:16px;padding:14px 16px;box-shadow:0 6px 24px rgba(0,0,0,.15);font-weight:600;line-height:1.4"; document.body.appendChild(m); }
+      m.dataset.herlaad = herlaad ? "1" : ""; m.textContent = t;
+      if (herlaad) { const b = document.createElement("button"); b.className = "btn primary"; b.style.marginTop = "10px"; b.textContent = "Opnieuw laden"; b.onclick = () => location.reload(); m.appendChild(b); }
     },
     async tx(store, mode, fn) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction(store, mode); const r = fn(t.objectStore(store)); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error); }); },
     put(store, obj) { return this.tx(store, "readwrite", (o) => { o.put(obj); }); },
@@ -148,7 +162,8 @@
       const names = ["cijfers", "kennisbank", "voorbeelddata", "trendacties"];
       const got = await Promise.all(names.map((n) => fetch("data/" + n + ".json").then((r) => r.json())));
       names.forEach((n, i) => (this.data[n] = got[i]));
-      try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
+      if (this.authActief && this.authActief()) await this.authHerstel();   // echte login (js/auth.js) zodra Supabase is ingesteld
+      else try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
       this.laadPref();
       if (this.user) await this.herstelConcept();
       document.addEventListener("visibilitychange", () => {
@@ -173,8 +188,13 @@
       this.route();
     },
 
-    async login(id) { this.user = USERS.find((u) => u.id === id); try { localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.planning = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
-    logout() { this.stopMic(); this.user = null; this.state.inspectie = null; this.acties = null; this.actFilter = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
+    async login(id, profiel) {
+      if (this.authActief && this.authActief() && !profiel) return;   // met Supabase alleen via js/auth.js (geen voorbeeld-login)
+      this.user = profiel || USERS.find((u) => u.id === id); try { if (!profiel) localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.planning = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
+    logout() {
+      // lopende inspectie eerst veiligstellen (een wachtende bewaar-timer mag het concept niet meer wissen)
+      clearTimeout(this._cTimer); if (this.user && this.state.inspectie) DB.put("concept", { id: "lopend-" + this.user.id, ins: this.state.inspectie, t: new Date().toISOString() }).catch(() => {});
+      if (this.authLogout) this.authLogout(); this.stopMic(); this.user = null; this.state.inspectie = null; this.acties = null; this.actFilter = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
 
     // ---- weergave: veldmodus (grote knoppen) en zonmodus (hoog contrast) ----
     pref: { veld: false, zon: false },
@@ -205,6 +225,7 @@
       clearTimeout(this._cTimer);
       const user = this.user; if (!user) return;
       this._cTimer = setTimeout(async () => {
+        if (this.user !== user) return;   // intussen uitgelogd: logout() heeft het concept al bewaard
         const ins = this.state.inspectie;
         try {
           if (ins) await DB.put("concept", { id: "lopend-" + user.id, ins, t: new Date().toISOString() });
@@ -229,7 +250,7 @@
     openAccount() {
       const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow" onclick="${on}"><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
-        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", "App.closeModal();App.openSearch()")}${r("sun", "Weergave", "Veldmodus en zonmodus", "App.openWeergave()")}${r("back", "Uitloggen", "", "App.closeModal();App.logout()")}</div>`);
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", "App.closeModal();App.openSearch()")}${r("sun", "Weergave", "Veldmodus en zonmodus", "App.openWeergave()")}${u.role === "hoofd" ? r("tand", "Beheer", "Monteurs en doel % conform", "App.closeModal();App.go('beheer')") : ""}${r("back", "Uitloggen", "", "App.closeModal();App.logout()")}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}

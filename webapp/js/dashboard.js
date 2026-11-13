@@ -46,7 +46,7 @@
     view_dashboard() {
       const c = this.data.cijfers, D = this.computeDash(), f = this.dashFilter;
       const w = D.waarn, beo = D.oordeel.Conform + D.oordeel.Afwijking + D.oordeel.Verbeterpunt, pct = beo ? Math.round(100 * D.oordeel.Conform / beo) : 0;
-      const progPct = Math.round(100 * c.vp_x / c.vp_y), progDoel = 90;
+      const progPct = Math.round(100 * c.vp_x / c.vp_y), progDoel = 90, doelC = this.doelConform();
       const v = $("view");
       const prods = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.product))].sort();
       const locs = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.locatie))].sort();
@@ -61,7 +61,7 @@
       </div>`));
       v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Filters werken op waarnemingen en oordelen. Tik op een tegel, staaf of klasse voor detail / kruis-filter.</div>`));
       v.appendChild(el(`<div class="grid kpis">
-        ${beo >= 5 ? this.tile("sage", pct + "%", "Conform", D.oordeel.Conform + " van " + beo + " beoordeeld", "App.drill('conform')")
+        ${beo >= 5 ? this.tile(doelC != null && pct < doelC ? "mist" : "sage", pct + "%", "Conform", (doelC != null ? "doel " + doelC + "% · " : "") + D.oordeel.Conform + " van " + beo + " beoordeeld", "App.drill('conform')")
           : this.tile("mist", "n = " + beo, "Conform", "te weinig voor een percentage (n < 5)", "App.drill('conform')")}
         ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
         ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, "App.drill('programma')")}
@@ -83,27 +83,43 @@
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Klik op een maand, een stuk van de ring of een klasse voor de details. Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen.</div>`));
     },
 
+    // doel % conform (ingesteld door het Hoofd S&M in Beheer); null = geen doel
+    doelConform() {
+      let v = null; try { v = localStorage.getItem("wpi_doel_conform"); } catch (e) {}
+      const n = v == null || String(v).trim() === "" ? NaN : Math.round(+v);
+      return n >= 1 && n <= 100 ? n : null;
+    },
     // zachte, warme kleuren die bij de app passen
-    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#8B7F72" },
+    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#8B7F72", doel: "#2F5D50" },
     // %-conform per maand als zachte lijn met vlak eronder
     chartTrend(mnd, om) {
-      const P = this.PAL, W = 1100, H = 230, L = 44, R = 24, T = 30, Bm = 30, iw = W - L - R, ih = H - T - Bm;
+      const doel = this.doelConform(), P = this.PAL, W = 1100, H = 230, L = 44, R = doel != null ? 92 : 24, T = 30, Bm = 30, iw = W - L - R, ih = H - T - Bm;
       const pts = mnd.map((m, i) => { const o = om[m] || {}, tot = (o.Conform || 0) + (o.Afwijking || 0) + (o.Verbeterpunt || 0);
         return { m, tot, p: tot ? (o.Conform || 0) / tot : null, x: L + (mnd.length === 1 ? iw / 2 : iw * i / (mnd.length - 1)) }; });
       const y = (p) => T + ih * (1 - p);
       const geldig = pts.filter((q) => q.p !== null);
       let g = `<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.C}" stop-opacity=".35"/><stop offset="1" stop-color="${P.C}" stop-opacity="0"/></linearGradient></defs>`;
       [0, .5, 1].forEach((t) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}" stroke="${P.track}" stroke-width="2" stroke-dasharray="${t === 0 ? "" : "4 6"}"/><text x="${L - 8}" y="${y(t) + 4}" text-anchor="end" font-size="12" fill="${P.soft}">${t * 100}%</text>`; });
+      if (doel != null) {   // streepjeslijn met het doel; label rechts naast de lijn, buiten de punten
+        const yd = y(doel / 100);
+        // rustig: dun, half doorzichtig, label rechts buiten de punten
+        g += `<g class="doellijn"><line x1="${L}" x2="${W - R + 14}" y1="${yd}" y2="${yd}" stroke="${P.doel}" stroke-opacity=".45" stroke-width="1.5" stroke-dasharray="6 7" stroke-linecap="round"/>
+          <text x="${W - R + 20}" y="${yd + 4.5}" text-anchor="start" font-size="12.5" font-weight="700" fill="${P.doel}" fill-opacity=".8">doel ${doel}%</text></g>`;
+      }
       if (geldig.length > 1) {
         let d = `M${geldig[0].x},${y(geldig[0].p)}`;
         for (let k = 1; k < geldig.length; k++) { const a = geldig[k - 1], b = geldig[k], cx = (a.x + b.x) / 2; d += ` C${cx},${y(a.p)} ${cx},${y(b.p)} ${b.x},${y(b.p)}`; }
         g += `<path d="${d} L${geldig[geldig.length - 1].x},${T + ih} L${geldig[0].x},${T + ih} Z" fill="url(#tg)"/><path d="${d}" fill="none" stroke="${P.C}" stroke-width="4" stroke-linecap="round"/>`;
       }
+      const yDoel = doel != null ? y(doel / 100) : null;
       pts.forEach((q) => {
         const klein = q.tot < 5, yy = q.p === null ? T + ih : y(q.p);
+        // label boven de punt; raakt het de doellijn, dan eronder (en met een witte rand voor de leesbaarheid)
+        const ly = yDoel != null && Math.abs(yDoel - (yy - 19)) < 12.5 && yy + 26 < T + ih + 4 ? yy + 26 : yy - 14;
+        const lx = q.x === L && mnd.length > 1 ? q.x - 6 : q.x, la = lx === q.x ? "middle" : "start";   // eerste punt: niet over de as-labels
         g += `<g style="cursor:pointer" onclick="App.drill('oordeelmaand','${q.m}')"><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
           <circle cx="${q.x}" cy="${yy}" r="7" fill="${klein ? "#fff" : P.C}" stroke="${klein ? P.N : "#fff"}" stroke-width="3"/>
-          ${q.p !== null && !klein ? `<text x="${q.x}" y="${yy - 14}" text-anchor="middle" font-size="13" font-weight="800" fill="${P.ink}">${Math.round(q.p * 100)}%</text>` : `<text x="${q.x}" y="${yy - 14}" text-anchor="middle" font-size="12" fill="${P.soft}">n=${q.tot}</text>`}
+          ${q.p !== null && !klein ? `<text class="pctlab" x="${lx}" y="${ly}" text-anchor="${la}" font-size="13" font-weight="800" fill="${P.ink}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${Math.round(q.p * 100)}%</text>` : `<text x="${lx}" y="${ly}" text-anchor="${la}" font-size="12" fill="${P.soft}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">n=${q.tot}</text>`}
           <text x="${q.x}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${P.soft}">${mlabel(q.m)}</text></g>`;
       });
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;

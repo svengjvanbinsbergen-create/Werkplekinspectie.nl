@@ -44,10 +44,10 @@ await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(300);
 console.log('MOD', JSON.stringify((await p.locator('#mod').innerText()).slice(0,400)), 'ov', await ev(()=>document.getElementById('ov').className), errs);
 await p.selectOption('#ai-houder','u-douwe');await p.selectOption('#ai-toetser','u-douwe');
 await p.click('text=Actie instellen');await p.waitForTimeout(200);
-console.log('fout:', await p.locator('#ai-fout').textContent());
+const fout1=await p.locator('#ai-fout').textContent();console.log('fout:', fout1);if(!fout1.trim())errs.push('METHODE: toetser = actiehouder niet geweigerd');
 await S('t7-fout');
 await p.selectOption('#ai-toetser','u-winfred');await p.click('text=Actie instellen');await p.waitForTimeout(400);
-console.log('status na instellen', await ev((id)=>App.acties.find(a=>a.id===id).status,nid));
+const st1=await ev((id)=>App.acties.find(a=>a.id===id).status,nid);console.log('status na instellen', st1);if(st1!=='Open')errs.push('METHODE: status na instellen '+st1+', verwacht Open');
 // Douwe voert uit
 await ev(()=>App.login('u-douwe'));await p.waitForTimeout(400);
 await ev((id)=>{App.go('acties');},nid);await p.waitForTimeout(400);
@@ -62,9 +62,9 @@ await ev(()=>{App.actFilter='toetsen';App.go('acties')});await p.waitForTimeout(
 await S('t9-toetsen');
 await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(200);
 await p.click('text=Niet akkoord · terug naar actiehouder');await p.waitForTimeout(200);
-console.log('reden-fout:', await p.locator('#ai-fout').textContent());
+const fout2=await p.locator('#ai-fout').textContent();console.log('reden-fout:', fout2);if(!fout2.trim())errs.push('METHODE: niet akkoord zonder reden niet geweigerd');
 await p.click('text=Akkoord na toetsing · afronden');await p.waitForTimeout(400);
-console.log('eind', await ev((id)=>{const a=App.acties.find(a=>a.id===id);return a.status+' | '+a.log.map(l=>l.wat).join(' / ')},nid));
+const eind=await ev((id)=>{const a=App.acties.find(a=>a.id===id);return a.status+' | '+a.log.map(l=>l.wat).join(' / ')},nid);console.log('eind', eind);if(!/^Afgerond \|/.test(eind)||!/Getoetst en akkoord/.test(eind))errs.push('METHODE: na akkoord van de toetser niet Afgerond: '+eind.slice(0,80));
 // rapport
 const rep=await ev(async()=>{const all=await new Promise(r=>{const q=indexedDB.open('wpi');q.onsuccess=()=>{const g=q.result.transaction('inspecties').objectStore('inspecties').getAll();g.onsuccess=()=>r(g.result)}});return all[0].id});
 await ev((id)=>{location.hash='#/rapport/'+id},rep);await p.waitForTimeout(700);

@@ -113,7 +113,7 @@
       const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${u.id}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
       const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
       let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
-        <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${a.foto ? `<img src="${a.foto}" alt="foto" style="height:64px;border-radius:10px">` : ""}</div>`;
+        <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${a.foto ? `<img src="${esc(WPI.fotoSrc(a.foto))}" alt="foto" style="height:64px;border-radius:10px">` : ""}</div>`;
       if (a.status === "Voorstel") {
         {
           h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
@@ -132,7 +132,7 @@
       } else {
         h += `<div class="card" style="background:var(--mist);box-shadow:none;margin-bottom:12px"><div class="t" style="font-size:16px">${esc(a.tekst)}</div>
           <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b></div></div>`;
-        if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${a.foto}" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${a.nafoto}" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
+        if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.foto))}" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.nafoto))}" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
         if ((a.status === "Open" || a.status === "In uitvoering") && (isHouder || staf())) {
           if (a.status === "Open") h += `<button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="App.zetStatus('${a.id}','In uitvoering','Uitvoering gestart')">Start uitvoering</button>`;
           h += `<button class="btn primary" onclick="App.naFoto('${a.id}')">${svg("cam", 18)} Klaar · na-foto maken</button>

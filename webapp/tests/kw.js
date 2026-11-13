@@ -10,5 +10,5 @@ await p.setViewportSize({width:390,height:844});await p.evaluate(()=>App.route()
 await p.evaluate(()=>App.nieuweActie());await p.waitForTimeout(200);
 await p.fill('#na-tekst','Hijsbanden in de bus vervangen');await p.selectOption('#ai-houder','u-douwe');await p.selectOption('#ai-toetser','u-winfred');
 await p.click('text=Actie aanmaken');await p.waitForTimeout(500);await p.screenshot({path:'k5.png'});
-console.log('handmatig:',await p.evaluate(()=>App.acties.filter(a=>a.handmatig).map(a=>a.status+' '+a.plandatum)));
+const hm=await p.evaluate(()=>App.acties.filter(a=>a.handmatig).map(a=>a.status+' '+a.plandatum));console.log('handmatig:',hm);if(hm.length!==1||!/^Open \d{4}-\d\d-\d\d$/.test(hm[0]))errs.push('handmatige actie niet als Open met plandatum bewaard: '+JSON.stringify(hm));
 console.log(errs);await b.close()})();

@@ -1,0 +1,123 @@
+# Werkplekinspectie — Netlify. In de Netlify-instellingen: Base directory = "webapp".
+# (Staat dit bestand in de root van de repo, gebruik dan base = "webapp".)
+# Headers staan in _headers (zelfde map); de regels hieronder doen hetzelfde, voor als
+# _headers per ongeluk niet wordt meegenomen. Bij dubbele headers wint netlify.toml.
+
+[build]
+  publish = "."
+  # Geen build-stap voor de app zelf; dit haalt alleen bestanden weg die nooit online horen
+  # (documentatie, tests, databasescripts, markdown). Wat niet wordt geüpload, kan niet lekken.
+  # Ook alle .html behalve index.html (interne pagina's: beveiligingsplan, onderzoek, ontwerpen) en
+  # vercel.json; netlify.toml zelf blijft staan (Netlify leest hem) maar geeft 404 (zie hieronder).
+  command = "rm -rf docs tests supabase vercel.json && find . -name '*.md' -type f -delete && find . -maxdepth 1 -name '*.html' ! -name index.html -type f -delete"
+
+# --- HTTP → HTTPS (Netlify doet dit ook automatisch met "Force HTTPS") ---
+[[redirects]]
+  from = "http://werkplekinspectie.nl/*"
+  to = "https://werkplekinspectie.nl/:splat"
+  status = 301
+  force = true
+[[redirects]]
+  from = "http://www.werkplekinspectie.nl/*"
+  to = "https://werkplekinspectie.nl/:splat"
+  status = 301
+  force = true
+
+# --- afgeschermd: altijd 404, ook als de bestanden toch zouden bestaan ---
+[[redirects]]
+  from = "/docs/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/supabase/*"
+  to = "/404.html"
+  status = 404
+  force = true
+# Netlify kent geen "*.md"-patroon midden in een pad; de build hierboven verwijdert alle .md-bestanden
+# en deze regels vangen de bekende plekken af.
+[[redirects]]
+  from = "/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/:dir/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+# interne pagina's en de hostingconfig: nooit publiek (ook niet als de build ze zou laten staan)
+[[redirects]]
+  from = "/beveiliging.html"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/onderzoek.html"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/gauntlet.html"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/verbeter.html"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/design-vandaag.html"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/netlify.toml"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/vercel.json"
+  to = "/404.html"
+  status = 404
+  force = true
+[[redirects]]
+  from = "/_headers"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    # script-src-elem 'self': geen inline <script> en geen javascript:-URL's; alleen inline handler-attributen mogen nog.
+    # TODO(volgende fase): script-src-attr 'none' en 'unsafe-inline' uit script-src zodra de inline onclick-handlers weg zijn.
+    # VERPLICHT bij livegang: "project-ref" vervangen door de echte Supabase-ref (zie _headers en js/config.js).
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(self), microphone=(self), geolocation=(self), accelerometer=(), autoplay=(), bluetooth=(), display-capture=(), encrypted-media=(), fullscreen=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(self), serial=(), usb=(), xr-spatial-tracking=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
+    X-Permitted-Cross-Domain-Policies = "none"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "no-cache"

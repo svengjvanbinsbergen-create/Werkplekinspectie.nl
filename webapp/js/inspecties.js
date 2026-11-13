@@ -13,7 +13,7 @@
       // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
       const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({
         eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, monteurs: r.monteurs || [],
-        sub: (r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length) + " waarnemingen" + (r.handtekening ? " · ondertekend" : "") }))
+        sub: ((n) => n + (n === 1 ? " waarneming" : " waarnemingen"))(r.versie >= 2 ? r.waarnemingen.length : Object.values(r.oordelen || {}).filter(Boolean).length) + (r.handtekening ? " · ondertekend" : "") }))
         .concat(mine ? [] : (this.data.voorbeelddata.wpis || []).map((w) => ({ eigen: false, id: w.nr, titel: w.product + " · " + (w.locatie || ""), datum: w.datum, inspecteur: w.inspecteur, monteurs: this.demoMonteurs(w), sub: w.nr + " · " + (w.ingang || "") })))
         .sort((a, b) => b.datum.localeCompare(a.datum));
       const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
@@ -74,10 +74,10 @@
         ${acties.length ? `<h2>3. Acties</h2><div class="listcard">${aRows}</div>` : ""}
         ${r.gesprek ? `<h2>4. Gesprek met de monteurs</h2><div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
         ${r.positief ? `<h2>5. Wat ging opvallend goed</h2><div class="card" style="line-height:1.5">${esc(r.positief)}</div>` : ""}
-        ${fotos.length ? `<h2>Foto's</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map((w) => `<figure style="margin:0"><img src="${w.foto}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}</figcaption></figure>`).join("")}</div>` : ""}
+        ${fotos.length ? `<h2>Foto's</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map((w) => `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(w.foto))}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}</figcaption></figure>`).join("")}</div>` : ""}
         <h2>Ondertekening</h2>
         <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
-          ${r.handtekening ? `<img src="${r.handtekening}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
+          ${r.handtekening ? `<img src="${esc(WPI.fotoSrc(r.handtekening))}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
         ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${kc("voorstel gebruikt")} voorstel(len) gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
         ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${r.open_punten.length} open herinnering(en): ${esc(r.open_punten.join(" "))}</div>` : ""}
       </div>`));

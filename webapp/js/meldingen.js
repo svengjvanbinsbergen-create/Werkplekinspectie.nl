@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, esc, svg, naam, kort, dagLabel, dagenTot } = window.WPI;
+  const { $, esc, svg, naam, kort, dagLabel, dagenTot, staf } = window.WPI;
   Object.assign(window.App, {
     // ---- meldingen over plandata: 1× een week vooraf, daarna na verstrijken elke 2 dagen; voor iedereen ----
     meldingen() {
@@ -12,12 +12,23 @@
         const d = dagenTot(a.plandatum);
         if (d < 0) {
           const k = Math.floor((-d - 1) / 2);   // dag 1, 3, 5 … na de plandatum telt als nieuwe melding
-          uit.push({ id: a.id + ":laat:" + k, actie: a.id, soort: "laat", d, titel: "Te laat: " + kort(a.tekst, 70),
+          // de status staat in de pil ("te laat"), niet ook nog voor de titel; de toestelmelding (zonder pil) krijgt hem wel
+          uit.push({ id: a.id + ":laat:" + k, actie: a.id, soort: "laat", d, pil: "te laat", titel: kort(a.tekst, 70), sysTitel: "Te laat: " + kort(a.tekst, 70),
             tekst: `Plandatum ${dagLabel(a.plandatum)} is ${-d} dag${-d === 1 ? "" : "en"} verstreken · actiehouder ${naam(a.houder)}` });
         } else if (d <= 7) {
-          uit.push({ id: a.id + ":week", actie: a.id, soort: "week", d, titel: (d === 0 ? "Vandaag" : "Over " + d + " dag" + (d === 1 ? "" : "en")) + ": " + kort(a.tekst, 70),
+          const wanneer = d === 0 ? "vandaag" : d === 1 ? "morgen" : "over " + d + " dagen";
+          uit.push({ id: a.id + ":week", actie: a.id, soort: "week", d, pil: wanneer, titel: kort(a.tekst, 70), sysTitel: wanneer[0].toUpperCase() + wanneer.slice(1) + ": " + kort(a.tekst, 70),
             tekst: `Plandatum ${dagLabel(a.plandatum)} · actiehouder ${naam(a.houder)}` });
         }
+      });
+      // gemiste inspecties: gepland, datum verstreken, nog niet uitgevoerd → de dag erna, daarna elke 2 dagen;
+      // voor de toegewezen inspecteur en voor het Hoofd S&M en de coördinatoren
+      (this.planning || []).filter((p) => p.status === "gepland" && p.datum && (staf() || p.inspecteur === this.user.id)).forEach((p) => {
+        const d = dagenTot(p.datum); if (d >= 0) return;
+        const k = Math.floor((-d - 1) / 2), wie = p.inspecteur === this.user.id ? "jouw inspectie" : "ingepland voor " + naam(p.inspecteur);
+        uit.push({ id: p.id + ":gemist:" + k, plan: p.id, soort: "gemist", d, hash: "#/planning", pil: "te laat",
+          titel: "Inspectie nog niet gedaan: " + this.productNaam(p.code) + (p.locatie ? " · " + p.locatie : ""),
+          tekst: `Gepland op ${dagLabel(p.datum)}, ${-d} dag${-d === 1 ? "" : "en"} geleden · ${wie}` });
       });
       return uit.sort((x, y) => x.d - y.d);
     },
@@ -25,15 +36,21 @@
     _bewaarSet(k, set) { try { localStorage.setItem(k + "_" + this.user.id, JSON.stringify([...set].slice(-400))); } catch (e) {} },
     async checkMeldingen() {
       if (!this.user) return;
-      await this.laadActies(); if (!this.user) return;
+      await this.laadActies(); if (this.laadPlanning) await this.laadPlanning(); if (!this.user) return;
       const M = this.meldingen(), gelezen = this._set("wpi_gelezen"), getoond = this._set("wpi_getoond");
       const ongelezen = M.filter((m) => !gelezen.has(m.id));
       const nr = $("belnr"); if (nr) { nr.textContent = ongelezen.length; nr.classList.toggle("hidden", !ongelezen.length); }
-      // vaste alert in beeld zolang er acties over de plandatum zijn (niet tijdens het inspecteren)
-      const laat = M.filter((m) => m.soort === "laat"), al = $("alert");
+      // vaste alert in beeld zolang er acties of inspecties over datum zijn (niet tijdens het inspecteren)
+      const laat = M.filter((m) => m.soort === "laat"), gemist = M.filter((m) => m.soort === "gemist"), al = $("alert");
       if (al) {
-        al.classList.toggle("hidden", !laat.length || this._page === "inspectie" || this._page === "vandaag" || !location.hash || location.hash === "#/");
-        al.innerHTML = laat.length ? `${svg("warn", 16)}<span class="al-t">${laat.length} actie${laat.length === 1 ? "" : "s"} over de plandatum</span><b>Bekijk ›</b>` : "";
+        al.classList.toggle("hidden", !(laat.length || gemist.length) || this._page === "inspectie" || this._page === "vandaag" || !location.hash || location.hash === "#/");
+        const nA = laat.length + " actie" + (laat.length === 1 ? "" : "s"), nI = gemist.length + " inspectie" + (gemist.length === 1 ? "" : "s");
+        const tekst = (laat.length && gemist.length ? nA + " en " + nI : laat.length ? nA : nI) + " over datum";
+        al.innerHTML = laat.length || gemist.length ? `${svg("warn", 16)}<span class="al-t">${tekst}</span><b>Bekijk ›</b>` : "";
+        // de balk opent wat hij noemt: alleen acties → de acties die te laat zijn (zoals altijd); alleen inspecties → de
+        // Planning; allebei → de meldingenlijst, waar beide staan en elke regel naar de juiste plek leidt
+        if (this._alertKlik === undefined) this._alertKlik = al.onclick;
+        al.onclick = laat.length && gemist.length ? () => this.openMeldingen() : gemist.length ? () => this.go("planning") : this._alertKlik;
       }
       // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
       let nieuw = false;
@@ -43,9 +60,10 @@
     async systeemMelding(m) {
       try {
         if (!("Notification" in window) || Notification.permission !== "granted") return false;
-        const opt = { body: m.tekst, icon: "icon-192.png", badge: "icon-192.png", tag: m.id, data: { hash: "#/acties" } };
+        const opt = { body: m.tekst, icon: "icon-192.png", badge: "icon-192.png", tag: m.id, data: { hash: m.hash || "#/acties" } };
         const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
-        if (reg) await reg.showNotification(m.titel, opt); else new Notification(m.titel, opt);
+        const t = m.sysTitel || m.titel;
+        if (reg) await reg.showNotification(t, opt); else new Notification(t, opt);
         return true;
       } catch (e) { return false; }
     },
@@ -54,22 +72,55 @@
       this.openMeldingen();
     },
     async openMeldingen() {
-      await this.laadActies();
+      await this.laadActies(); if (this.laadPlanning) await this.laadPlanning();
       const M = this.meldingen(), gelezen = this._set("wpi_gelezen");
       const perm = !("Notification" in window) ? "nee" : Notification.permission;
       const permHtml = perm === "granted" ? `<div class="s" style="margin-top:12px">✓ Meldingen op dit toestel staan aan.</div>`
         : perm === "denied" ? `<div class="hint" style="margin-top:12px">Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</div>`
-        : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de rode balk.</div>`
+        : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de balk bovenin het scherm.</div>`
         : `<button class="btn primary" style="margin-top:14px" onclick="App.meldingenAan()">${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
-      this.openModal("Meldingen", "Een week vóór de plandatum één keer; daarna elke 2 dagen zolang de actie te laat is. Iedereen krijgt ze.",
-        (M.length ? `<div class="listcard">${M.map((m) => `<div class="row" style="cursor:pointer" onclick="App.leesMelding('${m.id}','${m.actie}')">
-            <span style="width:10px;height:10px;border-radius:50%;flex:none;background:${gelezen.has(m.id) ? "transparent" : m.soort === "laat" ? "var(--red)" : "var(--amber)"}"></span>
-            <span class="grow"><span class="t" style="${gelezen.has(m.id) ? "font-weight:500" : ""}">${esc(m.titel)}</span><div class="s">${esc(m.tekst)}</div></span>
-            <span class="badge ${m.soort === "laat" ? "b-A" : "b-V"}">${m.soort === "laat" ? "te laat" : "binnen 7 d"}</span></div>`).join("")}</div>
+      this.openModal("Meldingen", "Acties en inspecties die aandacht vragen.",
+        // één signaal per regel: groene stip = ongelezen; de status als rustige pil (warm oranje alleen voor "te laat",
+        // net als op de Planning en Vandaag; nooit de kleur van een oordeel)
+        (M.length ? `<div class="listcard">${M.map((m) => { const nieuw = !gelezen.has(m.id), laat = m.soort !== "week";
+            return `<div class="row mrij ${m.soort} ${nieuw ? "nieuw" : "gelezen"}" onclick="App.leesMelding('${m.id}','${m.actie || ""}')">
+            <span class="mstip" ${nieuw ? 'role="img" aria-label="Nieuw"' : 'aria-hidden="true"'}></span>
+            <span class="grow"><span class="t">${esc(m.titel)}</span><span class="mmeta"><span class="mpil${laat ? " laat" : ""}">${esc(m.pil || (laat ? "te laat" : "binnenkort"))}</span><span class="s">${esc(m.tekst)}</span></span></span></div>`; }).join("")}</div>
             <button class="btn ghost sm" style="margin-top:10px" onclick="App.allesGelezen()">Alles gelezen</button>`
-          : `<div class="s">Geen meldingen. Alle acties liggen op schema.</div>`) + permHtml);
+          : `<div class="s">Geen meldingen. Alle acties en inspecties liggen op schema.</div>`) + permHtml
+        + `<p class="s mritme">Acties: een week vóór de plandatum, daarna elke 2 dagen zolang ze te laat zijn. Inspecties die nog niet gedaan zijn: de dag erna, daarna elke 2 dagen.</p>`);
     },
-    leesMelding(mid, aid) { const g = this._set("wpi_gelezen"); g.add(mid); this._bewaarSet("wpi_gelezen", g); this.checkMeldingen(); this.openActie(aid); },
+    leesMelding(mid, aid) {
+      const g = this._set("wpi_gelezen"); g.add(mid); this._bewaarSet("wpi_gelezen", g);
+      if (/:gemist:/.test(mid)) { this.closeModal(); if (location.hash === "#/planning") this.route(); else this.go("planning"); return; }   // gemiste inspectie → Planning
+      this.checkMeldingen(); this.openActie(aid);
+    },
+    // Vandaag: tegel "Inspectie nog niet gedaan" naast "Actie te laat"; opent de Planning. Alleen voor inspecties van
+    // anderen (Hoofd S&M, coördinatoren): je eigen gemiste inspectie staat op Vandaag al bovenaan ("Nog te doen").
+    _gemistTegel(act) {
+      const lc = act && act.querySelector(".listcard"); if (!lc || lc.querySelector(".vgemist")) return;
+      const P = this.planning || [], G = this.meldingen().filter((m) => m.soort === "gemist")
+        .map((m) => P.find((x) => x.id === m.plan)).filter((p) => p && p.inspecteur !== this.user.id);
+      if (!G.length) return;
+      const n = G.length, p = G[0];
+      const sub = n === 1 ? "Gepland " + dagLabel(p.datum) + " · " + this.productNaam(p.code) + " · " + naam(p.inspecteur) : kort(G.map((x) => this.productNaam(x.code)).join(" · "), 60);
+      const b = document.createElement("div");
+      b.innerHTML = `<button class="vknop warm vgemist" onclick="App.go('planning')"><span class="nr">${n}</span><span class="grow"><span class="t">${n === 1 ? "Inspectie" : "Inspecties"} nog niet gedaan</span><span class="s">${esc(sub)}</span></span>${svg("chev", 18)}</button>`;
+      const laat = lc.querySelector(".vknop.warm");
+      lc.insertBefore(b.firstElementChild, laat ? laat.nextSibling : lc.firstChild);
+      const kop = act.querySelector(".vsectie"); if (kop && kop.textContent === "Acties") kop.textContent = "Acties en inspecties";
+    },
     allesGelezen() { const g = this._set("wpi_gelezen"); this.meldingen().forEach((m) => g.add(m.id)); this._bewaarSet("wpi_gelezen", g); this.checkMeldingen(); this.openMeldingen(); },
   });
+  // view_vandaag (js/vandaag.js) aanvullen: de tegel komt erbij zodra de actiekaart er staat
+  const vandaagOrig = window.App.view_vandaag;
+  if (vandaagOrig) window.App.view_vandaag = function () {
+    const r = vandaagOrig.apply(this, arguments), act = $("mijnact");
+    if (act) {
+      const zet = () => { if (document.body.contains(act)) this._gemistTegel(act); };
+      new MutationObserver(zet).observe(act, { childList: true });
+      if (this.laadPlanning) this.laadPlanning().then(zet);
+    }
+    return r;
+  };
 })();

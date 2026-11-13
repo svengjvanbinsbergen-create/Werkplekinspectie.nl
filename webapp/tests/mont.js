@@ -6,15 +6,15 @@ await p.evaluate(()=>{App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbe
 await p.click('.chipb:has-text("Henk Voorbeeld")');await p.click('.chipb:has-text("Kees Demo")');
 await p.fill('#nieuwe-monteur','Bert Jansen');await p.click('button:has-text("Toevoegen")');await p.waitForTimeout(300);
 await p.screenshot({path:'m1.png'});
-console.log('monteurs',await p.evaluate(()=>App.state.inspectie.monteurs));
+const mons=await p.evaluate(()=>App.state.inspectie.monteurs);console.log('monteurs',mons);if(JSON.stringify(mons)!==JSON.stringify(['Henk Voorbeeld','Kees Demo','Bert Jansen']))errs.push('monteurs niet gekoppeld: '+JSON.stringify(mons));
 await p.evaluate(()=>{App.state.inspectie.stap='klaar';App.route()});await p.waitForTimeout(300);
 await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(600);
 await p.evaluate(()=>{App.closeModal();App.go('inspecties')});await p.waitForTimeout(600);await p.screenshot({path:'m2.png'});
 await p.selectOption('select.filtersel >> nth=1','Bert Jansen');await p.waitForTimeout(500);await p.screenshot({path:'m3.png'});
-console.log('kaarten na filter',await p.locator('.ikaart').count());
+const nk=await p.locator('.ikaart').count();console.log('kaarten na filter',nk);if(nk<1)errs.push('monteurfilter vindt de inspectie niet');
 await p.evaluate(()=>{App.inspFilter={insp:'',mont:''};});
 await p.setViewportSize({width:1440,height:900});await p.evaluate(()=>App.route());await p.waitForTimeout(500);await p.screenshot({path:'m4.png'});
 const id=await p.evaluate(async()=>{const a=await new Promise(r=>{const q=indexedDB.open('wpi');q.onsuccess=()=>{const g=q.result.transaction('inspecties').objectStore('inspecties').getAll();g.onsuccess=()=>r(g.result)}});return a[a.length-1].id});
 await p.evaluate((id)=>{location.hash='#/rapport/'+id},id);await p.waitForTimeout(600);
-console.log('rapport:',(await p.locator('#rap').innerText()).match(/Monteurs:.*/)[0]);
+const rm=((await p.locator('#rap').innerText()).match(/Monteurs:.*/)||[''])[0];console.log('rapport:',rm);if(!/Bert Jansen/.test(rm))errs.push('monteur ontbreekt in het rapport');
 console.log(errs);await b.close()})();

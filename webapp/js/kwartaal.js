@@ -36,8 +36,12 @@
       const goed = Object.entries(K.klasse).filter(([, x]) => x.C >= 3).sort((a, b) => (b[1].C / (b[1].C + b[1].AV)) - (a[1].C / (a[1].C + a[1].AV)) || b[1].C - a[1].C).slice(0, 3);
       const zin = [];
       zin.push(`In ${K.q} zijn <b>${K.wpis.length} werkplekinspecties</b> uitgevoerd${K.producten.length ? ` bij ${K.producten.length} producten` : ""}, met <b>${K.regels.length} waarnemingen</b>.`);
-      if (K.pct != null) zin.push(`<b>${K.pct}%</b> van de beoordeelde waarnemingen was conform${V && V.pct != null ? (K.pct > V.pct ? `, ${K.pct - V.pct} procentpunt hoger dan in ${V.q}` : K.pct < V.pct ? `, ${V.pct - K.pct} procentpunt lager dan in ${V.q}` : `, gelijk aan ${V.q}`) : ""}.`);
-      if (K.progPct != null) zin.push(`Van het verplichte inspectieprogramma is <b>${K.prog.ok} van ${K.prog.y}</b> (${K.progPct}%) uitgevoerd${K.progPct < 90 ? "; het doel van 90% is niet gehaald" : "; het doel van 90% is gehaald"}.`);
+      // doel % conform (Beheer) hoort bij de conform-zin; het programmadoel (90%) bij de programma-zin
+      const doel = this.doelConform ? this.doelConform() : null;
+      if (K.pct != null) zin.push(`<b>${K.pct}%</b> van de beoordeelde waarnemingen was conform${V && V.pct != null ? (K.pct > V.pct ? `, ${K.pct - V.pct} procentpunt hoger dan in ${V.q}` : K.pct < V.pct ? `, ${V.pct - K.pct} procentpunt lager dan in ${V.q}` : `, gelijk aan ${V.q}`) : ""}`
+        + (doel != null ? (K.pct >= doel ? `; daarmee is het doel van ${doel}% conform gehaald` : `; dat is onder het doel van ${doel}% conform`) : "") + `.`);
+      else if (doel != null) zin.push(`Of het doel van ${doel}% conform is gehaald, is niet te zeggen: te weinig beoordeelde waarnemingen (n = ${K.beo}).`);
+      if (K.progPct != null) zin.push(`Van het verplichte inspectieprogramma is <b>${K.prog.ok} van ${K.prog.y}</b> (${K.progPct}%) uitgevoerd${K.progPct < 90 ? ", onder het programmadoel van 90%" : "; het programmadoel van 90% is gehaald"}.`);
       if (top3.length) zin.push(`De meeste aandachtspunten zaten bij <b>${esc(top3[0][0].toLowerCase())}</b>${top3[1] ? ` en ${esc(top3[1][0].toLowerCase())}` : ""}.`);
       v.appendChild(el(`<div id="kwrap" class="kwrap">
         <div class="kwkop"><div><div class="hi">Werkplekinspecties · Noardling</div><div class="kwtitel">Kwartaalrapportage ${K.q}</div>
@@ -46,7 +50,7 @@
         <div class="card kwverhaal"><h3>In het kort</h3><p>${zin.join(" ")}</p></div>
 
         <div class="grid kpis kwkpis">
-          <div class="tile sage"><div class="lab">Conform</div><div class="n">${K.pct != null ? K.pct + "%" : "n=" + K.beo}</div><div class="sub">${delta(K.pct, V && V.pct, " pp")}</div></div>
+          <div class="tile ${doel != null && K.pct != null && K.pct < doel ? "mist" : "sage"}"><div class="lab">Conform</div><div class="n">${K.pct != null ? K.pct + "%" : "n=" + K.beo}</div><div class="sub">${doel != null ? "doel " + doel + "% " : ""}${delta(K.pct, V && V.pct, " pp")}</div></div>
           <div class="tile ${K.progPct >= 90 ? "sage" : "blush"}"><div class="lab">Programma</div><div class="n">${K.progPct != null ? K.progPct + "%" : "–"}</div><div class="sub">${K.prog.ok}/${K.prog.y} · doel 90% ${delta(K.progPct, V && V.progPct, " pp")}</div></div>
           <div class="tile sky"><div class="lab">Inspecties</div><div class="n">${K.wpis.length}</div><div class="sub">${delta(K.wpis.length, V && V.wpis.length, "")}</div></div>
           <div class="tile ${K.over.length ? "blush" : "sage"}"><div class="lab">Acties op tijd afgerond</div><div class="n">${K.af.length ? Math.round(100 * K.optijd.length / K.af.length) + "%" : "–"}</div><div class="sub">${K.optijd.length} van ${K.af.length} afgerond · ${K.over.length} over termijn</div></div>
@@ -68,7 +72,7 @@
             <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#A3610F" : "inherit"}">${K.over.length}</b></div></div>
           <div class="card"><h3>5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h3>
             ${this.data.trendacties.slice(0, 5).map((t) => `<div class="kwrij"><span class="grow">${esc(t.onderwerp)}</span>${stBadge(t.status === "Open" ? "Open" : "Afgerond")}</div>`).join("")}
-            <div class="s noprint" style="margin-top:8px"><a href="javascript:App.drill('acties')" style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
+            <div class="s noprint" style="margin-top:8px"><a href="#/kwartaal" onclick="event.preventDefault();App.drill('acties')" style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
         </div>
 
         <div class="card kwnoot"><h3>Methode</h3><p class="s">Werkplekinspecties zijn momentopnames: alleen wat de inspecteur zelf zag telt (VCA 2026/6.1 eis 7.1). Conform-% is berekend over beoordeelde waarnemingen (C, A, V), zonder ‘niet van toepassing’. Bij minder dan 5 waarnemingen tonen we geen percentage. Een afwijking zegt iets over de situatie op dat moment, niet over personen. Acties zijn pas afgerond na toetsing door een ander dan de actiehouder.</p>

@@ -1,0 +1,84 @@
+# Werkplekinspectie — beveiligingsheaders voor statische hosting (Netlify en Cloudflare Pages).
+# Publicatiemap = webapp/. Vercel gebruikt vercel.json; Netlify leest dit bestand én netlify.toml.
+#
+# CSP: inline <script>-elementen en javascript:-URL's zijn geblokkeerd (script-src-elem 'self'); alleen inline
+#   handler-attributen (onclick="App.x()") mogen nog (script-src-attr 'unsafe-inline'). script-src houdt
+#   'unsafe-inline' alleen als terugval voor browsers zonder script-src-elem/-attr (CSP 3).
+#   Gevolg: een in de HTML geïnjecteerd on*-attribuut wordt NIET door de CSP tegengehouden. De verdediging
+#   daartegen is escaping (WPI.esc) en geen servertekst in handler-attributen (zie tests/sync.js, XSS-planning).
+# TODO(volgende fase): inline onclick-handlers vervangen door event-delegatie, daarna script-src-attr 'none' en
+#   script-src 'self' (zonder 'unsafe-inline') — hier, in netlify.toml, vercel.json en de meta-CSP in index.html.
+# connect-src noemt alleen het EIGEN Supabase-project (geen wildcard *.supabase.co: daarmee kan een
+#   geïnjecteerd script data naar elk willekeurig Supabase-project sturen). VERPLICHT bij livegang:
+#   "project-ref" vervangen door de echte ref uit js/config.js — hier, in netlify.toml, vercel.json en
+#   de meta-CSP in index.html (zoek op "project-ref"). Vergeten = de app kan de server niet bereiken
+#   (zichtbaar in de console en bij Synchronisatie), er lekt niets.
+# img-src heeft geen supabase-adres nodig: foto's worden met fetch() opgehaald en als data:-URL getoond.
+# De meta-CSP in index.html blijft als vangnet (bijv. bij lokaal testen); beide gelden tegelijk,
+# dus wat de app nodig heeft moet in allebei staan. frame-ancestors werkt alleen als echte header.
+#
+# HTTP → HTTPS: Netlify en Cloudflare Pages sturen http automatisch door (Netlify: "Force HTTPS",
+# Cloudflare: SSL/TLS → Edge Certificates → "Always Use HTTPS" aanzetten). HSTS hieronder zorgt
+# dat de browser daarna nooit meer http probeert. Preload pas aanmelden (hstspreload.org) als
+# ALLE subdomeinen van het eigen domein HTTPS hebben; op *.netlify.app/*.pages.dev geen preload.
+#
+# Afgeschermd (/docs, /tests, /supabase, *.md, interne pagina's als beveiliging.html/onderzoek.html/
+# gauntlet.html/verbeter.html/design-vandaag.html — elke .html behalve index.html — en de hostingconfig
+# zelf): Netlify verwijdert ze in de build en geeft daar 404 via netlify.toml. Cloudflare Pages kent geen
+# 404-regel: zet daar (root directory "webapp", build output directory ".") als build command
+#   rm -rf docs tests supabase netlify.toml vercel.json && find . -name '*.md' -type f -delete && find . -maxdepth 1 -name '*.html' ! -name index.html -type f -delete
+# De headers hieronder zijn alleen een extra vangnet (noindex, niets uitvoeren).
+#
+# Vercel (vercel.json, Root Directory = webapp): dezelfde headers via "routes"; /docs, /tests,
+# /supabase en *.md geven daar 404 vóór de bestandscontrole. Vercel stuurt http altijd door naar
+# https (niet uit te zetten). vercel.json kan geen commentaar bevatten; de TODO's hierboven gelden ook daar.
+
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self), accelerometer=(), autoplay=(), bluetooth=(), display-capture=(), encrypted-media=(), fullscreen=(self), gyroscope=(), hid=(), idle-detection=(), magnetometer=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(self), serial=(), usb=(), xr-spatial-tracking=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-Permitted-Cross-Domain-Policies: none
+
+# altijd de nieuwste app-schil (de service worker regelt offline)
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: no-cache
+
+/docs/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/tests/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/supabase/*
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/beveiliging.html
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/onderzoek.html
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/gauntlet.html
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/verbeter.html
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/design-vandaag.html
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/netlify.toml
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox
+/vercel.json
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'none'; sandbox

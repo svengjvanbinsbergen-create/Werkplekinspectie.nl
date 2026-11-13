@@ -4,7 +4,7 @@ await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await
 await p.evaluate(()=>App.login('u-winfred'));await p.waitForTimeout(1200);await p.screenshot({path:'p1.png'});
 console.log('tabs',await p.evaluate(()=>[...document.querySelectorAll('#tabbar a')].map(a=>a.textContent)));
 await p.click('text=Inspectie inplannen');await p.waitForTimeout(300);await p.screenshot({path:'p2.png'});
-await p.click('#mod button.primary');await p.waitForTimeout(200);console.log('fout:',await p.locator('#ai-fout').textContent());
+await p.click('#mod button.primary');await p.waitForTimeout(200);const fout1=await p.locator('#ai-fout').textContent();console.log('fout:',fout1);if(!fout1.trim())errs.push('leeg planformulier niet geweigerd');
 await p.selectOption('#pl-code','SLI');await p.fill('#pl-project','P26-190');await p.fill('#pl-loc','RWZI Zuid');await p.click('.chipb:has-text("Vandaag")');await p.selectOption('#pl-insp','u-winfred');
 await p.click('#mod button.primary');await p.waitForTimeout(600);
 await p.evaluate(()=>App.go('planning'));await p.waitForTimeout(600);await p.screenshot({path:'p3.png',fullPage:true});
@@ -13,11 +13,11 @@ console.log('h1',await p.locator('h1').innerText());
 // start gepland en leg vast
 const id=await p.evaluate(()=>App.planning.find(x=>x.code==='SLI').id);
 await p.evaluate((id)=>App.startGepland(id),id);await p.waitForTimeout(400);
-console.log('plan_id',await p.evaluate(()=>App.state.inspectie.plan_id));
+const pid=await p.evaluate(()=>App.state.inspectie.plan_id);console.log('plan_id',pid);if(pid!==id)errs.push('gestarte inspectie niet gekoppeld aan de planning: '+pid);
 await p.evaluate(()=>{App.state.inspectie.stap='klaar';App.route()});await p.waitForTimeout(300);
 await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(600);
 await p.evaluate(()=>{App.closeModal();App.planning=null;App.go('planning')});await p.waitForTimeout(600);
-console.log('status',await p.evaluate(()=>App.planning.find(x=>x.code==='SLI').status));
+const pst=await p.evaluate(()=>App.planning.find(x=>x.code==='SLI').status);console.log('status',pst);if(pst!=='uitgevoerd')errs.push('planning na vastleggen niet uitgevoerd: '+pst);
 await p.screenshot({path:'p5.png',fullPage:true});
 await p.setViewportSize({width:1440,height:900});await p.evaluate(()=>App.route());await p.waitForTimeout(500);await p.screenshot({path:'p6.png'});
 console.log(errs);await b.close()})();

@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Werkplekinspectie</title>
 <meta name="description" content="Werkplekinspectie — momentopname-methode (voorbeeld, fictieve data)">
-<!-- CSP: script-src bevat 'unsafe-inline' omdat de prototype-app inline onclick-handlers gebruikt; latere hardening = event-delegatie, dan kan dit strakker. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self'">
+<!-- CSP: inline <script> en javascript:-URL's zijn geblokkeerd (script-src-elem 'self'); alleen inline handler-attributen (onclick) mogen nog (script-src-attr). TODO volgende fase: event-delegatie, dan script-src-attr 'none' en script-src zonder 'unsafe-inline' (ook in _headers, netlify.toml, vercel.json). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; connect-src 'self' https://project-ref.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="theme-color" content="#FAF6EF">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="css/beheer.css">
 </head>
 <body>
 <div id="app">
@@ -27,6 +28,8 @@
 </div>
 <div id="ov" onclick="if(event.target===this)App.closeModal()"><div id="mod"></div></div>
 <script src="js/kern.js"></script>
+<script src="js/config.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/vandaag.js"></script>
 <script src="js/planning.js"></script>
 <script src="js/inspectie.js"></script>
@@ -35,6 +38,8 @@
 <script src="js/meldingen.js"></script>
 <script src="js/dashboard.js"></script>
 <script src="js/kwartaal.js"></script>
+<script src="js/beheer.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/start.js"></script>
 </body>
 </html>

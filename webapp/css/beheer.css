@@ -1,0 +1,125 @@
+/* Werkplekinspectie — css/beheer.css
+   Beheer (monteurs, doel % conform), programma-voorstel op de Planning en gemiste-inspectie-meldingen.
+   Stijl B: crème achtergrond, witte ronde kaarten, één donkergroen accent; warm oranje alleen voor "te laat". */
+
+/* ---- Beheer ---- */
+.bhgrid{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:900px){
+  .bhgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}
+  .tabbar a.bhtab{margin-top:auto}
+}
+.bhkaart .bhkop{font-size:18px;font-weight:800;display:flex;align-items:baseline;gap:8px;margin:0 0 2px}
+.bhkaart .bhkop .sub{font-size:13.5px;font-weight:700;color:var(--soft)}
+.bhuitleg{margin:4px 0 12px;line-height:1.45}
+.bhtoevoeg,.bhdoel{display:flex;gap:8px;align-items:center}
+.bhtoevoeg .fin{flex:1;min-width:0}
+.bhtoevoeg .btn.sm,.bhdoel .btn.sm,.bhrij .btn.sm{width:auto;flex:none;min-height:44px;padding:0 16px}
+.bhdoel .fin{width:110px;flex:none;font-weight:800;font-size:17px}
+.bhpct{font-weight:800;color:var(--soft);font-size:17px;margin-right:6px}
+.bhstand{margin-top:2px}
+/* foutmelding en "geen doel" niet tegen elkaar aan */
+#bh-doel-fout:not(:empty){margin-bottom:10px}
+.bhlijst{margin-top:2px}
+.bhrij{gap:10px;min-height:58px;padding:8px 0}
+.bhrij:last-child{border-bottom:0}
+.bhrij .grow{flex:1;min-width:0}
+.bhrij .t{font-weight:800;overflow-wrap:anywhere}
+.bhrij.uit .t{color:var(--soft)}
+.bhrij.uit .mini-av{background:#F4EDE3;color:var(--soft)}
+/* wijzigen: naam over de hele breedte, knoppen eronder */
+.bhrij.bewerk{flex-wrap:wrap;padding:12px 0}
+.bhrij.bewerk .fin{flex:1 1 100%;min-width:0}
+.bhbew{display:flex;gap:8px;flex:1 1 100%}
+.bhbew .btn.sm{flex:1}
+@media(min-width:441px){.bhbew .btn.sm{flex:none}}
+.bhlink{flex:1 1 100%;text-align:left;font-size:13.5px;font-weight:800;color:var(--accent);padding:6px 0;min-height:40px}
+.bhlink span{font-weight:600;color:var(--soft)}
+.bhknop{position:relative;flex:none;min-height:40px;padding:0 14px;border-radius:12px;font-size:13.5px;font-weight:800;color:var(--accent);background:#fff;box-shadow:inset 0 0 0 1.5px #E8DDCD}
+.bhknop:active{background:#FBF7F1}
+.bhvh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.bhsub{font-size:13px;font-weight:800;color:#6E6255;letter-spacing:.04em;text-transform:uppercase;margin:18px 0 2px}
+@media(max-width:440px){
+  .bhkaart{padding:16px 14px}
+}
+/* gedeeld met het team of alleen op dit toestel; melding als de server een wijziging weigerde */
+.bhdeel{margin:12px 4px 0;font-size:13px;line-height:1.45;color:#6E6255}
+.bhsyncfout{margin:0 0 12px}
+.bhsyncfout .bhlink{display:inline;min-height:0;padding:0 0 0 4px;color:inherit;text-decoration:underline}
+
+/* ---- Programma-voorstel (Planning) ---- */
+.listcard.progrij{margin:-4px 0 16px;padding-top:0;padding-bottom:0}
+.progrij .vknop{min-height:64px}
+.progrij svg,.vgemist svg,.bhknop svg{width:auto;display:inline-block;flex:none}
+@media(min-width:900px){.listcard.progrij{max-width:520px}}
+.progvs{margin:0 0 8px}
+.vsal{margin:0 0 8px;font-size:13.5px}
+.progvs h2{margin-top:2px}
+/* kicker: het voorstel komt uit vaste regels en de projectplanning (geen AI-voorstel, dus geen lila) */
+.vskicker{font-size:13.5px;margin:6px 0 0}
+.vsuitleg{margin:0 0 6px;font-size:14px;line-height:1.45}
+.vswaarom{margin:0 0 12px;font-size:13.5px}
+.vswaarom summary{cursor:pointer;font-weight:800;color:var(--accent);padding:6px 0;min-height:32px;list-style-position:inside}
+.vswaarom p{margin:4px 0 0;line-height:1.5}
+.vsgroep{font-size:13px;font-weight:800;color:#6E6255;margin:14px 2px 8px}
+.vskaart{position:relative;box-shadow:var(--shadow),inset 0 0 0 1.5px #EFE6D8}
+.vskaart.vsfout{box-shadow:var(--shadow),inset 0 0 0 2px var(--red)}
+.vskaart .vsreden{font-size:12.5px;font-weight:700;padding-right:44px;margin-top:2px}
+.vskaart .titel{margin-top:2px;padding-right:44px}
+.vskaart .vsweg{position:absolute;top:12px;right:12px}
+.vslooptijd{margin-top:2px}
+.vslet{margin-top:6px;font-weight:700;color:#6E6255}
+.vsweg{flex:none;width:36px;height:36px;border-radius:50%;background:#F4EDE3;color:#6E6255;font-size:20px;line-height:1;display:grid;place-items:center}
+.vsweg:active{background:#EADFCF}
+/* weggehaalde voorstellen: één rustige regel met "Terugzetten" (geen kaart, geen kleur) */
+.progweg{margin:-4px 2px 16px;font-size:13.5px;line-height:1.45}
+.progvs .progweg{margin:12px 2px 0}
+.bhlinkk{display:inline;font:inherit;font-weight:800;color:var(--accent);text-decoration:underline;text-underline-offset:2px;padding:6px 2px;min-height:0}
+.vsvelden{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:10px;margin-top:6px}
+.vsvelden .fin{min-height:44px;font-size:14.5px;padding:8px 10px}
+.vsacties{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.vsacties .btn{flex:1;min-width:150px}
+.vsacties .btn.ghost{flex:0 1 auto}
+.vsacties .btn:disabled{opacity:.6}
+@media(min-width:900px){.vsacties .btn{flex:0 0 auto;width:auto;padding:0 26px}}
+/* zelfde raster als de planningkaarten eronder (kolommen lijnen uit); op de computer Dag en Inspecteur onder
+   elkaar, zodat een hele naam in de keuzelijst past */
+@media(min-width:900px){.vsvelden{grid-template-columns:1fr;gap:0}}
+@media(max-width:360px){.vsvelden{grid-template-columns:1fr}}
+
+/* ---- Meldingen: gemiste inspectie ---- */
+.mritme{margin-top:14px;font-size:12.5px;line-height:1.45}
+/* één signaal per regel: een kleine groene stip voor ongelezen; de status als rustige pil onder de titel */
+.mrij{align-items:flex-start;cursor:pointer}
+.mrij .mstip{width:8px;height:8px;border-radius:50%;flex:none;margin-top:8px;background:transparent}
+.mrij.nieuw .mstip{background:var(--accent)}
+.mrij.gelezen .t{font-weight:600}
+.mrij .t{display:block;line-height:1.35}
+.mrij .mmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px}
+.mpil{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:#F4EDE3;color:#6E6255}
+.mpil.laat{background:var(--warm);color:#8A4F0A}   /* warm-ink iets donkerder: leesbaar op 12px (contrast ≥ 4.5) */
+.mrij .mmeta .s{color:#6E6255}
+body.zon .mpil{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px currentColor}
+body.zon .mrij.nieuw .mstip{background:#141A22}
+
+/* ---- alertbalk even breed als de inhoud: zelfde rechterrand als de bel en de kaarten, op elke pagina.
+   De topbalk en de pagina hebben 36px binnenruimte, de balk 36px buitenmarge: balk = paginabreedte − 72px.
+   Eerst de standaard (820px-pagina's; zelfde selector als in styles.css, deze komt later), dan de brede pagina's.
+   Beheer is even breed als de Planning, zodat bel en avatar op de beheerpagina's niet verspringen. ---- */
+@media(min-width:900px){
+  #app:not(.nonav):not([data-page=dashboard]) .alertbar{max-width:748px}
+  .view[data-page=beheer]{max-width:1100px}
+  #app:not(.nonav):not(.x)[data-page=beheer] .topbar{max-width:1100px}
+  #app:not(.nonav):not(.x)[data-page=beheer] .alertbar,#app:not(.nonav):not(.x)[data-page=planning] .alertbar,
+  #app:not(.nonav):not(.x)[data-page=kwartaal] .alertbar,#app:not(.nonav):not(.x)[data-page=acties] .alertbar,
+  #app:not(.nonav):not(.x)[data-page=inspecties] .alertbar{max-width:1028px}
+  #app:not(.nonav):not(.x)[data-page=dashboard] .alertbar{max-width:1248px}
+}
+
+/* ---- veldmodus en zonmodus ---- */
+body.veld .bhknop,body.veld .vsweg{min-height:50px}
+body.veld .vsweg{width:50px;height:50px}
+body.veld .vskaart .titel,body.veld .vskaart .vsreden{padding-right:58px}
+body.veld .vsvelden .fin,body.veld .bhrij .fin{min-height:52px;font-size:16px}
+body.zon .bhknop,body.zon .vsweg{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .vskaart{background:#fff;box-shadow:0 0 0 2px #141A22}
+body.zon .bhrij.uit .t,body.zon .bhsub,body.zon .bhpct{color:#141A22}
