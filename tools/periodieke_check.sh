@@ -190,6 +190,29 @@ if [ -n "$H" ]; then fout "inline handler-attributen (verboden onder script-src-
 # quotes (x='${...}') zou daar uit kunnen breken (bijv. een extra data-action). Alle attributen moeten dus dubbele quotes hebben.
 Q=$(grep -nE "[a-zA-Z-]+='[^']*\\$\{" "$JS"/*.js 2>/dev/null || true)
 if [ -n "$Q" ]; then fout "attribuut tussen enkele quotes met een \${…}-waarde (esc() beschermt daar niet):"; echo "$Q" | sed 's/^/      /' | cut -c1-180 | head -20; else ok "geen attributen tussen enkele quotes met \${…} in webapp/js (esc() is daar veilig)"; fi
+# Niet-tekstvelden (oordeel, plandatum, datum, status, prio, monteurs, gekoppelde id's) komen ook uit IndexedDB/de server en moeten net zo
+# goed door esc() of een witte lijst (ov(): alleen C/A/V/NVT; datum alleen als JJJJ-MM-DD) voordat ze in HTML staan.
+# Aanvalstest: ${w.oordeel} in class="b-…" en value="${a.plandatum}" gaven een werkende data-action. Vergelijkingen
+# (w.oordeel === "A" ? … : …) zijn veilig en tellen niet.
+NT=$(python3 - "$JS" <<'PY'
+import re, sys, pathlib
+for f in sorted(pathlib.Path(sys.argv[1]).glob('*.js')):
+    for nr, regel in enumerate(f.read_text(encoding='utf-8').splitlines(), 1):
+        for m in re.finditer(r'\$\{([^{}]*\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\b[^{}]*)\}', regel):
+            e = re.sub(r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'', '""', m.group(1))
+            # in een functie (esc, ov, stBadge, prioChip, …): die bouwt of ontsmet zelf de HTML (en wordt zelf ook gescand)
+            e = re.sub(r'\b[\w.]+\([^()]*(?:\([^()]*\)[^()]*)*\)', 'X', e)
+            e = re.sub(r'\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\s*(?:===|!==|==|!=|<=|>=|<|>)', '.cmp', e)
+            e = re.sub(r'(?:===|!==)\s*[\w.]+\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\b', 'cmp', e)
+            e = re.sub(r'\[[\w.]*\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\]', '[k]', e)   # opzoeken in een tabel (PRIO[a.prio])
+            e = re.sub(r'\([^()]*\)\s*(?:===|!==)', 'cmp', e)                      # (p ? p.x : y) === z
+            e = re.sub(r'\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\s*\?', '.cmp ?', e)                           # alleen als voorwaarde: a.x ? … : …
+            e = re.sub(r'\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\s*\|\|\s*\[\]\)', '.cmp)', e)                # (r.monteurs || []).map(esc)
+            if re.search(r'\.(?:oordeel|plandatum|datum|status|prio|monteurs|inspectie_id|plan_id|houder|toetser|inspecteur)\b(?!\s*\()', e):
+                print(f'{f.name}:{nr}: ${{{m.group(1)[:110]}}}')
+PY
+)
+if [ -n "$NT" ]; then fout "niet-tekstveld (oordeel/datum/status/prio/monteurs/id) zonder esc() of witte lijst in HTML:"; echo "$NT" | sed 's/^/      /' | cut -c1-180 | head -20; else ok "oordeel, datums, status, prio, monteurs en gekoppelde id's gaan in webapp/js altijd via esc() of een witte lijst de HTML in"; fi
 # dynamische SQL (EXECUTE met een tekst) in de databasefuncties: zou SQL-injectie mogelijk maken; triggers
 # ("execute function …") en rechten ("grant/revoke execute …") en commentaar tellen niet mee
 X=$(grep -inE '\bexecute\b' "$WEB"/supabase/migrations/*.sql 2>/dev/null | grep -viE 'execute (function|procedure)|(grant|revoke)[^;]*execute|:[0-9]+:\s*--' || true)

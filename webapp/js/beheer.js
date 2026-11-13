@@ -224,7 +224,7 @@
       const v = el(`<section class="bhpagina" aria-labelledby="bh-titel"></section>`); $("view").appendChild(v);
       const actieven = this.monteursLijst(), ina = this.monteursInactief(), doel = this.doelConform ? this.doelConform() : null, b = this._beheer || {};
       v.appendChild(el(`<div><div class="hi">Monteurs en doelen</div><h1 class="groot" id="bh-titel">Beheer</h1></div>`));
-      if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); this.toast = null; }
+      if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); window.WPI.zeg(this.toast); this.toast = null; }
       let sf = null; try { sf = JSON.parse(localStorage.getItem(K_SYNCFOUT) || "null"); } catch (e) {}
       if (sf && sf.tekst) v.appendChild(el(`<div class="hint bhsyncfout" role="status">Een wijziging is niet op de server bewaard: ${esc(sf.tekst)}. Hier zie je weer wat er op de server staat. <button class="bhlink"${act("beheerFoutWeg")}>Begrepen</button></div>`));
       const rij = (n, i, actief) => actief && b.hernoem === n

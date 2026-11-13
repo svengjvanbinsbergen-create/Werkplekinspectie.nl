@@ -22,16 +22,20 @@
 <link rel="stylesheet" href="css/oefen.css">
 </head>
 <body>
+<a class="skiplink" href="#view" data-action="naarInhoud" data-geen-default>Naar de inhoud</a>
 <div id="app">
-  <div class="topbar">
-    <div class="brand"><span class="logo">N</span><span>Werkplekinspectie</span></div>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true">N</span><span>Werkplekinspectie</span></div>
     <div id="acct"></div>
-  </div>
-  <div id="alert" class="alertbar hidden" role="alert" data-action="alertKlik"></div>
-  <div class="view" id="view"></div>
-  <nav class="tabbar" id="tabbar"></nav>
+  </header>
+  <main id="hoofd">
+    <button type="button" id="alert" class="alertbar hidden" data-action="alertKlik"></button>
+    <div class="view" id="view" tabindex="-1"></div>
+    <div id="meldtekst" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  </main>
+  <nav class="tabbar" id="tabbar" aria-label="Hoofdmenu"></nav>
 </div>
-<div id="ov" data-action="closeModal" data-zelf><div id="mod"></div></div>
+<div id="ov" data-action="closeModal" data-zelf><div id="mod" role="dialog" aria-modal="true" aria-labelledby="modtitel" tabindex="-1"></div></div>
 <script src="js/kern.js"></script>
 <script src="js/config.js"></script>
 <script src="js/sync.js"></script>

@@ -17,8 +17,9 @@
 //   BASE=http://localhost:8417 node /home/user/Werkplekinspectie.nl/webapp/tests/xss.js     → eindigt met "errs []"
 // Omgeving: XSS_PAYLOADS=1,3 (alleen deze payloads), XSS_PAR=4 (payloads tegelijk, elk in een eigen context),
 // XSS_SRC_STRIKT=1 (ongevalideerde img-src ook als fout).
-// Niet gedekt (geen tekstveld in voorbeeldmodus of alleen getallen/datums): l-mail, l-ww, v-mail, n-ww,
-// n-ww2, m-code (alleen met Supabase, zie sync.js), pl-mont en bh-doel-in (type=number), datumvelden.
+// Niet-tekstvelden (keuzelijsten, datums, id's, tijden: oordeel, plandatum, status, prio, …) krijgen de payloads
+// rechtstreeks via IndexedDB (stap 8b, velden 28–29), ook in de lopende inspectie (concept).
+// Niet gedekt (alleen met Supabase, zie tests/security.js en sync.js): l-mail, l-ww, v-mail, n-ww, n-ww2, m-code.
 "use strict";
 const { chromium } = require("playwright");
 const BASE = process.env.BASE || "http://localhost:8140";
@@ -50,6 +51,8 @@ const VELDEN = {
   21: "record.handtekening (via sync)", 22: "record.waarnemingen[].foto (via sync)", 23: "record-tekstvelden (via sync)",
   24: "actie-log wie/wat (via sync)", 25: "record.monteurs (via sync)",
   26: "profiles.full_name (Supabase → USERS)", 27: "profiles.functie (Supabase → USERS)",
+  28: "niet-tekstvelden via IndexedDB (oordeel, plandatum, datum, status, prio, terPlaatse, id's, tijden)",
+  29: "lopende inspectie (concept): oordeel van een waarneming",
 };
 
 // ---------- in de pagina: scanner ----------
@@ -124,13 +127,13 @@ async function scenario(b, [pnaam, pf]) {
   const stap = async (naam, fn) => { try { await fn(); } catch (e) { gemist.push("stap " + naam + ": " + e.message.split("\n")[0].slice(0, 120)); } };
 
   await p.goto(BASE + "/index.html"); await wacht(900);
-  await ev(() => App.login("u-winfred")); await wacht(800);
+  await ev(() => App.login("u-coord1")); await wacht(800);
 
   // ===== 1. planning: twee inspecties (vandaag en gisteren = gemist) =====
   await stap("planning", async () => {
     await ev(() => App.planForm()); await wacht(250);
     await p.selectOption("#pl-code", "DAM"); await vul("#pl-project", 1); await vul("#pl-loc", 2); await vul("#pl-toel", 3);
-    await p.click('.chipb:has-text("Vandaag")'); await p.selectOption("#pl-insp", "u-winfred");
+    await p.click('.chipb:has-text("Vandaag")'); await p.selectOption("#pl-insp", "u-coord1");
     await scan("plan-modal (ingevuld)");
     await klik("#mod button.primary"); await wacht(400);
     await scan("planning (na inplannen)");
@@ -177,7 +180,7 @@ async function scenario(b, [pnaam, pf]) {
     const nid = await ev(() => App.acties.find((a) => a.status === "Voorstel" && !a.demo).id);
     ids.nid = nid;
     await ev((id) => App.openActie(id), nid); await wacht(250); await scan("actie-modal (voorstel)");
-    await vul("#ai-tekst", 12); await p.selectOption("#ai-houder", "u-douwe"); await p.selectOption("#ai-toetser", "u-winfred");
+    await vul("#ai-tekst", 12); await p.selectOption("#ai-houder", "u-coord2"); await p.selectOption("#ai-toetser", "u-coord1");
     await ev(() => { document.getElementById("ai-plan").value = WPI.plusDagen(0); });
     await klik("text=Actie instellen"); await wacht(300);
     await ev((id) => App.openActie(id), nid); await wacht(250); await scan("actie-modal (open)");
@@ -187,7 +190,7 @@ async function scenario(b, [pnaam, pf]) {
     await ev(() => App.openActie("ACT-demo4")); await wacht(250); await scan("actie-modal (vervallen, verloop)");
     // handmatige actie, plandatum in het verleden (te laat → alertbalk en Vandaag)
     await ev(() => { App.closeModal(); App.nieuweActie(); }); await wacht(250);
-    await vul("#na-tekst", 10); await vul("#na-aanl", 11); await p.selectOption("#ai-houder", "u-douwe"); await p.selectOption("#ai-toetser", "u-winfred");
+    await vul("#na-tekst", 10); await vul("#na-aanl", 11); await p.selectOption("#ai-houder", "u-coord2"); await p.selectOption("#ai-toetser", "u-coord1");
     await ev(() => { document.getElementById("ai-plan").value = WPI.plusDagen(-3); });
     await scan("nieuwe-actie-modal (ingevuld)");
     await klik("text=Actie aanmaken"); await wacht(400); await scan("acties (gepland)");
@@ -196,10 +199,10 @@ async function scenario(b, [pnaam, pf]) {
     await ev(() => { App.actFilter = "alle"; App.route(); }); await wacht(500); await scan("acties (alle)");
     await ev(() => { App.actFilter = "telaat"; App.route(); }); await wacht(500); await scan("acties (te laat) + alertbalk");
     // Douwe meldt klaar, Winfred keurt af met een reden
-    await ev(() => App.login("u-douwe")); await wacht(700);
+    await ev(() => App.login("u-coord2")); await wacht(700);
     await ev((id) => { App.go("acties"); App.openActie(id); }, hid); await wacht(400); await scan("actie-modal (actiehouder)");
     await klik("text=Klaar voor toetsing, zonder foto");
-    await ev(() => App.login("u-winfred")); await wacht(700);
+    await ev(() => App.login("u-coord1")); await wacht(700);
     await ev((id) => { App.go("acties"); App.openActie(id); }, hid); await wacht(400);
     await vul("#ai-reden", 14); await klik("text=Niet akkoord · terug naar actiehouder");
     await ev((id) => App.openActie(id), hid); await wacht(250); await scan("actie-modal (na niet akkoord, verloop)");
@@ -241,7 +244,7 @@ async function scenario(b, [pnaam, pf]) {
 
   // ===== 7. beheer (hoofd) en de monteurslijst in een nieuwe inspectie =====
   await stap("beheer", async () => {
-    await ev(() => App.login("u-bjorn")); await wacht(700);
+    await ev(() => App.login("u-hoofd")); await wacht(700);
     await route("beheer"); await vul("#bh-nieuw", 17); await klik('#view button:has-text("Toevoegen")'); await scan("beheer (toegevoegd)");
     await p.locator(".bhrij", { hasText: "Kees Demo" }).locator('button:has-text("Hernoemen")').click(); await wacht();
     await vul("#bh-hernoem", 18); await klik('.bhrij.bewerk button:has-text("Opslaan")'); await scan("beheer (hernoemd)");
@@ -261,7 +264,7 @@ async function scenario(b, [pnaam, pf]) {
         gesprek: P[23], positief: P[23], handtekening: P[21], keuzes: [], monteurs: [P[25]], open_punten: [P[23]], inspecteur: P[23], inspecteur_id: "u-insp",
         start: new Date().toISOString(), opgeslagen: new Date().toISOString() });
       await WPI.DB.put("acties", { id: "ACT-sync1", inspectie_id: "WPI-sync1", inspectie_titel: P[23], inspecteur: P[23], ref: P[23], waarneming: P[23], foto: P[22],
-        oordeel: "A", tekst: P[23], prio: "kort", status: "Open", houder: "u-douwe", toetser: "u-winfred", plandatum: WPI.plusDagen(-1), log: [{ t: new Date().toISOString(), wie: P[24], wat: P[24] }] });
+        oordeel: "A", tekst: P[23], prio: "kort", status: "Open", houder: "u-coord2", toetser: "u-coord1", plandatum: WPI.plusDagen(-1), log: [{ t: new Date().toISOString(), wie: P[24], wat: P[24] }] });
       App.acties = null;
     }, { 21: P(21), 22: P(22), 23: P(23), 24: P(24), 25: P(25) });
     [21, 22, 23, 24, 25].forEach((n) => gevuld.add(n));
@@ -270,6 +273,61 @@ async function scenario(b, [pnaam, pf]) {
     await ev(() => { App.actFilter = "alle"; }); await route("acties"); await scan("acties (sync-record)");
     await ev(() => App.openActie("ACT-sync1")); await wacht(250); await scan("actie-modal (sync-record)");
     await ev(() => App.openMeldingen()); await wacht(300); await scan("meldingen (sync-record)");
+  });
+
+  // ===== 8b. NIET-tekstvelden (keuzelijsten, datums, id's, tijden) rechtstreeks in IndexedDB =====
+  // De server en sync.js (schoon/vEnum/vDatum) laten hier alleen geldige waarden door, maar een oud,
+  // gemanipuleerd of toekomstig record mag nóg niet uit een attribuut of klasse breken (verdediging in de
+  // diepte; aanvalstest: oordeel in class="b-…", plandatum in value="…"). Elk record heeft één of enkele
+  // vreemde velden, zodat de rest van het scherm gewoon wordt opgebouwd.
+  await stap("niet-tekstvelden", async () => {
+    await ev(async (X) => {
+      const nu = new Date().toISOString(), ww = (n, extra) => Object.assign({ id: "wnt" + n, taak: "Damwand trekken", tekst: "waarneming " + n, foto: null, regel_id: null, buiten: true,
+        maatregelen: [], oordeel: "A", actie: { tekst: "actie " + n, herkomst: "Jij", prio: "kort", terPlaatse: "niets", actie_id: "ACT-nt" + n } }, extra);
+      const ins = (id, ws, extra) => WPI.DB.put("inspecties", Object.assign({ id, versie: 3, titel: "Niet-tekst " + id, code: "DAM", project: "p", taken: ["Damwand trekken"], taak: "Damwand trekken",
+        waarnemingen: ws, gesprek: "", positief: "", handtekening: null, keuzes: [], monteurs: [], open_punten: [], inspecteur: "Inspecteur (demo)", inspecteur_id: "u-insp", start: nu, opgeslagen: nu }, extra));
+      await ins("WPI-nt1", [ww(1, { oordeel: X }), ww(2, { actie: { tekst: "a", herkomst: "Jij", prio: X, terPlaatse: X, actie_id: "ACT-nt2" } }), ww(3, { regel_id: X, buiten: false })]);
+      await ins("WPI-nt2", [ww(4)], { inspecteur_id: X, plan_id: X, start: X, opgeslagen: X, versie: X });
+      const act = (id, extra) => WPI.DB.put("acties", Object.assign({ id, inspectie_id: "WPI-nt1", inspectie_titel: "nt", inspecteur: "x", ref: "r", waarneming: "w", foto: null, oordeel: "A", tekst: "t " + id,
+        prio: "kort", status: "Open", houder: "u-coord2", toetser: "u-coord1", plandatum: WPI.plusDagen(-1), log: [{ t: nu, wie: "u-coord2", wat: "x" }] }, extra));
+      await act("ACT-nt1", { plandatum: X, oordeel: X, prio: X });
+      await act("ACT-nt2", { status: X, houder: X, toetser: X });
+      await act("ACT-nt3", { inspectie_id: X, log: [{ t: X, wie: X, wat: "x", status: X }], afgerond_op: X, created_at: X });
+      await act("ACT-nt4", { status: "Klaar voor toetsing", plandatum: X, klaar_op: X });
+      const pl = (id, extra) => WPI.DB.put("planning", Object.assign({ id, datum: WPI.plusDagen(1), code: "DAM", project: "p", locatie: "l", monteurs: 2, inspecteur: "u-coord1", toelichting: "", status: "gepland" }, extra));
+      await pl("PL-nt1", { status: X, inspecteur: X, monteurs: X, inspectie_id: X });
+      await pl("PL-nt2", { datum: X });
+      await pl("PL-nt3", { status: "uitgevoerd", datum: WPI.plusDagen(-1), inspectie_id: X });
+      await pl("PL-nt4", { monteurs: X });
+      App.acties = null; App.planning = null;
+    }, P(28));
+    gevuld.add(28);
+    await ev(() => App.login("u-hoofd")); await wacht(700);   // hoofd: ziet alles, ook "Plandatum wijzigen"
+    for (const id of ["WPI-nt1", "WPI-nt2"]) { await ev((id) => { App.closeModal(); location.hash = "#/rapport/" + id; }, id); await wacht(700); await scan("rapport " + id + " (niet-tekst)"); }
+    for (const h of ["inspecties", "planning", "vandaag"]) { await route(h); await scan(h + " (niet-tekst)"); }
+    await ev(() => { App.actFilter = "alle"; }); await route("acties"); await scan("acties (niet-tekst)");
+    for (const id of ["ACT-nt1", "ACT-nt2", "ACT-nt3", "ACT-nt4"]) {
+      await ev((id) => { App.closeModal(); App.openActie(id); }, id); await wacht(250);
+      await ev(() => document.querySelectorAll("#mod details").forEach((d) => { d.open = true; }));
+      await scan("actie-modal " + id + " (niet-tekst)");
+    }
+    for (const id of ["PL-nt1", "PL-nt2", "PL-nt3", "PL-nt4"]) { await ev((id) => { App.closeModal(); App.planForm(id); }, id); await wacht(250); await scan("plan-modal " + id + " (niet-tekst)"); }
+    await ev(() => { App.closeModal(); return App.openMeldingen(); }); await wacht(300); await scan("meldingen (niet-tekst)");
+    await ev(() => App.closeModal());
+    await p.setViewportSize({ width: 1440, height: 900 }); await wacht(300);
+    for (const h of ["planning", "inspecties", "acties", "dashboard"]) { await route(h); await scan(h + "@1440 (niet-tekst)"); }
+    await p.setViewportSize({ width: 390, height: 844 }); await wacht(300);
+    // de lopende inspectie (concept) met een vreemd oordeel: algemene onderwerpen, "vastgelegd"-melding, afronden
+    await ev((X) => {
+      App.startInspectie("DAM", "x", "t", true);
+      const ins = App.state.inspectie;
+      ins.waarnemingen.push({ id: "wc1", taak: "Damwand trekken", tekst: "c", foto: null, extraFotos: [], regel_id: "ALG-A", onderwerp: "A", buiten: false, maatregelen: [], oordeel: X, actie: { tekst: "" } });
+      ins.laatste = "wc1"; ins.stap = "algemeen"; App.route();
+    }, P(29));
+    gevuld.add(29); await wacht(400); await scan("ins-algemeen (concept, niet-tekst)");
+    await ev(() => { App.state.inspectie.stap = "klaar"; App.route(); }); await wacht(400); await scan("ins-klaar (concept, niet-tekst)");
+    await ev(() => { App.state.inspectie = null; App.bewaarConcept(true); });
+    await ev(() => App.login("u-coord1")); await wacht(500);
   });
 
   // Alle schermen die opgeslagen tekst tonen, nog eens (telefoon én computer). Elk onderdeel apart,
@@ -282,7 +340,7 @@ async function scenario(b, [pnaam, pf]) {
       if (!n) throw new Error("inlogscherm toont geen accounts");
       await scan("login " + tag);
     });
-    await stap("alles " + tag + ": inloggen", async () => { await ev(() => { App.closeModal(); return App.login("u-winfred"); }); await wacht(700); await p.setViewportSize({ width: 390, height: 844 }); await wacht(200); });
+    await stap("alles " + tag + ": inloggen", async () => { await ev(() => { App.closeModal(); return App.login("u-coord1"); }); await wacht(700); await p.setViewportSize({ width: 390, height: 844 }); await wacht(200); });
     for (const h of ["vandaag", "planning", "inspecties"]) await stap("alles " + tag + ": " + h, async () => { await route(h); await scan(h + " " + tag); });
     await stap("alles " + tag + ": plan-modal", async () => {
       const id = await ev(() => (App.planning || []).filter((x) => !x.demo).map((x) => x.id)[0]);
@@ -304,7 +362,7 @@ async function scenario(b, [pnaam, pf]) {
       await p.setViewportSize({ width: 390, height: 844 }); await wacht(300);
     });
     await stap("alles " + tag + ": beheer en monteurslijst", async () => {
-      await ev(() => App.login("u-bjorn")); await wacht(700);
+      await ev(() => App.login("u-hoofd")); await wacht(700);
       await route("beheer"); await scan("beheer " + tag);
       await ev(() => { App.startInspectie("DAM", "x", "t", true); App.state.inspectie.stap = "monteurs"; App.route(); }); await wacht(400);
       await scan("ins-monteurs " + tag);
@@ -313,7 +371,7 @@ async function scenario(b, [pnaam, pf]) {
   }
 
   // ===== 9. na herladen (alles uit IndexedDB/localStorage) =====
-  await stap("herladen", async () => { await ev(() => App.login("u-winfred")); await wacht(400); await p.reload(); await wacht(1000); });
+  await stap("herladen", async () => { await ev(() => App.login("u-coord1")); await wacht(400); await p.reload(); await wacht(1000); });
   await alleSchermen("(na herladen)");
 
   // ===== 10. namen en functies uit Supabase-profielen =====
@@ -322,7 +380,7 @@ async function scenario(b, [pnaam, pf]) {
   await stap("profielen", async () => {
     await ev((P) => {
       const U = WPI.USERS;
-      for (const id of ["u-bjorn", "u-douwe", "u-winfred", "u-insp"]) { const u = U.find((x) => x.id === id); if (u) { u.full_name = P[26] + " " + id; u.functie = P[27]; } }
+      for (const id of ["u-hoofd", "u-coord2", "u-coord1", "u-insp"]) { const u = U.find((x) => x.id === id); if (u) { u.full_name = P[26] + " " + id; u.functie = P[27]; } }
       U.push({ id: "u-xssprof", full_name: P[26], role: "inspecteur", functie: P[27] });
     }, { 26: P(26), 27: P(27) });
     gevuld.add(26); gevuld.add(27);

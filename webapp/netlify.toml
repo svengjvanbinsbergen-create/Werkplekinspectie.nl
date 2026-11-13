@@ -13,7 +13,9 @@
   publish = "dist"
   command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
 
-# --- HTTP → HTTPS (Netlify doet dit ook automatisch met "Force HTTPS") ---
+# --- HTTP → HTTPS. Netlify stuurt zelf door zodra het certificaat er is; deze regels gelden ALLEEN voor de twee
+# domeinen hieronder. Komt de app op een ander adres, pas ze aan. Controleer na de deploy met
+# node webapp/tests/exposed.js --alles https://<adres> --strict ---
 [[redirects]]
   from = "http://werkplekinspectie.nl/*"
   to = "https://werkplekinspectie.nl/:splat"

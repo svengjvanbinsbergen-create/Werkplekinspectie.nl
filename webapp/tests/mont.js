@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(800);
-await p.evaluate(()=>App.login('u-winfred'));await p.waitForTimeout(800);
+await p.evaluate(()=>App.login('u-coord1'));await p.waitForTimeout(800);
 await p.evaluate(()=>{App.startInspectie('DAM','P26-168','Damwand · RWZI Voorbeeldstad',true);App.state.inspectie.stap='monteurs';App.route()});await p.waitForTimeout(400);
 await p.click('.chipb:has-text("Henk Voorbeeld")');await p.click('.chipb:has-text("Kees Demo")');
 await p.fill('#nieuwe-monteur','Bert Jansen');await p.click('button:has-text("Toevoegen")');await p.waitForTimeout(300);

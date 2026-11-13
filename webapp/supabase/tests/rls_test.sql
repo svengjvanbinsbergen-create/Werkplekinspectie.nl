@@ -605,8 +605,14 @@ select tests.faalt('storage: upload met .html geweigerd',
 select tests.faalt('storage: upload in de root van de bucket geweigerd',
   $q$insert into storage.objects (bucket_id, name) values ('fotos', 'x.jpg')$q$, '%row-level security%');
 :I2
-select tests.lukt('storage: inspecteur 2 uploadt na-foto in eigen map',
-  $q$insert into storage.objects (bucket_id, name) values ('fotos', 'a0000000-0000-4000-a000-000000000012/ACT-1-na.jpg')$q$);
+select tests.lukt('storage: inspecteur 2 uploadt een (nog niet gekoppelde) foto in eigen map',
+  $q$insert into storage.objects (bucket_id, name) values ('fotos', 'a0000000-0000-4000-a000-000000000012/ACT-1-na2.jpg')$q$);
+select tests.faalt('storage: de na-foto van ACT-1 is al als bewijs gekoppeld: (opnieuw) uploaden geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('fotos', 'a0000000-0000-4000-a000-000000000012/ACT-1-na.jpg')$q$, '%row-level security%');
+:PG
+-- de app uploadt altijd vóór het koppelen; in deze test werd ACT-1 eerder gekoppeld, dus het object hier neerzetten
+insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/ACT-1-na.jpg', 'a0000000-0000-4000-a000-000000000012');
+:I2
 select tests.telt('storage: inspecteur 2 ziet foto van inspecteur 1 niet', $q$select * from storage.objects where name like 'a0000000-0000-4000-a000-000000000011/%'$q$, 0);
 select tests.raakt('storage: inspecteur 2 kan foto van inspecteur 1 niet verwijderen',
   $q$delete from storage.objects where name like 'a0000000-0000-4000-a000-000000000011/%'$q$, 0);
@@ -749,7 +755,7 @@ select tests.lukt('foto: voorstel uit eigen inspectie met eigen foto',
   $q$insert into public.acties (id, inspectie_id, tekst, oordeel, ref, waarneming, prio, foto_pad, status)
      values ('ACT-11', 'WPI-11', 'Afzetting plaatsen', 'A', 'ROO-1.01', 'Put stond open zonder afzetting', 'kort', 'a0000000-0000-4000-a000-000000000011/voor.jpg', 'Voorstel')$q$);
 select tests.faalt('IDOR: foto_pad later vervangen door andermans foto geweigerd',
-  $q$update public.acties set foto_pad = 'a0000000-0000-4000-a000-000000000012/geheim.jpg' where id = 'ACT-11'$q$, '%zelf hebt geüpload%');
+  $q$update public.acties set foto_pad = 'a0000000-0000-4000-a000-000000000012/geheim.jpg' where id = 'ACT-11'$q$, '%foto%');
 select tests.faalt('storage: pad met .. geweigerd',
   $q$insert into storage.objects (bucket_id, name) values ('fotos', 'a0000000-0000-4000-a000-000000000011/../a0000000-0000-4000-a000-000000000012/y.jpg')$q$, '%row-level security%');
 select tests.faalt('storage: submap geweigerd',
@@ -1241,8 +1247,8 @@ select tests.lukt('logid: inspecteur 2 slaat daarna gewoon acties en statuswijzi
 -- 22b. auditlog vol laten lopen: inspectie ligt vast, alleen verschillen in de auditlog,
 --      grens per record, per uur en in bytes per dag
 :I1
-select tests.faalt('audit: inspectierecord met 1 MB nieuwe inhoud overschrijven geweigerd (momentopname)',
-  format('update public.inspecties set record = record || jsonb_build_object(%L, %L) where id = %L', 'gesprek', repeat('x', 1000000), 'WPI-11'),
+select tests.faalt('audit: inspectierecord met 200 KB nieuwe inhoud overschrijven geweigerd (momentopname)',
+  format('update public.inspecties set record = record || jsonb_build_object(%L, %L) where id = %L', 'gesprek', repeat('x', 200000), 'WPI-11'),
   '%momentopname ligt vast%');
 select tests.faalt('audit: tekst van een waarneming wijzigen en de foto weghalen geweigerd',
   $q$update public.inspecties set record = jsonb_set(record, '{waarnemingen,0}', '{"oordeel":"C","tekst":"klein dingetje","foto":null}') where id = 'WPI-11'$q$,
@@ -1266,13 +1272,29 @@ select tests.faalt('audit: meer dan 300 wijzigingen per uur (verspreid over reco
        insert into public.acties (id, tekst, oordeel, status) select 'ACT-vl' || g, 'x', '–', 'Voorstel' from generate_series(1, 11) g;
        for i in 1..28 loop update public.acties set plandatum = current_date + i where id like 'ACT-vl%'; end loop;
      end $d$$q$, '%Te veel wijzigingen in het afgelopen uur%');
-select tests.faalt('audit: 27 inspecties van 1 MB op één dag geweigerd (schrijfquotum 25 MiB)',
+select tests.faalt('audit: een inspectie van 1 MB geweigerd (vormgrens 256 KB, vóór het schrijfquotum)',
+  format('insert into public.inspecties (id, titel, record) values (%L, %L, jsonb_build_object(%L, %L))', 'WPI-groot0', 'x', 'gesprek', repeat('y', 1000000)),
+  '%te groot%');
+:PG
+-- schrijfquotum 25 MiB per dag: een record is nu hooguit 256 KB en er mogen 30 inspecties per uur bij, dus
+-- het dagquotum wordt pas over meerdere uren bereikt; hier staat er al bijna 25 MiB van inspecteur 2 in de auditlog
+set session_replication_role = replica;
+insert into public.audit_log (t, wie, tabel, record_id, actie, grootte)
+values (now() - interval '2 hours', 'a0000000-0000-4000-a000-000000000012', 'inspecties', 'WPI-quotumtest', 'INSERT', 25 * 1024 * 1024 - 300000);
+set session_replication_role = origin;
+:I2
+select tests.faalt('audit: twee inspecties van 200 KB boven het dagquotum (25 MiB) geweigerd',
   format($f$do $d$ begin
-       for i in 1..27 loop
+       for i in 1..2 loop
          insert into public.inspecties (id, titel, record) values ('WPI-groot' || i, 'x', jsonb_build_object('gesprek', %L || i));
        end loop;
-     end $d$$f$, repeat('y', 1000000)), '%Schrijfquotum%');
+     end $d$$f$, repeat('y', 200000)), '%Schrijfquotum%');
 select tests.telt('audit: niets van de vloed opgeslagen', $q$select * from public.inspecties where id like 'WPI-groot%'$q$, 0);
+:PG
+set session_replication_role = replica;
+delete from public.audit_log where record_id = 'WPI-quotumtest';
+set session_replication_role = origin;
+:I2
 
 -- 22c. het officiële verloop van andermans voorstel volschrijven
 :I1
@@ -1681,8 +1703,11 @@ select tests.lukt('upsert-foto: eerste upload met upsert lukt',
 select tests.lukt('upsert-foto: dezelfde (ongebruikte) foto nogmaals uploaden lukt (antwoord kwijt na netwerkfout)',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/abc123.jpg', auth.uid())
      on conflict (bucket_id, name) do update set owner = excluded.owner, updated_at = now() returning *$q$);
-select tests.lukt('upsert-foto: de na-foto van ACT-c5 staat in Storage',
-  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/na-c5.jpg', auth.uid())$q$);
+select tests.faalt('upsert-foto: de na-foto van ACT-c5 is al gekoppeld: alsnog uploaden geweigerd (eerst uploaden, dan koppelen)',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/na-c5.jpg', auth.uid())$q$, '%row-level security%');
+:PG
+insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/na-c5.jpg', 'a0000000-0000-4000-a000-000000000012');
+:I2
 select tests.faalt('upsert-foto: een foto die als bewijs in een actie staat, kan niet worden overschreven',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/na-c5.jpg', auth.uid())
      on conflict (bucket_id, name) do update set owner = excluded.owner, updated_at = now() returning *$q$, '%row-level security%');
@@ -1778,6 +1803,161 @@ select tests.telt('quotum: niets van de vloed opgeslagen',
 :I2
 select tests.lukt('quotum: telt per gebruiker (een ander kan nog gewoon uploaden)',
   $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/q0.jpg', auth.uid())$q$);
+
+-- =====================================================================
+-- 25. Aanvalstest (beveiligingsronde): elke bevinding als regressietest
+-- =====================================================================
+-- 25a. besturingstekens: record en kolommen volgen precies dezelfde regel (tekst_tekens_ok)
+:I2
+select tests.faalt('tekens: backspace (U+0008) in het gesprek (record) geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk1', 't', jsonb_build_object('gesprek', 'abc' || chr(8) || chr(8) || chr(8) || 'xyz'))$q$, '%tekst_tekens%');
+select tests.faalt('tekens: form feed (U+000C) in het record geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk1', 't', jsonb_build_object('positief', 'ok' || chr(12)))$q$, '%tekst_tekens%');
+select tests.faalt('tekens: besturingsteken in een SLEUTEL van het record geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk1', 't', jsonb_build_object('a' || chr(27), 'x'))$q$, '%tekst_tekens%');
+select tests.faalt('tekens: C1-besturingstekens (U+009B CSI, U+0085 NEL) in een actietekst geweigerd',
+  $q$insert into public.acties (id, tekst, status) values ('ACT-atk2', 'ok' || chr(155) || '31m' || chr(133) || 'Status: Afgerond', 'Voorstel')$q$, '%tekst_tekens%');
+select tests.faalt('tekens: zero-width space (U+200B) in een actietekst geweigerd',
+  $q$insert into public.acties (id, tekst, status) values ('ACT-atk2', 'Afge' || U&'\200B' || 'rond', 'Voorstel')$q$, '%tekst_tekens%');
+select tests.faalt('tekens: LRM/RLM (U+200E/U+200F) en U+061C in het record geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk1', 't', jsonb_build_object('w', jsonb_build_array('a' || U&'\200F' || 'b')))$q$, '%tekst_tekens%');
+select tests.faalt('tekens: regelscheider U+2028 in een actietekst geweigerd',
+  $q$insert into public.acties (id, tekst, status) values ('ACT-atk2', 'regel' || U&'\2028' || 'twee', 'Voorstel')$q$, '%tekst_tekens%');
+select tests.lukt('tekens: emoji met zero-width joiner (👷‍♀️), regeleinde en tab in het record mag',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk1', 't', jsonb_build_object('gesprek', E'Goed gesprek 👷‍♀️\n\tafspraak'))$q$);
+select tests.klopt('tekens: record_tekens_ok en tekst_tekens_ok zijn het voor elk teken U+0001–U+10FFFF eens (waarde en sleutel)',
+  (select bool_and(public.tekst_tekens_ok(chr(c)) = public.record_tekens_ok(jsonb_build_object('a', 'x' || chr(c) || 'y'))
+               and public.tekst_tekens_ok(chr(c)) = public.record_tekens_ok(jsonb_build_object('k' || chr(c), 1)))
+     from generate_series(1, 1114111) c where c not between 55296 and 57343));
+
+-- 25b. de foto van een actie uit een inspectie is de foto uit de momentopname en ligt vast
+:PG
+insert into storage.objects (bucket_id, name, owner) values
+  ('fotos', 'a0000000-0000-4000-a000-000000000012/orig.jpg', 'a0000000-0000-4000-a000-000000000012'),
+  ('fotos', 'a0000000-0000-4000-a000-000000000012/nep.jpg', 'a0000000-0000-4000-a000-000000000012');
+:I2
+select tests.lukt('foto-snapshot: inspectie met foto bij de waarneming en een actievoorstel',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-atk3', 't',
+     '{"waarnemingen":[{"tekst":"Put open","oordeel":"A","foto":"a0000000-0000-4000-a000-000000000012/orig.jpg","actie":{"actie_id":"ACT-atk3","prio":"kort"}}]}')$q$);
+select tests.faalt('foto-snapshot: actie met een ANDERE eigen foto dan in de momentopname geweigerd',
+  $q$insert into public.acties (id, inspectie_id, tekst, oordeel, waarneming, prio, status, foto_pad)
+     values ('ACT-atk3', 'WPI-atk3', '', 'A', 'Put open', 'kort', 'Voorstel', 'a0000000-0000-4000-a000-000000000012/nep.jpg')$q$, '%foto van de waarneming%');
+select tests.faalt('foto-snapshot: actie zonder foto terwijl de waarneming er een heeft geweigerd',
+  $q$insert into public.acties (id, inspectie_id, tekst, oordeel, waarneming, prio, status)
+     values ('ACT-atk3', 'WPI-atk3', '', 'A', 'Put open', 'kort', 'Voorstel')$q$, '%foto van de waarneming%');
+select tests.lukt('foto-snapshot: actie met de foto uit de momentopname (met "fotos/" ervoor) mag',
+  $q$insert into public.acties (id, inspectie_id, tekst, oordeel, waarneming, prio, status, foto_pad)
+     values ('ACT-atk3', 'WPI-atk3', '', 'A', 'Put open', 'kort', 'Voorstel', 'fotos/a0000000-0000-4000-a000-000000000012/orig.jpg')$q$);
+select tests.faalt('foto-snapshot: foto daarna leegmaken geweigerd (ook door de inspecteur zelf)',
+  $q$update public.acties set foto_pad = null where id = 'ACT-atk3'$q$, '%liggen vast%');
+select tests.faalt('foto-snapshot: foto daarna vervangen door een andere eigen foto geweigerd',
+  $q$update public.acties set foto_pad = 'a0000000-0000-4000-a000-000000000012/nep.jpg' where id = 'ACT-atk3'$q$, '%liggen vast%');
+select tests.raakt('foto-snapshot: de foto in de momentopname kan de inspecteur niet uit Storage verwijderen',
+  $q$delete from storage.objects where name = 'a0000000-0000-4000-a000-000000000012/orig.jpg'$q$, 0);
+
+-- 25c. prestatie: uploaden en foto's opvragen blijft snel bij veel foto's en acties (Supabase: 8 s timeout)
+:PG
+create or replace function tests.duur(p_sql text) returns interval
+language plpgsql as $$
+declare t0 timestamptz := clock_timestamp();
+begin
+  execute p_sql;
+  return clock_timestamp() - t0;
+end $$;
+grant execute on function tests.duur(text) to authenticated;
+insert into storage.objects (bucket_id, name, owner)
+  select 'fotos', 'a0000000-0000-4000-a000-000000000011/p' || g || '.jpg', 'a0000000-0000-4000-a000-000000000011'
+    from generate_series(1, 1000) g;
+insert into public.acties (id, tekst, status, foto_pad)
+  select 'ACT-perf' || g, 'x', 'Voorstel', case when g % 2 = 0 then 'a0000000-0000-4000-a000-000000000011/p' || g || '.jpg' end
+    from generate_series(1, 1000) g;
+analyze public.acties;
+:I2
+set statement_timeout = '8s';
+select tests.klopt('prestatie: upload als inspecteur bij 1000 foto''s × 1000 acties duurt < 1 s',
+  tests.duur($q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/p0.jpg', auth.uid())$q$) < interval '1 second');
+select tests.klopt('prestatie: alle zichtbare foto''s opsommen als inspecteur duurt < 2 s',
+  tests.duur($q$select count(*) from storage.objects$q$) < interval '2 seconds');
+select tests.klopt('prestatie: één foto via een actie opvragen duurt < 0,2 s',
+  tests.duur($q$select * from storage.objects where bucket_id = 'fotos' and name = 'a0000000-0000-4000-a000-000000000011/p2.jpg'$q$) < interval '200 milliseconds');
+reset statement_timeout;
+:PG
+select tests.klopt('prestatie: het quotum telt in public.foto_uploads (niet in storage.objects)',
+  (select count(*) from public.foto_uploads where wie = 'a0000000-0000-4000-a000-000000000012') >= 1
+  and not exists (select 1 from information_schema.role_table_grants
+                   where table_schema = 'public' and table_name = 'foto_uploads' and grantee in ('anon', 'authenticated')));
+
+-- =====================================================================
+-- 26. Aanvalstest ronde 4: regressietests voor de bevindingen van de tweede aanvalsronde
+-- =====================================================================
+-- 26a. onzichtbare tekens buiten de BMP, zacht afbreekstreepje en opvullers ("ASCII smuggling")
+:I2
+select tests.faalt('tekens: Unicode-tag-tekens (U+E0061…) in een actietekst geweigerd',
+  $q$insert into public.acties (id, tekst, status) values ('ACT-t1', 'Leuning' || chr(917601) || chr(917606) || chr(917631), 'Voorstel')$q$, '%tekst_tekens%');
+select tests.faalt('tekens: tag-tekens in een SLEUTEL van het record geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-t1', 't', jsonb_build_object('gesprek' || chr(917601), 'x'))$q$, '%tekst_tekens%');
+select tests.faalt('tekens: zacht afbreekstreepje (U+00AD) in de waarnemingstekst (record) geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-t1', 't', jsonb_build_object('waarnemingen', jsonb_build_array(jsonb_build_object('oordeel', 'C', 'tekst', 'Afge' || chr(173) || 'rond'))))$q$, '%tekst_tekens%');
+select tests.klopt('tekens: U+00AD, U+034F, U+115F, U+3164, U+FFA0, U+FFF9, U+1D173, U+E0001, U+E007F en U+E0100 geweigerd',
+  (select bool_and(not public.tekst_tekens_ok('a' || chr(c) || 'b'))
+     from unnest(array[173, 847, 4447, 12644, 65440, 65529, 119155, 917505, 917631, 917760]) c));
+select tests.klopt('tekens: emoji met ZWJ en variatiekiezer (👷‍♀️, ❤️) en accenten blijven toegestaan',
+  public.tekst_tekens_ok('Café 👷‍♀️ ❤️ naïef') and public.record_tekens_ok(jsonb_build_object('gesprek', 'Café 👷‍♀️ ❤️')));
+select tests.lukt('tekens: een getypte backslash + b/f in het record ("C:\bin\fmap") is geen besturingsteken',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-t2', 't', '{"gesprek":"pad C:\\bin\\fmap en \\\\u0008"}')$q$);
+:H
+select tests.faalt('tekens: monteursnaam met tag-tekens geweigerd (iedereen ziet de naam)',
+  $q$insert into public.monteurs (naam) values ('Wim' || chr(917601) || chr(917631) || ' Tag')$q$, '%tekens%');
+
+-- 26b. extraFotos: ook een losse tekst in de lijst is een foto (de app toont hem zo)
+:I1
+select tests.klopt('fotos: andermans pad als TEKST in extraFotos geweigerd door record_fotos_ok',
+  not public.record_fotos_ok('{"waarnemingen":[{"oordeel":"A","extraFotos":["a0000000-0000-4000-a000-000000000012/na-c5.jpg"]}]}', 'a0000000-0000-4000-a000-000000000011')
+  and not public.record_fotos_ok('{"waarnemingen":[{"extraFotos":[["a0000000-0000-4000-a000-000000000012/x.jpg"]]}]}', 'a0000000-0000-4000-a000-000000000011')
+  and public.record_fotos_ok('{"waarnemingen":[{"extraFotos":["a0000000-0000-4000-a000-000000000011/eigen.jpg",{"foto":"a0000000-0000-4000-a000-000000000011/b.jpg"},null,""]}]}', 'a0000000-0000-4000-a000-000000000011'));
+select tests.faalt('fotos: inspectie met de foto van een collega als tekst in extraFotos geweigerd',
+  $q$insert into public.inspecties (id, inspecteur_id, titel, record, opgeslagen) values ('WPI-x1', auth.uid(), 'Test',
+     '{"waarnemingen":[{"oordeel":"A","tekst":"zie foto","extraFotos":["a0000000-0000-4000-a000-000000000012/na-c5.jpg"]}]}', now())$q$, '%fotos_eigen%');
+select tests.klopt('fotos: een foto dieper dan 64 niveaus wordt niet overgeslagen maar geweigerd',
+  not public.record_fotos_ok(('{"fotos":' || repeat('[', 70) || '"a0000000-0000-4000-a000-000000000012/x.jpg"' || repeat(']', 70) || '}')::jsonb, 'a0000000-0000-4000-a000-000000000011')
+  and not public.record_fotos_ok(('{"a":' || repeat('[', 70) || '1' || repeat(']', 70) || '}')::jsonb, 'a0000000-0000-4000-a000-000000000011'));
+
+-- 26c. rekentijd: een groot of diep record wordt goedkoop geweigerd (Supabase: statement_timeout 8 s)
+:I2
+set statement_timeout = '8s';
+select tests.klopt('vorm: 250.000 lege lijsten (< 1 MB) binnen 1 s geweigerd ("te groot")',
+  tests.duur($q$select tests.faalt('vorm: record met 250.000 lege lijsten geweigerd',
+    $x$insert into public.inspecties (id, inspecteur_id, titel, record, opgeslagen) select 'WPI-dos1', auth.uid(), 'x', jsonb_build_object('fotos', jsonb_agg('[]'::jsonb)), now() from generate_series(1, 250000)$x$, '%te groot%')$q$) < interval '1 second');
+select tests.klopt('vorm: 30.000 elementen in 90 KB binnen 0,5 s geweigerd ("te veel onderdelen")',
+  tests.duur($q$select tests.faalt('vorm: record met 30.000 elementen geweigerd',
+    $x$insert into public.inspecties (id, inspecteur_id, titel, record, opgeslagen) select 'WPI-dos2', auth.uid(), 'x', jsonb_build_object('w', jsonb_agg(0)), now() from generate_series(1, 30000)$x$, '%te veel onderdelen%')$q$) < interval '500 milliseconds');
+select tests.faalt('vorm: record van 40 niveaus diep geweigerd',
+  $q$insert into public.inspecties (id, titel, record) values ('WPI-dos3', 'x', ('{"a":' || repeat('[', 40) || repeat(']', 40) || '}')::jsonb)$q$, '%te diep%');
+select tests.faalt('vorm: meer dan 500 waarnemingen geweigerd',
+  $q$insert into public.inspecties (id, titel, record) select 'WPI-dos4', 'x', jsonb_build_object('waarnemingen', jsonb_agg(jsonb_build_object('oordeel', 'C'))) from generate_series(1, 501)$q$, '%500 waarnemingen%');
+select tests.klopt('vorm: record_tekens_ok op 250.000 lege lijsten duurt < 1 s (was 5–11 s)',
+  tests.duur($q$select public.record_tekens_ok(jsonb_build_object('fotos', jsonb_agg('[]'::jsonb))) from generate_series(1, 250000)$q$) < interval '1 second');
+select tests.lukt('vorm: een gewone inspectie met 60 waarnemingen van 2000 tekens (± 125 KB) mag',
+  $q$insert into public.inspecties (id, titel, record) select 'WPI-dos5', 'x', jsonb_build_object('waarnemingen', jsonb_agg(jsonb_build_object('oordeel', 'C', 'tekst', repeat('Goed, netjes. ', 142)))) from generate_series(1, 60)$q$);
+reset statement_timeout;
+
+-- 26d. bewijs kan niet (opnieuw) worden geüpload zodra het gekoppeld is, ook niet na verwijderen
+--      (als inspecteur 2: inspecteur 1 zit sinds 23 aan zijn dagquotum)
+:I2
+select tests.lukt('bewijs: actie koppelen aan een eigen pad dat (nog) niet bestaat',
+  $q$insert into public.acties (id, tekst, status, foto_pad, waarneming) values ('ACT-ev1', 'Leuning plaatsen', 'Voorstel', 'a0000000-0000-4000-a000-000000000012/bewijs-ev1.jpg', 'Leuning ontbrak')$q$);
+select tests.faalt('bewijs: daarna iets uploaden onder dat gekoppelde pad geweigerd',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/bewijs-ev1.jpg', auth.uid())$q$, '%row-level security%');
+select tests.lukt('bewijs: een nieuwe, nog niet gekoppelde foto uploaden mag gewoon (eerst uploaden, dan koppelen)',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/bewijs-ev2.jpg', auth.uid())$q$);
+select tests.lukt('bewijs: en daarna koppelen aan een actie',
+  $q$insert into public.acties (id, tekst, status, foto_pad, waarneming) values ('ACT-ev2', 'Afzetting plaatsen', 'Voorstel', 'a0000000-0000-4000-a000-000000000012/bewijs-ev2.jpg', 'Afzetting weg')$q$);
+:H2
+select tests.raakt('bewijs: het hoofd verwijdert de foto (AVG/bewaartermijn)',
+  $q$delete from storage.objects where name = 'a0000000-0000-4000-a000-000000000012/bewijs-ev2.jpg'$q$, 1);
+:I2
+select tests.faalt('bewijs: na verwijderen een andere foto onder dezelfde naam zetten geweigerd',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('fotos', 'a0000000-0000-4000-a000-000000000012/bewijs-ev2.jpg', auth.uid())$q$, '%row-level security%');
 
 -- =====================================================================
 -- Resultaat

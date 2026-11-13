@@ -361,7 +361,7 @@ async function nieuwePagina(b, w, h) {
   // ================= 1440: computer, coördinator, tip ‘Niet nu’ per gebruiker, uitloggen =================
   const w = await nieuwePagina(b, 1440, 900), q = w.p;
   await q.goto(BASE + "/index.html"); await q.waitForTimeout(900);
-  await q.evaluate(() => App.login("u-winfred")); await q.waitForTimeout(800);
+  await q.evaluate(() => App.login("u-coord1")); await q.waitForTimeout(800);
   ok(await q.locator(".oef-hint").count() === 0, "coördinator: geen tip");
   await q.evaluate(() => App.openAccount()); await q.waitForTimeout(200);
   ok(await q.locator('#mod button[data-action="oefOpen"]').count() === 1, "coördinator: ‘Oefenen’ in het accountmenu");

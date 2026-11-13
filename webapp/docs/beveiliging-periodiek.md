@@ -19,6 +19,7 @@ Korte checklist voor Werkplekinspectie (Noardling B.V.). Wie wat doet staat erbi
    - geheimen zoeken in de hele git-geschiedenis, tags, reflog, binaire bestanden en de werkmap;
    - controleren dat in `js/config.js` alleen de publieke (anon/publishable) sleutel staat en dat `debug` uit staat;
    - zoeken naar debug-uitvoer, inline scripts en inline handlers;
+   - zoeken naar keuzevelden en datums (oordeel, plandatum, datum, status, prio) die zonder `esc()` of witte lijst in de HTML komen (aanvalstest november 2026);
    - de CSP vergelijken in alle vier de bronnen;
    - de publicatie controleren: wat er echt online komt, en de headers van de live site.
 2. **Supabase-dashboard** (vul je bevindingen in het verslag in):
@@ -45,7 +46,8 @@ Korte checklist voor Werkplekinspectie (Noardling B.V.). Wie wat doet staat erbi
    Let vooral op: veel `login_herhaald_mislukt` of `mfa_mislukt` voor één persoon, een `rol_gewijzigd` die niemand kan verklaren, en verwijderingen die niet door het hoofd zijn gedaan.
    Let op: `login_herhaald_mislukt` komt alleen binnen als er daarna op **hetzelfde toestel** wél iemand inlogt (de app bewaart de melding tot dan). Iemand die vanaf zijn eigen apparaat wachtwoorden raadt, zie je **alleen** in *Logs › Auth* (stap 2), niet in deze tabel.
    En: deze logboeken zijn alleen-toevoegen voor de app en voor gewone databasegebruikers, **niet** voor de eigenaar. Wie het databasewachtwoord of de SQL Editor van Supabase heeft, kan in onderhoudsstand regels verwijderen of de bewaking uitzetten. Houd die toegang dus klein (alleen Sven en het hoofd), en bewaar bij de maandcontrole een export van de uitkomst van deze drie zoekopdrachten buiten Supabase (bijv. in het beheerlogboek), zodat een latere wijziging opvalt.
-4. **Verslag**: één regel in het beheerlogboek, met datum, uitkomst (`0 FOUT` / bevindingen) en eventuele acties.
+4. **Gedeelde computers** (± 5 min): vraag op kantoor na of op gedeelde pc's bij het uitloggen "Wissen en uitloggen" wordt gekozen (niet "Bewaren"). Onverstuurd werk staat onversleuteld in de browser tot de volgende gebruiker inlogt (beveiligingsrapport punt 15).
+5. **Verslag**: één regel in het beheerlogboek, met datum, uitkomst (`0 FOUT` / bevindingen) en eventuele acties.
 
 ## 2. Elk kwartaal (± 2 uur, beheerder en hoofd samen)
 
@@ -53,10 +55,10 @@ Korte checklist voor Werkplekinspectie (Noardling B.V.). Wie wat doet staat erbi
    ```bash
    tools/periodieke_check.sh --db
    ```
-   Zonder `PGHOST`/`PGUSER` draait de controle de databasetests op een kopie als OS-gebruiker `postgres` (vraagt `sudo`); verwacht `483 van 483 databasecontroles geslaagd`. Met een eigen test-server: `PGHOST=… PGPORT=… PGUSER=… tools/periodieke_check.sh --db`.
+   Zonder `PGHOST`/`PGUSER` draait de controle de databasetests op een kopie als OS-gebruiker `postgres` (vraagt `sudo`); verwacht `529 van 529 databasecontroles geslaagd`. Met een eigen test-server: `PGHOST=… PGPORT=… PGUSER=… tools/periodieke_check.sh --db`.
 2. **Alle app-tests**: `node webapp/tests/run-all.js --extra -j 3` (alles PASS, ook `security.js` en `xss.js`).
 3. **Gebruikers en rollen** met het hoofd doorlopen: wie is hoofd of coördinator, wie is inspecteur? Klopt dat nog? Heeft het hoofd nog tweestapsverificatie (MFA) aan?
-4. **Supabase-instellingen** naast `supabase/README.md` §2 leggen: sign-ups uit, wachtwoord minimaal 12 tekens, *leaked password protection* aan, herstel-link maximaal 1 uur geldig, sessies met een tijdslimiet, redirect-URL's precies goed en eigen SMTP.
+4. **Supabase-instellingen** naast `supabase/README.md` §2 leggen: sign-ups uit, wachtwoord minimaal 12 tekens, *leaked password protection* aan, herstel-link maximaal 1 uur geldig, sessies met een tijdslimiet, redirect-URL's precies goed (de app-URL moet erin staan, anders werkt de herstellink met PKCE niet) en eigen SMTP.
 5. **Backup-hersteltest** (README §4): zet een backup terug in een testproject en open een paar foto's.
 6. **Updates**: Supabase meldt Postgres-upgrades in het dashboard (*Settings › Infrastructure*); plan die in. De app zelf heeft geen npm-pakketten. Werk Playwright en Python bij als je ze lokaal gebruikt (alleen voor tests en tools, ze gaan niet online).
 7. **Opruimen**: haal oude scripts in `tools/` weg die de controle als "waar niets naar verwijst" noemt, en verwijder testaccounts.

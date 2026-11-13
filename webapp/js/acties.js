@@ -27,11 +27,11 @@
       const t = "Voorbeeld · Damwand · P26-168", L = (wat) => [{ t: new Date().toISOString(), wie: "Voorbeelddata", wat }];
       const b = (o) => Object.assign({ demo: true, inspectie_titel: t, inspecteur: "Inspecteur (demo)", foto: null, terPlaatse: "niets" }, o);
       return [
-        b({ id: "ACT-demo1", ref: "DAM-2.07", oordeel: "A", waarneming: "Gasmeter hing boven aan de ladder, niet bij de man in de put.", tekst: "Gasmeter altijd meenemen naar de man in de put; toolbox gasmeting houden", prio: "kort", status: "In uitvoering", houder: "u-winfred", toetser: "u-bjorn", plandatum: plusDagen(-2), log: L("Ingesteld en gestart") }),
-        b({ id: "ACT-demo2", ref: "Algemeen F", oordeel: "V", waarneming: "Afzetting rond de bouwput was aan één zijde weggehaald.", tekst: "Afzetting rond de bouwput rondom herstellen en dagelijks controleren", prio: "kort", status: "Open", houder: "u-douwe", toetser: "u-winfred", plandatum: plusDagen(0), log: L("Ingesteld") }),
-        b({ id: "ACT-demo3", ref: "DAM-1.03", oordeel: "A", waarneming: "Hijsband vertoonde een rafelige rand.", tekst: "Hijsband afkeuren en vervangen; hijsmiddelencheck opnemen in de LMRA", prio: "direct", status: "Klaar voor toetsing", houder: "u-winfred", toetser: "u-douwe", plandatum: plusDagen(1), log: L("Klaar voor toetsing gemeld") }),
+        b({ id: "ACT-demo1", ref: "DAM-2.07", oordeel: "A", waarneming: "Gasmeter hing boven aan de ladder, niet bij de man in de put.", tekst: "Gasmeter altijd meenemen naar de man in de put; toolbox gasmeting houden", prio: "kort", status: "In uitvoering", houder: "u-coord1", toetser: "u-hoofd", plandatum: plusDagen(-2), log: L("Ingesteld en gestart") }),
+        b({ id: "ACT-demo2", ref: "Algemeen F", oordeel: "V", waarneming: "Afzetting rond de bouwput was aan één zijde weggehaald.", tekst: "Afzetting rond de bouwput rondom herstellen en dagelijks controleren", prio: "kort", status: "Open", houder: "u-coord2", toetser: "u-coord1", plandatum: plusDagen(0), log: L("Ingesteld") }),
+        b({ id: "ACT-demo3", ref: "DAM-1.03", oordeel: "A", waarneming: "Hijsband vertoonde een rafelige rand.", tekst: "Hijsband afkeuren en vervangen; hijsmiddelencheck opnemen in de LMRA", prio: "direct", status: "Klaar voor toetsing", houder: "u-coord1", toetser: "u-coord2", plandatum: plusDagen(1), log: L("Klaar voor toetsing gemeld") }),
         b({ id: "ACT-demo4", ref: "Algemeen C", oordeel: "V", waarneming: "Eén monteur droeg geen gehoorbescherming bij het trillen van de damwand.", tekst: "Gehoorbescherming bij trilwerk bespreken in de toolbox en voorraad in de bus aanvullen", prio: "planmatig", status: "Voorstel", houder: null, toetser: null, plandatum: null, log: L("Actievoorstel uit de inspectie") }),
-        b({ id: "ACT-demo5", ref: "DAM-3.02", oordeel: "V", waarneming: "Kabels lagen over het looppad naar de keet.", tekst: "Kabels via een kabelbrug of opgehangen langs het looppad leggen", prio: "planmatig", status: "Klaar voor toetsing", houder: "u-douwe", toetser: "u-bjorn", plandatum: plusDagen(6), log: L("Klaar voor toetsing gemeld") }),
+        b({ id: "ACT-demo5", ref: "DAM-3.02", oordeel: "V", waarneming: "Kabels lagen over het looppad naar de keet.", tekst: "Kabels via een kabelbrug of opgehangen langs het looppad leggen", prio: "planmatig", status: "Klaar voor toetsing", houder: "u-coord2", toetser: "u-hoofd", plandatum: plusDagen(6), log: L("Klaar voor toetsing gemeld") }),
       ];
     },
     // bakjes: hoofd ziet het hele team, anderen hun eigen acties
@@ -94,8 +94,8 @@
     },
     // telefoon: zelf een actie aanmaken (los van een inspectie)
     nieuweActie() {
-      const opts = `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse").map((u) => `<option value="${u.id}">${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
-      const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
+      const opts = `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse").map((u) => `<option value="${esc(u.id)}">${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       this.openModal("Nieuwe actie", "Bijvoorbeeld uit een melding, toolbox of overleg.",
         `${veld("Wat moet er gebeuren?", `<textarea id="na-tekst" class="fin" rows="3" placeholder="Bijv. hijsbanden in de bus vervangen"></textarea>`)}
          ${veld("Aanleiding (optioneel)", `<textarea id="na-aanl" class="fin" rows="2" placeholder="Wat zag of hoorde je?"></textarea>`)}
@@ -121,14 +121,14 @@
     openActie(id) {
       const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
       const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
-      const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${u.id}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
-      const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
+      const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${esc(u.id)}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
         <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${this.actieFotos(a)}</div>`;
       if (a.status === "Voorstel") {
         {
           h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
-            <textarea id="ai-tekst" class="fin" rows="3">${esc(a.tekst || "")}</textarea>
+            <textarea id="ai-tekst" class="fin" rows="3" aria-label="Wat moet er gebeuren? (voorstel, pas aan)">${esc(a.tekst || "")}</textarea>
             <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
               <div>${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts(null)}</select>`)}</div>
               <div>${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts(null)}</select>`)}</div>
@@ -163,7 +163,7 @@
         }
         if (staf() && (a.status === "Open" || a.status === "In uitvoering" || a.status === "Klaar voor toetsing")) {
           h += `<details style="margin-top:14px"><summary class="s" style="cursor:pointer;font-weight:600">Plandatum wijzigen</summary>
-            <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" value="${a.plandatum || ""}"><button class="btn ghost sm"${act("wijzigPlan", a.id)}>Opslaan</button></div></details>`;
+            <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" aria-label="Nieuwe plandatum" value="${/^\d{4}-\d{2}-\d{2}$/.test(a.plandatum || "") ? a.plandatum : ""}"><button class="btn ghost sm"${act("wijzigPlan", a.id)}>Opslaan</button></div></details>`;
         }
       }
       h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${esc(l.wat)}</div>`).join("")}</div>`;

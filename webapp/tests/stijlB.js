@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(900);
-await p.evaluate(()=>App.login('u-winfred'));await p.waitForTimeout(1300);await p.screenshot({path:'b1.png'});
+await p.evaluate(()=>App.login('u-coord1'));await p.waitForTimeout(1300);await p.screenshot({path:'b1.png'});
 await p.evaluate(()=>{App.actFilter='telaat';App.go('acties')});await p.waitForTimeout(700);await p.screenshot({path:'b2.png'});
 await p.evaluate(()=>{App.actFilter='alle';App.route()});await p.waitForTimeout(500);await p.screenshot({path:'b3.png'});
 await p.evaluate(()=>{App.go('dashboard')});await p.waitForTimeout(500);await p.screenshot({path:'b4.png'});

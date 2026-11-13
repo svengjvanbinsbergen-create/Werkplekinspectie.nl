@@ -4,7 +4,7 @@ const BASE='http://localhost:8700';
 require('fs').mkdirSync(OUT,{recursive:true});
 const NEUTRAAL=()=>{
   const W=window.WPI; if(!W||!W.USERS) return;
-  const zet={ 'u-bjorn':['Carla Bos','Hoofd uitvoering'],'u-winfred':['Anna Visser','Coördinator'],'u-douwe':['Bart Smit','Coördinator'],'u-insp':['Inspecteur (demo)','Inspecteur op locatie']};
+  const zet={ 'u-hoofd':['Carla Bos','Hoofd uitvoering'],'u-coord1':['Anna Visser','Coördinator'],'u-coord2':['Bart Smit','Coördinator'],'u-insp':['Inspecteur (demo)','Inspecteur op locatie']};
   W.USERS.forEach(u=>{ if(zet[u.id]){u.full_name=zet[u.id][0];u.functie=zet[u.id][1];} });
 };
 const TEKST=()=>{
@@ -100,29 +100,29 @@ await ev(()=>App.go('oefen'));await W(500);await S('20-oefenen');
 await p.click('text=Begin met oefenen').catch(()=>{});await W(500);await S('21-oefenen-scene');
 await ev(()=>App.oefStop && App.oefStop());await W(300);await ev(()=>App.closeModal());
 // coordinator: instellen
-await ev(()=>App.login('u-winfred'));await W(800);await herstel();await ev(()=>App.route());await W(800);
+await ev(()=>App.login('u-coord1'));await W(800);await herstel();await ev(()=>App.route());await W(800);
 await S('30-vandaag-coordinator');
 await ev(()=>{App.actFilter='instellen';App.go('acties')});await W(600);
 await ev(()=>{const t=document.querySelector('.tabs .tabp.on');if(t)t.scrollIntoView({inline:'center',block:'nearest'});window.scrollTo(0,0);});await W(200);await S('31-acties-instellen');
 const ids=await ev(()=>App.acties.filter(a=>a.status==='Voorstel'&&!a.demo).map(a=>a.id));
 const nid=ids[0];console.log('nid',nid);
 await ev((id)=>App.openActie(id),nid);await W(400);
-await p.selectOption('#ai-houder','u-douwe');await p.selectOption('#ai-toetser','u-winfred');await W(200);
+await p.selectOption('#ai-houder','u-coord2');await p.selectOption('#ai-toetser','u-coord1');await W(200);
 await S('32-actie-instellen');
 await p.screenshot({path:`${OUT}/32-actie-instellen-vol.png`,fullPage:true});
 await ev(()=>{const m=document.getElementById('mod');return m.scrollHeight});
-await p.selectOption('#ai-toetser','u-douwe');await p.click('text=Actie instellen');await W(300);
+await p.selectOption('#ai-toetser','u-coord2');await p.click('text=Actie instellen');await W(300);
 await S('33-toetser-fout');
-await p.selectOption('#ai-toetser','u-winfred');await p.click('text=Actie instellen');await W(500);
+await p.selectOption('#ai-toetser','u-coord1');await p.click('text=Actie instellen');await W(500);
 // actiehouder
-await ev(()=>App.login('u-douwe'));await W(800);await herstel();await ev(()=>App.route());await W(500);
+await ev(()=>App.login('u-coord2'));await W(800);await herstel();await ev(()=>App.route());await W(500);
 await ev(()=>{App.actFilter='gepland';App.go('acties')});await W(500);
 await ev(()=>{const t=document.querySelector('.tabs .tabp.on');if(t)t.scrollIntoView({inline:'center',block:'nearest'});window.scrollTo(0,0);});await W(200);await S('34-acties-houder');
 await ev((id)=>App.openActie(id),nid);await W(400);
 await S('35-actiehouder');
 await p.click('text=Klaar voor toetsing, zonder foto');await W(500);
 // toetser
-await ev(()=>App.login('u-winfred'));await W(800);await herstel();await ev(()=>App.route());await W(500);
+await ev(()=>App.login('u-coord1'));await W(800);await herstel();await ev(()=>App.route());await W(500);
 await ev(()=>{App.actFilter='toetsen';App.go('acties')});await W(500);
 await ev((id)=>App.openActie(id),nid);await W(400);
 await S('36-toetsen');

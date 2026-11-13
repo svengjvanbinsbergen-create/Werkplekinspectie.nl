@@ -88,7 +88,7 @@ const EIGEN = {
 };
 const SCHERMEN = [
   ["login", async (p) => { await ev(p, () => { App.closeModal(); App.logout(); }); await wacht(p, 300); }],
-  ["vandaag", async (p) => { await login("u-winfred")(p); }],
+  ["vandaag", async (p) => { await login("u-coord1")(p); }],
   ["planning", ga("planning")],
   ["plan-modal", async (p) => { await ev(p, () => App.planForm()); await wacht(p, 250); }],
   ["inspecties", ga("inspecties")],
@@ -120,7 +120,7 @@ const SCHERMEN = [
     await ev(p, async () => { App.closeModal(); const a = await WPI.DB.all(); location.hash = "#/rapport/" + a[a.length - 1].id; }); await wacht(p, 800); }],
   ["vandaag-zonmodus", async (p) => { await ev(p, () => { App.pref = { veld: true, zon: true }; App.pasPrefToe(); App.go("vandaag"); }); await wacht(p, 700); }],
   ["ins-zie-zonmodus", async (p) => { await ev(p, () => { App.startInspectie("DAM", "x", "Damwand test", true); App.kiesTaak(App.data.kennisbank.DAM.regels[0].taak); }); await wacht(p, 500); }],
-  ["beheer", async (p) => { await ev(p, () => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.state.inspectie = null; App.bewaarConcept(true); }); await login("u-bjorn")(p); await ga("beheer")(p); }],
+  ["beheer", async (p) => { await ev(p, () => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.state.inspectie = null; App.bewaarConcept(true); }); await login("u-hoofd")(p); await ga("beheer")(p); }],
 ];
 
 // Eigen controles die axe niet doet: klikbare elementen zonder toetsenbordbediening en modal-semantiek.

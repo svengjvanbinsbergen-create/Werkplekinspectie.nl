@@ -11,7 +11,8 @@
 // (ophalen mislukt) ziet niets van de vorige; uitloggen tijdens het ophalen; vraag "Is dit je eigen telefoon?";
 // na "Ja" zonder bereik opnieuw openen (service worker) + chip bij een koude start met wachtrij; blijvende weigering
 // bekijken en weggooien (leesbare naam); op de server verwijderd → niet vanzelf opnieuw aangemaakt; twee tabbladen
-// van verschillende gebruikers tegelijk (ook als een tabblad het storage-event mist).
+// van verschillende gebruikers tegelijk (ook als een tabblad het storage-event mist); links uit een e-mail (nep-token,
+// ander type, ander account, eigen account + Annuleren) wissen niets en loggen niemand als een ander in; PKCE-herstel.
 //   cd <scratch> && node /home/user/Werkplekinspectie.nl/webapp/tests/sync.js      → eindigt met "errs []"
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
@@ -405,24 +406,68 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await p.evaluate(() => App.syncHaal()); await p.waitForTimeout(400);
     ok(await p.evaluate(async (id) => (await WPI.DB.get('acties', id)).status, aid) === 'Open', 'inspecteur ziet de ingestelde actie na ophalen');
 
-    // ---------- 9b. gedeeld toestel: wachtrij van A blijft van A en is onzichtbaar voor B ----------
+    // ---------- 9b. gedeeld toestel: onverstuurd werk van A (wachtrij + lopende inspectie) ----------
+    // Het staat onversleuteld in IndexedDB. Uitloggen: kiezen (synchroniseren / bewaren / wissen); logt daarna een
+    // ander in, dan ziet die eerst "Werk van een vorige gebruiker" en wordt het pas na bevestiging gewist,
+    // vóórdat er iets op het scherm komt. Annuleren laat het staan voor A.
+    const A_ID = '00000000-0000-4000-8000-000000000001';
+    const rauw = (pg) => pg.evaluate(() => new Promise((res) => { const r = indexedDB.open('wpi'); r.onsuccess = () => {
+      const t = r.result.transaction(['outbox', 'planning', 'concept']), uit = {};
+      t.objectStore('outbox').getAll().onsuccess = (e) => { uit.outbox = e.target.result; };
+      t.objectStore('planning').getAll().onsuccess = (e) => { uit.planning = e.target.result.map((x) => x.id); };
+      t.objectStore('concept').getAll().onsuccess = (e) => { uit.concept = e.target.result.map((x) => x.id); };
+      t.oncomplete = () => { r.result.close(); res(uit); }; }; }));
+    const vanA = (r) => r.outbox.filter((e) => e.uid === A_ID).length + r.concept.filter((c) => c === 'lopend-' + A_ID).length;
     await ctx.setOffline(true);
     await p.evaluate(() => WPI.DB.put('planning', { id: 'PL-van-a', datum: '2026-11-25', code: 'DAM', project: 'P26-400', locatie: 'Gemaal A', monteurs: 1, inspecteur: App.user.id, toelichting: 'van A', status: 'gepland' }));
     await p.evaluate(() => App.openAccount()); await p.waitForTimeout(200);
-    await p.click('#mod button:has-text("Uitloggen")'); await p.waitForTimeout(300);
-    ok(/Nog niet alles verstuurd/.test(await p.locator('#mod').innerText()), 'uitloggen met volle wachtrij: eerst een waarschuwing');
-    await p.click('text=Toch uitloggen'); await p.waitForTimeout(500);
+    await p.click('#mod button:has-text("Uitloggen")'); await p.waitForTimeout(400);
+    const uitTekst = await p.locator('#mod').innerText();
+    ok(/Nog niet alles op de server/.test(uitTekst) && /niet versleuteld/.test(uitTekst) && /iemand anders in, dan wordt het gewist/.test(uitTekst), 'uitloggen met volle wachtrij: eerlijke waarschuwing (onversleuteld, wordt gewist als een ander inlogt)');
+    ok(!/onzichtbaar voor anderen|veilig op dit toestel/i.test(uitTekst), 'uitloggen: geen onjuiste belofte meer ("veilig", "onzichtbaar voor anderen")');
+    ok(await p.locator('#mod button:has-text("Eerst synchroniseren")').count() === 1 && await p.locator('#mod button:has-text("Bewaren en uitloggen")').count() === 1 && await p.locator('#mod button:has-text("Wissen en uitloggen")').count() === 1, 'uitloggen: kiezen tussen synchroniseren, bewaren en wissen');
+    await p.click('#mod button:has-text("Bewaren en uitloggen")'); await p.waitForTimeout(500);
+    ok(await p.evaluate(() => App.user === null) && vanA(await rauw(p)) === 1, 'bewaren: A uitgelogd, werk van A nog op het toestel');
+    await ctx.setOffline(false); await p.waitForTimeout(200);
+    // B logt in: eerst de vraag, A's werk staat er nog; annuleren laat het staan
+    await inloggen(p, 'douwe@noardling.test'); await p.waitForTimeout(800);
+    ok(await p.evaluate(() => App.user === null) && /Werk van een vorige gebruiker/.test(await p.locator('#view').innerText()), 'B logt in: eerst "Werk van een vorige gebruiker", nog niets van de app te zien');
+    ok(vanA(await rauw(p)) === 1, 'B: zolang B niet bevestigt, blijft het werk van A staan');
+    await p.click('#view button:has-text("Annuleren")'); await p.waitForTimeout(400);
+    ok(await p.evaluate(() => App.user === null) && await p.locator('#l-mail').count() === 1 && vanA(await rauw(p)) === 1, 'B annuleert: terug naar inloggen, werk van A blijft');
+    await inloggen(p, 'inspecteur@noardling.test'); await p.waitForTimeout(500);
+    ok(await totdat(async () => { const r = (await state()).tables.planning['PL-van-a']; return r && r.gemaakt_door === A_ID && r.toelichting === 'van A'; }), 'A logt weer in: eigen wijziging alsnog verstuurd');
+    // nu wél wissen: A bewaart een wijziging én een lopende inspectie, B bevestigt
+    await ctx.setOffline(true);
+    await p.evaluate(() => WPI.DB.put('planning', { id: 'PL-van-a2', datum: '2026-11-26', code: 'DAM', project: 'P26-401', locatie: 'Gemaal A2', monteurs: 1, inspecteur: App.user.id, toelichting: 'van A (2)', status: 'gepland' }));
+    await p.evaluate(() => { App.startInspectie('DAM', 'P26-401', 'Geheime lopende inspectie', true); App.bewaarConcept(true); }); await p.waitForTimeout(300);
+    await p.evaluate(() => App.openAccount()); await p.waitForTimeout(200);
+    await p.click('#mod button:has-text("Uitloggen")'); await p.waitForTimeout(400);
+    ok(/er loopt nog een inspectie/.test(await p.locator('#mod').innerText()), 'uitloggen: ook de lopende inspectie wordt genoemd');
+    await p.click('#mod button:has-text("Bewaren en uitloggen")'); await p.waitForTimeout(500);
+    ok(vanA(await rauw(p)) === 2, 'bewaren: wachtrij én concept van A op het toestel');
     await ctx.setOffline(false); await p.waitForTimeout(200);
     await inloggen(p, 'douwe@noardling.test'); await p.waitForTimeout(800);
-    ok(await p.evaluate(() => App.user && App.user.full_name === 'Douwe de Boer'), 'B (Douwe) ingelogd op hetzelfde toestel');
-    ok(await p.evaluate(async () => !(await WPI.DB.getAll('planning')).some((x) => x.id === 'PL-van-a') && !(await WPI.DB.get('planning', 'PL-van-a'))), 'B ziet de wachtrij-records van A niet');
-    ok(await p.evaluate(async () => { try { await WPI.DB.put('planning', { id: 'PL-van-a', datum: '2026-11-25', code: 'X', inspecteur: App.user.id, status: 'gepland' }); return false; } catch (e) { return true; } }), 'B kan een record van A niet overschrijven');
-    ok(await p.evaluate(async () => (await WPI.DB.getAll('outbox')).find((e) => e.rid === 'PL-van-a').uid === '00000000-0000-4000-8000-000000000001'), 'wachtrij-opdracht houdt eigenaar A');
+    await p.click('#view button:has-text("Doorgaan en wissen")'); await p.waitForTimeout(900);
+    ok(await p.evaluate(() => App.user && App.user.full_name === 'Douwe de Boer'), 'B (Douwe) ingelogd na bevestigen');
+    const naB = await rauw(p);
+    ok(vanA(naB) === 0 && !naB.planning.includes('PL-van-a2'), 'B: wachtrij, record en lopende inspectie van A zijn ook in de ruwe IndexedDB weg');
+    ok(await p.evaluate(async () => !(await WPI.DB.getAll('concept')).some((c) => c.ins && /Geheime lopende/.test(c.ins.titel || ''))), 'B: de lopende inspectie van A is niet meer te lezen (DevTools: DB.getAll("concept"))');
     await p.waitForTimeout(500);
-    ok(!(await state()).tables.planning['PL-van-a'], 'B verstuurt de wijziging van A niet');
-    await p.evaluate(() => App.logout()); await p.waitForTimeout(400);
-    await inloggen(p, 'inspecteur@noardling.test');
-    ok(await totdat(async () => { const r = (await state()).tables.planning['PL-van-a']; return r && r.gemaakt_door === '00000000-0000-4000-8000-000000000001' && r.toelichting === 'van A'; }), 'A logt weer in: eigen wijziging alsnog verstuurd');
+    ok(!(await state()).tables.planning['PL-van-a2'], 'gewist werk van A is niet verstuurd (ook niet door B)');
+    // wissen bij het uitloggen zelf
+    await ctx.setOffline(true);
+    await p.evaluate(() => WPI.DB.put('planning', { id: 'PL-van-b', datum: '2026-11-26', code: 'DAM', project: 'P26-402', locatie: 'Gemaal B', monteurs: 1, inspecteur: App.user.id, toelichting: 'van B', status: 'gepland' }));
+    await p.evaluate(() => App.openAccount()); await p.waitForTimeout(200);
+    await p.click('#mod button:has-text("Uitloggen")'); await p.waitForTimeout(400);
+    await p.click('#mod button:has-text("Wissen en uitloggen")'); await p.waitForTimeout(300);
+    ok(/kan niet ongedaan/.test(await p.locator('#mod').innerText()), 'wissen: eerst bevestigen (kan niet ongedaan worden gemaakt)');
+    await p.click('#mod button:has-text("Ja, wissen en uitloggen")'); await p.waitForTimeout(600);
+    const naWis = await rauw(p);
+    ok(await p.evaluate(() => App.user === null) && !naWis.outbox.length && !naWis.planning.includes('PL-van-b'), 'wissen en uitloggen: niets van B meer op het toestel');
+    await ctx.setOffline(false); await p.waitForTimeout(200);
+    await inloggen(p, 'inspecteur@noardling.test'); await p.waitForTimeout(500);
+    ok(await p.evaluate(() => App.user && App.user.id === '00000000-0000-4000-8000-000000000001'), 'A logt weer in (geen vraag: er staat geen werk van een ander)');
 
     // ---------- 9c. offline gewijzigd, intussen op de server verwijderd: NIET vanzelf opnieuw aanmaken ----------
     await p.evaluate(() => WPI.DB.put('planning', { id: 'PL-weg', datum: '2026-11-27', code: 'DAM', project: 'P26-612', locatie: 'Gemaal Verwijderd', monteurs: 2, inspecteur: App.user.id, toelichting: 'eerst', status: 'gepland' }));
@@ -605,6 +650,74 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await h.click('text=Annuleren, terug naar inloggen'); await h.waitForTimeout(300);
     ok(await h.locator('#l-mail').count() === 1, 'nieuw wachtwoord: annuleren → inlogscherm');
 
+    // ---------- 12a. links uit een e-mail (herstel/uitnodiging) kunnen niets wissen en niemand als een ander laten inloggen ----------
+    // Aanval (tweede aanvalsronde): #access_token=<onzin>&type=recovery wiste de bewaarde sessie en de gegevens op het
+    // toestel; een geldige link van een ANDER account zou de slachtoffer-app als die ander laten werken.
+    const ctxL = await b.newContext(opt), L = await pagina(ctxL, 'link');
+    await L.goto(BASE + '/index.html'); await L.waitForTimeout(700);
+    await inloggen(L, 'inspecteur@noardling.test', WW, true); await L.waitForTimeout(800);
+    await L.evaluate(() => App.closeModal && App.closeModal());
+    const telL = () => L.evaluate(async () => ({ user: App.user && App.user.id, sessie: !!localStorage.getItem('wpi_sessie'), profiel: !!localStorage.getItem('wpi_profiel'),
+      n: (await WPI.DB.all()).length + (await WPI.DB.getAll('acties')).length + (await WPI.DB.getAll('planning')).length }));
+    ok(await totdat(async () => (await telL()).n > 0), 'link: ingelogd met "Ingelogd blijven" en gegevens op het toestel');
+    const voorL = await telL();
+    for (const [naam, hash] of [['nep-token (recovery)', '#access_token=aaa.bbb.ccc&type=recovery'], ['magiclink-type', '#access_token=x&type=magiclink'], ['foutmelding', '#error=access_denied&error_code=otp_expired']]) {
+      await L.goto('about:blank'); await L.goto(BASE + '/index.html' + hash); await L.waitForTimeout(1200);   // als een nieuw geopende link (geen hashchange)
+      const naL = await telL(), v = await L.locator('#view').innerText();
+      ok(naL.user === voorL.user && naL.sessie && naL.profiel && !/Nieuw wachtwoord/.test(v), 'link (' + naam + '): nog steeds ingelogd, bewaarde sessie en profiel intact ' + JSON.stringify(naL));
+      ok(naL.n === voorL.n, 'link (' + naam + '): niets van het toestel gewist (' + voorL.n + ' → ' + naL.n + ')');
+      ok(!/access_token|error_code/.test(L.url()), 'link (' + naam + '): token/fout weg uit het adres');
+    }
+    ok(/Link niet gebruikt/.test(await L.locator('#mod').innerText().catch(() => '')), 'link: rustige melding "Link niet gebruikt"');
+    await L.evaluate(() => App.closeModal());
+    await L.evaluate(() => { location.hash = '#access_token=aaa.bbb.ccc&type=recovery'; }); await L.waitForTimeout(1500);   // link in hetzelfde tabblad
+    const naH = await telL();
+    ok(naH.user === voorL.user && naH.sessie && naH.n === voorL.n && !/access_token/.test(L.url()), 'link in hetzelfde tabblad (hashchange): ook verwerkt, niets gewist, token weg uit het adres');
+    await L.reload(); await L.waitForTimeout(1000);
+    ok((await telL()).user === voorL.user, 'link: na herladen nog steeds ingelogd (niet uitgelogd door een link)');
+    // geldige link van een ANDER account (bijv. een aanvaller die zijn eigen herstellink stuurt): geweigerd, sessie uit de link ingetrokken
+    const anderLink = (await (await fetch(BASE + '/__mock/herstellink?email=winfred@noardling.test&soort=recovery&redirect_to=' + encodeURIComponent(BASE + '/index.html'))).json()).link;
+    const anderTok = new URLSearchParams(anderLink.split('#')[1]).get('access_token');
+    await L.goto('about:blank'); await L.goto(anderLink); await L.waitForTimeout(1200);
+    const naA = await telL();
+    ok(naA.user === voorL.user && naA.sessie && !/Nieuw wachtwoord/.test(await L.locator('#view').innerText()), 'link van een ander account: geweigerd, nog steeds als zichzelf ingelogd');
+    ok(/ander account/.test(await L.locator('#mod').innerText().catch(() => '')), 'link van een ander account: melding "hoort bij een ander account"');
+    const anderSid = JSON.parse(Buffer.from(anderTok.split('.')[1], 'base64url').toString()).session_id;
+    ok(((await state()).sessions[anderSid] || {}).revoked === true, 'link van een ander account: die sessie is op de server ingetrokken');
+    // geldige link van het EIGEN account: scherm "Nieuw wachtwoord" met het e-mailadres; Annuleren → gewoon weer ingelogd, niets gewist
+    const eigenLink = (await (await fetch(BASE + '/__mock/herstellink?email=inspecteur@noardling.test&soort=recovery&redirect_to=' + encodeURIComponent(BASE + '/index.html'))).json()).link;
+    await L.goto('about:blank'); await L.goto(eigenLink); await L.waitForTimeout(1200);
+    const ve = await L.locator('#view').innerText();
+    ok(/Nieuw wachtwoord/.test(ve) && /inspecteur@noardling\.test/.test(ve), 'eigen link: scherm "Nieuw wachtwoord" noemt het account');
+    ok((await telL()).sessie, 'eigen link: bewaarde sessie nog niet aangeraakt');
+    await L.click('text=Annuleren, terug naar inloggen'); await L.waitForTimeout(1200);
+    const naE = await telL();
+    ok(naE.user === voorL.user && naE.sessie && naE.n === voorL.n, 'eigen link → Annuleren: weer ingelogd met de bewaarde sessie, niets gewist ' + JSON.stringify(naE));
+    await ctxL.close();
+    // PKCE: de herstelmail uit de app werkt alleen in de browser die hem aanvroeg
+    const ctxP = await b.newContext(opt), P = await pagina(ctxP, 'pkce');
+    await P.goto(BASE + '/index.html'); await P.waitForTimeout(700);
+    await P.click('text=Wachtwoord vergeten?'); await P.waitForTimeout(200);
+    await P.fill('#v-mail', 'winfred@noardling.test'); await P.click('#v-knop'); await P.waitForTimeout(600);
+    const rec = (await state()).recover.filter((r) => r.email === 'winfred@noardling.test').pop();
+    ok(rec && /^[A-Za-z0-9_-]{43}$/.test(rec.code_challenge || '') && rec.code_challenge_method === 's256', 'PKCE: herstelaanvraag met code_challenge (S256)');
+    const pkceLink = (await (await fetch(BASE + '/__mock/herstellink?email=winfred@noardling.test')).json()).link;
+    ok(/\?code=/.test(pkceLink), 'PKCE: de link bevat alleen een code (geen token)');
+    const ctxQ = await b.newContext(opt), Q = await pagina(ctxQ, 'pkce-ander');   // andere browser: geen code_verifier
+    await Q.goto(pkceLink); await Q.waitForTimeout(1200);
+    const vq = await Q.locator('#view').innerText();
+    ok(!/Nieuw wachtwoord/.test(vq) && /andere browser/.test(vq) && await Q.evaluate(() => App.user === null), 'PKCE: link in een andere browser werkt niet (geen sessie, uitleg)');
+    await ctxQ.close();
+    const pkceLink2 = (await (await fetch(BASE + '/__mock/herstellink?email=winfred@noardling.test')).json()).link;
+    await P.goto(pkceLink2); await P.waitForTimeout(1200);
+    ok(/Nieuw wachtwoord/.test(await P.locator('#view').innerText()) && !/code=/.test(P.url()), 'PKCE: in de eigen browser het scherm "Nieuw wachtwoord" (code weg uit het adres)');
+    await P.fill('#n-ww', 'Nieuw-Wachtwoord-2026!'); await P.fill('#n-ww2', 'Nieuw-Wachtwoord-2026!'); await P.click('#view button[type=submit]'); await P.waitForTimeout(800);
+    ok(/wachtwoord is gewijzigd/.test(await P.locator('#view').innerText()), 'PKCE: nieuw wachtwoord opgeslagen, overal uitgelogd');
+    const wnieuw = await (await fetch(BASE + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: 'mock-anon-key', 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'winfred@noardling.test', password: 'Nieuw-Wachtwoord-2026!' }) })).json();
+    ok(!!wnieuw.access_token, 'PKCE: inloggen met het nieuwe wachtwoord lukt');
+    await fetch(BASE + '/auth/v1/user', { method: 'PUT', headers: { apikey: 'mock-anon-key', Authorization: 'Bearer ' + wnieuw.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: WW }) });   // terugzetten voor de rest van de test
+    await ctxP.close();
+
     // ---------- 12b. opgeslagen XSS via record-jsonb (negatieve test) ----------
     const itok = await token('inspecteur@noardling.test');
     const kwaad = 'x" onerror="window.__xss=localStorage.getItem(\'wpi_sessie\')';
@@ -640,11 +753,11 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
       r.onsuccess = () => { const t = r.result.transaction(['inspecties', 'acties', 'concept'], 'readwrite');
         t.objectStore('inspecties').put({ id: 'WPI-oud1', versie: 3, titel: 'Oude inspectie', code: 'DAM', taken: ['oud'], waarnemingen: [], inspecteur: 'Inspecteur (demo)', inspecteur_id: 'u-insp', opgeslagen: recent });
         t.objectStore('inspecties').put({ id: 'WPI-oud2', versie: 3, titel: 'Heel oude inspectie', code: 'DAM', taken: ['oud'], waarnemingen: [], inspecteur: 'Inspecteur (demo)', inspecteur_id: 'u-insp', opgeslagen: '2026-06-01T10:00:00Z' });
-        t.objectStore('acties').put({ id: 'ACT-oud1', inspectie_id: 'WPI-oud1', tekst: 'oude actie', status: 'Afgerond', houder: 'u-douwe', toetser: 'u-winfred', oordeel: 'A',
+        t.objectStore('acties').put({ id: 'ACT-oud1', inspectie_id: 'WPI-oud1', tekst: 'oude actie', status: 'Afgerond', houder: 'u-coord2', toetser: 'u-coord1', oordeel: 'A',
           log: [{ t: '2026-06-01T10:00:00Z', wie: 'Björn Sloos', wat: 'Ingesteld: actiehouder Douwe de Boer, toetser Winfred Loerts' }, { t: '2026-06-03T10:00:00Z', wie: 'Winfred Loerts', wat: 'Getoetst en akkoord · afgerond' }] });
-        t.objectStore('acties').put({ id: 'ACT-oud2', inspectie_id: 'WPI-oud1', tekst: 'open actie', status: 'In uitvoering', houder: 'u-douwe', toetser: 'u-winfred', oordeel: 'V', log: [] });
-        t.objectStore('acties').put({ id: 'ACT-oud3', inspectie_id: 'WPI-oud2', tekst: 'actie bij te oude inspectie', status: 'Open', houder: 'u-douwe', toetser: 'u-winfred', oordeel: 'A', log: [] });
-        t.objectStore('concept').put({ id: 'lopend-u-winfred', t: '2026-06-02T08:00:00Z', ins: { code: 'DAM', project: 'P26-9', titel: 'Onafgemaakt oud', taak: null, taken: [], stap: 'taak', taakTekst: '', waarnemingen: [], cur: null, voorstel: null, laatste: null, gesprek: '', positief: '', handtekening: null, keuzes: [], plan_id: null, start: '2026-06-02T08:00:00Z' } });
+        t.objectStore('acties').put({ id: 'ACT-oud2', inspectie_id: 'WPI-oud1', tekst: 'open actie', status: 'In uitvoering', houder: 'u-coord2', toetser: 'u-coord1', oordeel: 'V', log: [] });
+        t.objectStore('acties').put({ id: 'ACT-oud3', inspectie_id: 'WPI-oud2', tekst: 'actie bij te oude inspectie', status: 'Open', houder: 'u-coord2', toetser: 'u-coord1', oordeel: 'A', log: [] });
+        t.objectStore('concept').put({ id: 'lopend-u-coord1', t: '2026-06-02T08:00:00Z', ins: { code: 'DAM', project: 'P26-9', titel: 'Onafgemaakt oud', taak: null, taken: [], stap: 'taak', taakTekst: '', waarnemingen: [], cur: null, voorstel: null, laatste: null, gesprek: '', positief: '', handtekening: null, keuzes: [], plan_id: null, start: '2026-06-02T08:00:00Z' } });
         t.oncomplete = () => { r.result.close(); res(); }; }; }), recent);
     await o.goto(BASE + '/index.html'); await o.waitForTimeout(700);
     await inloggen(o, 'inspecteur@noardling.test');
@@ -664,7 +777,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(await totdat(async () => o.evaluate(() => App.syncWachtrij() === 0 && !document.querySelector('#syncchip.fout'))), 'overname: niets blijft hangen of "Mislukt"');
     await o.evaluate(() => App.syncOudVraag()); await o.waitForTimeout(300);
     await o.click('text=Verder als mijn lopende inspectie'); await o.waitForTimeout(500);
-    ok(await o.evaluate(async () => App.state.inspectie && App.state.inspectie.titel === 'Onafgemaakt oud' && !(await WPI.DB.get('concept', 'lopend-u-winfred')) && !!(await WPI.DB.get('concept', 'lopend-' + App.user.id))), 'onafgemaakte inspectie verder als eigen lopende inspectie');
+    ok(await o.evaluate(async () => App.state.inspectie && App.state.inspectie.titel === 'Onafgemaakt oud' && !(await WPI.DB.get('concept', 'lopend-u-coord1')) && !!(await WPI.DB.get('concept', 'lopend-' + App.user.id))), 'onafgemaakte inspectie verder als eigen lopende inspectie');
 
     // ---------- 12d. opgeslagen XSS via planning: een inspecteur plant voor een coördinator (echte RLS staat dat toe) ----------
     const kwaadP = "x' onpointerdown='window.__xss=localStorage.length//\" onclick=\"window.__xss=2";

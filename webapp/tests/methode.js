@@ -121,38 +121,38 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
 
   // ---------------- M3 + M4: instellen ----------------
   console.log("M3/M4 instellen: toetser ≠ actiehouder, QHSE-manager nooit actiehouder");
-  await login("u-winfred");
+  await login("u-coord1");
   await open(id);
   const oh = await opties("#ai-houder"), ot = await opties("#ai-toetser");
   ok(oh.length > 2 && !oh.includes(QHSE.id), "actie-modal: QHSE-manager niet te kiezen als actiehouder (" + oh.join(",") + ")");
   ok(ot.length > 2, "actie-modal: toetserlijst gevuld (" + ot.join(",") + ")");
   // QHSE toch als actiehouder (bijv. via aangepaste HTML of oude lijst) → geweigerd
   await ev((q) => { const s = document.getElementById("ai-houder"); const o = document.createElement("option"); o.value = q.id; o.textContent = q.full_name; s.appendChild(o); s.value = q.id; }, QHSE);
-  await p.selectOption("#ai-toetser", "u-winfred");
+  await p.selectOption("#ai-toetser", "u-coord1");
   await p.click("text=Actie instellen"); await wacht(300);
   ok((await fout()).length > 0, "QHSE-manager als actiehouder geweigerd met melding: '" + (await fout()) + "'");
   ok((await actie(id)).status === "Voorstel", "na weigering QHSE: status nog Voorstel");
   await open(id);
-  await p.selectOption("#ai-houder", "u-douwe"); await p.selectOption("#ai-toetser", "u-douwe");
+  await p.selectOption("#ai-houder", "u-coord2"); await p.selectOption("#ai-toetser", "u-coord2");
   await p.click("text=Actie instellen"); await wacht(300);
   ok((await fout()).length > 0, "toetser = actiehouder geweigerd met melding: '" + (await fout()) + "'");
   ok((await actie(id)).status === "Voorstel", "na weigering toetser=actiehouder: status nog Voorstel");
-  await p.selectOption("#ai-toetser", "u-winfred"); await p.click("text=Actie instellen"); await wacht(400);
+  await p.selectOption("#ai-toetser", "u-coord1"); await p.click("text=Actie instellen"); await wacht(400);
   let a = await actie(id);
-  ok(a.status === "Open" && a.houder === "u-douwe" && a.toetser === "u-winfred", "geldig ingesteld: Open, actiehouder Douwe, toetser Winfred (" + a.status + ")");
+  ok(a.status === "Open" && a.houder === "u-coord2" && a.toetser === "u-coord1", "geldig ingesteld: Open, actiehouder Douwe, toetser Winfred (" + a.status + ")");
   // nieuwe actie (telefoon)
   await ev(() => { App.closeModal(); App.nieuweActie(); }); await wacht(250);
   const nh = await opties("#ai-houder");
   ok(nh.length > 2 && !nh.includes(QHSE.id), "nieuwe actie: QHSE-manager niet te kiezen als actiehouder (" + nh.join(",") + ")");
   const voor = (await ev(async () => (await WPI.DB.getAll("acties")).length));
   await p.fill("#na-tekst", "Methodetest: toetser gelijk aan actiehouder");
-  await p.selectOption("#ai-houder", "u-douwe"); await p.selectOption("#ai-toetser", "u-douwe");
+  await p.selectOption("#ai-houder", "u-coord2"); await p.selectOption("#ai-toetser", "u-coord2");
   await p.click("text=Actie aanmaken"); await wacht(300);
   ok((await fout()).length > 0 && (await ev(async () => (await WPI.DB.getAll("acties")).length)) === voor, "nieuwe actie met toetser = actiehouder geweigerd, niets bewaard ('" + (await fout()) + "')");
 
   // ---------------- M5: alleen afgerond na toetsing door de toetser ----------------
   console.log("M5 afgerond alleen na toetsing door de toetser");
-  await login("u-douwe");
+  await login("u-coord2");
   await open(id);
   let kn = await knoppen();
   ok(!kn.some((t) => /akkoord|afronden/i.test(t)), "actiehouder ziet geen knop om af te ronden (" + kn.join(" | ") + ")");
@@ -166,13 +166,13 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
   ok(!kn.some((t) => /akkoord|afronden/i.test(t)), "actiehouder kan na klaar melden nog steeds niet afronden");
   await ev((id) => App.akkoord(id), id); await wacht(200);
   ok((await actie(id)).status === "Klaar voor toetsing", "App.akkoord() door de actiehouder bij 'Klaar voor toetsing' verandert niets");
-  await login("u-bjorn");
+  await login("u-hoofd");
   await open(id);
   kn = await knoppen();
   ok(!kn.some((t) => /akkoord|afronden/i.test(t)), "hoofd (niet de toetser) ziet geen afrondknop");
   await ev((id) => App.akkoord(id), id); await wacht(200);
   ok((await actie(id)).status === "Klaar voor toetsing", "App.akkoord() door het hoofd (niet de toetser) verandert niets");
-  await login("u-winfred");
+  await login("u-coord1");
   await open(id);
   kn = await knoppen();
   ok(kn.some((t) => /Akkoord na toetsing/.test(t)) && kn.some((t) => /Niet akkoord/.test(t)), "toetser ziet akkoord en niet akkoord");
@@ -181,17 +181,17 @@ const QHSE = { id: "u-qhse", full_name: "Quinten QHSE (test)", role: "qhse", fun
   await p.fill("#ai-reden", "Oude hijsband ligt nog in de bus"); await p.click("text=Niet akkoord · terug naar actiehouder"); await wacht(400);
   a = await actie(id);
   ok(a.status === "In uitvoering", "niet akkoord met reden → terug naar de actiehouder (" + a.status + "), niet afgerond");
-  await login("u-douwe"); await open(id);
+  await login("u-coord2"); await open(id);
   await p.click("text=Klaar voor toetsing, zonder foto"); await wacht(400);
-  await login("u-winfred"); await open(id);
+  await login("u-coord1"); await open(id);
   await p.click("text=Akkoord na toetsing · afronden"); await wacht(500);
   a = await actie(id);
   const laatste = a.log[a.log.length - 1] || {};
   ok(a.status === "Afgerond", "akkoord door de toetser → Afgerond (" + a.status + ")");
-  ok(laatste.wie === "Winfred Loerts" && /getoetst/i.test(laatste.wat), "laatste logregel is de toetsing door de toetser: " + laatste.wie + " · " + laatste.wat);
+  ok(laatste.wie === "Carla Proef" && /getoetst/i.test(laatste.wat), "laatste logregel is de toetsing door de toetser: " + laatste.wie + " · " + laatste.wat);
   // beschadigde actie: toetser = actiehouder → afronden kan niet
   await ev(async () => { await App.laadActies(); const x = { id: "ACT-methode-zelf", tekst: "Methodetest: zelf getoetst", ref: "Handmatig", oordeel: "–", waarneming: "",
-    status: "Klaar voor toetsing", houder: "u-winfred", toetser: "u-winfred", plandatum: WPI.plusDagen ? WPI.plusDagen(3) : null, log: [] };
+    status: "Klaar voor toetsing", houder: "u-coord1", toetser: "u-coord1", plandatum: WPI.plusDagen ? WPI.plusDagen(3) : null, log: [] };
     App.acties.push(x); await WPI.DB.put("acties", x); });
   await open("ACT-methode-zelf");
   await ev(() => App.akkoord("ACT-methode-zelf")); await wacht(300);

@@ -49,14 +49,17 @@ rm -f "$SEED"
 PGOPTIONS='-c client_min_messages=warning' $P -f "$DIR/schema.sql"
 echo "schema.sql opnieuw geladen over de gevulde testdatabase: OK"
 
-# 5. gelijktijdigheid: twee hoofden degraderen elkaar tegelijk; en iemand wordt tegelijk
-#    actiehouder en QHSE-manager
+# 5. gelijktijdigheid: twee hoofden degraderen elkaar tegelijk; iemand wordt tegelijk
+#    actiehouder en QHSE-manager; en parallelle verzoeken tegen de limieten per gebruiker
 sh "$DIR/tests/race_hoofd.sh" "$DB"
 sh "$DIR/tests/race_qhse.sh" "$DB"
+sh "$DIR/tests/race_quotum.sh" "$DB"
 
-# 6. naamsleutel/naam opschonen gelijk aan beheer.js (alle Unicode-codepunten; vraagt node)
+# 6. naamsleutel/naam opschonen gelijk aan beheer.js, en de tekenregel voor vrije tekst gelijk aan sync.js
+#    (alle Unicode-codepunten; vraagt node)
 if command -v node >/dev/null 2>&1; then
   sh "$DIR/tests/naamsleutel_check.sh" "$DB"
+  sh "$DIR/tests/tekens_check.sh" "$DB"
 else
-  echo "naamsleutel: OVERGESLAGEN (node niet gevonden)"
+  echo "naamsleutel en tekens: OVERGESLAGEN (node niet gevonden)"
 fi

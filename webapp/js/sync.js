@@ -37,7 +37,11 @@
       fotoveld is alleen een geldig storagepad of data:image/(jpeg|png|webp);base64 — al het
       andere wordt null. De naam van de inspecteur komt altijd uit inspecteur_id, nooit uit het record.
    6. Gedeeld toestel: records die nog in de wachtrij van een andere gebruiker staan zijn voor de
-      ingelogde gebruiker onzichtbaar en niet te wijzigen; ze gaan mee zodra die ander weer inlogt.
+      ingelogde gebruiker onzichtbaar en niet te wijzigen; ze gaan mee zodra die ander weer inlogt. Ze staan wel
+      onversleuteld in IndexedDB (met DevTools leesbaar). Daarom: bij uitloggen met onverstuurd werk kiest de
+      gebruiker "Eerst synchroniseren", "Bewaren" (eigen telefoon) of "Wissen" (gedeeld toestel), en vóórdat een
+      andere gebruiker iets te zien krijgt, wordt (na bevestiging bij het inloggen) de wachtrij én de lopende
+      inspectie van alle andere gebruikers van dit toestel gewist (syncWisAnderen, js/auth.js).
       Alles wat van de server kwam wordt van het toestel gehaald (syncWisLokaal) bij uitloggen, bij het
       openen zonder geldige sessie (tabblad dicht zonder uitloggen) en vóór het inloggen van een andere
       gebruiker dan de vorige — vóórdat er iets op het scherm komt. Een ophaal- of verstuurronde die
@@ -322,7 +326,19 @@
   const vanAnder = (store, id) => { const e = OB.get(store + ":" + id); return !!(e && App.user && e.uid && e.uid !== App.user.id); };
   class AnderFout extends Error {}
   DB.putLokaal = p0; DB.delLokaal = d0;   // zonder wachtrij (voor binnenkomende serverdata)
+  // Lopende inspectie (store "concept", id "lopend-<uid>"): alleen wegschrijven zolang <uid> de eigenaar van dit
+  // toestel is (controle in dezelfde transactie). Zo zet een tabblad van een vorige gebruiker dat net uitlogt (omdat
+  // een ander inlogde) zijn concept niet terug nádat de nieuwe gebruiker het al wiste (syncWisAnderen).
+  const CONCEPT_UID = /^lopend-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  function conceptAlsEigenaar(obj) {
+    const uid = CONCEPT_UID.exec(obj.id)[1];
+    return tx(["concept", "syncmeta"], (t, klaar) => {
+      const r = t.objectStore("syncmeta").get("eigenaar");
+      r.onsuccess = () => { const e = r.result && r.result.v; if (e && e !== uid) { klaar(false); return; } t.objectStore("concept").put(obj); klaar(true); };
+    });
+  }
   DB.put = async function (store, obj) {
+    if (actief() && store === "concept" && obj && CONCEPT_UID.test(String(obj.id))) return conceptAlsEigenaar(obj);
     const volg = actief() && STORES.includes(store) && obj && obj.id != null && !obj.demo && !isVoorbeeld(obj.id);
     if (volg) { await laad(); if (vanAnder(store, obj.id)) throw new AnderFout("Dit record staat nog in de wachtrij van een andere gebruiker op dit toestel."); }
     if (!volg) return p0(store, obj);
@@ -457,10 +473,17 @@
       await sb("/storage/v1/object/fotos/" + pad, { method: "POST", headers: { "Content-Type": f.mime, "x-upsert": "true", "cache-control": "3600" }, body: new Blob([f.bytes], { type: f.mime }), timeout: 60000 });
     } catch (e) {
       const dubbel = e.status === 409 || (e.body && String(e.body.statusCode) === "409");
-      if (!dubbel) throw e;   // bestaat al (zelfde inhoud, zelfde naam) = goed
+      // Een foto die al als bewijs gekoppeld is, mag de server niet opnieuw laten uploaden (RLS-fout, 0007). Dat gebeurt
+      // als deze zelfde foto (zelfde naam = zelfde inhoud) eerder vanaf een ander toestel of vóór het wissen van de
+      // syncmeta al is verstuurd. Staat hij er (eigen map: altijd leesbaar), dan is dat goed; anders de fout doorgeven.
+      if (!dubbel && !((e.status === 400 || e.status === 403) && await bestaatFoto(pad))) throw e;
     }
     await zetMeta("foto:" + sha, pad);
     return pad;
+  }
+  async function bestaatFoto(pad) {
+    try { const r = await sb("/storage/v1/object/authenticated/fotos/" + pad, { raw: true, timeout: 20000 }); try { if (r.body) r.body.cancel(); } catch (e) {} return true; }
+    catch (e) { return false; }
   }
   // fotoveld → pad voor de database: storagepad blijft, data-URL wordt geüpload, de rest wordt null
   async function naarPad(v, uid) {
@@ -528,7 +551,28 @@
 
   // ---------------- versturen ----------------
   const leeg = (v) => (v === undefined || v === "" ? null : v);
+  // Onzichtbare en besturingstekens die de server in vrije tekst weigert (0007_invoer_aanvulling.sql, tekst_tekens_ok):
+  // vóór het versturen weghalen, zodat een geplakte tekst (bijv. met een zero-width space uit een mail) niet blijvend
+  // wordt geweigerd. Regel-/alineascheider (U+2028/2029) wordt een gewoon regeleinde. Tab en regeleinde blijven;
+  // U+200D (zero-width joiner, in emoji) en U+FE00–FE0F (emoji-variatiekiezers) ook. Ook \u0000 weg (kan niet in
+  // Postgres-tekst). Ook buiten de BMP: Unicode-tag-tekens U+E0000–E007F ("ASCII smuggling"), variatiekiezers
+  // U+E0100–E01EF, U+1D173–1D17A; en het zachte afbreekstreepje en opvullers (U+00AD, U+034F, U+3164, …).
+  // Moet precies gelijk blijven aan tekst_tekens_ok; supabase/tests/tekens_check.sh vergelijkt elk codepunt.
+  const ONZICHTBAAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u0600-\u0605\u06DD\u070F\u0890\u0891\u08E2\u115F\u1160\u17B4\u17B5\u180E\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0\uFFF9-\uFFFB\u{110BD}\u{110CD}\u{13430}-\u{1343F}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}-\u{E007F}\u{E0100}-\u{E01EF}]/gu;
+  const schoonTekst = (t) => t.replace(/[\u2028\u2029]/g, "\n").replace(ONZICHTBAAR, "");
+  function schoonDiep(o) {
+    if (typeof o === "string") return schoonTekst(o);
+    if (Array.isArray(o)) return o.map(schoonDiep);
+    if (o && typeof o === "object") { const u = {}; for (const k of Object.keys(o)) u[schoonTekst(k)] = schoonDiep(o[k]); return u; }
+    return o;
+  }
   async function naarRij(store, rec, uid) {
+    const rij = schoonDiep(await naarRij0(store, rec, uid));
+    // de waarneming van een actie is (getrimd) de tekst van de waarneming; na het weghalen opnieuw trimmen
+    if (store === "acties" && typeof rij.waarneming === "string") rij.waarneming = rij.waarneming.trim() || null;
+    return rij;
+  }
+  async function naarRij0(store, rec, uid) {
     if (store === "inspecties") {
       const record = await fotosNaarPaden(rec, uid);
       delete record.updated_at;
@@ -680,7 +724,7 @@
       if (uit.verloren && uit.verloren.length) nieuw.push(("Niet doorgevoerd vanaf het toestel (intussen door iemand anders gewijzigd): "
         + uit.verloren.map((k) => VELDNAAM[veldVan(k)] || veldVan(k)).join(", ") + ". Bewaard bij de gebruiker.").slice(0, 2000));
       if (nieuw.length) await sb("/rest/v1/actie_log", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: json(nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat }))) });
+        body: json(nieuw.map((wat) => ({ actie_id: rec.id, wie: uid, wat: schoonTekst(wat).replace(/[\u00AD\u200D]/g, "") }))) });
       await zetMeta("logn:" + rec.id, (rec.log || []).length);
     }
     return uit;
@@ -1354,8 +1398,9 @@
     },
     // Wat al veilig op de server staat van dit toestel halen (gedeelde toestellen). Gebeurt bij uitloggen,
     // bij het openen zonder geldige sessie (tabblad dicht zonder uitloggen) en vóór het inloggen van een
-    // andere gebruiker dan de vorige (js/auth.js). Wat nog in de wachtrij staat blijft (verborgen voor
-    // anderen) en gaat mee bij de volgende login van de eigenaar — er gaat dus nooit iets verloren.
+    // andere gebruiker dan de vorige (js/auth.js). Wat nog in de wachtrij staat blijft hier staan (in de app
+    // verborgen voor anderen, maar onversleuteld): bij uitloggen kiest de eigenaar zelf (versturen, bewaren op
+    // de eigen telefoon of wissen), en logt een ander in, dan wist syncWisAnderen het (na bevestiging).
     async syncWisLokaal(uid) {
       if (!actief()) return;
       generatie++;   // synchroon, vóór de eerste await: een lopende ronde schrijft vanaf nu niets meer
@@ -1375,6 +1420,46 @@
       this.acties = null; this.planning = null;
       meldTabbladen();
     },
+    // ---- gedeeld toestel: werk dat nog niet op de server staat (wachtrij en lopende inspectie) ----
+    // Staat onversleuteld in IndexedDB. Daarom (js/auth.js): bij uitloggen kiest de gebruiker eerst versturen, bewaren
+    // (eigen telefoon) of wissen (gedeeld toestel); en vóórdat een ANDERE gebruiker iets te zien krijgt, wordt het werk
+    // van alle andere gebruikers van dit toestel gewist (na een bevestiging bij het inloggen).
+    // { wachtrij, concept } van één gebruiker (wachtrij = aantal opdrachten; concept = er loopt een inspectie)
+    async syncEigenWerk(uid) {
+      if (!actief() || !uid) return { wachtrij: 0, concept: false };
+      await laad(true);
+      let c = null; try { c = await g0("concept", "lopend-" + uid); } catch (e) {}
+      return { wachtrij: [...OB.values()].filter((e) => e.uid === uid).length, concept: !!(c && c.ins) };
+    },
+    // aantal onderdelen (opdrachten + lopende inspecties) van ANDERE gebruikers dan uid op dit toestel
+    async syncAnderWerk(uid) {
+      if (!actief()) return 0;
+      await laad(true);
+      let cs = []; try { cs = await ga0("concept"); } catch (e) {}
+      return [...OB.values()].filter((e) => e.uid && e.uid !== uid).length
+        + cs.filter((c) => { const m = CONCEPT_UID.exec(String(c && c.id)); return m && m[1] !== uid && c.ins; }).length;
+    },
+    // wissen: alleen van uid (wie == uid) of van iedereen behalve uid (wie == null, anders = uid)
+    async syncWisWerk(uid, anderen) {
+      if (!actief() || !uid) return;
+      const van = (u) => (anderen ? !!u && u !== uid : u === uid);
+      generatie++;
+      await laad(true);
+      const weg = [...OB.values()].filter((e) => van(e.uid));
+      for (const e of weg) {
+        try { await tx(["outbox", e.store], (t) => { t.objectStore("outbox").delete(e.id); t.objectStore(e.store).delete(e.rid); }); } catch (x) {}
+        OB.delete(e.id);
+        await zetMeta("srv:" + e.id, undefined); await zetMeta("fotomist:" + e.id, undefined);
+        if (e.store === "acties") await zetMeta("logn:" + e.rid, undefined);
+      }
+      let cs = []; try { cs = await ga0("concept"); } catch (x) {}
+      for (const c of cs) { const m = CONCEPT_UID.exec(String(c && c.id)); if (m && van(m[1])) { try { await d0("concept", c.id); } catch (x) {} } }
+      const l = META.get("conflicten") || [], rest = l.filter((c) => !van(c.uid));
+      if (rest.length !== l.length) await zetMeta("conflicten", rest);
+      wijzig++; meldTabbladen(); laatsteOk = null;
+      this.acties = null; this.planning = null;
+    },
+    syncWisAnderen(uid) { return this.syncWisWerk(uid, true); },
     // wie nu op dit toestel inlogt (js/auth.js, vóór syncWisLokaal): tabbladen van een eerdere gebruiker
     // schrijven vanaf nu niets meer van de server weg (zie schrijfVanServer)
     syncEigenaar(uid) { return actief() ? zetEigenaar(uid) : Promise.resolve(); },

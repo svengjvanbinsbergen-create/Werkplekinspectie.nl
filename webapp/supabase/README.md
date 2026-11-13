@@ -12,7 +12,7 @@ triggers en rechten. De controles in de app zijn alleen gebruiksgemak.
 | `migrations/0004_audit.sql` | auditlog (oud/nieuw als jsonb; bij wijzigen alleen de verschillen), schrijfquotum per gebruiker, append-only bewaking |
 | `migrations/0005_storage.sql` | privébucket `fotos` (5 MB, jpeg/png/webp) en Storage-policies |
 | `migrations/0006_rpc.sql` | `report_security_event` (rate-limited), `dashboard_cijfers`, `monteur_aanmelden` |
-| `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker) |
+| `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker; geteld in `public.foto_uploads` met een lock per gebruiker, snel ook bij duizenden foto's), indexen op `acties.foto_pad`/`nafoto_pad`. Na de aanvalstest ook: C1-, zero-width- en richtingstekens geweigerd, en elke tekst in het record met dezelfde regel |
 | `schema.sql` | alle migraties samen (gegenereerd met `sh bouw-schema.sh`) |
 | `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstelling; **geen** voorbeelddata |
 | `tests/` | lokale Supabase-emulatie, `rls_test.sql` (483 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh`, `naamsleutel_check.sh`, `sleutelcheck.sh`, `run.sh` |
@@ -253,7 +253,7 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   deel in het id (§8, punt 8) is raden kansloos.
 - **Voorbeelddata nooit versturen.** Id's met `demo` als begin of na een streepje
   (`ACT-demo1`, `PL-demo3`, `WPI-demo…`, hoofdletterongevoelig) weigert de database
-  (CHECK `*_geen_demo`). Ook de voorbeeldgebruikers (`u-winfred`, `u-bjorn`, …) bestaan niet
+  (CHECK `*_geen_demo`). Ook de voorbeeldgebruikers (`u-coord1`, `u-hoofd`, …) bestaan niet
   op de server; `houder`/`toetser`/`inspecteur` zijn altijd echte profiel-uuid's.
 - **Door de server gezet, meesturen mag** (wordt overschreven): `updated_at`, `created_at`
   (inspecties, planning, acties, monteurs, instellingen), `planning.gemaakt_door`,
@@ -559,7 +559,7 @@ Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0007): **483 v
 database, beide racetests en de naamsleutelvergelijking groen (0 verschillen op 138 560
 codepunten met een sleutel; codepunten die pas in een nieuwere Unicode-versie dan de ICU van de
 database bestaan, tellen niet mee). Gedekt o.a.:
-RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); geen escalatie via
+RLS op elke tabel; anon en inactieve/niet-uitgenodigde accounts zien niets; datumgrenzen, geen besturings-/bidi-tekens, fotopaden alleen uit de eigen map en het uploadquotum (sectie 24, 0007); aanvalstest: tekens, foto van een actie uit een inspectie ligt vast, snelheid bij 1000 foto's × 1000 acties (sectie 25); gelijktijdige verzoeken tegen de limieten (`tests/race_quotum.sh`); geen escalatie via
 naam of `seed.sql`; inspecteur leest/wijzigt geen inspecties van een ander en schrijft geen
 instellingen/monteurs/profielen; geen foto-IDOR via `foto_pad`/`nafoto_pad`; veilige
 Storage-namen; bewijsfoto's niet te overschrijven of te verwijderen; functiescheiding
@@ -634,7 +634,9 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST "$URL/storage/v1/object/fotos/<
 curl -s -o /dev/null -w "%{http_code}\n" -X POST "$URL/storage/v1/object/fotos/<uid>/<sha>.jpg" \
   -H "apikey: $ANON" -H "Authorization: Bearer $JWT_INSP" -H "Content-Type: image/jpeg" -H "x-upsert: false" --data-binary @foto.jpg
 # koppel die foto aan een actie (foto_pad) en upload hem nogmaals met x-upsert: true:
-# verwacht een weigering (RLS; bewijs wordt nooit overschreven)
+# verwacht een weigering (RLS; bewijs wordt nooit overschreven). Ook een gekoppeld pad dat
+# (nog of na verwijderen door het hoofd) niet bestaat, is niet te uploaden (0007: insert-policy
+# met "not foto_in_gebruik"); de app vangt die weigering op als het object al bestaat.
 # 6 MB-bestand of image/gif: verwacht 413/415 of 400 (bucketlimieten)
 ```
 
@@ -649,9 +651,14 @@ Auth-instellingen uit §2 nog gelijk; `run.sh`, `sleutelcheck.sh` en de curl-che
 De database dwingt het onderstaande af; zolang de client het nog niet doet, krijgt de
 gebruiker een weigering ("Mislukt — opnieuw") in plaats van een stille fout.
 
-1. `auth.js` verwerkHash: `type=invite` net zo behandelen als `type=recovery` (scherm "nieuw
-   wachtwoord" met de sessie uit de link), in plaats van naar het inlogscherm te gaan en de
-   sessie te wissen. Tot dan: de werkwijze uit §1.4 (link openen, daarna "Wachtwoord vergeten?").
+1. ~~`auth.js` verwerkHash: `type=invite` net zo behandelen als `type=recovery`~~ **Gedaan**
+   (`auth.js` verwerkLink, november 2026): `type=invite` en `type=recovery` openen het scherm
+   "Kies je wachtwoord"/"Nieuw wachtwoord", pas nadat het token bij `GET /auth/v1/user` is
+   gecontroleerd; elk ander type wordt genegeerd. De herstelmail uit de app gebruikt PKCE
+   (`code_challenge` bij `/recover`, de link bevat `?code=…`, alleen in te wisselen met de
+   `code_verifier` in dezelfde browser). Een link wist nooit een bewaarde sessie of lokale gegevens,
+   en een link van een ander account dan de bewaarde sessie wordt geweigerd. Zet de app-URL
+   precies in *Redirect URLs* (anders stuurt Supabase naar de Site URL zonder `?code=`).
 2. `sync.js` uploadFoto (aanbevolen, niet meer verplicht): `x-upsert: "false"` sturen; 409
    blijft "goed". Met `"true"` (nu) werkt een eerste en een herhaalde upload van een nog
    ongebruikte foto ook (§5, *Foto's*); alleen een foto die al als bewijs in een actie of

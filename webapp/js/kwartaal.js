@@ -48,7 +48,7 @@
         <div class="kwkop"><div><div class="hi">Werkplekinspecties · Noardling</div><div class="kwtitel">Kwartaalrapportage ${K.q}</div>
           <div class="s">Peildatum ${esc(this.data.voorbeelddata.peildatum || "")} · ${lopend ? "kwartaal loopt nog" : "afgesloten kwartaal"} · voorbeelddata (fictief)</div></div><span class="logo groot">N</span></div>
 
-        <div class="card kwverhaal"><h3>In het kort</h3><p>${zin.join(" ")}</p></div>
+        <div class="card kwverhaal"><h2 class="kaartkop">In het kort</h2><p>${zin.join(" ")}</p></div>
 
         <div class="grid kpis kwkpis">
           <div class="tile ${doel != null && K.pct != null && K.pct < doel ? "mist" : "sage"}"><div class="lab">Conform</div><div class="n">${K.pct != null ? K.pct + "%" : "n=" + K.beo}</div><div class="sub">${doel != null ? "doel " + doel + "% " : ""}${delta(K.pct, V && V.pct, " pp")}</div></div>
@@ -58,25 +58,25 @@
         </div>
 
         <div class="grid dashgrid kwgrid">
-          <div class="card grafiek breed"><h3>1 · Hoe ontwikkelt het zich? <span class="sub">% conform per maand</span></h3>${this.chartTrend(K.maanden, K.om)}</div>
-          <div class="card"><h3>2 · Wat ging goed</h3>
+          <div class="card grafiek breed"><h2 class="kaartkop">1 · Hoe ontwikkelt het zich? <span class="sub">% conform per maand</span></h2>${this.chartTrend(K.maanden, K.om)}</div>
+          <div class="card"><h2 class="kaartkop">2 · Wat ging goed</h2>
             <p class="s" style="margin-bottom:10px">${K.o.Conform} conforme waarnemingen. Waar het het beste ging:</p>
             ${goed.length ? goed.map(([k, x]) => `<div class="kwrij"><span class="bolletje" style="background:${P.C}"></span><span class="grow">${esc(k)}</span><b>${Math.round(100 * x.C / (x.C + x.AV))}% conform</b></div>`).join("") : `<div class="s">Te weinig waarnemingen per klasse.</div>`}</div>
-          <div class="card"><h3>3 · Waar moet aandacht naartoe</h3>
+          <div class="card"><h2 class="kaartkop">3 · Waar moet aandacht naartoe</h2>
             ${top3.length ? top3.map(([k, x], i) => `<div class="kwrij"><span class="nr">${i + 1}</span><span class="grow">${esc(k)}</span><b>${x.AV}×</b></div>`).join("") : `<div class="s">Geen afwijkingen of verbeterpunten. 🌿</div>`}
             ${K.themas.length ? `<div class="s" style="margin:12px 0 6px;font-weight:800">Terugkerende thema's</div>${K.themas.map((t) => `<div class="kwthema">“${esc(t.thema)}” <span class="s">· ${t.nq}× dit kwartaal</span></div>`).join("")}` : ""}</div>
-          <div class="card"><h3>4 · Acties</h3>
+          <div class="card"><h2 class="kaartkop">4 · Acties</h2>
             <div class="kwrij"><span class="grow">Aangemaakt</span><b>${K.acties.length}</b></div>
             <div class="kwrij"><span class="grow">Afgerond na toetsing</span><b>${K.af.length}</b></div>
             <div class="kwrij"><span class="grow">Daarvan op tijd</span><b>${K.optijd.length}</b></div>
             <div class="kwrij"><span class="grow">Nog open</span><b>${K.open.length}</b></div>
-            <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#A3610F" : "inherit"}">${K.over.length}</b></div></div>
-          <div class="card"><h3>5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h3>
+            <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#8F5409" : "inherit"}">${K.over.length}</b></div></div>
+          <div class="card"><h2 class="kaartkop">5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h2>
             ${this.data.trendacties.slice(0, 5).map((t) => `<div class="kwrij"><span class="grow">${esc(t.onderwerp)}</span>${stBadge(t.status === "Open" ? "Open" : "Afgerond")}</div>`).join("")}
             <div class="s noprint" style="margin-top:8px"><a href="#/kwartaal" data-geen-default${act("drill", "acties")} style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
         </div>
 
-        <div class="card kwnoot"><h3>Methode</h3><p class="s">Werkplekinspecties zijn momentopnames: alleen wat de inspecteur zelf zag telt (VCA 2026/6.1 eis 7.1). Conform-% is berekend over beoordeelde waarnemingen (C, A, V), zonder ‘niet van toepassing’. Bij minder dan 5 waarnemingen tonen we geen percentage. Een afwijking zegt iets over de situatie op dat moment, niet over personen. Acties zijn pas afgerond na toetsing door een ander dan de actiehouder.</p>
+        <div class="card kwnoot"><h2 class="kaartkop">Methode</h2><p class="s">Werkplekinspecties zijn momentopnames: alleen wat de inspecteur zelf zag telt (VCA 2026/6.1 eis 7.1). Conform-% is berekend over beoordeelde waarnemingen (C, A, V), zonder ‘niet van toepassing’. Bij minder dan 5 waarnemingen tonen we geen percentage. Een afwijking zegt iets over de situatie op dat moment, niet over personen. Acties zijn pas afgerond na toetsing door een ander dan de actiehouder.</p>
           <div class="kwteken"><div><div class="s">Opgesteld door</div><b>${esc(this.user.full_name)}</b><div class="s">${esc(this.user.functie)}</div></div><div><div class="s">Datum</div><b>${new Date().toLocaleDateString("nl-NL")}</b></div><div><div class="s">Besproken met directie op</div><div class="lijntje"></div></div></div></div>
       </div>`));
     },

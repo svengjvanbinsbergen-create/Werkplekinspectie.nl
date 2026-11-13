@@ -1,7 +1,7 @@
 /* Werkplekinspectie.nl — app-stijl (ontleend aan het goedgekeurde ontwerp) */
 :root{
-  --ink:#2A2622; --soft:#8B7F72; --line:#EFE6DA; --dark:#2A2622; --bg:#FAF6EF;
-  --accent:#2F5D50; --accent-bg:#DCEBE3; --accent-ink:#2F5D50; --warm:#FCEBD3; --warm-ink:#A3610F;
+  --ink:#2A2622; --soft:#72665A; --line:#EFE6DA; --dark:#2A2622; --bg:#FAF6EF;
+  --accent:#2F5D50; --accent-bg:#DCEBE3; --accent-ink:#2F5D50; --warm:#FCEBD3; --warm-ink:#8F5409;
   --shadow:0 1px 0 #EFE6DA,0 6px 20px rgba(120,90,50,.05);
   --green:#1E7A4C; --green-bg:#E6F4EC; --red:#B42318; --red-bg:#FDECEA;
   --amber:#8A4B00; --amber-bg:#FFF1DC; --grey:#9AA2AE;
@@ -40,7 +40,7 @@ h2{font-size:18px;font-weight:650;margin:22px 0 12px}
 .sky{background:var(--sky)} .butter{background:var(--butter)} .sage{background:var(--sage)}
 .lilac{background:var(--lilac)} .blush{background:var(--blush)} .mist{background:var(--mist)}
 .card{background:#fff;border-radius:var(--r);box-shadow:0 0 0 1px var(--line);padding:18px 20px}
-.card h3{font-size:16px;font-weight:650;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
+.card h3,.card h2.kaartkop{font-size:16px;margin-top:0;font-weight:650;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
 .row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:0}
 .row .grow{flex:1;min-width:0}
@@ -261,7 +261,7 @@ h2{font-size:18px;font-weight:800}
 .leeg .t{font-weight:800;font-size:17px}.leeg .s{margin-top:4px}
 /* tabbalk: wit, rond aan de bovenkant */
 .tabbar{border-top:0;border-radius:24px 24px 0 0;box-shadow:0 -1px 0 var(--line),0 -6px 20px rgba(120,90,50,.05)}
-.tabbar a{color:#B2A797;font-weight:700}
+.tabbar a{color:#776B5E;font-weight:700}
 .tabbar a.on{color:var(--accent)}
 /* modal */
 #mod{border-radius:28px}
@@ -319,7 +319,7 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 /* ================= Computer (webversie): menu links, breed dashboard ================= */
 .sidebrand{display:none}
 .tablewrap{overflow-x:auto}
-.card h3 .btn{font-size:13px}
+.card h3 .btn,.card h2.kaartkop .btn{font-size:13px}
 @media(min-width:900px){
   #app{max-width:none;margin:0;padding-left:252px}
   #app.nonav{padding-left:0}
@@ -359,8 +359,8 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 @media(min-width:900px){#app.nonav .view,#app.nonav .topbar{width:100%}}
 
 /* ---- vrolijke grafieken in app-stijl ---- */
-.grafiek h3{font-size:17px;font-weight:800}
-.grafiek h3 .sub{font-size:13px;font-weight:700;color:var(--soft);margin-left:6px}
+.grafiek h3,.grafiek h2.kaartkop{font-size:17px;font-weight:800}
+.grafiek h3 .sub,.grafiek h2.kaartkop .sub{font-size:13px;font-weight:700;color:var(--soft);margin-left:6px}
 .svgchart{width:100%;height:auto;font-family:Nunito,system-ui,sans-serif;overflow:visible}
 .legend{gap:14px;margin-top:8px}
 .legend span{font-weight:700;font-size:12.5px}
@@ -488,7 +488,7 @@ h2 .s{font-size:14px;font-weight:700}
 .vrij .t,.vknop .t{font-size:16.5px;font-weight:800;color:var(--ink);line-height:1.25}
 .vrij .meta{font-size:13.5px;color:#6E6255;margin-top:2px}
 .vknop .s{font-size:13.5px;font-weight:700;color:#6E6255;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vknop>svg{color:#B2A797;flex:none}
+.vknop>svg{color:#9C8F80;flex:none}
 .vknop .cirkel{width:44px;height:44px;background:var(--accent-bg);color:var(--accent)}
 .vknop .nr{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:var(--accent-bg);color:var(--accent)}
 .vknop .nr.nul{background:var(--accent-bg);color:var(--accent)}
@@ -656,7 +656,7 @@ body.zon .ziekaart .partial:not(:empty){background:#fff;color:#141A22;box-shadow
 .doorvraag{margin-top:12px;font-size:15px;line-height:1.45}
 .okaart .gevaarbalk{margin-top:12px}
 .otitel{margin:16px 2px 8px;font-size:15px;font-weight:800;color:var(--ink)}
-.otitel span{font-weight:700;color:#8B7F72}
+.otitel span{font-weight:700;color:var(--soft)}
 .odock{margin:auto -6px 0;padding:30px 6px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(rgba(250,246,239,0),var(--bg) 26px)}
 .odock .otitel{margin-top:0}
 .seg.stapel{flex-direction:column;gap:8px}
@@ -718,12 +718,12 @@ body.zon .seg.stapel button.on-C{background:var(--green-bg)}body.zon .seg.stapel
 .aw-stap li::before{content:"";position:absolute;top:13px;left:-50%;right:50%;height:2.5px;background:#E8DDCD}
 .aw-stap li:first-child::before{display:none}
 .aw-stap li.klaar::before,.aw-stap li.nu::before{background:var(--accent)}
-.aw-stap .bol{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:inset 0 0 0 2px #E2D6C5;font-size:13px;font-weight:800;color:#8B7F72}
+.aw-stap .bol{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#fff;box-shadow:inset 0 0 0 2px #E2D6C5;font-size:13px;font-weight:800;color:var(--soft)}
 .aw-stap li.klaar .bol{background:var(--accent);color:#fff;box-shadow:none}
 .aw-stap li.nu .bol{background:var(--accent-bg);color:var(--accent);box-shadow:inset 0 0 0 2.5px var(--accent)}
 .aw-stap .bol svg{display:block}
 .aw-stap .n{margin-top:5px;font-size:13px;font-weight:800;line-height:1.15}
-.aw-stap li:not(.klaar):not(.nu) .n{color:#8B7F72}
+.aw-stap li:not(.klaar):not(.nu) .n{color:var(--soft)}
 .aw-stap .w{font-size:12px;font-weight:700;color:#7A6E62;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .aw-stap li.nu .w{color:var(--accent)}
 .aw-regel{margin:10px 2px 0;font-size:13.5px;font-weight:600;color:#5E544A;line-height:1.4}
@@ -740,7 +740,7 @@ body.zon .seg.stapel button.on-C{background:var(--green-bg)}body.zon .seg.stapel
 .aw-feiten dt{font-size:13px;font-weight:700;color:#6E6255}
 .aw-feiten dd{margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;font-weight:700;min-width:0}
 .jijtag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:800}
-.leegw{color:#8B7F72;font-weight:600}
+.leegw{color:var(--soft);font-weight:600}
 .aw-herkomst{margin:-6px 0 14px;font-size:12.5px;color:#6E6255}
 #mod.actiemod>.btn{min-height:56px}
 #mod.actiemod>details>summary{min-height:48px;display:flex;align-items:center;gap:6px}
@@ -830,7 +830,7 @@ body.zon .alklaar .btn{box-shadow:inset 0 0 0 2px #141A22;color:#141A22}
 .odock.uit .seg.stapel button{background:#F6F1EA;box-shadow:inset 0 0 0 1.5px #EADFCF;cursor:default}
 .odock.uit .seg.stapel .l{background:#C9BFB2}
 .odock.uit .seg.stapel button:active{transform:none}
-.odock.uit .linkknop.nvt{color:#8B7F72;cursor:default}
+.odock.uit .linkknop.nvt{color:var(--soft);cursor:default}
 .ostap .okaart{padding:14px 16px}
 .kzelf{margin:4px 0 24px}
 .kzelf .linkknop{min-height:56px;padding:14px 0 6px}
@@ -909,3 +909,23 @@ body.zon .vs-mr .n{background:#141A22;color:#fff}
 .oh-l{flex:none;min-width:64px;font-weight:800;color:var(--ink)}
 body.zon .oh-rij{color:#141A22}
 body.zon .oh-rij + .oh-rij{border-top-color:#141A22}
+
+/* ================= Toegankelijkheid (WCAG 2.2 AA) ================= */
+/* landmarks: <header>, <main id="hoofd"> (alertbalk + #view) en <nav> (index.html) */
+#hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
+button.alertbar{width:auto;text-align:left;font:inherit;font-weight:700}
+/* alleen voor schermlezers */
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* skiplink: pas zichtbaar bij toetsenbordfocus */
+.skiplink{position:absolute;left:12px;top:-60px;z-index:100;background:var(--accent);color:#fff;font-weight:700;padding:10px 16px;border-radius:12px;transition:top .1s}
+.skiplink:focus{top:12px}
+/* zichtbare focus voor toetsenbord (muis/aanraken: geen ring) */
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:inherit}
+.inbox textarea:focus-visible,.fin:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.row[role="button"]:focus-visible,tr[role="button"]:focus-visible{outline-offset:-3px;border-radius:12px}
+g[role="button"]:focus-visible{outline:3px solid var(--accent)}
+#mod:focus,#view:focus,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
+body.zon :focus-visible{outline:3px solid #141A22;outline-offset:2px}
+/* opslagstatus: "opnieuw" is een echte knop */
+.opnieuwlink{text-decoration:underline;font-weight:700;color:inherit;padding:0 2px;min-height:24px}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

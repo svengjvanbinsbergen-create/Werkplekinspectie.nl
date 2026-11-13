@@ -50,7 +50,7 @@
       const v = $("view");
       const prods = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.product))].sort();
       const locs = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.locatie))].sort();
-      const sel = (k, opts, lab) => `<select${op("change", "setFilter", k, WAARDE)} style="height:38px;border-radius:12px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 10px;font-size:13px;font-weight:600;background:#fff;color:${f[k] ? "var(--ink)" : "var(--soft)"}">
+      const sel = (k, opts, lab) => `<select aria-label="${esc(lab)}"${op("change", "setFilter", k, WAARDE)} style="height:38px;border-radius:12px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 10px;font-size:13px;font-weight:600;background:#fff;color:${f[k] ? "var(--ink)" : "var(--soft)"}">
         <option value=""${f[k] ? "" : " selected"}>${lab}</option>${opts.map((o) => `<option value="${esc(o.v)}"${f[k] === o.v ? " selected" : ""}>${esc(o.l)}</option>`).join("")}</select>`;
       v.appendChild(el(`<div><div class="kicker">Trendanalyse · mei–nov 2026 · peildatum 11-11-2026</div><h1>Dashboard</h1></div>`));
       v.appendChild(el(`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -70,14 +70,14 @@
       </div>`));
       const PAL = this.PAL, leg = (items) => `<div class="legend">${items.map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
       const chartCard = el(`<div class="grid dashgrid" style="gap:14px;margin-top:14px"></div>`);
-      chartCard.appendChild(el(`<div class="card grafiek breed"><h3>Hoeveel ziet er goed uit? <span class="sub">% conform per maand</span></h3>${this.chartTrend(D.maanden, D.om)}
+      chartCard.appendChild(el(`<div class="card grafiek breed"><h2 class="kaartkop">Hoeveel ziet er goed uit? <span class="sub">% conform per maand</span></h2>${this.chartTrend(D.maanden, D.om)}
         <div class="s" style="margin-top:6px">Een open rondje = minder dan 5 waarnemingen in die maand: te weinig voor een percentage.</div></div>`));
-      chartCard.appendChild(el(`<div class="card grafiek"><h3>Oordelen per maand</h3>${this.chartOordeel(D.maanden, D.om)}
+      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Oordelen per maand</h2>${this.chartOordeel(D.maanden, D.om)}
         ${leg([[PAL.C, "Conform"], [PAL.V, "Verbeterpunt"], [PAL.A, "Afwijking"]])}</div>`));
-      chartCard.appendChild(el(`<div class="card grafiek"><h3>Verdeling oordelen</h3>${this.chartDonut(D.oordeel)}</div>`));
-      chartCard.appendChild(el(`<div class="card grafiek"><h3>Inspectieprogramma <span class="sub">verplichte WPI’s per maand</span></h3>${this.chartProg()}
+      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Verdeling oordelen</h2>${this.chartDonut(D.oordeel)}</div>`));
+      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Inspectieprogramma <span class="sub">verplichte WPI’s per maand</span></h2>${this.chartProg()}
         ${leg([[PAL.C, "Uitgevoerd"], [PAL.A, "Gemist"], ["#E6DCCD", "Loopt nog"]])}</div>`));
-      chartCard.appendChild(el(`<div class="card grafiek"><h3>Waar zitten de aandachtspunten? <span class="sub">per klasse</span></h3>${this.klasseBars(D.klasse)}
+      chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Waar zitten de aandachtspunten? <span class="sub">per klasse</span></h2>${this.klasseBars(D.klasse)}
         ${leg([[PAL.A, "Afwijking"], [PAL.V, "Verbeterpunt"]])}</div>`));
       v.appendChild(chartCard);
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Klik op een maand, een stuk van de ring of een klasse voor de details. Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen.</div>`));
@@ -90,7 +90,7 @@
       return n >= 1 && n <= 100 ? n : null;
     },
     // zachte, warme kleuren die bij de app passen
-    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#8B7F72", doel: "#2F5D50" },
+    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#72665A", doel: "#2F5D50" },
     // %-conform per maand als zachte lijn met vlak eronder
     chartTrend(mnd, om) {
       const doel = this.doelConform(), P = this.PAL, W = 1100, H = 230, L = 44, R = doel != null ? 92 : 24, T = 30, Bm = 30, iw = W - L - R, ih = H - T - Bm;
@@ -117,7 +117,7 @@
         // label boven de punt; raakt het de doellijn, dan eronder (en met een witte rand voor de leesbaarheid)
         const ly = yDoel != null && Math.abs(yDoel - (yy - 19)) < 12.5 && yy + 26 < T + ih + 4 ? yy + 26 : yy - 14;
         const lx = q.x === L && mnd.length > 1 ? q.x - 6 : q.x, la = lx === q.x ? "middle" : "start";   // eerste punt: niet over de as-labels
-        g += `<g style="cursor:pointer"${act("drill", "oordeelmaand", q.m)}><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
+        g += `<g style="cursor:pointer" aria-label="${esc(mlabel(q.m) + ": " + (q.p !== null && !klein ? Math.round(q.p * 100) + "% conform" : "n=" + q.tot) + " · details")}"${act("drill", "oordeelmaand", q.m)}><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
           <circle cx="${q.x}" cy="${yy}" r="7" fill="${klein ? "#fff" : P.C}" stroke="${klein ? P.N : "#fff"}" stroke-width="3"/>
           ${q.p !== null && !klein ? `<text class="pctlab" x="${lx}" y="${ly}" text-anchor="${la}" font-size="13" font-weight="800" fill="${P.ink}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${Math.round(q.p * 100)}%</text>` : `<text x="${lx}" y="${ly}" text-anchor="${la}" font-size="12" fill="${P.soft}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">n=${q.tot}</text>`}
           <text x="${q.x}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${P.soft}">${mlabel(q.m)}</text></g>`;
@@ -136,7 +136,7 @@
         p += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" font-size="15" font-weight="800" fill="${P.ink}">${labels[i][0]}</text>`;
         p += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
         p += `<rect x="${pad + gap * i}" y="0" width="${gap}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer"${actieFn(i)}>${p}</g>`;
+        g += `<g style="cursor:pointer" aria-label="${esc(labels[i][1] + ": " + labels[i][0] + " · details")}"${actieFn(i)}>${p}</g>`;
       });
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },
@@ -160,7 +160,7 @@
         if (!val) return; const a1 = a0 + val / tot * Math.PI * 2 - 0.03;
         const pt = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)], big = a1 - a0 > Math.PI ? 1 : 0;
         const [x0, y0] = pt(R, a0), [x1, y1] = pt(R, a1), [x2, y2] = pt(r, a1), [x3, y3] = pt(r, a0);
-        g += `<path d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${col}" style="cursor:pointer"${act("drill", "conform")}/>`;
+        g += `<path d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${col}" style="cursor:pointer" aria-label="${esc(k + ": " + val + " · details")}"${act("drill", "conform")}/>`;
         a0 = a1 + 0.03;
       });
       const ok = (o.Conform || 0) + (o.Afwijking || 0) + (o.Verbeterpunt || 0), pc = ok >= 5 ? Math.round(100 * (o.Conform || 0) / ok) + "%" : "n=" + ok;

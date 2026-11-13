@@ -1,11 +1,11 @@
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(800);
-await p.evaluate(()=>App.login('u-winfred'));await p.waitForTimeout(1200);await p.screenshot({path:'p1.png'});
+await p.evaluate(()=>App.login('u-coord1'));await p.waitForTimeout(1200);await p.screenshot({path:'p1.png'});
 console.log('tabs',await p.evaluate(()=>[...document.querySelectorAll('#tabbar a')].map(a=>a.textContent)));
 await p.click('text=Inspectie inplannen');await p.waitForTimeout(300);await p.screenshot({path:'p2.png'});
 await p.click('#mod button.primary');await p.waitForTimeout(200);const fout1=await p.locator('#ai-fout').textContent();console.log('fout:',fout1);if(!fout1.trim())errs.push('leeg planformulier niet geweigerd');
-await p.selectOption('#pl-code','SLI');await p.fill('#pl-project','P26-190');await p.fill('#pl-loc','RWZI Zuid');await p.click('.chipb:has-text("Vandaag")');await p.selectOption('#pl-insp','u-winfred');
+await p.selectOption('#pl-code','SLI');await p.fill('#pl-project','P26-190');await p.fill('#pl-loc','RWZI Zuid');await p.click('.chipb:has-text("Vandaag")');await p.selectOption('#pl-insp','u-coord1');
 await p.click('#mod button.primary');await p.waitForTimeout(600);
 await p.evaluate(()=>App.go('planning'));await p.waitForTimeout(600);await p.screenshot({path:'p3.png',fullPage:true});
 await p.evaluate(()=>App.go('vandaag'));await p.waitForTimeout(700);await p.screenshot({path:'p4.png'});

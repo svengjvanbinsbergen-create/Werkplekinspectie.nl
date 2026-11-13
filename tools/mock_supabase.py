@@ -3,7 +3,8 @@
 
 Serveert op één poort (zelfde origin, dus de CSP connect-src 'self' volstaat):
   - de statische app uit webapp/ (met een ingevulde js/config.js die naar deze server wijst)
-  - /auth/v1     token (password, refresh_token), user (GET/PUT), logout, recover, factors (TOTP)
+  - /auth/v1     token (password, refresh_token, pkce), user (GET/PUT), logout, recover (met PKCE), factors (TOTP)
+  - /__mock/herstellink?email=…[&soort=recovery|invite]  de link uit de herstel-/uitnodigingsmail
   - /rest/v1     profiles, inspecties, acties, planning, actie_log (+ rpc/report_security_event)
   - /storage/v1  object/fotos/<pad> (upload) en object/authenticated/fotos/<pad> (download)
   - /__mock/...  testhulp: state (alles bekijken), fail (volgende verzoeken laten mislukken; optioneel alleen
@@ -90,7 +91,7 @@ def nieuwe_state():
              u(5, "inactief@noardling.test", "Oud Medewerker", "inspecteur", "Inspecteur", actief=False)]
     return {"users": {x["email"]: x for x in users}, "sessions": {}, "refresh": {}, "challenges": {},
             "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "security_events": [],
-            "fotos": {}, "recover": [], "logins": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
+            "fotos": {}, "recover": [], "pkce": {}, "logins": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
 
 
 STATE = nieuwe_state()
@@ -231,6 +232,19 @@ class Handler(SimpleHTTPRequestHandler):
             if p == "/__mock/reset":
                 STATE = nieuwe_state()
                 return self.stuur(200, {"ok": True})
+            if p == "/__mock/herstellink":   # de link uit de herstel-/uitnodigingsmail (alleen voor de test)
+                x = STATE["users"].get(q.get("email", ""))
+                if not x:
+                    return self.stuur(404, {"message": "onbekend"})
+                r = next((r for r in reversed(STATE["recover"]) if r["email"] == x["email"]), None)
+                doel = (r and r["redirect_to"]) or q.get("redirect_to", "/index.html")
+                soort = q.get("soort", "recovery")
+                if soort == "recovery" and r and r.get("code_challenge"):
+                    code = str(uuid.uuid4())
+                    STATE["pkce"][code] = {"uid": x["id"], "challenge": r["code_challenge"], "method": str(r.get("code_challenge_method") or "plain").lower(), "t": time.time()}
+                    return self.stuur(200, {"link": doel + "?code=" + code})
+                d = sessie_uitgeven(x)
+                return self.stuur(200, {"link": doel + "#access_token=%s&expires_at=%d&expires_in=3600&refresh_token=%s&token_type=bearer&type=%s" % (d["access_token"], d["expires_at"], d["refresh_token"], soort)})
             if p == "/__mock/totp":   # huidige code voor een gebruiker (alleen voor de test)
                 x = STATE["users"].get(q.get("email", ""))
                 f = x and next((f for f in x["factors"] if f["status"] == "verified" or q.get("ook_nieuw")), None)
@@ -263,10 +277,20 @@ class Handler(SimpleHTTPRequestHandler):
                     return self.stuur(400, {"code": "refresh_token_already_used", "msg": "Invalid Refresh Token: Already Used"})
                 r["used"] = True
                 return self.stuur(200, sessie_uitgeven(user_by_id(s["uid"]), s["aal"], r["sid"]))
+            if q.get("grant_type") == "pkce":   # PKCE: code uit de herstellink + code_verifier van DEZE browser
+                f = STATE["pkce"].pop(str(b.get("auth_code", "")), None)
+                if not f or f["t"] < time.time() - 300:
+                    return self.stuur(404, {"code": "flow_state_not_found", "msg": "invalid flow state, no valid flow state found"})
+                v = str(b.get("code_verifier", ""))
+                ok = (b64u(hashlib.sha256(v.encode()).digest()) == f["challenge"]) if f["method"] == "s256" else hmac.compare_digest(v, f["challenge"])
+                if not v or not ok:
+                    return self.stuur(400, {"code": "bad_code_verifier", "msg": "code challenge does not match previously saved code verifier"})
+                return self.stuur(200, sessie_uitgeven(user_by_id(f["uid"])))
             return self.stuur(400, {"msg": "unsupported_grant_type"})
         if pad == "recover" and m == "POST":
             b = self.jbody() or {}
-            STATE["recover"].append({"email": str(b.get("email", "")).lower(), "redirect_to": q.get("redirect_to"), "t": nu_iso()})
+            STATE["recover"].append({"email": str(b.get("email", "")).lower(), "redirect_to": q.get("redirect_to"), "t": nu_iso(),
+                                     "code_challenge": b.get("code_challenge"), "code_challenge_method": b.get("code_challenge_method")})
             return self.stuur(200, {})
         x, c = self.gebruiker()
         if not x:
@@ -551,6 +575,12 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.stuur(400, {"statusCode": "403", "error": "Unauthorized", "message": "new row violates row-level security policy"})
             if mime not in ("image/jpeg", "image/png", "image/webp") or len(data) > 5 * 1024 * 1024:
                 return self.stuur(400, {"statusCode": "415", "error": "invalid_mime_type", "message": "mime type not supported"})
+            # zoals de echte policy (0005/0007, foto_in_gebruik): een foto die al als bewijs gekoppeld is (actie of eigen
+            # inspectie) kan niet (opnieuw) worden geüpload, ook niet als hij nog niet (of niet meer) bestaat
+            gebruikt = any(r.get(k) in (naam, "fotos/" + naam) for r in STATE["tables"]["acties"].values() for k in ("foto_pad", "nafoto_pad")) \
+                or any(r.get("inspecteur_id") == x["id"] and naam in json.dumps(r.get("record"), ensure_ascii=False) for r in STATE["tables"]["inspecties"].values())
+            if gebruikt:
+                return self.stuur(400, {"statusCode": "403", "error": "Unauthorized", "message": "new row violates row-level security policy"})
             if naam in STATE["fotos"] and self.headers.get("x-upsert") != "true":
                 return self.stuur(400, {"statusCode": "409", "error": "Duplicate", "message": "The resource already exists"})
             STATE["fotos"][naam] = {"data": data, "mime": mime, "door": x["id"]}

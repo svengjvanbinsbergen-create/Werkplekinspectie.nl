@@ -1,14 +1,14 @@
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1440,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(''+(process.env.BASE||'http://localhost:8140')+'/index.html');await p.waitForTimeout(800);
-await p.evaluate(()=>App.login('u-bjorn'));await p.waitForTimeout(800);
+await p.evaluate(()=>App.login('u-hoofd'));await p.waitForTimeout(800);
 await p.evaluate(()=>App.go('kwartaal'));await p.waitForTimeout(900);await p.screenshot({path:'k1.png',fullPage:true});
 await p.evaluate(()=>{App.kwartaal='Q3 2026';App.route()});await p.waitForTimeout(600);await p.screenshot({path:'k2.png'});
 await p.emulateMedia({media:'print'});await p.pdf({path:'k.pdf',format:'A4'});await p.emulateMedia({media:'screen'});
 await p.evaluate(()=>{App.actFilter='alle';App.go('acties')});await p.waitForTimeout(700);await p.screenshot({path:'k3.png'});
 await p.setViewportSize({width:390,height:844});await p.evaluate(()=>App.route());await p.waitForTimeout(500);await p.screenshot({path:'k4.png'});
 await p.evaluate(()=>App.nieuweActie());await p.waitForTimeout(200);
-await p.fill('#na-tekst','Hijsbanden in de bus vervangen');await p.selectOption('#ai-houder','u-douwe');await p.selectOption('#ai-toetser','u-winfred');
+await p.fill('#na-tekst','Hijsbanden in de bus vervangen');await p.selectOption('#ai-houder','u-coord2');await p.selectOption('#ai-toetser','u-coord1');
 await p.click('text=Actie aanmaken');await p.waitForTimeout(500);await p.screenshot({path:'k5.png'});
 const hm=await p.evaluate(()=>App.acties.filter(a=>a.handmatig).map(a=>a.status+' '+a.plandatum));console.log('handmatig:',hm);if(hm.length!==1||!/^Open \d{4}-\d\d-\d\d$/.test(hm[0]))errs.push('handmatige actie niet als Open met plandatum bewaard: '+JSON.stringify(hm));
 console.log(errs);await b.close()})();

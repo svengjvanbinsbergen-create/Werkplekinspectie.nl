@@ -243,8 +243,12 @@ function headerConfigCheck() {
       uit.push({ bron, header: "Cache-Control /" + naam, status: cc && /no-cache|no-store|max-age=0/.test(cc) ? "ok" : "ONTBREEKT", detail: cc || "" });
     }
   }
-  const naarHttps = [...c.toml.matchAll(/\[\[redirects\]\]([\s\S]*?)(?=\n\[\[|$)/g)].some((m) => /from\s*=\s*"http:\/\//.test(m[1]) && /to\s*=\s*"https:\/\//.test(m[1]) && /status\s*=\s*30[18]/.test(m[1]));
-  uit.push({ bron: "netlify.toml", header: "http → https", status: naarHttps ? "ok" : "ONTBREEKT", detail: naarHttps ? "301-regel van http:// naar https://" : "" });
+  // De regel noemt vaste domeinen (from = "http://<domein>/*"): op een ander adres (app.<domein>.nl, *.netlify.app)
+  // doet hij niets en stuurt Netlify zelf door zodra het certificaat er is. Daarom de domeinen in de uitvoer, en na de
+  // deploy altijd --alles https://<adres> (vraagt echt http:// op).
+  const httpsRegels = [...c.toml.matchAll(/\[\[redirects\]\]([\s\S]*?)(?=\n\[\[|$)/g)].filter((m) => /from\s*=\s*"http:\/\//.test(m[1]) && /to\s*=\s*"https:\/\//.test(m[1]) && /status\s*=\s*30[18]/.test(m[1]));
+  const naarHttps = httpsRegels.length > 0, domeinen = httpsRegels.map((m) => (/from\s*=\s*"http:\/\/([^/"]+)/.exec(m[1]) || [])[1]).filter(Boolean);
+  uit.push({ bron: "netlify.toml", header: "http → https", status: naarHttps ? "ok" : "ONTBREEKT", detail: naarHttps ? "301-regel alleen voor " + domeinen.join(", ") + " (ander adres: aanpassen, of Netlify stuurt zelf door; controleer met --alles)" : "" });
   uit.push({ bron: "vercel.json", header: "http → https", status: "ok", detail: "Vercel stuurt altijd door (niet uit te zetten)" });
   uit.push({ bron: "_headers", header: "http → https", status: "n.v.t.", detail: 'Cloudflare: "Always Use HTTPS" aanzetten (instelling, geen bestand)' });
   return uit;

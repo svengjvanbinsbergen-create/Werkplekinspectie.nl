@@ -15,6 +15,8 @@
 //    -planning/-inspecties/-cijfers, geen "Voorbeeld"/"Demo"-label, geen debuguitvoer in de console. Zelfs met een
 //    vanuit de console gezette App.user: geen fictieve cijfers op dashboard/rapportage, geen voorbeeld-inspecties.
 //    Voorbeeldmodus (lege config): accountkiezer met "Voorbeeld"-uitleg en een rustig "Demo"-label na het inloggen.
+//    Ook: geen fictieve monteurs als terugval (lege lijst + uitleg), een concept van een vorige gebruiker kan niet
+//    terug op het toestel, en geen echte (voor)namen van medewerkers in de gepubliceerde bestanden (js, css, html, json).
 // 4. Uploads: SVG, PDF, een onbekend bestand, een leeg bestand en een foto van 21 MB worden geweigerd met een
 //    Nederlandse melding (via de echte bestandskiezer van de na-foto en van de inspectie); een gewone foto wordt
 //    een verkleinde JPEG. Invoergrenzen: tekstvelden krijgen de maxlength van de server, datumvelden min/max.
@@ -182,7 +184,7 @@ async function vulAlles(p, n, metEnter = true) {
 
     // ================= computer: coördinator (planning, acties, uploads) =================
     const wp = await pagina(b, WEB, 'coordinator');
-    await wp.evaluate(() => App.login('u-winfred')); await wp.waitForTimeout(500);
+    await wp.evaluate(() => App.login('u-coord1')); await wp.waitForTimeout(500);
     for (const [naam, h] of [['vandaag', 'vandaag'], ['planning', 'planning'], ['inspecties', 'inspecties'], ['acties', 'acties'], ['dashboard', 'dashboard'], ['rapportage', 'kwartaal']]) {
       await wp.evaluate((x) => App.go(x), h); await wp.waitForTimeout(600); await scan(wp, 'computer · ' + naam);
     }
@@ -200,7 +202,7 @@ async function vulAlles(p, n, metEnter = true) {
     await wp.evaluate(() => App.go('acties')); await wp.waitForTimeout(400);
     await wp.evaluate(() => App.nieuweActie()); await wp.waitForTimeout(300);
     ok(await vulAlles(wp, 10, false) === 2, 'nieuwe actie: 2 tekstvelden gevuld met payload');
-    await wp.selectOption('#ai-houder', 'u-douwe'); await wp.selectOption('#ai-toetser', 'u-bjorn');
+    await wp.selectOption('#ai-houder', 'u-coord2'); await wp.selectOption('#ai-toetser', 'u-hoofd');
     await wp.click('#mod [data-action="maakActie"]'); await wp.waitForTimeout(600);
     const nid = await wp.evaluate(() => ((App.acties || []).find((a) => String(a.tekst).includes('__xss=10')) || {}).id);
     ok(!!nid, 'nieuwe actie: payload opgeslagen');
@@ -244,7 +246,7 @@ async function vulAlles(p, n, metEnter = true) {
 
     // ================= computer: hoofd (beheer) =================
     const hp = await pagina(b, WEB, 'hoofd');
-    await hp.evaluate(() => App.login('u-bjorn')); await hp.waitForTimeout(500);
+    await hp.evaluate(() => App.login('u-hoofd')); await hp.waitForTimeout(500);
     await hp.evaluate(() => App.go('beheer')); await hp.waitForTimeout(500);
     await scan(hp, 'computer · beheer');
     ok(await hp.evaluate(() => { const x = document.getElementById('bh-nieuw'); return !!x && x.maxLength > 0 && x.maxLength <= 120; }), 'invoergrens: monteursnaam ≤ 120 (zoals de server)');
@@ -265,19 +267,19 @@ async function vulAlles(p, n, metEnter = true) {
     await hp.context().close();
 
     // ================= 3b. productie: geen voorbeeld-omwegen =================
-    const pp = await pagina(b, TEL, 'productie', { productie: true, consoleFoutMag: true, init: () => { try { localStorage.setItem('wpi_user', JSON.stringify({ id: 'u-bjorn' })); } catch (e) {} } });
+    const pp = await pagina(b, TEL, 'productie', { productie: true, consoleFoutMag: true, init: () => { try { localStorage.setItem('wpi_user', JSON.stringify({ id: 'u-hoofd' })); } catch (e) {} } });
     const pl = await pp.locator('#view').innerText();
     ok(await pp.locator('#l-mail').count() === 1 && await pp.locator('#l-ww').count() === 1, 'productie: echt inlogscherm (e-mail + wachtwoord)');
-    ok(!/Kies je account|Voorbeeld|Björn Sloos|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
+    ok(!/Kies je account|Voorbeeld|Björn Sloos|Bram Voorbeeld|Carla Proef|Dirk Demo|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
     ok(await pp.evaluate(() => App.user === null), 'productie: "wpi_user" uit localStorage genegeerd (niemand ingelogd)');
     ok(await pp.evaluate(() => localStorage.getItem('wpi_user') === null), 'productie: oude "wpi_user" opgeruimd');
     ok(await pp.evaluate(() => WPI.USERS.length === 0), 'productie: geen fictieve accounts in WPI.USERS');
     ok(await pp.evaluate(() => !/Voorbeeld|Demo/.test(document.getElementById('acct').innerText) && !document.querySelector('.demolabel')), 'productie: geen "Voorbeeld"- of "Demo"-label bovenin');
-    await pp.evaluate(() => App.login('u-bjorn')); await pp.waitForTimeout(300);
-    ok(await pp.evaluate(() => App.user === null), 'productie: App.login("u-bjorn") vanuit de console doet niets');
+    await pp.evaluate(() => App.login('u-hoofd')); await pp.waitForTimeout(300);
+    ok(await pp.evaluate(() => App.user === null), 'productie: App.login("u-hoofd") vanuit de console doet niets');
     await pp.evaluate(() => App.login('nep', { id: 'nep', full_name: 'Nep', role: 'hoofd', functie: '' })); await pp.waitForTimeout(300);
     ok(await pp.evaluate(() => App.user === null), 'productie: App.login(id, {role:"hoofd"}) met een verzonnen profiel doet niets');
-    await pp.evaluate(() => { document.body.insertAdjacentHTML('beforeend', '<button id="nepknop" data-action="login" data-args=\'["u-bjorn"]\'>x</button>'); document.getElementById('nepknop').click(); });
+    await pp.evaluate(() => { document.body.insertAdjacentHTML('beforeend', '<button id="nepknop" data-action="login" data-args=\'["u-hoofd"]\'>x</button>'); document.getElementById('nepknop').click(); });
     await pp.waitForTimeout(300);
     ok(await pp.evaluate(() => App.user === null), 'productie: geïnjecteerde data-action="login" doet niets');
     for (const h of ['#/dashboard', '#/beheer', '#/acties', '#/rapport/WPI-20260505-POM-C2']) {
@@ -300,6 +302,48 @@ async function vulAlles(p, n, metEnter = true) {
     ok(await pp.locator('.ikaart').count() === 0 && !/voorbeeld ·|WPI-2026/.test(await pp.locator('#view').innerText()), 'productie (console-omweg): geen voorbeeld-inspecties in de lijst');
     await pp.evaluate(() => App.go('acties')); await pp.waitForTimeout(600);
     ok(await pp.evaluate(async () => (await WPI.DB.getAll('acties')).every((a) => !a.demo) && (await WPI.DB.getAll('planning')).every((x) => !x.demo)), 'productie (console-omweg): geen voorbeeldacties of -planning in IndexedDB');
+    // monteurs: geen fictieve namen als terugval (lege lijst + uitleg), ook niet in Beheer (console-omweg als hoofd)
+    ok(await pp.evaluate(() => { try { localStorage.removeItem('wpi_monteurs'); localStorage.removeItem('wpi_monteurs_inactief'); } catch (e) {} return App.monteursLijst().length === 0; }), 'productie: monteurslijst leeg tot de server hem levert (geen Henk Voorbeeld e.d.)');
+    await pp.evaluate(() => App.go('beheer')); await pp.waitForTimeout(500);
+    const bh = await pp.locator('#view').innerText();
+    ok(/0 actief/.test(bh) && !/Voorbeeld|Proef|Fictief|Kees Demo/.test(bh), 'productie (console-omweg): Beheer toont geen fictieve monteurs');
+    await pp.setViewportSize(TEL);
+    await pp.evaluate(() => { App.startInspectie('DAM', 'p', 't', true); App.state.inspectie.stap = 'monteurs'; App.go('inspectie'); App.route(); }); await pp.waitForTimeout(500);
+    const im = await pp.locator('#view').innerText();
+    ok(/monteurslijst is nog niet geladen/.test(im) && !/Henk Voorbeeld|Pieter Proef/.test(im), 'productie: inspectie toont "monteurslijst nog niet geladen" in plaats van fictieve namen');
+    await pp.evaluate(() => { App.state.inspectie = null; });
+    await pp.setViewportSize(WEB);
+    // gedeeld toestel: een tabblad van een vorige gebruiker kan zijn concept niet terugzetten nadat een ander eigenaar werd
+    const cr = await pp.evaluate(async () => {
+      const A = '00000000-0000-4000-a000-0000000000aa', B = '00000000-0000-4000-a000-0000000000bb';
+      const n0 = await App.syncAnderWerk(B);
+      await App.syncEigenaar(B);
+      await WPI.DB.put('concept', { id: 'lopend-' + A, ins: { titel: 'van A' }, t: new Date().toISOString() });
+      const weg = !(await WPI.DB.get('concept', 'lopend-' + A));
+      await App.syncEigenaar(A);
+      await WPI.DB.put('concept', { id: 'lopend-' + A, ins: { titel: 'van A' }, t: new Date().toISOString() });
+      const er = !!(await WPI.DB.get('concept', 'lopend-' + A));
+      const n = await App.syncAnderWerk(B);
+      await App.syncWisAnderen(B);
+      const gewist = !(await WPI.DB.get('concept', 'lopend-' + A));
+      return { weg, er, extra: n - n0, gewist, rest: await App.syncAnderWerk(B) };
+    });
+    ok(cr.weg && cr.er && cr.extra === 1 && cr.gewist && cr.rest === 0, 'productie: concept van een vorige gebruiker niet terug te zetten; syncWisAnderen wist het ' + JSON.stringify(cr));
+    // geen echte namen in de gepubliceerde code: ook geen voornamen (ook niet als interne id zoals "u-<voornaam>"),
+    // in ELK gepubliceerd bestand: alle scripts en stylesheets van index.html, index.html zelf, sw.js, manifest.json
+    // en alle data/*.json (de lijst van de service worker, plus wat index.html laadt)
+    const bronnen = await pp.evaluate(async () => {
+      const sw = await (await fetch('sw.js')).text();
+      const shell = ((sw.match(/SHELL\s*=\s*\[([\s\S]*?)\]/) || [])[1] || '').match(/["'][^"']+["']/g) || [];
+      const urls = new Set(['index.html', 'sw.js', 'manifest.json', 'data/kennisbank.json', 'data/cijfers.json', 'data/trendacties.json', 'data/voorbeelddata.json',
+        ...shell.map((x) => x.slice(1, -1).replace(/^\.\//, '')).filter((x) => x && x !== '/' && !/\.png$/.test(x)),
+        ...[...document.scripts].filter((x) => x.src).map((x) => x.src), ...[...document.querySelectorAll('link[rel=stylesheet]')].map((x) => x.href).filter((h) => h.startsWith(location.origin))]
+        .map((u) => new URL(u, location.href).pathname));
+      return Promise.all([...urls].map(async (u) => { const r = await fetch(u); return [u, r.ok ? await r.text() : '']; }));
+    });
+    const echt = bronnen.filter(([, t]) => /\b(bj[oö]rn|winfred|douwe|sloos|loerts)\b/i.test(t)).map(([u, t]) => u + ' (' + t.match(/.{0,20}\b(bj[oö]rn|winfred|douwe|sloos|loerts)\b.{0,20}/i)[0] + ')');
+    const welJs = bronnen.filter(([u, t]) => /\.js$/.test(u) && t).length, welJson = bronnen.filter(([u, t]) => /\/data\/.*\.json$/.test(u) && t).length;
+    ok(welJs >= 10 && welJson >= 4 && bronnen.some(([u, t]) => /index\.html$/.test(u) && t) && !echt.length, 'gepubliceerde bestanden bevatten geen (voor)namen van medewerkers' + (echt.length ? ' → ' + echt.join(', ') : ' (' + bronnen.length + ' bestanden: ' + welJs + ' js, ' + welJson + ' data)'));
     await scan(pp, 'productie · schermen na console-omweg');
     const ruis = pp.__console.filter((m) => /^(log|debug|info|trace|table):/.test(m) || /^warning: \[sync\]/.test(m));
     ok(!ruis.length, 'productie: geen debuguitvoer in de console' + (ruis.length ? ' → ' + ruis.slice(0, 3).join(' | ') : ''));

@@ -140,6 +140,9 @@ begin
   if not public.naam_tekens_ok(v_naam) or char_length(public.naam_sleutel(v_naam)) = 0 then
     raise exception 'De naam bevat onzichtbare of ongeldige tekens' using errcode = '22023';
   end if;
+  -- eerst de quotumlock per gebruiker (dezelfde als audit_quotum), dan die per naam: zonder de eerste telden
+  -- parallelle aanroepen met verschillende namen elkaar niet mee (19 + 15 parallel = 34 nieuwe namen)
+  perform pg_advisory_xact_lock(hashtextextended('wpi_quotum:' || v_uid::text, 0));
   perform pg_advisory_xact_lock(hashtextextended('wpi_monteur:' || public.naam_sleutel(v_naam), 0));
   select * into v_rij from public.monteurs m where public.naam_sleutel(m.naam) = public.naam_sleutel(v_naam);
   if found then

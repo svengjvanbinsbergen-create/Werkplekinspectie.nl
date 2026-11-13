@@ -21,7 +21,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
   {
     const { ctx, p } = await nieuw({ width: 390, height: 844 });
     // geen toegang voor coördinator en inspecteur
-    for (const u of ['u-winfred', 'u-insp']) {
+    for (const u of ['u-coord1', 'u-insp']) {
       await p.evaluate((u) => App.login(u), u); await wacht(p, 700);
       await p.evaluate(() => App.openAccount()); await wacht(p, 150);
       check(!(await p.locator('#mod button:has-text("Beheer")').count()), u + ': geen Beheer in het accountmenu');
@@ -37,7 +37,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
       && (await p.evaluate(() => App.monteursLijst().length)) === 5, 'inspecteur: beheerDoel/beheerToevoegen/beheerActief doen niets');
     await p.evaluate(() => localStorage.removeItem('wpi_doel_conform'));
 
-    await p.evaluate(() => App.login('u-bjorn')); await wacht(p, 700);
+    await p.evaluate(() => App.login('u-hoofd')); await wacht(p, 700);
     await p.evaluate(() => App.openAccount()); await wacht(p, 150);
     await p.click('#mod button:has-text("Beheer")'); await wacht(p, 500);
     check(await p.evaluate(() => location.hash) === '#/beheer' && await p.locator('h1:has-text("Beheer")').count() === 1, 'hoofd: Beheer via accountmenu');
@@ -205,7 +205,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
   // ===== 2. Doellijn in dashboard en kwartaalrapportage (web) =====
   {
     const { ctx, p } = await nieuw({ width: 1440, height: 900 });
-    await p.evaluate(() => App.login('u-bjorn')); await wacht(p, 700);
+    await p.evaluate(() => App.login('u-hoofd')); await wacht(p, 700);
     await p.evaluate(() => App.go('beheer')); await wacht(p, 400);
     check(await p.locator('#tabbar a.bhtab.on:has-text("Beheer")').count() === 1, 'web: Beheer in de zijbalk, actief');
     const br = await p.evaluate(() => { const r = (s) => document.querySelector(s).getBoundingClientRect(); return { view: r('#view').right, top: r('.topbar').right, grid: r('.bhgrid').right }; });
@@ -281,7 +281,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     await p.evaluate(() => App.login('u-insp')); await wacht(p, 600);
     await p.evaluate(() => App.go('planning')); await wacht(p, 500);
     check(await p.locator('button:has-text("Voorstel programma")').count() === 0, 'inspecteur: geen voorstel-knop');
-    await p.evaluate(() => App.login('u-winfred')); await wacht(p, 600);
+    await p.evaluate(() => App.login('u-coord1')); await wacht(p, 600);
     await p.evaluate(() => App.go('planning')); await wacht(p, 500);
     check(await p.locator('button:has-text("Voorstel programma december")').count() === 1, 'coördinator: knop "Voorstel programma december"');
     check(/4 inspecties uit de projectplanning/.test(await p.locator('.progrij').innerText()), 'rustige rij met aantal', await p.locator('.progrij').innerText());
@@ -313,7 +313,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
       'projectnummer vergelijken zonder verschil in hoofdletters (ook voor oude of gesynchroniseerde records)');
     check(V.every((x) => x.datum.startsWith('2026-12') && [1, 2, 3, 4, 5].includes(new Date(x.datum + 'T00:00').getDay()) && x.datum >= x.min && x.datum <= x.max), 'datums op werkdagen binnen de looptijd', V.map((x) => x.datum));
     check(new Set(V.map((x) => x.datum)).size === V.length, 'datums verspreid over de maand');
-    check(JSON.stringify(V.map((x) => x.inspecteur)) === JSON.stringify(['u-winfred', 'u-douwe', 'u-winfred']), 'inspecteur om en om over de coördinatoren');
+    check(JSON.stringify(V.map((x) => x.inspecteur)) === JSON.stringify(['u-coord1', 'u-coord2', 'u-coord1']), 'inspecteur om en om over de coördinatoren');
     check(V.every((x) => x.code), 'product gekoppeld aan de kennisbank', V.map((x) => x.product + '→' + x.code));
     const kaarten = p.locator('.vskaart');
     check(await kaarten.count() === 3 && await p.locator('#progvs .badge, #progvs .b-vs').count() === 0 && /Uit de projectplanning/.test(await p.locator('#progvs .vskicker').innerText())
@@ -354,11 +354,11 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     const eerste = kaarten.nth(0), vid0 = await eerste.getAttribute('data-vid');
     const andereDag = await eerste.locator('.vsdatum option').evaluateAll((o) => o[o.length - 1].value);
     await eerste.locator('.vsdatum').selectOption(andereDag);
-    await eerste.locator('.vsinsp').selectOption('u-bjorn');
+    await eerste.locator('.vsinsp').selectOption('u-hoofd');
     const weg = await kaarten.nth(2).getAttribute('data-vid'), wegProj = V.find((x) => x.vid === weg).project;
     await kaarten.nth(2).locator('.vsweg').click(); await wacht(p);
     check(await p.locator('.vskaart').count() === 2, 'voorstel weghalen');
-    check(await p.locator(`.vskaart[data-vid="${vid0}"] .vsinsp`).inputValue() === 'u-bjorn' && await p.locator(`.vskaart[data-vid="${vid0}"] .vsdatum`).inputValue() === andereDag, 'aanpassing blijft staan na weghalen andere kaart');
+    check(await p.locator(`.vskaart[data-vid="${vid0}"] .vsinsp`).inputValue() === 'u-hoofd' && await p.locator(`.vskaart[data-vid="${vid0}"] .vsdatum`).inputValue() === andereDag, 'aanpassing blijft staan na weghalen andere kaart');
     // ongeldige datum (buiten de looptijd, bijv. via een oud formulier) wordt geweigerd
     await p.evaluate((vid) => App.progZet(vid, 'datum', '2027-01-05'), vid0);
     await p.click('button:has-text("Alles inplannen")'); await wacht(p, 400);
@@ -368,7 +368,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     await p.click('button:has-text("Alles inplannen")'); await wacht(p, 600);
     const nieuwP = await p.evaluate(() => App.planning.filter((x) => x.bron === 'programma'));
     check(nieuwP.length === 2 && nieuwP.every((x) => x.status === 'gepland') && !nieuwP.some((x) => x.project === wegProj), 'Alles inplannen: 2 ingepland, weggehaalde niet', nieuwP.map((x) => x.project + ' ' + x.datum + ' ' + x.inspecteur));
-    check(nieuwP.some((x) => x.datum === andereDag && x.inspecteur === 'u-bjorn'), 'aangepaste dag en inspecteur bewaard');
+    check(nieuwP.some((x) => x.datum === andereDag && x.inspecteur === 'u-hoofd'), 'aangepaste dag en inspecteur bewaard');
     check(nieuwP.every((x) => x.toelichting === ''), 'geen gegenereerde toelichting op de ingeplande inspecties', nieuwP.map((x) => x.toelichting));
     const pk = p.locator('.pkaart:not(.vskaart)', { hasText: nieuwP[0].project }).filter({ hasText: 'programma' });
     check(await pk.locator('.boven .s:has-text("programma")').count() === 1 && !/“|Inspectieprogramma|VCA/.test(await pk.innerText()), 'planningkaart: rustig label "programma", geen citaat', await pk.innerText());
@@ -453,7 +453,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     check(await p.locator('.vskaart').count() === vsP.length - 1 && /intussen ingepland/.test(await p.locator('#progvs').innerText()), 'voorstel ververst: intussen ingepland project eruit, met uitleg', await p.locator('#progvs .vsal').innerText().catch(() => ''));
     // en ook als de planning buiten het scherm om verandert (ander tabblad): opnieuw controleren bij bevestigen
     const dub2 = vsP[1];
-    await p.evaluate(async (nr) => { await WPI.DB.put('planning', { id: 'PL-ander-tab', status: 'gepland', code: 'POM', project: nr, datum: '2026-12-10', inspecteur: 'u-douwe', toelichting: '' }); }, dub2);
+    await p.evaluate(async (nr) => { await WPI.DB.put('planning', { id: 'PL-ander-tab', status: 'gepland', code: 'POM', project: nr, datum: '2026-12-10', inspecteur: 'u-coord2', toelichting: '' }); }, dub2);
     await p.click('button:has-text("Alles inplannen")'); await wacht(p, 600);
     const tel = await p.evaluate(async ([a, b]) => { const all = (await WPI.DB.getAll('planning')).filter((x) => String(x.datum).startsWith('2026-12')); return [a, b].map((nr) => all.filter((x) => x.project === nr).length); }, [dub, dub2]);
     check(tel[0] === 1 && tel[1] === 1, 'Alles inplannen: geen tweede inspectie voor een project dat intussen is ingepland', tel);
@@ -527,7 +527,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     // vandaag of toekomst: geen melding; uitgevoerd: geen melding
     check(await p.evaluate(() => { const x = App.planning.find((y) => y.id === 'PL-gemist'); x.datum = WPI.plusDagen(0); const a = App.meldingen().some((m) => m.plan); x.datum = WPI.plusDagen(-2); x.status = 'uitgevoerd'; const b = App.meldingen().some((m) => m.plan); x.status = 'gepland'; x.datum = WPI.plusDagen(-1); return !a && !b; }), 'geen melding voor vandaag of na uitvoeren');
     // hoofd ziet de gemiste inspectie van de inspecteur (en die van de demo-planning), een andere inspecteur niet
-    await p.evaluate(() => App.login('u-bjorn')); await wacht(p, 600);
+    await p.evaluate(() => App.login('u-hoofd')); await wacht(p, 600);
     await p.evaluate(() => App.go('acties')); await wacht(p, 500);
     M = await p.evaluate(() => App.meldingen().filter((m) => m.soort === 'gemist').map((m) => m.plan).sort());
     check(M.includes('PL-gemist') && M.includes('PL-demo6'), 'hoofd: meldingen voor alle gemiste inspecties', M);
@@ -544,7 +544,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     check(await p.evaluate(() => { const t = document.querySelector('#mijnact .vgemist'), v = t.previousElementSibling; return !v || v.classList.contains('warm'); }), 'tegel staat direct na "Actie te laat"');
     await p.locator('#mijnact .vgemist').click(); await wacht(p, 500);
     check(await p.evaluate(() => location.hash) === '#/planning', 'tegel opent de Planning');
-    await p.evaluate(() => App.login('u-douwe')); await wacht(p, 600);
+    await p.evaluate(() => App.login('u-coord2')); await wacht(p, 600);
     check((await p.evaluate(() => App.meldingen().filter((m) => m.soort === 'gemist').length)) === M.length, 'coördinator: ook alle gemiste inspecties');
     // alleen gemiste inspecties (geen acties te laat): balk opent de Planning
     await p.evaluate(async () => { for (const a of App.acties) { if (a.plandatum && WPI.dagenTot(a.plandatum) < 0) { a.plandatum = WPI.plusDagen(3); await WPI.DB.put('acties', a); } } App.go('acties'); });
@@ -597,7 +597,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     check(srv.monteurs.some((x) => x.naam === 'Veld Collega' && x.actief) && srv.log.some((l) => /rpc\/monteur_aanmelden/.test(l)), 'inspectie: nieuwe naam via monteur_aanmelden op de server', srv.log);
     await p.evaluate(() => { App.state.inspectie = null; App.bewaarConcept(true); });
     // hoofd: wijzigingen in Beheer gaan naar de server
-    await p.evaluate(() => App.login('u-bjorn')); await wacht(p, 600);
+    await p.evaluate(() => App.login('u-hoofd')); await wacht(p, 600);
     await p.evaluate(() => App.syncStart()); await p.evaluate(() => App.go('beheer')); await wacht(p, 500);
     check(/Gedeeld met het team/.test(await p.locator('.bhdeel').innerText()), 'Beheer: "Gedeeld met het team"');
     await p.fill('#bh-nieuw', 'Jan Server'); await p.click('button:has-text("Toevoegen")'); await wacht(p, 400);
@@ -631,7 +631,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     await ctx.close();
     // een ander toestel (computer van de coördinator): ziet het doel in het dashboard en de lijst in de inspectie
     const t2 = await nieuw({ width: 1440, height: 900 });
-    await t2.p.evaluate(() => App.login('u-winfred')); await wacht(t2.p, 600);
+    await t2.p.evaluate(() => App.login('u-coord1')); await wacht(t2.p, 600);
     srv.weiger = null; srv.log = []; await stub(t2.p, srv);
     await t2.p.evaluate(() => App.syncStart()); await wacht(t2.p, 300);
     await t2.p.evaluate(() => App.go('dashboard')); await wacht(t2.p, 600);

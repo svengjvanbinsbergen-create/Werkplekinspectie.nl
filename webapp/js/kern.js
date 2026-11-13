@@ -27,7 +27,8 @@
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
   };
-  const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
+  // iconen zijn decoratief (aria-hidden): de knop of link eromheen draagt de naam (tekst of aria-label)
+  const svg = (n, s = 24, w = 2) => `<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
 
   // ---- event-delegatie: GEEN inline handler-attributen (onclick e.d.) meer, zodat de CSP script-src-attr 'none' kan zijn ----
   // In gegenereerde HTML zet je attributen met deze helpers; één luisteraar op document (zie onderaan) roept
@@ -99,11 +100,12 @@
     });
   }
 
-  // Demo-gebruikers (spiegelt supabase/seed.sql; later te vervangen door Supabase Auth)
+  // Demo-gebruikers: FICTIEF (geen echte namen in publieke code; de echte accounts komen in productie uit
+  // Supabase-profielen, zie js/auth.js en supabase/seed.sql). De id's zijn alleen interne sleutels.
   const USERS = [
-    { id: "u-bjorn", full_name: "Björn Sloos", role: "hoofd", functie: "Hoofd Service & Montage" },
-    { id: "u-winfred", full_name: "Winfred Loerts", role: "coordinator", functie: "Montage Coördinator" },
-    { id: "u-douwe", full_name: "Douwe de Boer", role: "coordinator", functie: "Montage Coördinator" },
+    { id: "u-hoofd", full_name: "Bram Voorbeeld", role: "hoofd", functie: "Hoofd Service & Montage" },
+    { id: "u-coord1", full_name: "Carla Proef", role: "coordinator", functie: "Montage Coördinator" },
+    { id: "u-coord2", full_name: "Dirk Demo", role: "coordinator", functie: "Montage Coördinator" },
     { id: "u-insp", full_name: "Inspecteur (demo)", role: "inspecteur", functie: "Inspecteur op locatie" },
   ];
   const ROL = { hoofd: "Hoofd S&M", coordinator: "Coördinator", inspecteur: "Inspecteur" };
@@ -175,6 +177,22 @@
     return uit.slice(0, 4);
   }
 
+  // ---- toegankelijkheid: focus terugvinden na opnieuw tekenen, en korte meldingen voor schermlezers ----
+  // focusSleutel/zoekSleutel: hetzelfde element (id, of data-action + data-args) in nieuw getekende HTML terugvinden
+  const focusSleutel = (x) => ({ id: x.id || "", act: x.getAttribute("data-action") || "", args: x.getAttribute("data-args") || "" });
+  const zoekSleutel = (root, k) => {
+    if (k.id) return root.querySelector("#" + CSS.escape(k.id));
+    if (!k.act) return null;
+    return [...root.querySelectorAll("[data-action]")].find((x) => x.getAttribute("data-action") === k.act && (x.getAttribute("data-args") || "") === k.args) || null;
+  };
+  // zeg("…"): tekst in de verborgen live-regio #meldtekst (index.html), bijv. bij een toast of zoekresultaat
+  let zegTimer = null;
+  const zeg = (t) => {
+    const m = $("meldtekst"); if (!m) return;
+    m.textContent = ""; clearTimeout(zegTimer);
+    if (t) zegTimer = setTimeout(() => { m.textContent = String(t); }, 60);   // leegmaken + kort wachten: dezelfde tekst wordt ook opnieuw voorgelezen
+  };
+
   const App = {
     data: {}, state: { inspectie: null, extra: [] }, user: null,
     caps: { dictation: null, sample: null }, micKey: null, _dictKey: null, _rec: null,
@@ -223,7 +241,7 @@
     pasPrefToe() { document.body.classList.toggle("veld", !!this.pref.veld); document.body.classList.toggle("zon", !!this.pref.zon); },
     zetPref(k) { this.pref[k] = !this.pref[k]; try { localStorage.setItem("wpi_pref", JSON.stringify(this.pref)); } catch (e) {} this.pasPrefToe(); tril(15); this.openWeergave(); },
     openWeergave() {
-      const sw = (k, t, s) => `<button class="row prefrow"${act("zetPref", k)}><span class="grow"><span class="t">${t}</span><div class="s">${s}</div></span><span class="sw${this.pref[k] ? " on" : ""}" role="switch" aria-checked="${!!this.pref[k]}"></span></button>`;
+      const sw = (k, t, s) => `<button type="button" class="row prefrow" role="switch" aria-checked="${!!this.pref[k]}"${act("zetPref", k)}><span class="grow"><span class="t">${t}</span><span class="s" style="display:block">${s}</span></span><span class="sw${this.pref[k] ? " on" : ""}" aria-hidden="true"></span></button>`;
       this.openModal("Weergave", "Voor op locatie. Wordt onthouden op dit toestel.",
         `<div class="listcard">${sw("veld", "Veldmodus", "Grotere knoppen en microfoon, voor werken met handschoenen")}${sw("zon", "Zonmodus", "Hoog contrast: zwart op wit met dikke randen, leesbaar in fel licht")}</div>
          <div class="s" style="margin-top:12px">Tijdens een inspectie blijft het scherm automatisch aan.</div>`);
@@ -259,14 +277,15 @@
     toonOpslag() {
       const c = $("opslag"); if (!c) return; const o = this._opslag || {};
       c.className = "opslag " + (o.s || "");
-      c.innerHTML = o.s === "fout" ? `Niet opgeslagen · <u style="cursor:pointer"${act("bewaarConcept")}>opnieuw</u>`
+      const h = o.s === "fout" ? `Niet opgeslagen · <button type="button" class="opnieuwlink"${act("bewaarConcept")}>opnieuw</button>`
         : o.t ? `✓ Veilig op dit toestel · ${o.t.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "Wordt op dit toestel bewaard";
+      if (c.innerHTML !== h) c.innerHTML = h;
     },
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
       $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
-        <button class="rondknop bel"${act("openMeldingen")} title="Meldingen" aria-label="Meldingen">${svg("bell", 19)}<span id="belnr" class="belnr hidden"></span></button>
-        <button class="rondknop avatar"${act("openAccount")} title="${esc(this.user.full_name)}" aria-label="Account">${esc(this.user.full_name[0])}</button></div>`;
+        <button type="button" class="rondknop bel"${act("openMeldingen")} title="Meldingen">${svg("bell", 19)}<span class="sr-only">Meldingen</span><span id="belnr" class="belnr hidden"></span></button>
+        <button type="button" class="rondknop avatar"${act("openAccount")} title="${esc(this.user.full_name)}" aria-label="Account">${esc(this.user.full_name[0])}</button></div>`;
     },
     openAccount() {
       const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
@@ -277,7 +296,7 @@
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       this._search = { prod: Object.values(this.data.kennisbank).map((p) => p.naam), trend: this.data.trendacties, saved };
       this.openModal("Zoeken", "Producten, trendacties en je inspecties.",
-        `<input id="zq" placeholder="Typ om te zoeken…" autocomplete="off"${op("input", "doSearch", WAARDE)} style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
+        `<input id="zq" type="search" aria-label="Zoeken" placeholder="Typ om te zoeken…" autocomplete="off"${op("input", "doSearch", WAARDE)} style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
          <div id="zr"></div>`);
       const i = $("zq"); if (i) i.focus();
     },
@@ -289,6 +308,7 @@
       s.prod.filter((p) => p.toLowerCase().includes(q)).slice(0, 5).forEach((p) => hit.push(["Product", p, ""]));
       (isWeb() ? s.trend : []).filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
       s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie", r.titel + " · " + r.taak, "#/rapport/" + r.id]));
+      zeg(hit.length ? hit.length + " resultaat" + (hit.length === 1 ? "" : "en") : "Niets gevonden");
       out.innerHTML = hit.length ? `<div class="listcard">${hit.map(([k, lab, href]) =>
         `<div class="row"${href ? ` style="cursor:pointer"${actSluit("go", href.replace(/^#\//, ""))}` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
         : `<div class="s">Niets gevonden voor “${esc(q)}”.</div>`;
@@ -296,6 +316,7 @@
 
     go(h) { location.hash = "#/" + h; },
     route() {
+      const inMenu = document.activeElement && $("tabbar").contains(document.activeElement);
       this.renderAcct();
       if (!this.user) { $("app").classList.add("nonav"); $("view").dataset.page = "login"; $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
@@ -314,10 +335,11 @@
       if (fn) fn.call(this, parts.slice(1));
       else this.view_vandaag();
       window.scrollTo(0, 0);
+      if (inMenu) { const a = $("tabbar").querySelector("a.on"); if (a) a.focus({ preventScroll: true }); }
     },
     renderTabs(active) {
-      $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
-        `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
+      $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo" aria-hidden="true">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
+        `<a href="#/${t.id}" class="${t.id === active ? "on" : ""}"${t.id === active ? ' aria-current="page"' : ""}><span class="ic">${svg(t.ic, 24)}</span>${t.lab}</a>`).join("");
     },
 
     view_login() {
@@ -326,7 +348,7 @@
         <div class="muted" style="margin-top:-8px;margin-bottom:8px">Kies je account. (Voorbeeld-login; later Supabase Auth.)</div></div>`));
       v.appendChild(el(`<div class="listcard">${USERS.map((u) =>
         `<div class="row" style="cursor:pointer"${act("login", u.id)}>
-          <span style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
+          <span aria-hidden="true" style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
           <span class="grow"><span class="t">${esc(u.full_name)}</span><div class="s">${esc(u.functie)} · ${ROL[u.role]}</div></span>
           <span class="s">${svg("chev", 18)}</span></div>`).join("")}</div>`));
       v.appendChild(el(`<div class="muted" style="font-size:12px;margin-top:16px">Rollen bepalen wat je ziet: een inspecteur start en ziet eigen inspecties; een coördinator en het Hoofd S&amp;M zien alles, acties en het dashboard.</div>`));
@@ -338,14 +360,30 @@
         <div class="lab">${lab}</div><div class="n">${n}</div><div class="sub">${sub}${actie ? " ›" : ""}</div></div>`;
     },
 
+    // Dialoog (#mod, role="dialog" aria-modal in index.html): titel = kop (#modtitel), sluitknop met naam,
+    // focus naar de dialoog bij openen (of terug op hetzelfde element als het venster opnieuw wordt getekend),
+    // Tab blijft binnen de dialoog en Escape sluit (zie de keydown-luisteraar onderaan), bij sluiten terug naar de opener.
     openModal(title, sub, body) {
-      $("mod").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div style="font-size:20px;font-weight:700">${esc(title)}</div>
-        <button${act("closeModal")} style="background:#F3F4F6;width:36px;height:36px;border-radius:50%;font-size:18px;color:#4A5565">×</button></div>
+      const mod = $("mod"), ov = $("ov"), open = ov.classList.contains("on"), a = document.activeElement;
+      const sleutel = open && a && a !== mod && mod.contains(a) ? focusSleutel(a) : null;
+      if (!open) this._modTerug = a && a !== document.body ? a : null;
+      mod.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+        <div id="modtitel" role="heading" aria-level="2" style="font-size:20px;font-weight:700">${esc(title)}</div>
+        <button type="button" class="modsluit"${act("closeModal")} aria-label="Sluiten" style="background:#F3F4F6;width:44px;height:44px;flex:none;border-radius:50%;font-size:20px;color:#4A5565">×</button></div>
         ${sub ? `<div class="muted" style="font-size:13px;margin:4px 0 14px">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
-      $("ov").classList.add("on");
+      ov.classList.add("on");
+      const terug = sleutel && zoekSleutel(mod, sleutel);
+      try { (terug || mod).focus({ preventScroll: !terug }); } catch (e) {}
     },
-    closeModal() { $("ov").classList.remove("on"); },
+    closeModal() {
+      const ov = $("ov"), was = ov.classList.contains("on"), mod = $("mod");
+      ov.classList.remove("on");
+      if (!was) return;
+      const t = this._modTerug, a = document.activeElement; this._modTerug = null;
+      if (t && t.isConnected && typeof t.focus === "function" && (!a || a === document.body || mod.contains(a))) { try { t.focus({ preventScroll: true }); } catch (e) {} }
+    },
+    // skiplink "Naar de inhoud" (index.html): geen hash-navigatie (die is van de router), alleen focus verplaatsen
+    naarInhoud() { const v = $("view"), h = v && v.querySelector("h1"); if (h && !h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1"); (h || v).focus(); },
     printen() { window.print(); },   // "Opslaan als PDF / printen" (rapport, kwartaal)
 
     view_alleenweb() {
@@ -360,7 +398,7 @@
   const WPI = window.WPI = {
     $, el, esc, MND, mlabel, IC, svg, DB, fotoDataURL, USERS, ROL, TABS, staf, isWeb, naam, STOP, SYN, toks, overlap,
     OW_KEYS, splitMaatregelen, kort, dag0, isoDag, plusDagen, dagLabel, dagenTot, PRIO, ST_CLS, stBadge, tril,
-    eigenWoorden, act, actSluit, op, WAARDE, ELEMENT, EVENT
+    eigenWoorden, act, actSluit, op, WAARDE, ELEMENT, EVENT, zeg
   };
 
   // ---- de delegatielaag (zie act/op hierboven): één luisteraar per eventsoort op document ----
@@ -408,7 +446,49 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") delegeer(e, "data-enter", "data-enter-args");
     if (e.key === "Escape") delegeer(e, "data-escape", "data-escape-args");
+    const ov = $("ov"), mod = $("mod"), open = ov && ov.classList.contains("on"), doel = e.target;
+    // Escape sluit de dialoog (tenzij een veld zelf iets met Escape doet: data-escape)
+    if (e.key === "Escape" && open && !e.defaultPrevented && !(doel && doel.closest && doel.closest("[data-escape]"))) { e.preventDefault(); App.closeModal(); return; }
+    // Tab blijft binnen de open dialoog (focus-trap)
+    if (e.key === "Tab" && open) {
+      const f = focusbaar(mod), a = document.activeElement;
+      if (!f.length) { e.preventDefault(); mod.focus(); return; }
+      if (e.shiftKey && (a === f[0] || a === mod || !mod.contains(a))) { e.preventDefault(); f[f.length - 1].focus(); }
+      else if (!e.shiftKey && (a === f[f.length - 1] || !mod.contains(a))) { e.preventDefault(); f[0].focus(); }
+      return;
+    }
+    // Enter/spatie op een niet-native knop (role="button" via bedienbaar hieronder) = klikken
+    if ((e.key === "Enter" || e.key === " ") && doel && doel.nodeType === 1 && !NATIEF.has(doel.tagName) && doel.hasAttribute("data-action")
+      && /^(button|switch|menuitem|tab|link)$/.test(doel.getAttribute("role") || "") && !e.repeat) {
+      e.preventDefault();
+      doel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    }
   });
+  // ---- klikbare niet-knoppen (rij, tegel, tabelrij, grafiekdeel met data-action) toetsenbordbedienbaar maken ----
+  // Eén plek voor alle gegenereerde HTML: krijgt role="button" en tabindex="0" (Enter/spatie: zie hierboven).
+  // SVG-delen zonder naam krijgen hun <title> of tekst als aria-label.
+  const NATIEF = new Set(["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "LABEL", "SUMMARY", "OPTION"]);
+  function focusbaar(root) {
+    return [...root.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')]
+      .filter((x) => x.getClientRects().length && getComputedStyle(x).visibility !== "hidden");
+  }
+  function maakBedienbaar(x) {
+    if (NATIEF.has(x.tagName) || x.id === "ov" || x.hasAttribute("data-geen-knop")) return;
+    if (!x.hasAttribute("role")) x.setAttribute("role", "button");
+    if (!x.hasAttribute("tabindex")) x.setAttribute("tabindex", "0");
+    if (x instanceof SVGElement && !x.hasAttribute("aria-label")) {
+      const t = x.querySelector("title"), tekst = (t ? t.textContent : x.textContent || "").replace(/\s+/g, " ").trim();
+      if (tekst) x.setAttribute("aria-label", tekst);
+    }
+  }
+  function bedienbaar(n) {
+    if (!n || n.nodeType !== 1) return;
+    if (n.hasAttribute("data-action")) maakBedienbaar(n);
+    n.querySelectorAll("[data-action]").forEach(maakBedienbaar);
+  }
+  new MutationObserver((ms) => ms.forEach((m) => { if (m.type === "attributes") bedienbaar(m.target); else m.addedNodes.forEach(bedienbaar); }))
+    .observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-action"] });
+  if (document.body) bedienbaar(document.body);
   // push-to-talk (inspreken): ingedrukt houden = praten, loslaten = klaar (450 ms, zie App.micDown/micUp)
   document.addEventListener("pointerdown", (e) => { const m = mic(e); if (m) App.micDown(m.getAttribute("data-mic"), e); });
   document.addEventListener("pointerup", (e) => { const m = mic(e); if (m) App.micUp(m.getAttribute("data-mic")); });

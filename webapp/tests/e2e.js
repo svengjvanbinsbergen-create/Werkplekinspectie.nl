@@ -34,7 +34,7 @@ await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(500);
 console.log('na opslaan:', (await p.locator('#mod').innerText()).slice(0,200));
 const rid=await ev(async()=>{const r=await (await indexedDB.databases(), null);return null});
 // Winfred stelt in
-await ev(()=>{App.closeModal();return App.login('u-winfred')});await p.waitForTimeout(600);
+await ev(()=>{App.closeModal();return App.login('u-coord1')});await p.waitForTimeout(600);
 await S('t5-vandaag-winfred');
 await ev(()=>{App.actFilter='instellen';App.go('acties')});await p.waitForTimeout(500);
 await S('t6-instellen');
@@ -42,14 +42,14 @@ const ids=await ev(()=>App.acties.filter(a=>a.status==='Voorstel').map(a=>a.id))
 const nid=ids.find(i=>!i.includes('demo'));
 await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(300);
 console.log('MOD', JSON.stringify((await p.locator('#mod').innerText()).slice(0,400)), 'ov', await ev(()=>document.getElementById('ov').className), errs);
-await p.selectOption('#ai-houder','u-douwe');await p.selectOption('#ai-toetser','u-douwe');
+await p.selectOption('#ai-houder','u-coord2');await p.selectOption('#ai-toetser','u-coord2');
 await p.click('text=Actie instellen');await p.waitForTimeout(200);
 const fout1=await p.locator('#ai-fout').textContent();console.log('fout:', fout1);if(!fout1.trim())errs.push('METHODE: toetser = actiehouder niet geweigerd');
 await S('t7-fout');
-await p.selectOption('#ai-toetser','u-winfred');await p.click('text=Actie instellen');await p.waitForTimeout(400);
+await p.selectOption('#ai-toetser','u-coord1');await p.click('text=Actie instellen');await p.waitForTimeout(400);
 const st1=await ev((id)=>App.acties.find(a=>a.id===id).status,nid);console.log('status na instellen', st1);if(st1!=='Open')errs.push('METHODE: status na instellen '+st1+', verwacht Open');
 // Douwe voert uit
-await ev(()=>App.login('u-douwe'));await p.waitForTimeout(400);
+await ev(()=>App.login('u-coord2'));await p.waitForTimeout(400);
 await ev((id)=>{App.go('acties');},nid);await p.waitForTimeout(400);
 await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(300);
 await S('t8-houder');
@@ -57,7 +57,7 @@ await p.click('text=Klaar voor toetsing, zonder foto');await p.waitForTimeout(40
 await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(200);
 console.log('douwe ziet:', (await p.locator('#mod .hint').textContent()));
 // Winfred toetst
-await ev(()=>{App.closeModal();return App.login('u-winfred')});await p.waitForTimeout(400);
+await ev(()=>{App.closeModal();return App.login('u-coord1')});await p.waitForTimeout(400);
 await ev(()=>{App.actFilter='toetsen';App.go('acties')});await p.waitForTimeout(400);
 await S('t9-toetsen');
 await ev((id)=>App.openActie(id),nid);await p.waitForTimeout(200);

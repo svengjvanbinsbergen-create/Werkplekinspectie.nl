@@ -133,6 +133,9 @@ $$;
 -- Alleen als het object ECHT bij die actie hoort: de foto is geüpload door de aanmaker
 -- van de actie (of de inspecteur van de bron-inspectie), de na-foto door wie hem
 -- toevoegde. Een zelfgekozen pad naar andermans foto geeft dus geen toegang.
+-- Gewone gelijkheid op het pad (met of zonder "fotos/"): gebruikt de indexen acties_foto_pad/acties_nafoto_pad
+-- (0007). Deze functie draait in de SELECT-policy van storage.objects voor elk object; een volledige scan
+-- van acties per object maakte lijsten en de oude quotumtelling onbruikbaar traag.
 create or replace function public.foto_via_actie(p_naam text)
 returns boolean
 language sql stable security definer set search_path = ''
@@ -140,9 +143,9 @@ as $$
   select auth.uid() is not null and exists (
     select 1 from public.acties a
     left join public.inspecties i on i.id = a.inspectie_id
-    where ((regexp_replace(a.foto_pad, '^fotos/', '') = p_naam
+    where ((a.foto_pad in (p_naam, 'fotos/' || p_naam)
             and public.foto_eigenaar(p_naam) in (a.aangemaakt_door::text, i.inspecteur_id::text))
-        or (regexp_replace(a.nafoto_pad, '^fotos/', '') = p_naam
+        or (a.nafoto_pad in (p_naam, 'fotos/' || p_naam)
             and public.foto_eigenaar(p_naam) = a.nafoto_door::text))
       and public.actie_zichtbaar(a.houder, a.toetser, a.aangemaakt_door, a.ingesteld_door,
                                  a.vervallen_door, a.inspectie_id, a.status, a.plandatum))
@@ -160,8 +163,8 @@ language sql stable security definer set search_path = ''
 as $$
   select public.foto_eigenaar(p_naam) is distinct from auth.uid()::text
       or exists (select 1 from public.acties a
-                 where regexp_replace(a.foto_pad, '^fotos/', '') = p_naam
-                    or regexp_replace(a.nafoto_pad, '^fotos/', '') = p_naam)
+                 where a.foto_pad in (p_naam, 'fotos/' || p_naam)
+                    or a.nafoto_pad in (p_naam, 'fotos/' || p_naam))
       or exists (select 1 from public.inspecties i
                  where i.inspecteur_id = auth.uid()
                    and strpos(i.record::text, p_naam) > 0)
@@ -709,8 +712,8 @@ end $$;
 -- Methode ("alleen wat de inspecteur ziet telt"):
 --   * oordeel wijzigt niemand ('–' en leeg zijn hetzelfde: "geen oordeel");
 --   * een actie uit een inspectie is een kopie van één waarneming uit de bevroren
---     momentopname (acties_controle_nieuw); waarneming, referentie en dringendheid liggen
---     daarna vast, ook voor de inspecteur zelf;
+--     momentopname (acties_controle_nieuw); waarneming, referentie, dringendheid en foto
+--     liggen daarna vast, ook voor de inspecteur zelf;
 --   * bij een handmatige actie wijzigt alleen de waarnemer (wie hem aanmaakte; ook staf
 --     niet) waarneming, referentie, dringendheid, foto en 'handmatig'. Zonder aanmaker
 --     (service_role/postgres) is er geen waarnemer;
@@ -846,11 +849,12 @@ begin
       raise exception 'Het oordeel komt van de inspecteur en kan niet worden gewijzigd' using errcode = '42501';
     end if;
     -- Uit een inspectie (of ooit uit een inspectie: oordeel C/A/V/NVT): waarneming,
-    -- referentie en dringendheid zijn een kopie van de vastgelegde momentopname en liggen
+    -- referentie, dringendheid en foto zijn een kopie van de vastgelegde momentopname en liggen
     -- vast, ook voor de inspecteur zelf (zoals de inspectie zelf, zie inspecties_valideer).
     if (old.inspectie_id is not null or old.oordeel in ('C', 'A', 'V', 'NVT'))
-       and (new.waarneming, new.ref, new.prio) is distinct from (old.waarneming, old.ref, old.prio) then
-      raise exception 'Waarneming, referentie en dringendheid komen uit de vastgelegde inspectie en liggen vast'
+       and (new.waarneming, new.ref, new.prio, new.foto_pad)
+           is distinct from (old.waarneming, old.ref, old.prio, old.foto_pad) then
+      raise exception 'Waarneming, referentie, dringendheid en foto komen uit de vastgelegde inspectie en liggen vast'
         using errcode = '42501';
     end if;
     -- waarneming, referentie, dringendheid, foto en 'handmatig': alleen de waarnemer zelf
@@ -1014,7 +1018,8 @@ $$;
 -- momentopname (inspecties.record, bevroren). De app legt dat vast als
 -- record.waarnemingen[n].actie.actie_id = id van de actie. De server eist dat verband en
 -- vergelijkt de kopie: oordeel (A of V, van de inspecteur), waarneming (tekst, getrimd),
--- dringendheid (actie.prio), en "Afgerond" alleen bij actie.terPlaatse = 'gecorrigeerd'.
+-- dringendheid (actie.prio), foto (= waarnemingen[n].foto, met of zonder "fotos/"), en "Afgerond"
+-- alleen bij actie.terPlaatse = 'gecorrigeerd'.
 -- (De referentie, bv. "DAM-2.07", haalt de app uit de catalogus en staat niet in het
 -- record; die controleert de server niet, maar ook hij ligt na het aanmaken vast.)
 create or replace function public.acties_controle_nieuw()
@@ -1054,6 +1059,12 @@ begin
     end if;
     if new.prio is distinct from nullif(v_w -> 'actie' ->> 'prio', '') then
       raise exception 'De dringendheid van de actie moet gelijk zijn aan die in de vastgelegde inspectie'
+        using errcode = '23514';
+    end if;
+    -- de foto is de foto van die waarneming in de momentopname (niet een andere eigen foto als "bewijs")
+    if regexp_replace(coalesce(new.foto_pad, ''), '^fotos/', '')
+       <> regexp_replace(coalesce(case when jsonb_typeof(v_w -> 'foto') = 'string' then v_w ->> 'foto' end, ''), '^fotos/', '') then
+      raise exception 'De foto van de actie moet de foto van de waarneming in de vastgelegde inspectie zijn'
         using errcode = '23514';
     end if;
     if new.status = 'Afgerond' and (v_w -> 'actie' ->> 'terPlaatse') is distinct from 'gecorrigeerd' then
@@ -1102,6 +1113,9 @@ begin
       raise exception 'Ongeldig id: het tijdstip in het id ligt in de toekomst (staat de klok van het toestel goed?)'
         using errcode = '22023';
     end if;
+    -- eerst de lock per gebruiker (dezelfde als audit_quotum), dán tellen: deze trigger vuurt vóór "audit"
+    -- (triggers gaan op naam), dus zonder eigen lock telden parallelle inserts elkaar niet mee (295 + 12 = 307)
+    perform pg_advisory_xact_lock(hashtextextended('wpi_quotum:' || v_uid::text, 0));
     if (select count(*) from public.acties a
          where a.aangemaakt_door = v_uid and a.created_at > now() - interval '1 hour') > 300 then
       raise exception 'Te veel nieuwe acties in het afgelopen uur; probeer het later opnieuw'
@@ -1214,7 +1228,7 @@ begin
   if current_user in ('authenticated', 'anon') then
     new.bron := 'client';
     if new.wat ~ '[\u00AD\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]'
-       or new.wat ~ '[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F]' then
+       or new.wat ~ '[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u061C\u2028\u2029]' then
       raise exception 'Het verloop mag geen onzichtbare of besturingstekens bevatten' using errcode = '22023';
     end if;
     if normalize(new.wat, NFKC) ~* '^[[:space:][:punct:]]*(status[[:space:]]*:|aangemaakt[[:space:]]+met[[:space:]]+status|actiehouder,[[:space:]]*toetser[[:space:]]+of[[:space:]]+plandatum[[:space:]]+gewijzigd)' then

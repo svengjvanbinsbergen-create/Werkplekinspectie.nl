@@ -4,6 +4,8 @@
 (function () {
   "use strict";
   const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden, act, actSluit, op, WAARDE, ELEMENT } = window.WPI;
+  // oordeel uit het (lokale) concept alleen als C/A/V/NVT in de HTML (anders leeg): nooit ruwe tekst in class of tekst
+  const ov = (o) => ({ C: "C", A: "A", V: "V", NVT: "NVT" }[o] === o ? o : "");
   Object.assign(window.App, {
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
@@ -163,7 +165,7 @@
       try { if (this._rec) { this._rec.onend = null; this._rec.stop(); } } catch (e) {}
       this._rec = null; this.markMic(); if (k) this.zegPartial(k, "");
     },
-    markMic() { document.querySelectorAll("[data-mic]").forEach((b) => b.classList.toggle("on", b.getAttribute("data-mic") === this.micKey)); },
+    markMic() { document.querySelectorAll("[data-mic]").forEach((b) => { const aan = b.getAttribute("data-mic") === this.micKey; b.classList.toggle("on", aan); if (b.hasAttribute("aria-pressed")) b.setAttribute("aria-pressed", String(aan)); }); },
     zegPartial(key, text) { const p = key && $("p-" + key); if (p) p.textContent = text ? "… " + text : ""; },
     zegHint(key, text) { const p = key && $("p-" + key); if (p) p.textContent = text; },
 
@@ -293,7 +295,7 @@
         <button class="ih-rond"${act("terug")} aria-label="Terug" title="Terug">${svg("back", 22)}</button>
         <div class="ih-meta"><div class="ih-titel">${esc(ins.titel)}</div>
           <div class="ih-sub">${n} waarneming${n === 1 ? "" : "en"}${a ? " · " + a + " actievoorstel" + (a === 1 ? "" : "len") : ""}</div>
-          <span id="opslag" class="opslag"></span></div>
+          <span id="opslag" class="opslag" role="status"></span></div>
         <button class="ih-rond"${act("openWeergave")} aria-label="Weergave: veldmodus en zonmodus" title="Weergave">${svg("sun", 22)}</button></div>
         <div class="kicker" style="margin-top:14px">${esc(kicker)}</div>
         <div class="ih-vraag"><h1>${esc(titel)}</h1>${rechts || ""}</div></div>`;
@@ -306,7 +308,7 @@
     toastLaatste(ins) {
       const w = ins.waarnemingen.find((x) => x.id === ins.laatste); if (!w) return "";
       const info = this.regelInfo(w.regel_id, w.buiten);
-      return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${w.oordeel}]${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
+      return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${ov(w.oordeel)}]${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
         <button class="btn ghost sm"${act("ongedaan")}>Ongedaan maken</button></div>`;
     },
 
@@ -342,9 +344,9 @@
         </div>
         <div class="dock">
           <div class="vangrij">
-            <button class="micgroot${aan ? " on" : ""}" data-mic="zie" aria-label="Inspreken: houd vast en praat, of tik voor aan en uit">
+            <button class="micgroot${aan ? " on" : ""}" data-mic="zie" aria-describedby="mg-uitleg" aria-pressed="${!!aan}">
               <span class="mg-ic">${svg("mic", 28)}</span>
-              <span class="mg-t"><b class="m-uit">Inspreken</b><b class="m-aan">Luistert…</b><small class="m-uit">Houd vast en praat</small><small class="m-aan">Loslaten = klaar</small></span>
+              <span class="mg-t"><b class="m-uit">Inspreken</b><b class="m-aan">Luistert…</b><small class="m-uit">Houd vast en praat</small><small class="m-aan">Loslaten = klaar</small><span id="mg-uitleg" class="sr-only">Houd vast en praat, of tik (of Enter) voor aan en uit</span></span>
             </button>
             <button class="fotogroot"${act("addFoto")} aria-label="${nf ? "Extra foto maken" : "Foto maken"}"${vol ? " disabled" : ""}>${svg("cam", 28)}<span>${nf ? "Extra" : "Foto"}</span></button>
           </div>
@@ -482,7 +484,7 @@
       const cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten);
       let h = `<div class="q okaart">${this.citaat(cur)}
         <div class="koppelrij"><span class="vp-ref">${esc(info.ref)}</span><div class="t clamp3" title="${esc(info.titel)}">${esc(info.titel)}</div>
-          ${cur.onderwerp ? "" : `<button class="wijzig"${act("wijzigKoppeling")} aria-label="Andere TRA-regel kiezen">Wijzig</button>`}</div>`;
+          ${cur.onderwerp ? "" : `<button class="wijzig"${act("wijzigKoppeling")} aria-label="Wijzig: andere TRA-regel kiezen">Wijzig</button>`}</div>`;
       if (cur.direct) h += `<div class="gevaarbalk" role="status">${svg("warn", 20)}<span>Direct gevaar · werk is stilgelegd</span></div>`;
       if (cur.vraag) h += `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(cur.vraag)}</div>`;
       if (info.maatregelen.length) h += `<div class="otitel">Welke maatregel zag je? <span>(optioneel)</span></div>
@@ -599,7 +601,7 @@
     },
     ins_meer(ins, v) {
       v.appendChild(el(this.insHead(ins, "Taak · " + ins.taak, "Nog iets gezien?")));
-      const t = this.toastLaatste(ins); if (t) v.appendChild(el(t));
+      const t = this.toastLaatste(ins); if (t) { const n = el(t); v.appendChild(n); window.WPI.zeg((n.firstElementChild || n).textContent.trim()); }
       v.appendChild(el(`<div class="q">
         <button class="btn primary"${act("waarnemingOver")}>${svg("mic", 18)} Ja, volgende waarneming</button>
         <button class="btn ghost" style="margin-top:10px;width:100%"${act("stap", "algemeen")}>Algemene onderwerpen nalopen</button>
@@ -609,13 +611,13 @@
     },
     ins_algemeen(ins, v) {
       v.appendChild(el(this.insHead(ins, "Geheugensteun · niet verplicht", "Algemene onderwerpen")));
-      const t = this.toastLaatste(ins); if (t) v.appendChild(el(t));
+      const t = this.toastLaatste(ins); if (t) { const n = el(t); v.appendChild(n); window.WPI.zeg((n.firstElementChild || n).textContent.trim()); }
       v.appendChild(el(`<div class="q"><div class="qs" style="margin-top:0">Leg alleen vast wat je zag. Tik op een onderwerp om er een waarneming bij te geven.</div>
         ${this.onderwerpen().map((o) => {
           const ws = ins.waarnemingen.filter((x) => x.regel_id === "ALG-" + o.ref);
           return `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:12px"${act("waarnemingOver", o.ref)}>
             <span style="width:30px;height:30px;border-radius:8px;background:var(--mist);display:grid;place-items:center;font-weight:700;flex:none">${o.ref}</span>
-            <span style="flex:1" class="t">${esc(o.naam)}</span>${ws.map((x) => `<span class="badge b-${x.oordeel === "NVT" ? "N" : x.oordeel}">[${x.oordeel}]</span>`).join(" ")}</button>`;
+            <span style="flex:1" class="t">${esc(o.naam)}</span>${ws.map((x) => `<span class="badge b-${ov(x.oordeel) === "NVT" ? "N" : ov(x.oordeel)}">[${ov(x.oordeel)}]</span>`).join(" ")}</button>`;
         }).join("")}
         <button class="btn primary" style="margin-top:14px"${act("stap", "meer")}>Klaar met de onderwerpen</button></div>`));
     },
@@ -651,7 +653,7 @@
         return `<div class="row"><span class="grow"><span class="t">${esc(i.ref)} · ${esc(kort(i.titel, 60))}</span>
           <div class="s">${w.tekst.trim() ? "“" + esc(kort(w.tekst.trim(), 90)) + "”" : this.fotoLijst(w).length > 1 ? "foto's" : "foto"}${w.actie && w.actie.tekst ? " · actie: " + esc(kort(w.actie.tekst, 60)) : ""}</div></span>
           ${this.fotoDuimen(w, 1, 36)}
-          <span class="badge b-${w.oordeel === "NVT" ? "N" : w.oordeel}">[${w.oordeel}]</span></div>`;
+          <span class="badge b-${ov(w.oordeel) === "NVT" ? "N" : ov(w.oordeel)}">[${ov(w.oordeel)}]</span></div>`;
       }).join("")}</div></div>`;
     },
     // controle vóór ondertekenen: alleen herinneringen, je kunt altijd vastleggen

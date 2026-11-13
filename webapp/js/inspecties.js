@@ -4,6 +4,8 @@
 (function () {
   "use strict";
   const { $, el, esc, svg, DB, staf, naam, kort, dagLabel, stBadge, act, op, WAARDE } = window.WPI;
+  // oordeel uit een (lokaal) record alleen als C/A/V/NVT in de HTML (anders leeg): nooit ruwe tekst in class of tekst
+  const ov = (o) => ({ C: "C", A: "A", V: "V", NVT: "NVT" }[o] === o ? o : "");
   Object.assign(window.App, {
     // ---------------- INSPECTIES ----------------
     inspFilter: { insp: "", mont: "" },
@@ -21,7 +23,7 @@
       const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
       const lijst = rijen.filter((r) => (!f.insp || r.inspecteur === f.insp) && (!f.mont || r.monteurs.includes(f.mont)));
       v.appendChild(el(`<div><div class="hi">${mine ? "Jouw inspecties" : "Alle inspecties"}</div><h1 class="groot">Inspecties</h1></div>`));
-      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}"${op("change", "zetInspFilter", k, WAARDE)}><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}" aria-label="${esc(lab)}"${op("change", "zetInspFilter", k, WAARDE)}><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
       v.appendChild(el(`<div class="filterbalk">${mine ? "" : sel("insp", inspecteurs, "Alle inspecteurs")}${sel("mont", monteurs, "Alle monteurs")}
         ${f.insp || f.mont ? `<button class="linkje"${act("wisInspFilter")}>Wis filter</button>` : ""}</div>`));
       v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.mont ? ` waarbij ${esc(f.mont)} aan het werk was` : ""}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
@@ -48,7 +50,7 @@
         return `<div class="row" style="align-items:flex-start"><span class="grow"><span class="t">${esc(i.ref)} · ${esc(kort(i.titel, 90))}</span>
           ${w.tekst ? `<div class="s">Waarneming: “${esc(w.tekst.trim())}”</div>` : ""}
           ${w.maatregelen && w.maatregelen.length ? `<div class="s">Maatregel gezien: ${esc(w.maatregelen.join("; "))}</div>` : ""}</span>
-          <span class="badge b-${w.oordeel === "NVT" ? "N" : w.oordeel}">[${w.oordeel}] ${ob[w.oordeel] || ""}</span></div>`;
+          <span class="badge b-${ov(w.oordeel) === "NVT" ? "N" : ov(w.oordeel)}">[${ov(w.oordeel)}] ${ob[ov(w.oordeel)] || ""}</span></div>`;
       }).join("");
       const acties = ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && w.actie);
       await this.laadActies();

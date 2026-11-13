@@ -7,7 +7,12 @@
    MET backend (Supabase Auth, direct via /auth/v1 — geen externe bibliotheek):
    - e-mail + wachtwoord; "Wachtwoord vergeten?" stuurt een herstelmail (altijd dezelfde melding,
      zodat niet te achterhalen is welke adressen bestaan); de link uit die mail opent hier het
-     scherm "Nieuw wachtwoord" en logt daarna alle sessies uit.
+     scherm "Nieuw wachtwoord" en logt daarna alle sessies uit. De herstelmail gebruikt PKCE: de link
+     (?code=…) is alleen in te wisselen in de browser die hem aanvroeg (code_verifier in localStorage).
+     Een link met #access_token (uitnodiging, of herstel via het Supabase-dashboard) wordt eerst bij de
+     server gecontroleerd. Een link kan NOOIT een bewaarde sessie of de gegevens op dit toestel wissen,
+     en hoort hij bij een ander account dan wie hier bewaard ingelogd is, dan wordt hij geweigerd
+     (geen "inloggen als een ander" via een link van een buitenstaander). Zie verwerkLink().
    - rol uit public.profiles (nooit uit de client); inactieve profielen komen er niet in.
    - het hoofd moet tweestapsverificatie (TOTP, aal2) doorlopen; zonder gekoppelde app wordt die
      eerst ingesteld (QR-code). RLS dwingt aal2 af voor beheerroutes (public.mfa_ok()).
@@ -32,7 +37,13 @@
      van die ander te wissen. Ook bij terugkomen in een tabblad dat het event miste (zie ook js/sync.js, punt 6).
    - gedeeld toestel: na het sluiten zonder uitloggen (geen sessie meer bij het openen) en bij een andere
      gebruiker dan de vorige (localStorage "wpi_laatste_uid") worden eerst de servergegevens op dit
-     toestel gewist (App.syncWisLokaal; de eigen wachtrij blijft), pas daarna komt er iets op het scherm.
+     toestel gewist (App.syncWisLokaal), pas daarna komt er iets op het scherm.
+   - werk dat nog NIET op de server staat (wachtrij en lopende inspectie) staat onversleuteld in IndexedDB.
+     Uitloggen met zulk werk: kiezen tussen "Eerst synchroniseren", "Bewaren" (alleen op je eigen telefoon) en
+     "Wissen" (gedeeld toestel). Logt daarna een ANDER in, dan ziet die eerst "Werk van een vorige gebruiker"
+     en wordt dat werk gewist vóórdat er iets op het scherm komt (App.syncWisAnderen); annuleren kan.
+     Restrisico (zie docs/beveiligingsrapport.md): wie "Bewaren" kiest op een gedeeld toestel, laat het werk
+     leesbaar achter voor iemand met toegang tot het toestel (DevTools) tot de volgende login.
    - lukt het ophalen van het profiel tijdelijk niet (geen netwerk, time-out, 401/408/429/5xx), dan wordt
      er NIET uitgelogd: bij herstellen verder met het bewaarde profiel, bij inloggen "Server niet
      bereikbaar, probeer opnieuw". Alleen een definitief antwoord (geen profiel / actief = false /
@@ -53,6 +64,7 @@
   const K_RT = "wpi_sessie", K_PROF = "wpi_profiel", K_PROFS = "wpi_profielen", K_POG = "wpi_login_pogingen", K_SEC = "wpi_beveiliging_wachtrij";
   const K_KEUZE = "wpi_ingelogd_blijven";   // alleen de keuze van het vinkje (geen geheim)
   const K_LAATSTE = "wpi_laatste_uid";       // wie het laatst op dit toestel was ingelogd (geen geheim)
+  const K_PKCE = "wpi_pkce";                 // code_verifier van de laatste herstelaanvraag in deze browser (PKCE)
   const ROLLEN = ["hoofd", "coordinator", "inspecteur"];
   const MFA_ROLLEN = ["hoofd"];
 
@@ -63,6 +75,7 @@
     try { const p = t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"); return JSON.parse(decodeURIComponent(escape(atob(p + "===".slice((p.length + 3) % 4))))); }
     catch (e) { return {}; }
   }
+  const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   const opslag = (onthoud) => (onthoud ? localStorage : sessionStorage);
   function lees(k) {
     for (const [st, onthoud] of [[localStorage, true], [sessionStorage, false]]) {
@@ -101,6 +114,7 @@
     const vorige = laatsteUid();
     try { localStorage.setItem(K_LAATSTE, uid); } catch (e) {}
     if (App.syncEigenaar) await App.syncEigenaar(uid);
+    if (App.syncWisAnderen) await App.syncWisAnderen(uid);   // werk van andere gebruikers (bevestigd in rondAf)
     if (vorige !== uid && App.syncWisLokaal) await App.syncWisLokaal(vorige);
   }
   // alleen de bewaarde sessie van déze gebruiker wissen (in localStorage kan al die van een ander staan)
@@ -121,7 +135,7 @@
     if (App.closeModal) App.closeModal();
     App.logout();
   }
-  const anderIngelogd = () => uitElders("Er is in een ander venster op dit toestel iemand anders ingelogd. Je bent hier uitgelogd; je vastgelegde gegevens zijn bewaard.");
+  const anderIngelogd = () => uitElders("Er is in een ander venster op dit toestel iemand anders ingelogd. Je bent hier uitgelogd.");
   const keuzeOnthoud = () => { try { return localStorage.getItem(K_KEUZE) === "1"; } catch (e) { return false; } };
 
   let vBezig = null;
@@ -230,7 +244,8 @@
       <button class="linkknop" type="button"${act("authScherm", "login")}>Terug naar inloggen</button></div>`));
   }
   function scherm_nieuwww(v) {
-    v.appendChild(el(`<div>${kop("Nieuw wachtwoord", "Kies een nieuw wachtwoord van minstens 12 tekens. Een zin van een paar woorden werkt goed.")}${melding()}
+    const l = S.link, wie = l && l.email ? `<div class="s" style="margin-bottom:12px;line-height:1.45">Voor het account <b>${esc(l.email)}</b>. Is dit niet jouw e-mailadres, of heb je niets aangevraagd? Kies dan Annuleren.</div>` : "";
+    v.appendChild(el(`<div>${kop(l && l.soort === "invite" ? "Kies je wachtwoord" : "Nieuw wachtwoord", "Kies een nieuw wachtwoord van minstens 12 tekens. Een zin van een paar woorden werkt goed.")}${melding()}${wie}
       <form class="card" novalidate${op("submit", "authNieuwWachtwoord")}>
         <label class="flab" for="n-ww">Nieuw wachtwoord</label>
         <input id="n-ww" class="fin" type="password" autocomplete="new-password" required minlength="12" maxlength="200">
@@ -269,6 +284,16 @@
       </form>
       <button class="linkknop" type="button"${act("authAnnuleer")}>Annuleren</button></div>`));
     const i = $("m-code"); if (i) i.focus();
+  }
+  function scherm_anderwerk(v) {
+    const n = S.anderN || 0;
+    v.appendChild(el(`<div>${kop("Werk van een vorige gebruiker", "")}
+      <div class="card">
+        <div class="s" style="line-height:1.5;margin-bottom:12px">Op dit toestel staat nog werk van iemand anders dat niet op de server staat (${n} ${n === 1 ? "onderdeel" : "onderdelen"}, bijvoorbeeld een lopende inspectie). Als je doorgaat, wordt dat gewist; het is dan weg.</div>
+        <div class="s" style="line-height:1.5;margin-bottom:14px">Is het van een collega? Laat die dan eerst hier inloggen en synchroniseren.</div>
+        <button class="btn primary"${act("authAnderDoorgaan")}>Doorgaan en wissen</button>
+        <button class="btn ghost" style="margin-top:10px;width:100%"${act("authAnnuleer")}>Annuleren</button>
+      </div></div>`));
   }
   function fout(t) { const f = $("l-fout"); if (f) { f.dataset.slot = ""; f.textContent = t; } }
   function bezigKnop(id, aan, tekst) { const k = $(id); if (k) { k.disabled = aan; if (tekst) k.textContent = tekst; } }
@@ -311,6 +336,14 @@
     } catch (e) { S.melding = "Tweestapsverificatie kon niet starten. Controleer je verbinding en probeer het opnieuw."; }
   }
   async function rondAf(p, herstel) {
+    // Staat er op dit toestel nog onverstuurd werk van een ANDERE gebruiker? Dan eerst bevestigen dat het wordt
+    // gewist (wisAlsAnder → syncWisAnderen), vóórdat deze gebruiker iets te zien krijgt. Bij herstel van een eigen
+    // sessie wordt het zonder vraag gewist (dat werk kan er alleen staan als de ander koos het te bewaren).
+    if (!herstel && !S.anderOk && App.syncAnderWerk) {
+      const n = await App.syncAnderWerk(p.id);
+      if (n) { S.wacht = p; S.anderN = n; S.scherm = "anderwerk"; S.melding = ""; App.route(); return; }
+    }
+    S.anderOk = false; S.wacht = null;
     const prof = profielVoorApp(p);
     // pas nu (profiel, rol en zo nodig MFA in orde) het refresh-token bewaren; het hoofd nooit blijvend
     if (MFA_ROLLEN.includes(p.role)) S.onthoud = false;
@@ -335,21 +368,77 @@
     if (!S.at) return;
     try { await metTimeout(sb("/auth/v1/logout?scope=" + scope, { method: "POST", auth: false, headers: metToken() }), 5000); } catch (e) {}
   }
-  // link uit de herstelmail: #access_token=…&type=recovery (of #error=…)
-  function verwerkHash() {
+  // ---------------- link uit een e-mail (wachtwoord herstellen, uitnodiging) ----------------
+  // Twee vormen:
+  //  - PKCE (de herstelmail die deze app aanvraagt): ?code=… — alleen in te wisselen met de code_verifier die DEZE
+  //    browser bij het aanvragen bewaarde (K_PKCE). Een link van iemand anders werkt hier dus nooit.
+  //  - impliciet: #access_token=…&type=recovery|invite (uitnodiging door het hoofd, of herstel via het dashboard).
+  //    Alleen type recovery of invite, en het token wordt EERST bij de server gecontroleerd (GET /auth/v1/user).
+  // Een link verandert nooit iets aan wat er al is: geen wisSessie/wisOpslag, geen syncWisLokaal. Bij een ongeldige
+  // link, of een link van een ander account dan wie hier bewaard ingelogd is, gaat de app gewoon verder met de
+  // bewaarde sessie (met een melding). Pas na het opslaan van een nieuw wachtwoord (overal uitgelogd) gaat die weg.
+  const LINK_VERLOPEN = "De link is verlopen, al gebruikt of ongeldig. Vraag hieronder een nieuwe aan.";
+  async function verwerkLink() {
     const h = new URLSearchParams(location.hash.replace(/^#\/?/, ""));
-    if (!h.get("access_token") && !h.get("error") && !h.get("error_code")) return false;
-    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }
-    if (h.get("error") || h.get("error_code")) { S.scherm = "vergeten"; S.melding = "De link is verlopen of al gebruikt. Vraag hieronder een nieuwe aan."; return true; }
-    zetSessie({ access_token: h.get("access_token"), refresh_token: h.get("refresh_token"), expires_in: +h.get("expires_in") || 3600 }, false);
-    S.scherm = h.get("type") === "recovery" ? "nieuwww" : "login";
-    if (S.scherm === "login") wisSessie();
+    const q = new URLSearchParams(location.search);
+    const code = q.get("code");
+    if (!code && !h.get("access_token") && !h.get("error") && !h.get("error_code")) return false;
+    // token/code meteen uit het adres (niet in de geschiedenis, niet in een gedeelde schermafbeelding)
+    q.delete("code");
+    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "")); } catch (e) { location.hash = ""; }
+    const bw = lees(K_RT), bewaardUid = bw && bw.v && bw.v.rt ? bw.v.uid : null;
+    const weiger = (m) => { vergeetGeheugen(); S.link = null; if (bewaardUid) S.linkMelding = m; else { S.scherm = "vergeten"; S.melding = m; } return false; };
+    if (h.get("error") || h.get("error_code")) return weiger(LINK_VERLOPEN);
+    if (!navigator.onLine) return weiger("Geen verbinding. Open de link opnieuw zodra je bereik hebt.");
+    let d, soort;
+    if (code) {
+      let pk = null; try { pk = JSON.parse(localStorage.getItem(K_PKCE) || "null"); } catch (e) {}
+      if (!pk || !pk.v || Date.now() - (pk.t || 0) > 24 * 3600e3) return weiger("Deze link hoort bij een aanvraag uit een andere browser. Open hem in de browser waarin je de herstelmail aanvroeg, of vraag hieronder een nieuwe aan.");
+      try { d = await sb("/auth/v1/token?grant_type=pkce", { method: "POST", auth: false, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ auth_code: code, code_verifier: pk.v }) }); }
+      catch (e) { return weiger(!e.status || e.status >= 500 ? "De server is niet bereikbaar. Open de link straks opnieuw." : LINK_VERLOPEN); }
+      try { localStorage.removeItem(K_PKCE); } catch (e) {}
+      soort = "recovery";
+    } else {
+      soort = h.get("type");
+      if (soort !== "recovery" && soort !== "invite") return weiger("Deze link wordt hier niet gebruikt. Vraag zo nodig hieronder een herstelmail aan.");
+      const at = h.get("access_token");
+      let u = null;
+      try { u = await sb("/auth/v1/user", { auth: false, headers: { Authorization: "Bearer " + at } }); }
+      catch (e) { return weiger(!e.status || e.status >= 500 ? "De server is niet bereikbaar. Open de link straks opnieuw." : LINK_VERLOPEN); }
+      if (!u || !u.id || (jwt(at).sub && jwt(at).sub !== u.id)) return weiger(LINK_VERLOPEN);
+      d = { access_token: at, refresh_token: h.get("refresh_token"), expires_in: +h.get("expires_in") || 3600, user: u };
+    }
+    const uid = (d.user && d.user.id) || jwt(d.access_token).sub;
+    if (bewaardUid && uid !== bewaardUid) {
+      // niet als een ander inloggen; de sessie uit de link meteen intrekken (alleen die)
+      try { await metTimeout(sb("/auth/v1/logout?scope=local", { method: "POST", auth: false, headers: { Authorization: "Bearer " + d.access_token } }), 5000); } catch (e) {}
+      return weiger("Deze link hoort bij een ander account dan waarmee je hier bent ingelogd en is niet gebruikt. Log eerst uit als het jouw link is.");
+    }
+    zetSessie(d, false);   // alleen in het geheugen (S.klaar blijft false: er wordt niets bewaard)
+    S.link = { uid, email: (d.user && d.user.email) || jwt(d.access_token).email || "", soort, bewaard: !!bewaardUid };
+    S.scherm = "nieuwww"; S.melding = "";
     return true;
+  }
+  // Annuleren of mislukken op het scherm "Nieuw wachtwoord" na een link: alleen de sessie uit de link vergeten
+  // (en op de server intrekken) en verder met wat er bewaard was. Niets wissen.
+  async function linkAfbreken(scherm, m) {
+    await uitloggenServer("local");   // S.at is hier het token uit de link: dit trekt alleen die sessie in
+    vergeetGeheugen(); S.link = null; S.scherm = null; S.melding = "";
+    await App.authHerstel();
+    if (!App.user) { S.scherm = scherm; S.melding = m || ""; }
+    else { if (m) S.linkMelding = m; if (App.herstelConcept) await App.herstelConcept(); }
+    App.route();
+    toonLinkMelding();
+  }
+  function toonLinkMelding() {
+    const m = S.linkMelding; if (!m || !App.user) return;
+    S.linkMelding = null;
+    setTimeout(() => App.openModal("Link niet gebruikt", m, `<button class="btn primary"${act("closeModal")}>Begrepen</button>`), 300);
   }
 
   // sessie van een vorige keer herstellen (refresh-token uit sessionStorage of, met "Ingelogd blijven", localStorage)
   async function herstel() {
-    if (verwerkHash()) return;
+    if (await verwerkLink()) return;
     const o = lees(K_RT); if (!o || !o.v.rt) return;
     S.rt = o.v.rt; S.uid = o.v.uid; S.onthoud = o.onthoud; S.klaar = true;
     const prof = (lees(K_PROF) || {}).v, profs = (lees(K_PROFS) || {}).v;
@@ -370,16 +459,17 @@
     async authHerstel() {
       zonderVoorbeelddata();   // vóór er iets op het scherm komt (boot() heeft de data net geladen)
       await herstel();
-      // Geen sessie te herstellen (tabblad/app gesloten zonder uitloggen, sessie verlopen, herstellink):
-      // de servergegevens van de vorige gebruiker horen niet op het inlogscherm van een gedeeld toestel.
-      if (!App.user) { if (App.syncWisLokaal) await App.syncWisLokaal(laatsteUid()); }
-      else await wisAlsAnder(App.user.id);   // (zonder bereik hersteld: zelfde controle als bij inloggen)
+      // Geen sessie te herstellen (tabblad/app gesloten zonder uitloggen, sessie verlopen): de servergegevens van de
+      // vorige gebruiker horen niet op het inlogscherm van een gedeeld toestel. NIET bij een link uit een e-mail terwijl
+      // er een bewaarde sessie (van hetzelfde account) is: een link mag nooit iets wissen (zie verwerkLink).
+      if (!App.user) { if (App.syncWisLokaal && !(S.link && S.link.bewaard)) await App.syncWisLokaal(laatsteUid()); }
+      else { await wisAlsAnder(App.user.id); toonLinkMelding(); }   // (zonder bereik hersteld: zelfde controle als bij inloggen)
     },
     // eenmalig na de eerste login van een inspecteur op dit toestel met het vinkje uit
     authToestelVraag() {
       if (!App.user || App._page === "inspectie" || ($("ov") && $("ov").classList.contains("on"))) return;
       App.openModal("Is dit je eigen telefoon?", "Dan kun je ingelogd blijven, zodat je de app ook zonder bereik opnieuw kunt openen (bijv. op een locatie zonder signaal).",
-        `<div class="s" style="margin-bottom:12px;line-height:1.45">Doe dit alleen op een toestel dat alleen jij gebruikt. Op een gedeeld toestel ben je uitgelogd zodra de app of het tabblad sluit; je vastgelegde gegevens blijven dan wel veilig bewaard.</div>
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">Doe dit alleen op een toestel dat alleen jij gebruikt. Op een gedeeld toestel ben je uitgelogd zodra de app of het tabblad sluit. Wat dan nog niet verstuurd is, blijft op het toestel tot de volgende gebruiker inlogt; die kan het wissen. Synchroniseer op een gedeeld toestel dus altijd vóór je stopt.</div>
          <button class="btn primary"${act("authOnthoud", true)}>Ja, ingelogd blijven</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${act("authOnthoud", false)}>Nee, gedeeld toestel</button>`);
     },
@@ -414,17 +504,45 @@
       if (!S.melding) S.melding = scope === "global" ? "Je bent op al je toestellen uitgelogd." : "Je bent uitgelogd.";
     },
     authLogoutOveral() { S.scope = "global"; App.closeModal(); App.logout(); },
-    // uitloggen via het menu: eerst waarschuwen als er nog wijzigingen in de wachtrij staan (gedeeld toestel)
-    authUitloggenVraag(overal) {
-      const n = App.syncWachtrij ? App.syncWachtrij() : 0, doe = overal ? act("authLogoutOveral") : actSluit("logout");
-      if (!n) return overal ? App.authLogoutOveral() : (App.closeModal(), App.logout());
-      App.openModal("Nog niet alles verstuurd", n + (n === 1 ? " wijziging staat" : " wijzigingen staan") + " nog in de wachtrij.",
-        `<div class="s" style="margin-bottom:12px;line-height:1.45">Ze blijven veilig op dit toestel en zijn onzichtbaar voor anderen die hier inloggen. Ze worden pas verstuurd als jíj hier weer inlogt. Synchroniseer liever eerst.</div>
-         <button class="btn primary"${actSluit("syncOpnieuw")}>Eerst synchroniseren</button>
-         <button class="btn ghost" style="margin-top:10px;width:100%"${doe}>Toch uitloggen</button>`);
+    // Uitloggen via het menu. Staat er nog werk dat niet op de server staat (wachtrij of een lopende inspectie),
+    // dan eerst kiezen. Eerlijk over wat er gebeurt: dat werk staat onversleuteld op dit toestel; wie het toestel
+    // daarna gebruikt kan het met technische hulpmiddelen inzien, en logt er een ander in, dan wordt het gewist.
+    async authUitloggenVraag(overal) {
+      const uid = App.user && App.user.id;
+      const w = App.syncEigenWerk ? await App.syncEigenWerk(uid) : { wachtrij: 0, concept: false };
+      const n = w.wachtrij, lopend = w.concept || !!App.state.inspectie;
+      const doe = overal ? act("authLogoutOveral") : actSluit("logout");
+      if (!n && !lopend) return overal ? App.authLogoutOveral() : (App.closeModal(), App.logout());
+      const wat = [n ? n + (n === 1 ? " wijziging staat" : " wijzigingen staan") + " nog in de wachtrij" : "", lopend ? "er loopt nog een inspectie (niet vastgelegd)" : ""].filter(Boolean).join(" en ");
+      App.openModal("Nog niet alles op de server", wat.charAt(0).toUpperCase() + wat.slice(1) + ".",
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">Dit staat alleen op dit toestel en is niet versleuteld: wie dit toestel na jou gebruikt, kan het met technische hulpmiddelen inzien. Logt er hier iemand anders in, dan wordt het gewist.</div>
+         ${n ? `<button class="btn primary"${actSluit("syncOpnieuw")}>Eerst synchroniseren</button>` : ""}
+         <button class="btn ${n ? "ghost" : "primary"}" style="margin-top:10px;width:100%"${doe}>Bewaren en uitloggen (alleen eigen telefoon)</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${act("authWisVraag", !!overal)}>Wissen en uitloggen (gedeeld toestel)</button>`);
+    },
+    authWisVraag(overal) {
+      App.openModal("Wissen en uitloggen?", "Wat nog niet op de server staat, ben je dan kwijt.",
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">De wachtrij en de lopende inspectie worden van dit toestel gewist. Dit kan niet ongedaan worden gemaakt.</div>
+         <button class="btn primary"${act("authWisEnUitloggen", !!overal)}>Ja, wissen en uitloggen</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${act("authUitloggenVraag", !!overal)}>Terug</button>`);
+    },
+    async authWisEnUitloggen(overal) {
+      const uid = App.user && App.user.id; if (!uid) return;
+      clearTimeout(App._cTimer); App.state.inspectie = null;   // logout() bewaart anders het concept opnieuw
+      if (App.syncWisWerk) await App.syncWisWerk(uid, false);
+      App.closeModal();
+      return overal ? App.authLogoutOveral() : App.logout();
+    },
+    async authAnderDoorgaan() {
+      const p = S.wacht; if (!p || !S.at) { S.scherm = "login"; return App.route(); }
+      S.anderOk = true; S.scherm = null;
+      await rondAf(p, false);
     },
     authScherm(s) { S.scherm = s; S.melding = ""; App.route(); },
-    authAnnuleer() { uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = ""; App.route(); },
+    authAnnuleer() {
+      if (S.link) return linkAfbreken("login", "");
+      uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = ""; S.wacht = null; S.anderOk = false; App.route();
+    },
 
     async authInloggen() {
       const mail = ($("l-mail").value || "").trim().toLowerCase(), ww = $("l-ww").value || "";
@@ -459,7 +577,15 @@
       const laatst = +(sessionStorage.getItem("wpi_herstel_t") || 0);
       if (Date.now() - laatst < 60000) return fout("Je hebt net een herstelmail aangevraagd. Wacht een minuut voor een nieuwe.");
       bezigKnop("v-knop", true, "Bezig…");
-      try { await sb("/auth/v1/recover?redirect_to=" + encodeURIComponent(location.origin + location.pathname), { method: "POST", auth: false, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: mail }) }); }
+      // PKCE: de link uit de mail werkt alleen samen met deze geheime code_verifier, die in DEZE browser blijft
+      const body = { email: mail };
+      try {
+        const v = b64u(crypto.getRandomValues(new Uint8Array(32)));
+        body.code_challenge = b64u(new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(v))));
+        body.code_challenge_method = "s256";
+        localStorage.setItem(K_PKCE, JSON.stringify({ v, t: Date.now() }));
+      } catch (e) { delete body.code_challenge; delete body.code_challenge_method; }   // geen crypto.subtle (geen https): gewone link
+      try { await sb("/auth/v1/recover?redirect_to=" + encodeURIComponent(location.origin + location.pathname), { method: "POST", auth: false, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
       catch (e) { if (!e.status || e.status >= 500) { bezigKnop("v-knop", false, "Herstelmail versturen"); return fout("Versturen lukte niet. Controleer je verbinding en probeer het opnieuw."); } }
       try { sessionStorage.setItem("wpi_herstel_t", String(Date.now())); } catch (e) {}
       S.scherm = "login"; S.melding = "Als dit adres bij ons bekend is, ontvang je binnen enkele minuten een e-mail met een link om een nieuw wachtwoord in te stellen.";
@@ -471,10 +597,14 @@
       if (a !== b) return fout("De twee wachtwoorden zijn niet gelijk.");
       try { await sb("/auth/v1/user", { method: "PUT", auth: false, headers: metToken({ "Content-Type": "application/json" }), body: JSON.stringify({ password: a }) }); }
       catch (e) {
-        if (e.status === 401 || e.status === 403) { wisSessie(); S.scherm = "vergeten"; S.melding = "De link is verlopen. Vraag een nieuwe herstelmail aan."; return App.route(); }
+        if (e.status === 401 || e.status === 403) {
+          if (S.link) return linkAfbreken("vergeten", "De link is verlopen. Vraag een nieuwe herstelmail aan.");
+          wisSessie(); S.scherm = "vergeten"; S.melding = "De link is verlopen. Vraag een nieuwe herstelmail aan."; return App.route();
+        }
         return fout(e.status === 422 ? "Dit wachtwoord wordt niet geaccepteerd (te zwak of eerder gelekt). Kies een ander." : "Opslaan lukte niet. Probeer het opnieuw.");
       }
-      await uitloggenServer("global"); wisSessie();
+      // overal uitgelogd (ook een bewaarde sessie van dit account is daarmee ongeldig: die kan dus weg)
+      await uitloggenServer("global"); wisSessie(); S.link = null;
       S.scherm = "login"; S.melding = "Je wachtwoord is gewijzigd en je bent overal uitgelogd. Log in met je nieuwe wachtwoord.";
       App.route();
     },
@@ -507,7 +637,7 @@
         return;
       }
       const v = $("view"), s = S.scherm || "login";
-      ({ login: scherm_login, vergeten: scherm_vergeten, nieuwww: scherm_nieuwww, mfa: scherm_mfa }[s] || scherm_login)(v);
+      ({ login: scherm_login, vergeten: scherm_vergeten, nieuwww: scherm_nieuwww, mfa: scherm_mfa, anderwerk: scherm_anderwerk }[s] || scherm_login)(v);
     },
     openAccount() {
       acct0.apply(this, arguments);
@@ -528,7 +658,7 @@
   // PRODUCTIE: geen enkele voorbeeld-omweg. De echte bescherming is RLS op de server (zonder geldige JWT
   // geeft PostgREST niets), maar de app biedt ook zelf niets fictiefs of omzeilbaars aan:
   //   - App.login is dicht: alleen rondAf() (na wachtwoord, profiel/rol uit de server en zo nodig MFA) logt in,
-  //     via de kern-functie in een closure. App.login("u-bjorn") of App.login(id, {role:"hoofd"}) vanuit de
+  //     via de kern-functie in een closure. App.login("u-hoofd") of App.login(id, {role:"hoofd"}) vanuit de
   //     console of een geïnjecteerde data-action="login" doet niets.
   //   - geen fictieve accounts (WPI.USERS leeg tot de profielen van de server er zijn), geen "wpi_user";
   //   - geen voorbeeldacties of -planning in IndexedDB (demoActies/demoPlanning leveren niets);
@@ -556,6 +686,15 @@
   if (actief()) {
     USERS.splice(0, USERS.length);
     try { localStorage.removeItem("wpi_user"); } catch (e) {}
+    // geen fictieve monteursnamen (Henk Voorbeeld …) als terugval: zolang de lijst van de server er niet is, is hij leeg
+    App.MONTEURS_DEMO = Object.freeze([]);
+    const insMonteurs0 = App.ins_monteurs;
+    if (insMonteurs0) App.ins_monteurs = function (ins, v) {
+      const r = insMonteurs0.apply(this, arguments);
+      const c = v && v.querySelector(".q .chips");
+      if (c && !this.monteursLijst().length) c.insertAdjacentHTML("beforebegin", `<div class="hint" role="status" style="margin:8px 0">De monteurslijst is nog niet geladen (nog geen verbinding gehad, of er staan nog geen monteurs in Beheer). Voeg de namen hieronder zelf toe.</div>`);
+      return r;
+    };
     Object.assign(App, {
       login() { return Promise.resolve(); },   // dicht; zie hierboven
       demoActies: () => [],
@@ -593,5 +732,8 @@
       if (S.rt && Date.now() > S.exp - 120000 && navigator.onLine) vernieuw();
     });
     window.addEventListener("online", () => { if (S.rt && Date.now() > S.exp - 60000) vernieuw(); });
+    // een link uit een e-mail in een tabblad waar de app al open is (alleen het #-deel verandert): opnieuw laden,
+    // zodat verwerkLink() hem net zo behandelt als bij openen (controleren, niets wissen, token uit het adres)
+    window.addEventListener("hashchange", () => { if (/(^|[#&/])(access_token|error_code|error)=/.test(location.hash)) location.reload(); });
   }
 })();

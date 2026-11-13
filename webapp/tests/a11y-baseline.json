@@ -480,10 +480,10 @@
     ".chip": 1,
     ".kicker": 1,
     "div:nth-child(n) > .muted": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow > .s": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > .grow > .s": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow > .s": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow > .s": 1
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > .grow > .s": 1
    }
   },
   "color-contrast|login@390": {
@@ -493,10 +493,10 @@
     ".chip": 1,
     ".kicker": 1,
     "div:nth-child(n) > .muted": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow > .s": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > .grow > .s": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow > .s": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow > .s": 1
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > .grow > .s": 1
    }
   },
   "color-contrast|meldingen-modal@1440": {
@@ -2519,14 +2519,14 @@
     "#view > div:nth-child(n)": 1,
     ".hint": 1,
     ".topbar": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > span:nth-child(n)": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > span:nth-child(n)": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > span:nth-child(n)": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > span:nth-child(n)": 1
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > span:nth-child(n)": 1
    }
   },
   "region|login@390": {
@@ -2537,14 +2537,14 @@
     "#view > div:nth-child(n)": 1,
     ".hint": 1,
     ".logo": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > span:nth-child(n)": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-douwe\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-hoofd\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-coord2\\\"]\"] > span:nth-child(n)": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow": 1,
     "div[data-args=\"[\\\"u-insp\\\"]\"] > span:nth-child(n)": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow": 1,
-    "div[data-args=\"[\\\"u-winfred\\\"]\"] > span:nth-child(n)": 1
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-coord1\\\"]\"] > span:nth-child(n)": 1
    }
   },
   "region|meldingen-modal@1440": {

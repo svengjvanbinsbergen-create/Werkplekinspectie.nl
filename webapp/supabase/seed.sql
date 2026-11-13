@@ -2,6 +2,10 @@
 -- Werkplekinspectie — seed (v1). Draaien als postgres in de SQL-editor,
 -- NA schema.sql. Idempotent en veilig om opnieuw te draaien. Bevat GEEN
 -- wachtwoorden en GEEN voorbeelddata (ook geen fictieve monteurs).
+-- Dit is het inrichtingsbestand voor de ECHTE omgeving en bevat daarom de echte namen
+-- van de vaste gebruikers. Het wordt nooit gepubliceerd (supabase/ staat niet in de
+-- deploymap; tests/exposed.js controleert dat). De voorbeeldmodus van de app (js/kern.js)
+-- gebruikt bewust fictieve namen en spiegelt dit bestand dus NIET meer.
 -- =====================================================================
 
 -- ---------- 1. Gebruikers: uitnodigen, nooit wachtwoorden in SQL ----------

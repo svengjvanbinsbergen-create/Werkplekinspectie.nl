@@ -1,6 +1,6 @@
 # Beveiligingsrapport Werkplekinspectie
 
-*Voor: Sven (beheer app) · Noardling B.V. · stand 13 november 2026 (fase 3, beveiligingsronde)*
+*Voor: Sven (beheer app) · Noardling B.V. · stand 13 november 2026 (fase 3, beveiligingsronde, na de tweede aanvalsronde)*
 
 Dit rapport loopt jouw beveiligingslijst punt voor punt langs. Per punt staat erbij wat de **status** is, wat we **vonden**, wat we **gedaan** hebben en waar het **bewijs** staat (een test, een opdracht of een bestand met regelnummer). Je hoeft geen ontwikkelaar te zijn om het te lezen: de technische verwijzingen staan steeds onderaan een punt.
 
@@ -10,6 +10,7 @@ Dit rapport loopt jouw beveiligingslijst punt voor punt langs. Per punt staat er
 |---|---|
 | **Geregeld** | Werkt nu al, en is getest. |
 | **Geregeld na Supabase-koppeling** | Zit in de app en in het databaseontwerp en is lokaal getest, maar werkt pas echt zodra het Supabase-project bestaat en is ingesteld (zie "Wat moet Sven nog doen"). |
+| **Geregeld na deploy** | Staat klaar in de hostingconfiguratie en is lokaal getest, maar werkt pas echt zodra de app bij een host (Netlify, Vercel of Cloudflare) online staat en daar is gecontroleerd (zie "Wat moet Sven nog doen", stap 6). Hangt niet van Supabase af. |
 | **Niet van toepassing** | Past niet bij hoe deze app werkt. De reden staat erbij, en wat we in plaats daarvan doen. |
 | **Open** | Nog niet (helemaal) geregeld. Staat ook bij "Wat moet Sven nog doen" of bij de restrisico's. |
 
@@ -25,32 +26,32 @@ Zolang er geen Supabase-project is ingevuld in `js/config.js`, draait de app in 
 |---|---|---|---|
 | 1 | Goede authenticatie | Geregeld na Supabase-koppeling | Inloggen met e-mail en wachtwoord via Supabase Auth, MFA voor het hoofd, geen voorbeeld-login in productie. |
 | 2 | API-sleutels verbergen | Geregeld | In de app staat alleen de publieke anon-sleutel; geheime sleutels nergens, en een controle bewaakt dat. |
-| 3 | Database beveiligen | Geregeld na Supabase-koppeling | RLS op elke tabel, rechten per rol, privé-fotomap; 483 databasetests slagen. |
-| 4 | HTTPS afdwingen | Geregeld na Supabase-koppeling | Doorsturen naar https plus HSTS in alle drie de hostingconfiguraties. |
+| 3 | Database beveiligen | Geregeld na Supabase-koppeling | RLS op elke tabel, rechten per rol, privé-fotomap; 529 databasetests, 3 gelijktijdigheidstests en 2 vergelijkingen met de app slagen. |
+| 4 | HTTPS afdwingen | Geregeld na deploy | HSTS in alle drie de hostingconfiguraties; doorsturen van http naar https doet de host zelf (de Netlify-regel geldt alleen voor werkplekinspectie.nl). Na de deploy controleren met `exposed.js --alles`. |
 | 5 | Wachtwoorden hashen | Geregeld (door Supabase) | Supabase Auth bewaart wachtwoorden met bcrypt; de app bewaart nooit een wachtwoord. |
-| 6 | Formulieren server-side valideren | Geregeld na Supabase-koppeling | Elk formulier heeft regels in de database; in deze ronde gaten gedicht (datums, vreemde tekens, fotopaden). |
-| 7 | XSS tegenhouden | Geregeld (met restrisico) | Escaping + strikte CSP zonder inline scripts; 12 aanvalsteksten in elk veld en in het adres doen niets. Een ingespoten `data-action` houdt de CSP níet tegen; daar is escaping de enige verdediging. |
+| 6 | Formulieren server-side valideren | Geregeld na Supabase-koppeling | Elk formulier heeft regels in de database; in deze ronde gaten gedicht (datums, vreemde en onzichtbare tekens, fotopaden, de foto van een actie), en na de tweede aanvalsronde ook onzichtbare tekens buiten de gewone tekenset, foto's als losse tekst in `extraFotos` en een grens op de grootte van een inspectie. |
+| 7 | XSS tegenhouden | Geregeld (met restrisico) | Escaping, witte lijsten voor keuzevelden en datums, en een strikte CSP zonder inline scripts; 12 aanvalsteksten in elk veld, in keuzevelden en in het adres doen niets. Een ingespoten `data-action` houdt de CSP níet tegen; daar is escaping de enige verdediging. |
 | 8 | Verdachte activiteit loggen en volgen | Geregeld na Supabase-koppeling (alarmering: Open) | Auditlog en beveiligingsmeldingen in de database. Wachtwoorden raden zie je alleen in de Auth-logs van Supabase. De database-eigenaar kan de logboeken wél aanpassen. Automatische alarmering is er nog niet. |
 | 9 | Beheerroutes afschermen | Geregeld na Supabase-koppeling | Beheer alleen voor het hoofd, op de server met MFA (aal2) zodra MFA verplicht staat. |
 | 10 | Geparametriseerde queries | Geregeld | Geen zelfgebouwde SQL; PostgREST en de databasefuncties gebruiken parameters. |
 | 11 | Omgevingsvariabelen periodiek controleren | Geregeld | `tools/periodieke_check.sh` + maandchecklist. |
-| 12 | Rate limiting | Geregeld na Supabase-koppeling | Limieten van Supabase Auth + quota in de database (schrijven, meldingen, uploads) + wachttijd na foute logins. |
+| 12 | Rate limiting | Geregeld na Supabase-koppeling | Limieten van Supabase Auth + quota in de database (schrijven, meldingen, uploads, ook bij gelijktijdige verzoeken). Een te groot of te diep inspectierecord wordt in milliseconden geweigerd (eerder 5–11 s rekentijd per poging). De wachttijd in de app is alleen gemak, geen bescherming. |
 | 13 | CORS beperken | Niet van toepassing (deels) | Supabase REST heeft geen origin-lijst; RLS is de grens. De CSP beperkt wél waar de app heen mag praten. |
 | 14 | Security headers | Geregeld | CSP, HSTS, X-Frame-Options, nosniff, Referrer- en Permissions-Policy in alle configuraties; `exposed.js --config` toetst ze per configuratie. |
-| 15 | Veilige sessiecookies | Niet van toepassing (maatregelen: na Supabase-koppeling) | Er zijn geen cookies; tokens in geheugen/sessionStorage. Werkt pas veilig met de sessielimieten in Supabase (7 dagen / 8 uur inactief). |
-| 16 | CSRF-bescherming | Niet van toepassing | Het token gaat in een header die een andere site niet kan meesturen. |
-| 17 | Herstellinks laten verlopen | Geregeld na Supabase-koppeling | Instelling ≤ 1 uur (advies 15 min); de app verwerkt de link en wist hem uit de adresbalk. |
-| 18 | Uploads beperken (type en grootte) | Geregeld (app) / na koppeling (server) | App: alleen foto's, max 20 MB in, max 5 MB uit; server: 5 MB, jpeg/png/webp, max 120 per uur. |
+| 15 | Veilige sessiecookies | Niet van toepassing (maatregelen: na Supabase-koppeling) | Er zijn geen cookies; tokens in geheugen/sessionStorage. Werkt pas veilig met de sessielimieten in Supabase (7 dagen / 8 uur inactief). Onverstuurd werk op een gedeeld toestel: kiezen bij uitloggen, gewist voordat een ander inlogt (restrisico). |
+| 16 | CSRF-bescherming | Niet van toepassing (klassieke CSRF) · vervalste herstellink: Geregeld | Het token gaat in een header die een andere site niet kan meesturen. Wél gevonden: een vervalste herstellink kon iemand uitloggen en de gegevens op het toestel wissen; nu dicht. |
+| 17 | Herstellinks laten verlopen | Geregeld na Supabase-koppeling | Instelling ≤ 1 uur (advies 15 min); de herstelmail werkt alleen in de browser die hem aanvroeg (PKCE), elke andere link wordt eerst bij de server gecontroleerd en een link wist nooit iets. |
+| 18 | Uploads beperken (type en grootte) | Geregeld (app) / na koppeling (server) | App: alleen foto's, max 20 MB in, max 5 MB uit; server: 5 MB, jpeg/png/webp, max 120 per uur (snel geteld, ook bij gelijktijdige uploads); een foto die als bewijs gekoppeld is, is niet (opnieuw) te uploaden, ook niet na verwijderen. |
 | 19 | Debugstand uit in productie | Geregeld | `debug: false`; in productie geen voorbeeld-omwegen en geen debuguitvoer (getest). |
 | 20 | Kwetsbare afhankelijkheden bijwerken | Geregeld | De app heeft geen npm-pakketten; versies van de rest staan in de periodieke controle. |
 | 21 | Ongebruikte pakketten verwijderen | Geregeld (3 oude scripts: Open) | Geen pakketten in de app; de controle meldt drie oude hulpscripts in `tools/` (nog opruimen). |
-| 22 | Blootgestelde bestanden controleren | Geregeld | Allowlist-publicatie: alleen de app gaat online; test controleert de configuraties. |
+| 22 | Blootgestelde bestanden controleren | Geregeld | Allowlist-publicatie: alleen de app gaat online; test controleert de configuraties. Geen echte namen of voornamen meer in de gepubliceerde bestanden, ook niet als interne id; de test zoekt daar nu op. |
 | 23 | Git-geschiedenis scannen op geheimen | Geregeld | Volledige scan: 0 echte geheimen. |
 | 24 | Gelekte sleutels intrekken en vervangen | Geregeld (procedure) | Stappenplan in `beveiliging-periodiek.md` §4; er is niets gelekt. |
 | 25 | Periodieke grondige review | Geregeld (afspraak) | Maand-, kwartaal- en jaarritme beschreven. |
-| 26 | Beschermingen testen en rapporteren | Geregeld (eigen aanvallen + onafhankelijke review) · aparte aanvallers ronde 3: **Open** | `tests/security.js`, `xss.js`, `exposed.js`, databasetests en dit rapport. De bevindingen van de aparte aanvallers van ronde 3 zijn niet bij ons aangekomen. |
+| 26 | Beschermingen testen en rapporteren | Geregeld | `tests/security.js`, `xss.js`, `exposed.js`, databasetests en dit rapport. De bevindingen van de eerste review (R1–R10), de aanvalstest met tweede review (A1–A15) en de tweede aanvalsronde (A16–A22) zijn verwerkt, elk met een regressietest of een correctie in dit rapport. |
 
-**Testuitslag van deze ronde (13 november, na de review):** alle app-tests PASS (`tests/run-all.js -j 3`: **14 PASS · 0 FAIL**), `xss.js` 12 aanvalsteksten × 27 bronnen zonder treffer, databasetests 483 van 483 geslaagd, `exposed.js --config --strict` zonder fouten (ook de headers), `periodieke_check.sh` **0 FOUT · 5 LET OP** (met `--snel` 6 LET OP: de overgeslagen geschiedenisscan telt mee).
+**Testuitslag van deze ronde (13 november, na de tweede aanvalsronde):** alle app-tests PASS (`tests/run-all.js -j 3 --extra`: **15 PASS · 0 FAIL**, inclusief `security.js`, `sync.js` en `xss.js`: 12 aanvalsteksten × 29 bronnen zonder treffer), databasetests **529 van 529** geslaagd plus de gelijktijdigheidstests (laatste hoofd, QHSE-rol, quota) en de twee vergelijkingen met de app (`naamsleutel: OK`, `tekens: OK`), `exposed.js --config --strict` zonder fouten (ook de headers), `periodieke_check.sh --snel` **0 FOUT · 6 LET OP** (de overgeslagen geschiedenisscan telt als LET OP; volledig: 5 LET OP).
 
 ---
 
@@ -63,17 +64,22 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
    - In `webapp/js/config.js`: alleen de project-URL en de **anon/publishable** sleutel. Die is bedoeld om publiek te zijn.
    - De **service_role/secret** sleutel, het databasewachtwoord en het SMTP-wachtwoord gaan in een **wachtwoordkluis**, nooit in de code, git of een build-variabele van de website.
    - Vervang `project-ref` door de echte project-ref in de CSP op vier plekken: `index.html`, `_headers`, `netlify.toml` en `vercel.json` (zoek op "project-ref").
-3. **Auth-instellingen in Supabase** (README §2): aanmelden door vreemden **uit** (alleen uitnodigingen), wachtwoord minimaal **12 tekens**, **Prevent use of leaked passwords aan** (vraagt het Pro-abonnement), herstellink maximaal **3600 s** (liever 900 s), refresh-token-rotatie aan, juiste Site URL en Redirect URLs (geen `localhost`).
-   **Verplicht** (vraagt ook het Pro-abonnement): *Authentication › Sessions*: **Time-box user sessions = 7 dagen** en **Inactivity timeout = 8 uur**. Zonder deze twee blijft een gestolen refresh-token (bijv. van een telefoon met "Ingelogd blijven") onbeperkt bruikbaar; de afweging in punt 15 rust erop (`js/auth.js:24-25`, README §2).
+3. **Auth-instellingen in Supabase** (README §2): aanmelden door vreemden **uit** (alleen uitnodigingen), wachtwoord minimaal **12 tekens**, **Prevent use of leaked passwords aan** (vraagt het Pro-abonnement), herstellink maximaal **3600 s** (liever 900 s), refresh-token-rotatie aan, juiste Site URL en Redirect URLs (geen `localhost`). Zet de precieze app-URL in *Redirect URLs*: de herstelmail stuurt terug naar die URL met een eenmalige code (PKCE, punt 17); staat hij er niet in, dan komt de code niet aan en werkt de herstellink niet.
+   **Verplicht** (vraagt ook het Pro-abonnement): *Authentication › Sessions*: **Time-box user sessions = 7 dagen** en **Inactivity timeout = 8 uur**. Zonder deze twee blijft een gestolen refresh-token (bijv. van een telefoon met "Ingelogd blijven") onbeperkt bruikbaar; de afweging in punt 15 rust erop (`js/auth.js:28-29`, README §2).
 4. **Eigen SMTP instellen** (EU-maildienst met SPF/DKIM) voor uitnodigingen en herstelmails. De standaardmailer van Supabase is alleen voor testen en heeft een zeer lage limiet.
 5. **MFA voor het hoofd aanzetten.** Björn koppelt een authenticator-app bij de eerste login; zet daarna als hoofd de instelling `mfa_verplicht_hoofd` op `true` (README §2). Pas dan zijn de beheerrechten op de server alleen nog bruikbaar met MFA.
-6. **Hosting kiezen en publiceren uit `dist/`** (Netlify, Vercel of Cloudflare Pages; de build staat al in de configuratie). Zet bij Netlify "Force HTTPS" aan, bij Cloudflare "Always Use HTTPS". Draai na de eerste deploy: `node webapp/tests/exposed.js --alles https://<adres> --strict`.
+6. **Hosting kiezen en publiceren uit `dist/`** (Netlify, Vercel of Cloudflare Pages; de build staat al in de configuratie).
+   - **https:** Netlify en Vercel sturen http vanzelf door naar https zodra het certificaat er is; daar hoef je geen schakelaar voor te zoeken. Bij Cloudflare zet je *SSL/TLS › Edge Certificates › Always Use HTTPS* aan.
+   - De doorstuurregel in `netlify.toml` (regels 17-26) noemt alleen `werkplekinspectie.nl` en `www.werkplekinspectie.nl`. Komt de app op een ander adres (bijv. `app.<domein>.nl` of `*.netlify.app`), pas die twee regels dan aan of laat de host het doen; de regel doet op een ander adres niets.
+   - **Controleer het daarna altijd**: `node webapp/tests/exposed.js --alles https://<adres> --strict`. Die test vraagt ook `http://<adres>` op en meldt het als dat niet naar https gaat.
 7. **GitHub**: zet *secret scanning* en *push protection* aan op de repository, en overweeg een pre-commit-hook met `tools/secret_scan.sh --streng`.
 8. **Toegang tot de database klein houden.** Het databasewachtwoord en de SQL Editor van Supabase geven eigenaarsrechten: daarmee kan iemand de logboeken aanpassen (punt 8). Alleen Sven en het hoofd, met MFA op hun Supabase-account (*Account › Security*).
 9. **Mislukte logins volgen in de Auth-logs** (*Logs › Auth*), niet alleen in `security_events` (punt 8). Wil je ze in de eigen tabel: een *Password Verification Hook* van Supabase (betaald abonnement) kan elke mislukte poging wegschrijven; dat is nog niet gebouwd.
 10. **Ritme vastleggen**: maandelijks `tools/periodieke_check.sh --url https://<adres>` en de handmatige punten uit `beveiliging-periodiek.md` §1; elk kwartaal §2. Zet het in de agenda met een vaste eigenaar.
 11. **Optioneel**: Google Fonts zelf hosten (dan gaat het IP-adres van gebruikers niet naar Google; AVG) en de oude scripts in `tools/` opruimen die `tools/periodieke_check.sh` meldt ("scripts in tools/ waar niets naar verwijst").
 12. **Kleine codefix laten doen** (door de ontwikkelaar van `js/kern.js`): laat `esc()` ook de enkele quote omzetten (`'` → `&#39;`). Nu niet uitbuitbaar (zie punt 7), maar het haalt een valkuil weg.
+13. **Afspraak voor gedeelde computers** (de webversie met dashboard draait op kantoor-pc's): op een gedeelde pc altijd eerst synchroniseren en bij uitloggen **"Wissen en uitloggen"** kiezen, nooit "Bewaren". Wat niet op de server staat, staat onversleuteld in de browser (punt 15). Neem dit op in de werkinstructie; liever nog een eigen browserprofiel per persoon.
+14. **Service worker bijwerken** (door de eigenaar van `sw.js`): na deze ronde zijn `js/kern.js`, `js/auth.js`, `js/sync.js`, `js/inspectie.js`, `js/inspecties.js`, `js/acties.js` en `js/planning.js` gewijzigd (in de tweede aanvalsronde opnieuw `kern.js`, `auth.js`, `sync.js`, `acties.js` en `planning.js`). Verhoog `CACHE` ("wpi-vNN") in `sw.js`, anders blijven bestaande toestellen de oude versie gebruiken.
 
 ---
 
@@ -87,10 +93,10 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 **Fix.**
 - Productie gebruikt **Supabase Auth**: e-mail en wachtwoord, sessie met een kortlevend toegangstoken (1 uur) en een vernieuwbaar refresh-token met rotatie.
 - **MFA (TOTP)** voor het hoofd; de serverrechten van het hoofd vragen dan niveau `aal2`.
-- In productie is alles van de voorbeeldmodus dicht: geen accountkiezer, geen fictieve accounts, `App.login` doet niets, een in de pagina geïnjecteerde inlogknop doet niets, elke route toont alleen het inlogscherm, geen voorbeelddata of -cijfers. Alleen het echte inlogproces (wachtwoord → profiel en rol van de server → zo nodig MFA) logt in.
+- In productie is alles van de voorbeeldmodus dicht: geen accountkiezer, geen fictieve accounts, geen fictieve monteursnamen als terugval, `App.login` doet niets, een in de pagina geïnjecteerde inlogknop doet niets, elke route toont alleen het inlogscherm, geen voorbeelddata of -cijfers. Alleen het echte inlogproces (wachtwoord → profiel en rol van de server → zo nodig MFA) logt in.
 - "Overal uitloggen" (bijv. bij een verloren telefoon) en automatisch uitloggen als in een ander tabblad iemand anders inlogt.
 
-**Bewijs.** `js/auth.js:527-576` (productie tegenover voorbeeldmodus) · `tests/security.js` blok 3 (20 controles "productie: …", o.a. "App.login("u-bjorn") vanuit de console doet niets", "#/beheer toont alleen het inlogscherm") · `tests/sync.js` (inloggen, MFA, vernieuwen, uitloggen tegen de nep-Supabase `tools/mock_supabase.py`) · `supabase/README.md` §2.
+**Bewijs.** `js/auth.js:657-719` (productie tegenover voorbeeldmodus) · `tests/security.js` blok 3 (in deze versie 29 controles die beginnen met "productie", o.a. "App.login("u-hoofd") vanuit de console doet niets", "#/beheer toont alleen het inlogscherm") · `tests/sync.js` (inloggen, MFA, vernieuwen, uitloggen tegen de nep-Supabase `tools/mock_supabase.py`) · `supabase/README.md` §2.
 
 ### 2. API-sleutels verbergen
 **Status:** Geregeld
@@ -108,16 +114,16 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Fix.** RLS staat op **elke** tabel; rechten per rol; inspecteurs zien alleen hun eigen inspecties; beheer alleen voor het hoofd; de fotomap is privé en per gebruiker; logboeken zijn alleen-toevoegen voor de app en voor elke databaserol behalve de eigenaar (zie punt 8: de eigenaar kan ze wél aanpassen); functies draaien met een vaste `search_path`; nieuwe functies krijgen standaard geen rechten voor anonieme gebruikers.
 
-**Bewijs.** `supabase/migrations/0003_rls_rechten.sql`, `0005_storage.sql`, `0006_rpc.sql:171` · databasetests `sh supabase/tests/run.sh`: **483 van 483 geslaagd** (eerste test: "RLS staat aan op ELKE tabel in public"), plus de racetests "laatste hoofd" en "QHSE-rol".
+**Bewijs.** `supabase/migrations/0003_rls_rechten.sql`, `0005_storage.sql`, `0006_rpc.sql:175` · databasetests `sh supabase/tests/run.sh`: **529 van 529 geslaagd** (eerste test: "RLS staat aan op ELKE tabel in public"), plus de racetests "laatste hoofd", "QHSE-rol" en "quotum" (nieuw: `supabase/tests/race_quotum.sh`).
 
 ### 4. HTTPS afdwingen
-**Status:** Geregeld na Supabase-koppeling (zodra er gehost wordt)
+**Status:** Geregeld na deploy (hangt af van de hosting, niet van Supabase)
 
 **Bevinding.** Op http kan iemand op hetzelfde wifi-netwerk meelezen of de app aanpassen.
 
-**Fix.** Doorsturen van http naar https (Netlify-regels; Vercel doet het altijd; Cloudflare via "Always Use HTTPS") en **HSTS** van 2 jaar, zodat de browser het daarna nooit meer via http probeert. Supabase zelf werkt alleen via https, en de CSP staat alleen `https://<project>.supabase.co` toe.
+**Fix.** **HSTS** van 2 jaar in alle drie de configuraties, zodat de browser het na het eerste bezoek nooit meer via http probeert. Het doorsturen van http naar https doet de host: Vercel altijd, Netlify vanzelf zodra het certificaat er is (er is geen aparte schakelaar), Cloudflare met "Always Use HTTPS". Daarnaast staan in `netlify.toml` (regels 17-26) twee doorstuurregels, maar **alleen voor `werkplekinspectie.nl` en `www.werkplekinspectie.nl`**: op een ander adres (bijv. `app.<domein>.nl` zoals in het voorbeeld in `supabase/README.md` §2, of `*.netlify.app`) doen die niets. Pas ze aan als het adres anders wordt. Supabase zelf werkt alleen via https, en de CSP staat alleen `https://<project>.supabase.co` toe.
 
-**Bewijs.** `_headers:49` (Strict-Transport-Security), `netlify.toml` (`[[redirects]]` van `http://` naar `https://` en de HSTS-header), `vercel.json` (route `/(.*)` met HSTS) · `node webapp/tests/exposed.js --config --strict`, blok "Beveiligingsheaders in de hostconfiguraties": per configuratie `ok` voor Strict-Transport-Security (max-age ≥ 180 dagen) en voor "http → https" (Netlify-regel; Vercel altijd; Cloudflare: instelling, staat als `n.v.t.`). Dit blok is in deze ronde toegevoegd; eerder toetste `--config` de headers niet, alleen `--headers`/`--alles` tegen een live adres. Na de deploy: `node webapp/tests/exposed.js --alles https://<adres> --strict` (controleert ook het echte doorsturen).
+**Bewijs.** `_headers:49` (Strict-Transport-Security), `netlify.toml` (`[[redirects]]` van `http://` naar `https://` en de HSTS-header), `vercel.json` (route `/(.*)` met HSTS) · `node webapp/tests/exposed.js --config --strict`, blok "Beveiligingsheaders in de hostconfiguraties": per configuratie `ok` voor Strict-Transport-Security (max-age ≥ 180 dagen) en voor "http → https" (Netlify: de regel, met de domeinen waarvoor hij geldt erbij; Vercel altijd; Cloudflare: instelling, staat als `n.v.t.`). Dat bewijst alleen dat de regel er staat, niet dat hij op jouw adres werkt. Dit blok is in deze ronde toegevoegd; eerder toetste `--config` de headers niet, alleen `--headers`/`--alles` tegen een live adres. **Het echte bewijs komt na de deploy**: `node webapp/tests/exposed.js --alles https://<adres> --strict` vraagt `http://<adres>` echt op en meldt `ONTBREEKT` als dat niet naar https gaat (Sven stap 6).
 
 ### 5. Wachtwoorden hashen
 **Status:** Geregeld (door Supabase Auth)
@@ -126,7 +132,7 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Fix.** Supabase Auth (GoTrue) bewaart wachtwoorden als **bcrypt**-hash. De app stuurt het wachtwoord alleen bij het inloggen via https naar Supabase en bewaart het nergens: niet in localStorage of sessionStorage, en in geen enkele IndexedDB-store (`inspecties`, `acties`, `planning`, `concept`, `outbox`, `syncmeta`). Aanvullend: minimaal 12 tekens en toetsing tegen gelekte wachtwoorden (HaveIBeenPwned) in de Supabase-instellingen.
 
-**Bewijs.** `supabase/README.md` §2 · `js/auth.js:233` (nieuw wachtwoord minstens 12 tekens) · `tests/sync.js`: "wachtwoordcheck leest alle IndexedDB-stores (wpi/acties, wpi/concept, wpi/inspecties, wpi/outbox, wpi/planning, wpi/syncmeta)" en "wachtwoord nergens in localStorage/sessionStorage/IndexedDB (alle stores)". De test leest nu elke store van elke IndexedDB-database van de app; de eerste versie keek maar naar 3 van de 6 stores.
+**Bewijs.** `supabase/README.md` §2 · `js/auth.js:596` (nieuw wachtwoord minstens 12 tekens) · `tests/sync.js`: "wachtwoordcheck leest alle IndexedDB-stores (wpi/acties, wpi/concept, wpi/inspecties, wpi/outbox, wpi/planning, wpi/syncmeta)" en "wachtwoord nergens in localStorage/sessionStorage/IndexedDB (alle stores)". De test leest nu elke store van elke IndexedDB-database van de app; de eerste versie keek maar naar 3 van de 6 stores.
 
 ### 6. Formulieren server-side valideren
 **Status:** Geregeld na Supabase-koppeling
@@ -134,26 +140,37 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 **Bevinding.** We hebben de formulieren van de app (planning, actie, inspectie, beheer, inloggen) naast de databaseregels gelegd. Gaten die we vonden:
 - datums zonder grens (jaar 0001 of 9999 kon, wat sorteren en "te laat" breekt);
 - vrije tekst mocht onzichtbare stuurtekens en "omkeer"-tekens bevatten (tekst die in een rapport anders wordt getoond dan hij is, "Trojan Source");
-- in een inspectie kon een fotopad van **iemand anders** staan, zodat je andermans foto als eigen bewijs kon tonen (strijdig met "alleen wat de inspecteur ziet telt").
+- in een inspectie kon een fotopad van **iemand anders** staan, zodat je andermans foto als eigen bewijs kon tonen (strijdig met "alleen wat de inspecteur ziet telt");
+- (aanvalstest) de tekens-controle had gaten: in de inspectietekst kwamen backspace (U+0008) en form feed (U+000C) erdoor, en overal C1-stuurtekens (o.a. U+009B, een ANSI-escape in exports), zero-width tekens en richtingsmarkeringen (U+200B–200F, U+061C) en regelscheiders (U+2028/2029);
+- (aanvalstest) de foto van een actie uit een inspectie lag niet vast: de inspecteur kon een andere eigen foto koppelen dan in de momentopname, of hem later weghalen en uit de opslag wissen;
+- (tweede aanvalsronde) onzichtbare tekens buiten de gewone tekenset kwamen erdoor, zoals de Unicode-"tag"-tekens waarmee je onzichtbare tekst in een gewone zin kunt verstoppen, het zachte afbreekstreepje en een paar "lege" opvultekens;
+- (tweede aanvalsronde) in een inspectie kon de foto van een collega toch als bewijs staan, als losse tekst in de lijst `extraFotos` (de controle keek alleen naar `{"foto": …}`), en een foto die heel diep in het record zat werd overgeslagen;
+- (tweede aanvalsronde) een inspectie van net onder 1 MB met honderdduizenden lege onderdelen kostte de database 5 tot 11 seconden rekenwerk per poging; zie punt 12.
 
-**Fix.** Migratie `0007_invoer_aanvulling.sql`: datums altijd tussen 2000 en 2100, vanuit de app tussen 2 jaar terug en 5 jaar vooruit; stuurtekens en omkeertekens geweigerd in alle tekstkolommen; fotopaden in een inspectie alleen in de eigen map. De oudere regels (oordeel alleen C/A/V/NVT, toetser ≠ actiehouder, QHSE nooit actiehouder, maximale lengtes, statusovergangen) staan in `0002_functies_validatie.sql`. De app neemt dezelfde lengtegrenzen over (`maxlength`) en geeft datumvelden een min/max, zodat de gebruiker de fout al ziet vóór het versturen.
+**Fix.** Migratie `0007_invoer_aanvulling.sql`: datums altijd tussen 2000 en 2100, vanuit de app tussen 2 jaar terug en 5 jaar vooruit; stuurtekens, onzichtbare tekens en omkeertekens geweigerd in alle tekstkolommen én in elke tekst (en sleutel) van een inspectie, met één en dezelfde regel (`tekst_tekens_ok`; alleen tab, regeleinde en de zero-width joiner in emoji mogen); fotopaden in een inspectie alleen in de eigen map. De app haalt dezelfde tekens vóór het versturen weg (`js/sync.js:555-562`, `schoonTekst`), zodat een geplakte tekst niet blijvend wordt geweigerd. Na de tweede aanvalsronde: de tekenregel weigert alle onzichtbare "format"-tekens (behalve de joiner in emoji), ook buiten de gewone tekenset, plus het zachte afbreekstreepje en de opvullers, in vrije tekst, in inspecties en in namen; de app haalt precies dezelfde weg (een vergelijking over alle 1,1 miljoen tekens bewaakt dat). Elke tekst in `extraFotos` telt nu als foto en moet uit de eigen map komen; een record van 64 niveaus of dieper wordt geweigerd in plaats van overgeslagen. De foto van een actie uit een inspectie moet de foto van die waarneming in de momentopname zijn en ligt daarna vast, net als waarneming, referentie en dringendheid (`0002_functies_validatie.sql:857` en `:1067`). De oudere regels (oordeel alleen C/A/V/NVT, toetser ≠ actiehouder, QHSE nooit actiehouder, maximale lengtes, statusovergangen) staan in `0002_functies_validatie.sql`. De app neemt dezelfde lengtegrenzen over (`maxlength`) en geeft datumvelden een min/max, zodat de gebruiker de fout al ziet vóór het versturen.
 
-**Bewijs.** `supabase/migrations/0007_invoer_aanvulling.sql:1-25` · `supabase/tests/rls_test.sql` sectie 22 (o.a. "datum: ook beheer via SQL kan geen jaar 9999 opslaan", "fotos: alle plekken en vormen gecontroleerd") · `tests/security.js` blok 4 ("Invoergrenzen").
+**Bewijs.** `supabase/migrations/0007_invoer_aanvulling.sql:1-122` (tekenregel `:43-66`, fotopaden `:88-122`) · `supabase/tests/rls_test.sql` sectie 24 (o.a. "datum: ook beheer via SQL kan geen jaar 9999 opslaan", "fotos: alle plekken en vormen gecontroleerd") en sectie 25 (o.a. "tekens: backspace (U+0008) in het gesprek (record) geweigerd", "tekens: C1-besturingstekens (U+009B CSI, U+0085 NEL) in een actietekst geweigerd", "tekens: record_tekens_ok en tekst_tekens_ok zijn het voor elk teken U+0001–U+10FFFF eens (waarde en sleutel)", "foto-snapshot: actie met een ANDERE eigen foto dan in de momentopname geweigerd", "foto-snapshot: foto daarna leegmaken geweigerd") en sectie 26 ("tekens: Unicode-tag-tekens (U+E0061…) in een actietekst geweigerd", "tekens: monteursnaam met tag-tekens geweigerd", "fotos: inspectie met de foto van een collega als tekst in extraFotos geweigerd", "fotos: een foto dieper dan 64 niveaus wordt niet overgeslagen maar geweigerd") · `supabase/tests/tekens_check.sh` ("tekens: app haalt 511 codepunten weg, database weigert er 511; verschillen: 0") · `tests/security.js` blok 4 ("Invoergrenzen").
 
 ### 7. XSS tegenhouden
-**Status:** Geregeld
+**Status:** Geregeld (met restrisico)
 
 **Bevinding.** XSS (iemand stopt code in een tekstveld die bij een ander wordt uitgevoerd) was het grootste risico uit het vooronderzoek: de oude app had overal `onclick="…"` in de HTML, waardoor de CSP inline scripts moest toestaan.
 
 **Fix.** Twee lagen:
-1. Alle tekst van gebruikers en van de server wordt **geëscaped** voordat hij in de pagina komt (`WPI.esc`).
+1. Alle tekst van gebruikers en van de server wordt **geëscaped** voordat hij in de pagina komt (`WPI.esc`). Keuzevelden en datums gaan door een **witte lijst**: een oordeel komt alleen als C, A, V of NVT in de pagina (anders leeg), een datum alleen als JJJJ-MM-DD of via `esc()`.
 2. **Strikte CSP**: alleen scripts van de eigen site, **geen** inline scripts, **geen** `onclick`-achtige attributen (`script-src-attr 'none'`), geen `eval`. De app gebruikt nu één centrale klikverwerking (`data-action`), die alleen echte app-functies aanroept. Als ergens een escape vergeten wordt, voert de browser een ingespoten `<script>` of `onerror=…` dus niet uit.
 
 **Wat de CSP níet tegenhoudt.** De centrale klikverwerking (`js/kern.js:372-405`, functies `roep` en `delegeer`) roept elke functie van de app aan die in een `data-action`-attribuut staat, met de argumenten uit `data-args`. Lukt het iemand om HTML in de pagina te krijgen (omdat ergens een escape vergeten is), dan kan hij zo'n knop maken en een app-functie laten uitvoeren zodra iemand erop klikt, bijvoorbeeld uitloggen of iets opslaan, met de rechten van wie er klikt. Er wordt geen vreemde code uitgevoerd en de database laat nog steeds alleen toe wat die gebruiker mag, maar de CSP helpt hier niet: **escaping is hier de enige verdediging.** Daarom toetsen `tests/security.js` en `tests/xss.js` nu ook deze aanval (een eigen `data-action` via `"` en via `'`), in elk tekstveld en in het adres.
 
-**De enkele quote.** `esc()` (`js/kern.js:12`) zet `& < > "` om, maar niet `'`. Dat is veilig zolang elke waarde in een attribuut tussen **dubbele** quotes staat. Dat is nu overal zo; `tools/periodieke_check.sh` (blok 5) faalt zodra iemand een attribuut tussen enkele quotes met een `${…}`-waarde schrijft. Advies aan de ontwikkelaar van `kern.js`: laat `esc()` ook `'` omzetten (zie "Wat moet Sven nog doen", stap 12).
+**Aanvalstest: keuzevelden, datums en getallen (gevonden en gedicht).** *In gewone woorden:* op negen plekken zette de app geen vrije tekst maar een keuze (het oordeel C/A/V/NVT), een datum, een aantal of een verwijzing zonder de gebruikelijke beveiliging in het scherm. Wie de gegevens op zijn **eigen** toestel had aangepast, kon daar een knop van maken die iemand uitlogt zodra hij erop klikt. Een buitenstaander kon hier niet bij: de server en de synchronisatie laten alleen geldige oordelen, datums, getallen en verwijzingen door. Wel klopte onze bewering "alle waarden worden beveiligd" niet. Alle negen plekken zijn nu beveiligd, en een test en de maandelijkse controle slaan alarm als er een nieuwe bij komt.
 
-**Bewijs.** `js/kern.js:32-50` en `:366-416` (event-delegatie, alleen eigen App-functies) · CSP in `index.html:13`, `_headers`, `netlify.toml`, `vercel.json` (gelijk; `exposed.js` controleert dat) · `tests/security.js` blok 1, 2 en 5: een ingespoten `onerror` en een ingespoten `<script>` worden door de browser geblokkeerd; in **elk** tekstveld van planning, nieuwe actie, actie instellen, zoeken, beheer en inspectie wordt een aanvalstekst ingevuld en opgeslagen, en daarna voert niets uit en staat er geen enkel `on…`-attribuut en geen ingespoten `data-action` in de pagina; ook niet met de aanvalstekst in het adres (`#/rapport/<aanvalstekst>` en 10 andere routes) · `tests/xss.js` (uitgebreid: 12 aanvalsteksten × 27 bronnen, ook via de server, waarvan 2 met een eigen `data-action`) · `tools/periodieke_check.sh` blok 5 ("geen attributen tussen enkele quotes met ${…}").
+*Bewijs (technisch):* gevonden door de aanvallers: het oordeel in het rapport en tijdens de inspectie, als klasse `b-…` én als tekst `[…]` (in de versie vóór de fix `inspecties.js:51` en `inspectie.js:309/618/654`; nu `inspecties.js:53` en `inspectie.js:311/620/656`), en de plandatum bij "Plandatum wijzigen" (`acties.js:166`). Door onze uitgebreide test daarna nog vier in de planning: het aantal monteurs (`planning.js:44`) en de datum (`planning.js:46`) in het planningsformulier, het aantal monteurs in de planningslijst (`:304`) en de link naar het rapport (`:308`). Met een gemanipuleerd lokaal record (IndexedDB) kwam er zo een werkende `<b data-action="logout">` in de pagina. Fix: witte lijst `ov()` voor het oordeel (`inspecties.js:8`, `inspectie.js:8`), alleen een geldige datum in `value` (`acties.js:166`), `esc()` op de vier plekken in `planning.js` (en ook op de persoon-id's in de keuzelijsten). `tests/xss.js` zet de 12 aanvalsteksten ook rechtstreeks in IndexedDB in keuzevelden, datums, id's en tijden (bronnen 28 en 29, ook in de lopende inspectie): met de oude code precies deze lekken, met de nieuwe niets. `tools/periodieke_check.sh` blok 5 faalt bij een oordeel, datum, status, prio, aantal monteurs of gekoppeld id (`${….oordeel}`, `${….plandatum}`, `${….monteurs}`, `${….inspectie_id}` …) zonder `esc()` of witte lijst (nagegaan: de regel vindt alle oude plekken en geeft op de huidige code niets).
+
+**De enkele quote.** *In gewone woorden:* de functie die tekst onschadelijk maakt, laat één teken ongemoeid: het enkele aanhalingsteken `'`. Dat is nu nergens een probleem, omdat de app overal dubbele aanhalingstekens gebruikt, en de maandelijkse controle slaat alarm als iemand dat ooit anders doet. Voor de zekerheid adviseren we de functie ook dat teken te laten omzetten ("Wat moet Sven nog doen", stap 12).
+
+*Bewijs (technisch):* `esc()` (`js/kern.js:12`) zet `& < > "` om, maar niet `'`. Veilig zolang elke waarde in een attribuut tussen **dubbele** quotes staat; `tools/periodieke_check.sh` blok 5 faalt zodra iemand een attribuut tussen enkele quotes met een `${…}`-waarde schrijft ("geen attributen tussen enkele quotes met ${…} in webapp/js").
+
+**Bewijs.** `js/kern.js:32-50` en `:366-416` (event-delegatie, alleen eigen App-functies; `roep` op `:373`, `delegeer` op `:385`) · CSP in `index.html:13`, `_headers`, `netlify.toml`, `vercel.json` (gelijk; `exposed.js` controleert dat) · `tests/security.js` blok 1, 2 en 5: een ingespoten `onerror` en een ingespoten `<script>` worden door de browser geblokkeerd; in **elk** tekstveld van planning, nieuwe actie, actie instellen, zoeken, beheer en inspectie wordt een aanvalstekst ingevuld en opgeslagen, en daarna voert niets uit en staat er geen enkel `on…`-attribuut en geen ingespoten `data-action` in de pagina; ook niet met de aanvalstekst in het adres (`#/rapport/<aanvalstekst>` en 10 andere routes) · `tests/xss.js` (uitgebreid: 12 aanvalsteksten × 29 bronnen, ook via de server en rechtstreeks in keuzevelden en datums in IndexedDB, waarvan 2 met een eigen `data-action`) · `tools/periodieke_check.sh` blok 5 ("geen attributen tussen enkele quotes met ${…}").
 
 **Restpunt (laag).** De stijlregel van de CSP staat nog `'unsafe-inline'` toe voor `style="…"`-attributen. Daarmee kun je geen script uitvoeren, alleen opmaak veranderen. Opruimen kan later (stijlen naar `styles.css`).
 
@@ -168,12 +185,12 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 - Supabase houdt zelf **Auth-logs** (elke inlogpoging, ook de mislukte, met IP-adres) en API-logs bij. Voor het raden van wachtwoorden zijn dát de logs om te bekijken.
 - De maandelijkse controle (`beveiliging-periodiek.md` §1) bevat kant-en-klare zoekopdrachten.
 
-**Mislukte logins: wat wel en niet in `security_events` komt.** Na elke 5 mislukte pogingen bewaart de app een melding `login_herhaald_mislukt` **op het toestel zelf**. Die gaat pas naar de database als daarna op **datzelfde toestel** iemand wél inlogt, want alleen een ingelogde gebruiker mag meldingen schrijven (`report_security_event` is alleen voor `authenticated`; `js/auth.js:165-177` en `:196-199`; `tests/sync.js`: "login_herhaald_mislukt verstuurd na login"). Iemand die vanaf zijn eigen apparaat wachtwoorden raadt, logt daarna niet in en levert dus **nooit** een regel in `security_events` op. Dat zie je alleen in de Auth-logs van Supabase (en Supabase remt het af, zie punt 12). Een melding vanaf het toestel van een aanvaller zou je ook niet kunnen vertrouwen. Wil je mislukte logins toch in de eigen tabel, dan kan een *Password Verification Hook* van Supabase dat op de server doen (betaald abonnement; nog niet gebouwd).
+**Mislukte logins: wat wel en niet in `security_events` komt.** Na elke 5 mislukte pogingen bewaart de app een melding `login_herhaald_mislukt` **op het toestel zelf**. Die gaat pas naar de database als daarna op **datzelfde toestel** iemand wél inlogt, want alleen een ingelogde gebruiker mag meldingen schrijven (`report_security_event` is alleen voor `authenticated`; `js/auth.js:179-192` en `:209-213`; `tests/sync.js`: "login_herhaald_mislukt verstuurd na login"). Iemand die vanaf zijn eigen apparaat wachtwoorden raadt, logt daarna niet in en levert dus **nooit** een regel in `security_events` op. Dat zie je alleen in de Auth-logs van Supabase (en Supabase remt het af, zie punt 12). Een melding vanaf het toestel van een aanvaller zou je ook niet kunnen vertrouwen. Wil je mislukte logins toch in de eigen tabel, dan kan een *Password Verification Hook* van Supabase dat op de server doen (betaald abonnement; nog niet gebouwd).
 
 **Wie kan de logboeken aanpassen?** De app en elke gewone databaserol (ook `service_role`) kunnen in `audit_log`, `actie_log` en `security_events` alleen regels toevoegen; wijzigen, verwijderen en leegmaken worden geweigerd (databasetests "eigenaar (postgres): auditlog UPDATE geweigerd door trigger" e.d.). Maar de **eigenaar** van de database (`postgres`) kan in onderhoudsstand (`wpi.onderhoud = 'aan'`) regels verwijderen, bedoeld voor de bewaartermijn (`0004_audit.sql:137-147`), en kan als eigenaar de bewaking (de triggers) uitzetten. Iedereen met het databasewachtwoord of toegang tot de SQL Editor van Supabase kan de logboeken dus wél aanpassen. Wat we daartegen doen: die toegang klein houden ("Wat moet Sven nog doen", stap 8) en bij de maandcontrole een export van de uitkomst buiten Supabase bewaren (`beveiliging-periodiek.md` §1.3).
 **Wat open staat.** Er gaat nog geen automatische mail of melding uit bij iets verdachts; iemand moet maandelijks kijken. Bij ~5 gebruikers is dat te doen. Wil je alarmering, dan kan later een kleine Supabase Edge Function of een geplande query een mail sturen.
 
-**Bewijs.** `supabase/migrations/0004_audit.sql` (append-only, uitzondering voor de eigenaar op `:137-147`), `0001_tabellen.sql:321-332` (security_events) · `js/auth.js:165-177` (melding bewaren en na een login versturen), `:196-199` (na elke 5 fouten) · `tests/sync.js` · databasetests sectie 7 · `docs/beveiliging-periodiek.md` §1.2-1.3.
+**Bewijs.** `supabase/migrations/0004_audit.sql` (append-only, uitzondering voor de eigenaar op `:137-147`), `0001_tabellen.sql:321-332` (security_events) · `js/auth.js:179-192` (melding bewaren en na een login versturen), `:209-213` (na elke 5 fouten) · `tests/sync.js` · databasetests sectie 7 · `docs/beveiliging-periodiek.md` §1.2-1.3.
 
 ### 9. Beheerroutes afschermen
 **Status:** Geregeld na Supabase-koppeling
@@ -191,7 +208,7 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Fix.** De app schrijft geen SQL. Hij praat met de REST-API van Supabase (PostgREST), die elke waarde als parameter doorgeeft; de waarden in de URL worden met `encodeURIComponent` gecodeerd. In de databasefuncties staat geen dynamische SQL (`EXECUTE` met tekst). De databasetests slaan bekende injectieteksten op en controleren dat ze **letterlijk** als tekst worden bewaard.
 
-**Bewijs.** `js/sync.js:614-662`, `:849` · `tools/periodieke_check.sh` blok 5: "OK geen dynamische SQL (EXECUTE met tekst) in supabase/migrations". Dezelfde controle met de hand, vanuit de repo-map; **verwacht: geen enkele regel uitvoer**:
+**Bewijs.** `js/sync.js:658-720`, `:893` · `tools/periodieke_check.sh` blok 5: "OK geen dynamische SQL (EXECUTE met tekst) in supabase/migrations". Dezelfde controle met de hand, vanuit de repo-map; **verwacht: geen enkele regel uitvoer**:
   ```bash
   grep -inE '\bexecute\b' webapp/supabase/migrations/*.sql | grep -viE 'execute (function|procedure)|(grant|revoke)[^;]*execute|:[0-9]+:\s*--'
   ```
@@ -207,13 +224,21 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 ### 12. Rate limiting
 **Status:** Geregeld na Supabase-koppeling
 
-**Fix.** Op vier niveaus:
+**Fix.** Wat echt tegenhoudt zit op de server (niveau 1 tot 3); niveau 4 is gemak:
 1. **Supabase Auth** (instelling): o.a. ±30 inlogpogingen per 5 minuten per IP, ±2 mails per uur.
-2. **Database-quota** per gebruiker: gezamenlijk schrijfquotum 25 MiB per 24 uur, max 30 wijzigingen per record, > 300 per uur geweigerd; beveiligingsmeldingen begrensd per minuut en per dag; uploads max **120 foto's per uur en 600 per 24 uur** (nieuw in deze ronde).
+2. **Database-quota** per gebruiker: gezamenlijk schrijfquotum 25 MiB per 24 uur, max 30 wijzigingen per record, > 300 per uur geweigerd; max 300 nieuwe acties per uur; max 20 nieuwe monteursnamen per dag; beveiligingsmeldingen begrensd per minuut en per dag; uploads max **120 foto's per uur en 600 per 24 uur**.
 3. **Storage**: max 5 MB per foto.
-4. **App**: na 3 foute logins een oplopende wachttijd (30 s tot max 15 min); herstelmail niet vaker dan eens per minuut; bij "429" van de server een duidelijke melding.
+4. **App**: na 3 foute logins een oplopende wachttijd (30 s tot max 15 min); herstelmail niet vaker dan eens per minuut; bij "429" van de server een duidelijke melding. **Dit is gemak voor gewone gebruikers en geen bescherming tegen een aanvaller**: de teller staat in de browser van het toestel zelf (`js/auth.js:194-215`, `pog()`/`zetPog()`); wie de opslag wist of Supabase `/auth/v1/token` rechtstreeks aanroept, slaat hem over. Alleen Supabase Auth (niveau 1) en de databasequota (niveau 2) houden iemand echt tegen.
 
-**Bewijs.** `supabase/README.md` §2 · `0004_audit.sql:20-43`, `0006_rpc.sql:40-55`, `0007_invoer_aanvulling.sql:131-145` · `js/auth.js:180-198`, `:446`, `:459-464` · databasetests ("quotum: …", "rate limit").
+**Aanvalstest (gedicht).** Drie limieten waren met gelijktijdige verzoeken te overschrijden, omdat er geteld werd vóór de lock per gebruiker (of zonder lock): nieuwe monteursnamen (19 + 15 tegelijk = 34 in plaats van max 20), nieuwe acties (295 + 12 = 307 i.p.v. 300) en uploads (115 + 12 = 127 i.p.v. 120). Nu neemt elke telling eerst dezelfde lock per gebruiker (`0006_rpc.sql:145`, `0002_functies_validatie.sql:1118`, `0007_invoer_aanvulling.sql:222-244`). De nieuwe test `supabase/tests/race_quotum.sh` doet precies die aanval: met de oude code 34 / 307 / 127 (FOUT), nu 20 / 300 / 120 (OK).
+
+**Aanvalstest (gedicht): uploads werden onbruikbaar traag.** De telling van het uploadquotum telde in `storage.objects` met de rechten van de gebruiker. Postgres voerde daardoor voor élke foto in de map eerst de leesregel uit (die alle acties doorzocht), vóór het filter op de eigen map: bij 137 foto's en 647 acties duurde één upload van een inspecteur 28,7 s, ruim boven de grens van 8 s die Supabase hanteert. Inspecteurs konden dan geen bewijsfoto's meer uploaden, en iedereen kon dat moment met nep-acties en uploads naar voren halen. Nu: een eigen kleine teltabel `public.foto_uploads` (index op gebruiker en tijd, alleen via de functie), en de foto-toegang via een actie zoekt met een index op het pad in plaats van alle acties (`0002_functies_validatie.sql:139`, `0007_invoer_aanvulling.sql:199-250`). Test met 1000 foto's × 1000 acties onder een limiet van 8 s: upload < 1 s, alle foto's opsommen < 2 s, één foto < 0,2 s.
+
+**Aanvalstest ronde 2 (gedicht): rekentijd zonder dat er iets geteld werd.** *In gewone woorden:* een inspecteur kon een inspectie van net onder 1 MB opsturen met honderdduizenden lege onderdelen. De controle op vreemde tekens liep die stuk voor stuk na en kostte 5 tot 11 seconden rekenwerk, waarna Supabase de poging na 8 seconden afbreekt. Omdat er dan niets wordt opgeslagen, telde zo'n poging nergens mee (niet voor de 30 inspecties per uur, niet voor het schrijfquotum). Met een paar van zulke verzoeken tegelijk in een lus houd je de database bezig. Nu: eerst goedkope grenzen (hooguit 256 KB, hooguit 20.000 onderdelen, minder dan 32 niveaus diep, hooguit 500 waarnemingen), die in enkele milliseconden weigeren, en de tekencontrole is nu één zoekopdracht over de hele tekst (milliseconden in plaats van seconden). Een gewone inspectie (ook 60 waarnemingen van 2000 tekens, ± 125 KB) past ruim.
+
+*Bewijs (technisch):* `0007_invoer_aanvulling.sql:124-157` (trigger `inspecties_0_vorm`, loopt vóór alle andere controles) en `:52-66` (`record_tekens_ok` als één reguliere expressie over `record::text`, met de JSON-escapes `\b`, `\f` en `\u00XX`) · databasetests sectie 26c ("vorm: 250.000 lege lijsten (< 1 MB) binnen 1 s geweigerd", "vorm: 30.000 elementen in 90 KB binnen 0,5 s geweigerd", "vorm: record_tekens_ok op 250.000 lege lijsten duurt < 1 s (was 5–11 s)", "vorm: een gewone inspectie met 60 waarnemingen van 2000 tekens (± 125 KB) mag"), met `statement_timeout = 8s` zoals bij Supabase.
+
+**Bewijs.** `supabase/README.md` §2 · `0004_audit.sql:20-43`, `0006_rpc.sql:40-55` en `:143-163`, `0007_invoer_aanvulling.sql:199-261` · `js/auth.js:194-215` (wachttijd), `:564` (melding bij 429), `:577` (herstelmail eens per minuut) · databasetests ("quotum: …", "rate limit", sectie 25c "prestatie: upload als inspecteur bij 1000 foto's × 1000 acties duurt < 1 s") · `supabase/tests/race_quotum.sh` ("race quotum: OK").
 
 ### 13. CORS beperken
 **Status:** Niet van toepassing (deels)
@@ -232,7 +257,7 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 **Bewijs.** `_headers:48-57` · `vercel.json` (route `/(.*)`) · `netlify.toml` (`[[headers]] for = "/*"`) · `node webapp/tests/exposed.js --config --strict`, blok "Beveiligingsheaders in de hostconfiguraties": leest per configuratie de headers die voor elk pad gelden en toetst ze met dezelfde eisen als de live-controle (HSTS ≥ 180 dagen, CSP strikt, `nosniff`, X-Frame-Options of `frame-ancestors`, Referrer-Policy, Permissions-Policy, COOP, CORP, `Cache-Control: no-cache` voor `index.html` en `sw.js`); 30 × `ok`, en hij faalt echt als er één ontbreekt (nagegaan door `nosniff` te schrappen en HSTS te verkorten in een kopie). Na deploy: `node webapp/tests/exposed.js --alles https://<adres> --strict` (de headers zoals de host ze echt stuurt).
 
 ### 15. Veilige sessiecookies
-**Status:** Niet van toepassing
+**Status:** Niet van toepassing (maatregelen: na Supabase-koppeling)
 
 **Uitleg.** De app gebruikt **geen cookies**. Supabase werkt met tokens die de app zelf in een header meestuurt. Instellingen als `HttpOnly`, `Secure` en `SameSite` gaan alleen over cookies.
 
@@ -243,39 +268,55 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 - de **strikte CSP** maakt het uitlezen via XSS (de enige manier om bij die opslag te komen) zeer moeilijk;
 - **Overal uitloggen** trekt alle sessies in (bijv. bij een verloren telefoon);
 - het **hoofd** (beheerrechten) krijgt nooit een bewaard refresh-token, ook niet met "Ingelogd blijven";
-- **sessielimieten in Supabase** (*Authentication › Sessions*): elke sessie stopt na **7 dagen** (*time-box*) en na **8 uur** zonder gebruik (*inactivity timeout*). Dit is de maatregel die een gestolen refresh-token vanzelf laat verlopen. `js/auth.js:24-25` noemt hem verplicht, maar hij staat pas aan als Sven hem instelt ("Wat moet Sven nog doen", stap 3; vraagt het Pro-abonnement). Tot dan blijft een gestolen refresh-token met "Ingelogd blijven" bruikbaar tot iemand "Overal uitloggen" kiest.
+- **sessielimieten in Supabase** (*Authentication › Sessions*): elke sessie stopt na **7 dagen** (*time-box*) en na **8 uur** zonder gebruik (*inactivity timeout*). Dit is de maatregel die een gestolen refresh-token vanzelf laat verlopen. `js/auth.js:28-29` noemt hem verplicht, maar hij staat pas aan als Sven hem instelt ("Wat moet Sven nog doen", stap 3; vraagt het Pro-abonnement). Tot dan blijft een gestolen refresh-token met "Ingelogd blijven" bruikbaar tot iemand "Overal uitloggen" kiest.
 
-**Bewijs.** `js/auth.js:14-29` (toelichting, met de verplichte sessielimieten op `:24-25`), `:61-76` (opslag), `:148` (token in de header) · `supabase/README.md` §2 ("Sessies (Pro): time-box / inactivity timeout · 7 dagen / 8 uur") · `tests/sync.js`.
+**Gedeeld toestel: werk dat nog niet op de server staat (aanvalstest, gedicht met restrisico).** Een lopende inspectie (met foto's en monteursnamen) en wijzigingen die nog in de wachtrij staan, bewaart de app in de browser (IndexedDB) zodat er offline niets verloren gaat. Dat is **niet versleuteld**. De aanvallers lieten zien dat na het uitloggen van A en het inloggen van B op dezelfde browser B met DevTools (`WPI.DB.getAll('concept')`, `getAll('outbox')`) de lopende inspectie en het onverstuurde werk van A kon lezen, terwijl het uitlogvenster A beloofde dat het "veilig en onzichtbaar voor anderen" was. Die belofte klopte niet. Wat er nu gebeurt:
+- **Bij uitloggen** met onverstuurd werk zegt de app eerlijk dat het onversleuteld op het toestel staat, en kies je: **Eerst synchroniseren**, **Bewaren en uitloggen** (alleen op je eigen telefoon) of **Wissen en uitloggen** (gedeeld toestel; met bevestiging).
+- **Logt daarna iemand anders in**, dan ziet die eerst "Werk van een vorige gebruiker" en wordt de wachtrij én de lopende inspectie van alle andere gebruikers gewist **vóórdat** er iets van de app op het scherm komt. Annuleren laat het staan, zodat de collega eerst zelf kan synchroniseren.
+- Een tabblad van de vorige gebruiker dat net uitlogt, kan zijn lopende inspectie daarna niet meer terugzetten (controle op de "eigenaar" van het toestel in dezelfde opslagtransactie).
+
+Versleutelen met een sleutel die bij de sessie hoort (zoals de aanvallers als beste oplossing noemden) is niet gebouwd: offline opnieuw openen vraagt dan een sleutel die óók op het toestel bewaard moet worden, en dat levert op een eigen telefoon weinig extra op. **Restrisico**: wie op een gedeeld toestel "Bewaren" kiest, of de app sluit zonder uit te loggen, laat zijn onverstuurde werk leesbaar achter voor iemand met toegang tot dat toestel, tot de volgende gebruiker inlogt. Vooral de webversie op kantoor-pc's raakt dit; daarom de afspraak in "Wat moet Sven nog doen", stap 13.
+
+**Bewijs.** `js/auth.js:19-34` (toelichting, met de verplichte sessielimieten op `:28-29`), `:79-103` (opslag), `:162` (token in de header), `:337-345` (vraag bij een ander z'n werk), `:510-540` (keuze bij uitloggen) · `js/sync.js:329-345` (concept alleen als eigenaar) en `:1428-1465` (`syncEigenWerk`, `syncAnderWerk`, `syncWisWerk`) · `tests/sync.js` sectie 9b ("uitloggen met volle wachtrij: eerlijke waarschuwing …", "B logt in: eerst \"Werk van een vorige gebruiker\" …", "B: wachtrij, record en lopende inspectie van A zijn ook in de ruwe IndexedDB weg") · `tests/security.js` ("productie: concept van een vorige gebruiker niet terug te zetten; syncWisAnderen wist het") · `supabase/README.md` §2 ("Sessies (Pro): time-box / inactivity timeout · 7 dagen / 8 uur").
 
 ### 16. CSRF-bescherming
 **Status:** Niet van toepassing
 
 **Uitleg.** CSRF werkt doordat een browser **cookies automatisch meestuurt** naar een site, ook als een kwaadwillende andere site het verzoek start. Deze app gebruikt geen cookies: het token gaat mee in de header `Authorization: Bearer …`, en die header zet de browser **nooit vanzelf**. Een andere site kent het token niet en kan het dus niet meesturen. Daarnaast: `form-action 'self'` in de CSP en `frame-ancestors 'none'` (de app kan niet in een onzichtbaar frame op een andere site worden geladen).
 
-**Bewijs.** `js/auth.js:148`, `js/sync.js:228` (token alleen in de header) · CSP in `_headers`.
+**Gevonden in de tweede aanvalsronde: een vervalste herstellink (laag, gedicht).** Klassieke CSRF speelt niet, maar er was een verwante aanval via een link. *In gewone woorden:* wie iemand een zelfgemaakte "herstellink" liet openen (ook met onzin erin), kon die persoon op dat toestel uitloggen en de gegevens van de server op het toestel laten wissen. Voor een inspecteur die ingelogd bleef en in het veld geen bereik heeft, betekent dat: de app niet meer kunnen openen tot er weer bereik is. De app controleerde de link niet bij de server en ruimde de bewaarde sessie op zodra je op "Annuleren" klikte. Nu wist een link nooit iets, wordt elke link eerst gecontroleerd, en een link van een ander account wordt geweigerd. Details en bewijs bij punt 17.
+
+**Bewijs.** `js/auth.js:162`, `js/sync.js:232` (token alleen in de header) · CSP in `_headers` · voor de link: punt 17.
 
 ### 17. Herstellinks laten verlopen
 **Status:** Geregeld na Supabase-koppeling
 
-**Fix.** De geldigheid van de herstellink is een Supabase-instelling: maximaal 3600 s (advies 900 s), eenmalig te gebruiken. De app verwerkt de link (`#access_token=…&type=recovery`), laat direct een nieuw wachtwoord van minstens 12 tekens kiezen en haalt het token uit de adresbalk. Een herstelmail aanvragen kan niet vaker dan eens per minuut vanuit de app, en de app zegt nooit of een e-mailadres bestaat. Redirect-URL's staan in Supabase op precies de eigen URL (geen open redirect).
+**Fix.** De geldigheid van de herstellink is een Supabase-instelling: maximaal 3600 s (advies 900 s), eenmalig te gebruiken. Een herstelmail aanvragen kan niet vaker dan eens per minuut vanuit de app, en de app zegt nooit of een e-mailadres bestaat. Redirect-URL's staan in Supabase op precies de eigen URL (geen open redirect).
 
-**Bewijs.** `supabase/README.md` §2 · `js/auth.js:233`, `:338-346`, `:459-464` · `tests/sync.js` (herstelflow tegen de nep-Supabase).
+**Aanvalstest ronde 2 (gedicht): de link zelf.** *In gewone woorden:* een link uit een e-mail mag niets kapot kunnen maken en niemand als een ander laten inloggen. Dat was niet zo (zie punt 16). Nu:
+- De herstelmail die de app aanvraagt gebruikt **PKCE**: de link bevat alleen een eenmalige code, en die werkt alleen samen met een geheim dat in de browser blijft die de mail aanvroeg. Een link die iemand anders je stuurt, of je eigen link in een andere browser, doet niets (met uitleg).
+- Een link in de oude vorm (uitnodiging door het hoofd, of herstel via het Supabase-dashboard) wordt pas gebruikt nadat de server hem heeft goedgekeurd, en alleen als het een herstel- of uitnodigingslink is.
+- Een link wist **nooit** een bewaarde sessie of de gegevens op het toestel. Klopt hij niet, of klik je op "Annuleren", dan gaat de app gewoon verder met wie er al ingelogd was.
+- Hoort een geldige link bij een **ander account** dan wie op dit toestel ingelogd is gebleven, dan wordt hij geweigerd (en op de server ingetrokken). Zo kan niemand je app als zijn account laten werken.
+- Het scherm "Nieuw wachtwoord" noemt het e-mailadres van het account, zodat je ziet voor wie je een wachtwoord kiest. Uitnodigingslinks werken nu ook (eerder gingen die naar het inlogscherm).
+
+**Bewijs.** `supabase/README.md` §2 en §8 punt 1 · `js/auth.js:371-437` (`verwerkLink`, `linkAfbreken`), `:574-592` (herstelmail met `code_challenge`), `:246-258` (scherm met het e-mailadres), `:459-467` (`authHerstel`: een link wist niets) · `tools/mock_supabase.py` (PKCE en `/__mock/herstellink` om de mail na te bootsen) · `tests/sync.js` sectie 12a: "link (nep-token (recovery)): nog steeds ingelogd, bewaarde sessie en profiel intact", "link (nep-token (recovery)): niets van het toestel gewist (17 → 17)", idem voor `type=magiclink` en `#error=…`, "link in hetzelfde tabblad (hashchange): ook verwerkt, niets gewist", "link: na herladen nog steeds ingelogd", "link van een ander account: geweigerd, nog steeds als zichzelf ingelogd", "link van een ander account: die sessie is op de server ingetrokken", "eigen link → Annuleren: weer ingelogd met de bewaarde sessie, niets gewist", "PKCE: link in een andere browser werkt niet (geen sessie, uitleg)", "PKCE: nieuw wachtwoord opgeslagen, overal uitgelogd".
 
 ### 18. Uploads beperken (type en grootte)
 **Status:** Geregeld in de app · op de server: Geregeld na Supabase-koppeling
 
 **Fix.**
 - **App**: alleen jpeg, png, webp en heic/heif (telefoonfoto's); max 20 MB bij het kiezen; de app verkleint de foto en stuurt hem als JPEG van max 5 MB. SVG, PDF, onbekende bestanden en lege bestanden worden geweigerd met een Nederlandse melding. Max 6 foto's per waarneming. Een foto wordt alleen getoond als het echt een eigen foto-data-URL is.
-- **Server**: de fotomap is **privé**, max 5 MB, alleen `image/jpeg|png|webp`, elke gebruiker alleen in de eigen map, bewijsfoto's niet te overschrijven of te verwijderen, en (nieuw) max 120 uploads per uur / 600 per dag.
+- **Server**: de fotomap is **privé**, max 5 MB, alleen `image/jpeg|png|webp`, elke gebruiker alleen in de eigen map, bewijsfoto's niet te overschrijven of te verwijderen, en (na de tweede aanvalsronde) ook niet (opnieuw) te uploaden zodra het pad als bewijs gekoppeld is: eerst een pad koppelen en later iets anders uploaden, of na verwijderen door het hoofd een andere foto onder dezelfde naam zetten, lukt niet meer (de app uploadt altijd vóór het koppelen; bestaat de foto al, dan accepteert de app dat). Max 120 uploads per uur / 600 per dag (snel geteld en niet te omzeilen met gelijktijdige uploads, zie punt 12).
 
-**Bewijs.** `js/sync.js:110-145`, `:444` · `js/inspectie.js:174` · `supabase/migrations/0005_storage.sql:11-16`, `0007_invoer_aanvulling.sql:131-145` · `tests/security.js` blok 4 ("SVG, PDF, onbekend, leeg en 21 MB geweigerd; gewone foto wordt verkleinde JPEG").
+**Bewijs.** `js/sync.js:106-157`, `:465-487` (upload, met `bestaatFoto`) · `js/inspectie.js:176` · `supabase/migrations/0005_storage.sql:11-16`, `0007_invoer_aanvulling.sql:199-261` (insert-policy met `not public.foto_in_gebruik(name)` op `:259`) · databasetests sectie 26d ("bewijs: daarna iets uploaden onder dat gekoppelde pad geweigerd", "bewijs: na verwijderen een andere foto onder dezelfde naam zetten geweigerd") · `tests/security.js` blok 4 ("SVG, PDF, onbekend, leeg en 21 MB geweigerd; gewone foto wordt verkleinde JPEG").
 
 ### 19. Debugstand uit in productie
 **Status:** Geregeld
 
 **Fix.** `debug: false` in `config.js`; alleen met `debug: true` schrijft `sync.js` ruwe servermeldingen naar de console. In productie bestaan de voorbeeld-omwegen niet meer (zie punt 1), worden fictieve accounts en voorbeelddata weggehaald en is er geen "Demo"-label. In de voorbeeldmodus staat een rustig, aantikbaar "Demo"-label bovenin dat uitlegt dat alles fictief is en alleen op dit toestel blijft. De periodieke controle zoekt naar `debugger`, `console.log` en `debug: true`.
 
-**Bewijs.** `js/config.js:29-35` · `js/sync.js:96-100` · `js/auth.js:556-576` · `tests/security.js` ("productie: debug staat uit", "productie: geen debuguitvoer in de console", "geen Voorbeeld- of Demo-label") · `periodieke_check.sh` blok 5.
+**Bewijs.** `js/config.js:29-35` · `js/sync.js:100-104` · `js/auth.js:657-719` · `tests/security.js` ("productie: debug staat uit", "productie: geen debuguitvoer in de console", "geen Voorbeeld- of Demo-label") · `periodieke_check.sh` blok 5.
 
 ### 20. Kwetsbare afhankelijkheden bijwerken
 **Status:** Geregeld
@@ -312,7 +353,7 @@ repo/
 
 **Bewijs.** `netlify.toml:5-14`, `vercel.json` (`buildCommand`, `outputDirectory`, 404-routes), `_headers:25-42` (indeling en Cloudflare-build) · `node tests/exposed.js --config --strict`: voert de build van alle drie de hosts echt uit in een tijdelijke kopie en faalt als er iets anders dan de app in `dist/` komt; controleert ook de 404-regels en dat de CSP overal gelijk is.
 
-**Let op.** `data/` gaat mee online (de kennisbank en de voorbeelddata). Daar staan geen echte persoonsgegevens in, alleen fictieve voorbeelden. Komen er ooit echte gegevens in `data/`, haal die map dan uit de build.
+**Let op.** `data/` en `js/` gaan mee online. In `data/` (kennisbank en voorbeelddata) staan geen echte persoonsgegevens, alleen fictieve voorbeelden. In `js/kern.js` stonden tot deze ronde de echte namen en functies van het hoofd en de twee coördinatoren als voorbeeldaccounts (aanvalstest, A5). In de eerste fix werden alleen de volledige namen vervangen door verzonnen namen; de **voornamen** bleven als interne id staan (`u-<voornaam>`, naast de echte functietitels, in `kern.js`, `acties.js`, `planning.js` en een opmerking in `auth.js`). In een klein bedrijf maakt voornaam plus functie iemand herkenbaar, dus dat zijn persoonsgegevens (AVG), en de vorige versie van dit rapport beweerde ten onrechte dat er geen echte namen meer in stonden (A17). Nu hebben de voorbeeldaccounts neutrale id's (`u-hoofd`, `u-coord1`, `u-coord2`, `u-insp`) en verzonnen namen ("Bram Voorbeeld", "Carla Proef", "Dirk Demo"; `js/kern.js:102-109`), ook in alle tests. `tests/security.js` zoekt nu op de voor- én achternamen (hoofdletterongevoelig, als los woord) in **elk** gepubliceerd bestand: alle scripts en stylesheets, `index.html`, `sw.js`, `manifest.json` en alle `data/*.json` ("gepubliceerde bestanden bevatten geen (voor)namen van medewerkers (25 bestanden: 16 js, 4 data)"). Nagegaan: de oude `kern.js` geeft met deze controle 3 treffers; een build van `dist/` met de opdracht uit `netlify.toml` geeft er 0. De echte namen staan alleen nog in `supabase/seed.sql` (het inrichtingsbestand voor de echte accounts, gaat nooit online) en in de nep-Supabase en tests buiten de publicatie. Komen er ooit echte gegevens in `data/`, haal die map dan uit de build.
 
 ### 23. Git-geschiedenis scannen op geheimen
 **Status:** Geregeld
@@ -336,31 +377,31 @@ repo/
 **Bewijs.** `docs/beveiliging-periodiek.md` §1-3.
 
 ### 26. Beschermingen testen en bevindingen rapporteren
-**Status:** Geregeld voor de eigen aanvalsrondes en de onafhankelijke review · de bevindingen van de aparte aanvallers van ronde 3: **Open**
+**Status:** Geregeld
 
 **Fix.** Alle maatregelen hebben een test die het echt probeert:
 | Test | Wat hij doet |
 |---|---|
-| `tests/security.js` (nieuw) | CSP aanwezig en afgedwongen; alle schermen doorlopen zonder inline handlers; productie-config zonder voorbeeld-login en zonder omwegen; uploadgrenzen; aanvalstekst in elk tekstveld blijft onschadelijk. Eindigt met `errs []`. |
-| `tests/xss.js` | 12 aanvalsteksten × 27 bronnen (ook een eigen `data-action` via `"` en `'`), ook via de server en na herladen. |
+| `tests/security.js` (nieuw) | CSP aanwezig en afgedwongen; alle schermen doorlopen zonder inline handlers; productie-config zonder voorbeeld-login, zonder omwegen en zonder fictieve monteurs; concept van een vorige gebruiker niet terug te zetten; geen echte (voor)namen in de gepubliceerde bestanden; uploadgrenzen; aanvalstekst in elk tekstveld blijft onschadelijk. Eindigt met `errs []`. |
+| `tests/xss.js` | 12 aanvalsteksten × 29 bronnen (ook een eigen `data-action` via `"` en `'`), ook via de server, na herladen en rechtstreeks in keuzevelden, datums en id's in IndexedDB. |
 | `tests/exposed.js` | publicatie-allowlist, 404-regels, CSP en beveiligingsheaders per hostconfiguratie (`--config`); live ook bereikbaarheid en echte headers (`--alles`). |
-| `tests/sync.js` | inloggen, MFA, sessie, herstel, wachtrij tegen de nep-Supabase; wachtwoord in geen enkele opslag. |
-| `supabase/tests/run.sh` | 483 databasecontroles (RLS, methoderegels, quota, aanvallen uit eerdere reviews). |
-| `tools/periodieke_check.sh` | geheimen, sleutels, debug, CSP, enkele-quote-attributen, dynamische SQL, ongebruikte scripts, publicatie, versies (met `--db` ook de databasetests). |
+| `tests/sync.js` | inloggen, MFA, sessie, herstel, wachtrij tegen de nep-Supabase; wachtwoord in geen enkele opslag; gedeeld toestel (kiezen bij uitloggen, werk van een ander gewist vóór het inloggen); links uit een e-mail (nep, ander type, ander account, eigen account, PKCE in een andere browser) wissen niets en loggen niemand als een ander in. |
+| `supabase/tests/run.sh` | 529 databasecontroles (RLS, methoderegels, quota, tekens, foto van een actie, bewijs niet opnieuw te uploaden, grootte en rekentijd van een record, snelheid bij 1000 × 1000, aanvallen uit eerdere reviews) en 3 gelijktijdigheidstests (laatste hoofd, QHSE-rol, quota), plus twee vergelijkingen met de app over alle Unicode-tekens (`naamsleutel_check.sh`, `tekens_check.sh`). |
+| `tools/periodieke_check.sh` | geheimen, sleutels, debug, CSP, enkele-quote-attributen, keuzevelden/datums zonder `esc()`, dynamische SQL, ongebruikte scripts, publicatie, versies (met `--db` ook de databasetests). |
 
 Alles draait samen met `node webapp/tests/run-all.js -j 3` (met `--extra` ook `xss.js`).
 
-**Wat nog open is.** De opdracht was ook: de bevindingen van **aparte aanvallers** (mensen of agents die de app los van ons aanvallen) opnemen. Voor ronde 3 zijn die bevindingen niet bij ons aangekomen. Wat we in plaats daarvan hebben: onze eigen aanvallen (tabel hieronder), de regressietests van de aanvallers uit fase 2, en de onafhankelijke review van dit rapport (bevindingen R1-R10 hieronder, allemaal verwerkt). Zodra de bevindingen van ronde 3 er zijn, komen ze in de sectie "Aanvalstest" met ernst, fix en bewijs; tot dan blijft dit deel Open.
+**Aanvallers en reviewers.** Naast onze eigen aanvallen zijn de app en dit rapport aangevallen en nagelopen door aparte aanvallers en strenge reviewers. Hun bevindingen staan in de sectie "Aanvalstest" in drie tabellen: R1–R10 (eerste review), A1–A15 (aanvalstest en tweede review) en A16–A22 (tweede aanvalsronde, deze versie), elk met ernst, fix en bewijs. Elke aanval die iets opleverde, is als regressietest opgenomen.
 
 ---
 
 ## Aanvalstest
 
-**Wat we zelf als aanvaller hebben geprobeerd in deze ronde** (allemaal tegengehouden):
+**Wat we zelf als aanvaller hebben geprobeerd in deze ronde** (tegengehouden, tenzij anders vermeld in de kolom "Uitkomst"):
 
 | Aanval | Uitkomst | Bewijs |
 |---|---|---|
-| In productie vanuit de console `App.login("u-bjorn")` of `App.login(id, {role:"hoofd"})` | doet niets | `tests/security.js` |
+| In productie vanuit de console `App.login("u-hoofd")` of `App.login(id, {role:"hoofd"})` | doet niets | `tests/security.js` |
 | Een inlogknop (`data-action="login"`) in de pagina injecteren | doet niets | `tests/security.js` |
 | Direct naar `#/dashboard`, `#/beheer`, `#/acties`, `#/rapport/…` zonder login | alleen het inlogscherm | `tests/security.js` |
 | Oude `wpi_user` in localStorage zetten om "ingelogd" te zijn | genegeerd en opgeruimd | `tests/security.js` |
@@ -369,12 +410,17 @@ Alles draait samen met `node webapp/tests/run-all.js -j 3` (met `--extra` ook `x
 | Een eigen klikknop (`data-action`) in de pagina krijgen via `"` of `'` in elk tekstveld (dit houdt de CSP **niet** tegen) | escaping houdt het tegen: geen ingespoten `data-action` | `tests/security.js` blok 5, `tests/xss.js` payload 11 en 12 |
 | Aanvalstekst in het adres: `#/rapport/<tekst>`, `#/acties/<tekst>` en 9 andere routes, ook `#/constructor` en `#/__proto__` | niets uitgevoerd of ingevoegd | `tests/security.js` ("payload in het adres") |
 | SVG, PDF, leeg bestand, 21 MB-bestand als foto uploaden | geweigerd met melding | `tests/security.js` |
-| Jaar 9999, stuurtekens, andermans fotopad, honderden uploads via de API | geweigerd door de database | databasetests sectie 22 |
-| Rol ophogen, id's vooraf claimen, andermans actie wijzigen, logboek vervalsen, hoofd zonder MFA | geweigerd door de database | databasetests sectie 21 en 22 |
+| Jaar 9999, stuurtekens, andermans fotopad, honderden uploads via de API | geweigerd door de database | databasetests sectie 24 en 25 |
+| Rol ophogen, id's vooraf claimen, andermans actie wijzigen, logboek vervalsen, hoofd zonder MFA | geweigerd door de database | databasetests sectie 21 tot en met 23 |
 | Testmappen, `.git`, `.md`, `.sql` opvragen na deploy | niet in `dist/`, en 404 | `tests/exposed.js --config --strict` |
-| Wachtwoorden raden vanaf een eigen apparaat | Supabase remt af (±30 pogingen per 5 min per IP); de app zelf heeft wachttijden. **Komt niet in `security_events`**, alleen in de Auth-logs van Supabase | punt 8, `tests/sync.js` |
+| Een vervalste herstellink (`#access_token=onzin&type=recovery`, ander type, `#error=…`) openen terwijl je ingelogd bent gebleven | niets gewist, nog steeds ingelogd, melding "Link niet gebruikt" | `tests/sync.js` sectie 12a |
+| Een échte herstellink van een ander account (bijv. van de aanvaller zelf) laten openen | geweigerd en op de server ingetrokken; je blijft jezelf | `tests/sync.js` sectie 12a |
+| De herstellink (PKCE) in een andere browser openen | doet niets, met uitleg | `tests/sync.js` sectie 12a |
+| Een inspectie van < 1 MB met 250.000 lege onderdelen, of 40 niveaus diep | binnen milliseconden geweigerd (eerder 5–11 s rekenwerk) | databasetests sectie 26c |
+| Tag-tekens, zacht afbreekstreepje of opvullers in een actie, inspectie of monteursnaam | geweigerd door de database; de app haalt ze weg | databasetests sectie 26a, `tekens_check.sh` |
+| Wachtwoorden raden vanaf een eigen apparaat | **Niet tegengehouden, alleen afgeremd**: Supabase laat ±30 pogingen per 5 min per IP toe; de wachttijd in de app is met een eigen script te omzeilen. **Komt niet in `security_events`**, alleen in de Auth-logs van Supabase. Bescherming: lange wachtwoorden, gelekte-wachtwoordencontrole, MFA voor het hoofd | punt 8 en 12, `tests/sync.js` |
 
-**Bevindingen van de onafhankelijke review (ronde 3).** Twee strenge beoordelaars hebben de vorige versie van dit rapport en het werk erachter nagelopen. Alles wat ze vonden is verwerkt:
+**Tabel 1 — Eerste onafhankelijke review (R1–R10).** Twee strenge beoordelaars hebben de eerste versie van dit rapport en het werk erachter nagelopen. Alles wat ze vonden is verwerkt:
 
 | # | Bevinding | Ernst | Fix | Bewijs |
 |---|---|---|---|---|
@@ -386,10 +432,42 @@ Alles draait samen met `node webapp/tests/run-all.js -j 3` (met `--extra` ook `x
 | R6 | De wachtwoordtest keek naar 3 van de 6 IndexedDB-stores. | laag | test leest nu alle stores van alle databases | punt 5, `tests/sync.js` |
 | R7 | Het bewijs bij punt 10 (een `grep` met veel uitvoer) was voor een niet-ontwikkelaar niet te beoordelen. | laag | opdracht die bij goed resultaat níets toont, ook in de periodieke controle | punt 10 |
 | R8 | De opdrachten onder "Opnieuw controleren" werkten niet zoals geschreven (server ontbrak; databasetest gaf "Peer authentication failed"). | middel | opdrachten die zelf hun server of gebruiker regelen; `--db` in de periodieke controle doet het | "Opnieuw controleren" |
-| R9 | Punt 26 en deze sectie waren onvolledig: de bevindingen van de aparte aanvallers ontbraken. | middel | eerlijk als **Open** gemarkeerd; eigen aanvallen uitgebreid (data-action, adres) | punt 26 |
+| R9 | Punt 26 en deze sectie waren onvolledig: de bevindingen van de aparte aanvallers ontbraken. | middel | eerst eerlijk als **Open** gemarkeerd en eigen aanvallen uitgebreid (data-action, adres); inmiddels verwerkt: de bevindingen staan in tabel 2 en 3 (A1–A22), punt 26 staat daarom nu op **Geregeld** | punt 26, tabel 2 en 3 |
 | R10 | Punt 7 overdreef wat de CSP doet: een ingespoten `data-action` roept een app-functie aan en de CSP houdt dat niet tegen; `esc()` zet `'` niet om. | middel | uitleg en restrisico toegevoegd; nieuwe tests; periodieke controle op attributen tussen enkele quotes | punt 7, restrisico's |
 
-**Bevindingen van de aparte aanvallers (ronde 3): Open.** Die zijn bij het afronden van deze versie niet bij ons aangekomen. Ze worden hier aangevuld zodra ze er zijn, per bevinding met ernst, fix en bewijs. Uit de eerdere aanvalsronden (fase 2) is elke gevonden aanval als regressietest in de databasetests opgenomen (sectie 21 en 22 van `supabase/tests/rls_test.sql`) en blijft dus bewaakt.
+**Tabel 2 — Aanvalstest en tweede review (A1–A15).** Aparte aanvallers hebben de app, de database en dit rapport aangevallen; strenge reviewers hebben het rapport opnieuw nagelopen. Alles is verwerkt (A5 pas helemaal in tabel 3, zie A17):
+
+| # | Bevinding | Ernst | Fix | Bewijs |
+|---|---|---|---|---|
+| A1 | Foto-uploads van inspecteurs werden met de groei van de data steeds trager (28,7 s bij 137 foto's × 647 acties; Supabase stopt na 8 s): de quotumtelling liet per foto in de map de leesregel over alle acties lopen. Ook bewust te versnellen met nep-acties en uploads. | **hoog** | quotum in een eigen teltabel met index; foto-toegang via een actie met een index op het pad | punt 12; databasetests 25c (1000 × 1000: upload < 1 s) |
+| A2 | Gedeeld toestel: de lopende inspectie en het onverstuurde werk van A waren na het inloggen van B met DevTools leesbaar, terwijl het uitlogvenster "veilig en onzichtbaar voor anderen" zei. | middel | eerlijke tekst; kiezen bij uitloggen (synchroniseren / bewaren / wissen); werk van anderen gewist vóór het inloggen van een ander (na bevestiging); concept niet terug te zetten door een oud tabblad | punt 15, restrisico's, Sven stap 13; `tests/sync.js` 9b, `tests/security.js` |
+| A3 | Een ongeëscaped oordeel (`class="b-${w.oordeel}"`, `[${w.oordeel}]`) gaf met een gemanipuleerd lokaal record een werkende `data-action="logout"` in het rapport en de inspectie. | laag | witte lijst `ov()` (alleen C/A/V/NVT) | punt 7; `tests/xss.js` bronnen 28–29; `periodieke_check.sh` blok 5 |
+| A4 | Uitbreken uit `value="${a.plandatum}"` bij "Plandatum wijzigen" (klik op het datumveld = uitloggen). Met de uitgebreide test vonden we dezelfde fout op vier plekken in de planning (datum en aantal monteurs in het formulier, aantal monteurs in de lijst, link naar het rapport). | laag | alleen een geldige datum in `value`; `esc()` op de vier plekken in `planning.js` | punt 7; `tests/xss.js` (ACT-nt1/ACT-nt4, PL-nt1 t/m PL-nt4) |
+| A5 | Echte namen en functies van het hoofd en de coördinatoren stonden als voorbeeldaccounts in de gepubliceerde `js/kern.js`. | laag | eerst alleen de volledige namen fictief gemaakt; de voornamen bleven als interne id staan (onvolledig, zie A17). Nu ook neutrale id's en een test op voornamen in alle gepubliceerde bestanden | punt 22; `tests/security.js` |
+| A6 | In productie viel de monteurskeuze terug op fictieve namen ("Henk Voorbeeld" …), die zo in echte inspecties konden komen. | laag | in productie een lege lijst met de melding "monteurslijst nog niet geladen" | punt 1; `tests/security.js` (3 controles "monteurs") |
+| A7 | Limieten per gebruiker te overschrijden met gelijktijdige verzoeken: monteursnamen 34 (max 20), acties 307 (max 300), uploads 127 (max 120). | laag | eerst de lock per gebruiker, dan tellen | punt 12; `supabase/tests/race_quotum.sh` (oud: FOUT 34/307/127, nu OK 20/300/120) |
+| A8 | Tekens-controle met gaten: U+0008 en U+000C in de inspectietekst, C1-stuurtekens (U+009B, U+0085), zero-width en richtingstekens, U+2028/2029. | laag | één regel voor kolommen en elke tekst/sleutel in het record; app haalt ze weg vóór het versturen | punt 6; databasetests 25a (incl. "zijn het voor elk teken U+0001–U+FFFF eens") |
+| A9 | De foto van een actie uit een inspectie lag niet vast: een andere eigen foto koppelen, of hem leegmaken en uit de opslag wissen. | laag | foto = foto uit de momentopname, en ligt daarna vast | punt 6; databasetests 25b |
+| A10 | Punt 7 had in de samenvatting een andere status dan bij het punt zelf. | laag | beide "Geregeld (met restrisico)" | punt 7 |
+| A11 | Punt 15 idem. | laag | beide "Niet van toepassing (maatregelen: na Supabase-koppeling)" | punt 15 |
+| A12 | Punt 12 telde de wachttijd in de app als rate limiting; die staat op het toestel van de aanvaller zelf. | laag | uitgelegd: gemak, geen bescherming; alleen niveau 1 en 2 houden tegen | punt 12 |
+| A13 | De kop van de tabel hierboven zei "allemaal tegengehouden", maar wachtwoorden raden wordt alleen afgeremd. | laag | kop en uitkomst aangepast | tabel hierboven |
+| A14 | De https-claim liet weg dat de Netlify-regel alleen voor `werkplekinspectie.nl` geldt, en Sven zocht naar een "Force HTTPS"-schakelaar die er niet meer is. | laag | uitgelegd; controle met `exposed.js --alles` na de deploy; `exposed.js` noemt nu de domeinen | punt 4, Sven stap 6 |
+| A15 | Verkeerde verwijzingen: `js/auth.js:24-25` (moest toen 23-24 zijn; na de wijzigingen in deze ronde is het 28-29) en "20 controles" in `security.js` (het waren er meer). | laag | verbeterd (nu 29 controles "productie …") | punt 1, 3, 15, Sven stap 3 |
+
+**Tabel 3 — Tweede aanvalsronde (A16–A22, deze versie).** Nieuwe aanvallers en strenge reviewers hebben de vorige versie opnieuw aangevallen en nagelopen. Alles is verwerkt:
+
+| # | Bevinding | Ernst | Fix | Bewijs |
+|---|---|---|---|---|
+| A16 | Een vervalste herstellink (ook met onzin als token) logde iemand die ingelogd bleef uit en wiste de gegevens op het toestel; de link werd niet bij de server gecontroleerd en elk ander type wiste meteen de sessie. Een échte link van een ander account kon de app als dat account laten werken. | laag | PKCE voor de herstelmail; andere links eerst bij de server gecontroleerd, alleen herstel/uitnodiging; een link wist nooit iets; link van een ander account geweigerd en ingetrokken; e-mailadres op het scherm | punt 16 en 17; `tests/sync.js` sectie 12a (17 controles) |
+| A17 | De voornamen van het hoofd en de coördinatoren stonden nog als id (`u-<voornaam>`) in de gepubliceerde code, naast hun functie; de test zocht alleen op achternamen en volledige namen, en het rapport zei "geen echte namen meer". | laag | neutrale id's (`u-hoofd`, `u-coord1`, `u-coord2`) in app, tests en hulpscripts; test op voor- en achternamen in elk gepubliceerd bestand; rapport gecorrigeerd | punt 22; `tests/security.js` |
+| A18 | Een inspecteur kon de foto van een collega als bewijs in zijn eigen vastgelegde inspectie zetten, als losse tekst in `extraFotos`; een foto dieper dan 64 niveaus werd niet gecontroleerd. | **middel** | elke tekst in `extraFotos` is een foto en moet uit de eigen map komen; te diep = geweigerd | punt 6; databasetests 26b |
+| A19 | Bewijs kon alsnog worden geüpload: eerst een pad koppelen (of laten afronden) en later iets anders uploaden, of na verwijderen door het hoofd een andere foto onder dezelfde naam zetten. Strijdig met "bewijs kan nooit worden overschreven". | **middel** | uploaden geweigerd zodra het pad als bewijs gekoppeld is; de app vangt het geval "bestaat al" op | punt 18; databasetests 26d en sectie 6 |
+| A20 | Rekentijd: een inspectie van < 1 MB met 250.000 lege onderdelen kostte 5–11 s per poging, liep tegen de time-out en telde nergens mee. | **middel** | goedkope grenzen vóór de diepe controles (256 KB, 20.000 onderdelen, < 32 niveaus, ≤ 500 waarnemingen); tekencontrole als één zoekopdracht | punt 12; databasetests 26c |
+| A21 | Onzichtbare tekens buiten de gewone tekenset (Unicode-tags, "ASCII smuggling"), het zachte afbreekstreepje en opvullers kwamen door de tekenregel, terwijl het rapport zei dat onzichtbare tekens geweigerd worden. | laag | alle onzichtbare format-tekens behalve de emoji-joiner, plus opvullers, ook in namen; app gelijk getrokken; vergelijking over alle 1,1 miljoen tekens | punt 6; databasetests 25a en 26a; `tekens_check.sh` |
+| A22 | Rapportfouten: punt 22 en A5 beweerden "geen echte namen meer"; R9 zei "Open" terwijl punt 26 "Geregeld" zei, en beide tabellen heetten "ronde 3"; punt 4 had een Supabase-status terwijl https van de hosting afhangt; verouderde regelnummers in punt 7; punt 7 was voor een niet-ontwikkelaar te technisch. | laag | punt 22 en A5 gecorrigeerd (A17); R9 bijgewerkt en tabellen 1–3 genummerd; nieuwe status "Geregeld na deploy" voor punt 4; regelnummers bijgewerkt (oude erbij genoemd); punt 7 begint nu per onderdeel met een samenvatting in gewone woorden, de code staat in het bewijs | dit rapport |
+
+Uit de eerdere aanvalsronden (fase 2) is elke gevonden aanval als regressietest in de databasetests opgenomen (sectie 21 tot en met 26 van `supabase/tests/rls_test.sql`) en blijft dus bewaakt.
 
 ---
 
@@ -403,7 +481,12 @@ Alles draait samen met `node webapp/tests/run-all.js -j 3` (met `--extra` ook `x
 - **Wachtwoorden raden** zie je alleen in de Auth-logs van Supabase, niet in `security_events` (punt 8).
 - **`style-src 'unsafe-inline'`** in de CSP (geen scriptuitvoering mogelijk; opmaak wel).
 - **Geen automatische alarmering** bij verdachte activiteit (punt 8).
-- **Bevindingen van de aparte aanvallers van ronde 3** ontbreken nog (punt 26).
+- **Onverstuurd werk op een gedeeld toestel** (punt 15): een lopende inspectie en de wachtrij staan onversleuteld in de browser. Wie op een gedeeld toestel "Bewaren" kiest of de app sluit zonder uit te loggen, laat dat leesbaar achter (DevTools) tot de volgende gebruiker inlogt; die wist het dan. Vooral de webversie op gedeelde kantoor-pc's; afspraak in Sven stap 13.
+- **Escaping blijft handwerk** (punt 7): in deze ronde vonden de aanvallers en wij negen plekken waar een keuzeveld, datum of getal zonder `esc()` in de HTML stond. Ze zijn dicht en de periodieke controle en `xss.js` bewaken ze nu, maar een nieuwe plek met een ander veld kan erdoor glippen.
+- **Grenzen aan een inspectie** (punt 12): hooguit 256 KB tekst, 500 waarnemingen en 20.000 onderdelen. Ruim voor een gewone inspectie (60 waarnemingen van 2000 tekens is ± 125 KB), maar een extreem lange inspectie wordt geweigerd met een Nederlandse melding in plaats van opgeslagen.
+- **Tekenregel** (punt 6): de vlaggen van Engeland, Schotland en Wales (gemaakt met tag-tekens) en een paar zeldzame tekens kunnen niet in vrije tekst; de app haalt ze stil weg.
+- **Een link van een ander account op een toestel waar iemand ingelogd bleef** wordt geweigerd (punt 17): wie op een gedeeld toestel zijn eigen herstel- of uitnodigingslink opent, moet eerst de ander laten uitloggen.
+- **Oude voorbeelddata** (alleen voorbeeldmodus): op een toestel dat de voorbeeldversie al gebruikte, staan voorbeeldacties en -planning nog met de oude id's; die tonen dan geen naam bij houder of toetser. Geen gevolg voor productie.
 - **Google Fonts**: IP-adres van gebruikers gaat naar Google (AVG-afweging; zelf hosten lost het op).
 - **Dashboard en kwartaalrapportage** rekenen nog met voorbeelddata; in productie tonen ze daarom een melding in plaats van cijfers, tot ze met de servergegevens werken.
 - **Kleinere punten uit de database-README §9**: bestaanstest van id's, voorspelbare id's, de klok van het toestel.
@@ -424,7 +507,7 @@ node webapp/tests/run-all.js security
 # 3. publicatie, 404-regels, CSP en headers in de hostconfiguraties. Verwacht: geen regel "STRICT: … problemen"
 node webapp/tests/exposed.js --config --strict
 # 4. alles periodiek, inclusief de databasetests. Verwacht: "0 FOUT" en
-#    "OK supabase/tests/run.sh: 483 van 483 databasecontroles geslaagd". Vraagt om je sudo-wachtwoord:
+#    "OK supabase/tests/run.sh: 529 van 529 databasecontroles geslaagd". Vraagt om je sudo-wachtwoord:
 #    de databasetests draaien als de gebruiker postgres (anders: "Peer authentication failed")
 tools/periodieke_check.sh --db
 #    zonder databasetests en zonder de trage geheimenscan:  tools/periodieke_check.sh --snel
