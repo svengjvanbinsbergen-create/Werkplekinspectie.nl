@@ -158,7 +158,7 @@
         NVT: "Er wordt hier echt gehesen, dus deze TRA-stap is van toepassing. Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden." },
       actie: { vs: "Beschadigde hijsband afkeuren en uit gebruik nemen. Pas verder hijsen met een gekeurde band.", ph: "Bijv. hijsband afkeuren en …",
         maatregel: "bijv. hijsen gestopt", verwachtTp: "maatregel",
-        okTekst: "Het hijsen is gestopt en de band gaat uit gebruik. Dat past bij het gevaar. Daarna kiest de coördinator wie de actie uitvoert en wie toetst." } },
+        okTekst: "Het hijsen is gestopt en de band gaat uit gebruik. Dat past bij het gevaar. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst." } },
     { id: "sleuf", titel: "Werken in de sleuf", plek: "Persleiding naast het gemaal (verzonnen)", leer: "Wat doen ze, en wat gaat goed?",
       alt: "Tekening: een gestutte sleuf met een ladder die boven de rand uitsteekt. Onderin werkt een monteur met een gele gasmeter op zijn borst; bovenaan staat een collega als wacht.",
       tekst: ["Even verderop ligt een open sleuf van ongeveer anderhalve meter diep. Onderin werkt een monteur aan een leiding.",
@@ -179,7 +179,7 @@
         NVT: "Er wordt hier echt in een sleuf gewerkt, dus deze TRA-stap is van toepassing. De TRA vraagt een gasmeter bij de werknemer, stempels en een vluchtweg." },
       actie: { vs: "", ph: "Wat moet er volgens jou gebeuren?",
         anders: "Volgens de TRA was hier alles in orde: een gasmeter bij de werknemer, stempels en een vluchtweg. Een actie is dan niet nodig. Wil je je oordeel nog eens bekijken?",
-        okTekst: "In het echt wordt dit een actie met status Voorstel. De coördinator kiest daarna wie de actie uitvoert en wie toetst." },
+        okTekst: "In het echt wordt dit een actie met status Voorstel. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst." },
       positief: { vraag: "Rond het gesprek af. Wat gaat hier goed? Zeg het tegen de ploeg.", vraagAV: "Je hebt iets aangesproken. Wat gaat hier wél goed? Zeg dat ook tegen de ploeg.",
         vs: "Fijn dat de gasmeter bij jou in de sleuf hangt: zo meet hij waar het telt. En de ladder staat goed als vluchtweg.", ph: "Bijv. goed dat de gasmeter …",
         woorden: ["gasmeter", "meter", "ladder", "gestut", "stempel", "vluchtweg", "wacht", "collega", "oog"] } },
@@ -550,9 +550,9 @@
       }
       const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}" id="oef-${k}-${val}"${act("oefZet", k, val)} aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${esc(u)}</span>` : ""}</button>`;
       // één duidelijke zin over wie toetst, passend bij wat je kiest (nooit twee tegenstrijdige)
-      const wie = a.terPlaatse === "maatregel" ? "Een maatregel maakt alleen het lopende werk veilig. De actie blijft open; daarna kiest de coördinator wie haar uitvoert en wie toetst."
+      const wie = a.terPlaatse === "maatregel" ? "Een maatregel maakt alleen het lopende werk veilig. De actie blijft open; daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst."
         : gecorr ? "Direct gecorrigeerd: de ploeg heeft het ter plaatse opgelost en jij hebt het herstel zelf gezien. Dan ben jij de toetser en is de actie afgerond; een urgentie is niet nodig."
-        : "Jij schrijft alleen het voorstel. Daarna kiest de coördinator wie de actie uitvoert en wie toetst.";
+        : "Jij schrijft alleen het voorstel. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst.";
       return `<div class="q akaart2 oef-kaart">${gezien}
           <div class="arij"><span id="oef-actiekop" class="oef-arijkop">${a.actieHerkomst === "Voorstel" ? `<span class="lbl vs">Voorstel</span><span class="s oef-s">pas gerust aan; het telt pas als jij het vastlegt</span>` : `<span class="arij-t">Wat moet er gebeuren?</span>`}</span>
             ${A.vs ? `<button class="wijzig arij-k"${act("oefActieVoorstel")}>Laat de app een actie voorstellen</button>` : ""}</div>

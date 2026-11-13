@@ -45,7 +45,7 @@
             <span class="t">${esc(this.productNaam(p.code))}</span><span class="meta">${waar(p)}</span></span>
             <button class="startpil"${act("startVandaag", p.id)} aria-label="Start inspectie ${esc(this.productNaam(p.code))}">${svg("play", 18)}Start</button></div>`;
         let html = "";
-        const rest = lo ? mijn : mijn.slice(1);
+        const rest = lo ? mijn.filter((p) => p.id !== lo.plan_id) : mijn.slice(1);   // de lopende inspectie staat al bovenaan
         // de kaart zelf is de knop: één doel, één tik
         if (!lo && mijn.length) {
           const p = mijn[0];

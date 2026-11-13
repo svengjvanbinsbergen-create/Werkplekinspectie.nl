@@ -15,7 +15,7 @@
       if (lo && !zeker && (lo.waarnemingen.length || lo.taken.length)) {
         // geen (server)tekst in een attribuut: de keuze wacht in App._nieuweStart (zie nieuwToch)
         this._nieuweStart = [code, project, titel, planId || null];
-        return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + " waarneming(en)",
+        return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + (lo.waarnemingen.length === 1 ? " waarneming" : " waarnemingen"),
           `<button class="btn primary"${actSluit("goIns")}>Verder met de lopende inspectie</button>
            <button class="btn danger" style="margin-top:10px;width:100%"${actSluit("nieuwToch")}>Lopende weggooien en nieuw starten</button>`);
       }
@@ -546,7 +546,7 @@
           ${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}
           <div class="hierna"><div class="hierna-t">Hierna</div>${gecorr
             ? this.actieStappen({ status: "Afgerond" }, { gecorr: true }) + `<div class="aw-regel">Jij zag het herstel: jij bent de toetser. Geen verdere instelling nodig.</div>`
-            : this.actieStappen({ status: "Voorstel" }) + `<div class="aw-regel">Een coördinator kiest actiehouder, toetser en plandatum. <b>Afgerond pas na toetsing</b>; de toetser is nooit de actiehouder.</div>`}</div>
+            : this.actieStappen({ status: "Voorstel" }) + `<div class="aw-regel">Iedereen in het team kan het voorstel instellen (Acties › In te stellen): actiehouder, toetser en plandatum kiezen. <b>Afgerond pas na toetsing</b>; de toetser is nooit de actiehouder.</div>`}</div>
         </div>
         <div class="dock adock"><button class="btn primary volgknop" data-need="actie"${act("bevestigActie")}>${svg("check", 20)} Actievoorstel vastleggen</button></div></div>`));
     },
@@ -555,7 +555,7 @@
       o = o || {};
       const nm = (id, std) => { const u = id && (window.WPI.USERS || []).find((x) => x.id === id); return u ? (u.id === (this.user || {}).id ? "jij" : u.full_name.split(" ")[0]) : std; };
       const S = o.gecorr ? [["Gezien", "jij"], ["Hersteld", "ploeg"], ["Getoetst", "jij"], ["Afgerond", ""]]
-        : [["Instellen", "coördinator"], ["Uitvoeren", nm(a.houder, "actiehouder")], ["Toetsen", nm(a.toetser, "toetser")], ["Afgerond", ""]];
+        : [["Instellen", "team"], ["Uitvoeren", nm(a.houder, "actiehouder")], ["Toetsen", nm(a.toetser, "toetser")], ["Afgerond", ""]];
       const nu = { "Voorstel": 0, "Open": 1, "In uitvoering": 1, "Klaar voor toetsing": 2, "Afgerond": 4 }[a.status];
       if (nu === undefined) return "";
       return `<ol class="aw-stap${o.gecorr ? " gecorr" : ""}" aria-label="Verloop van de actie">${S.map(([n, w], i) => {
@@ -751,7 +751,7 @@
       location.replace("#/rapport/" + rec.id);
       const nv = nieuw.filter((a) => a.status === "Voorstel").length;
       this.openModal("Vastgelegd", "Veilig bewaard op dit toestel (cloud-opslag volgt met de backend).",
-        `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Een coördinator stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
+        `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Jij of een collega stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
          <button class="btn primary"${actSluit("go", "rapport/" + rec.id)}>Bekijk rapport</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${actSluit("go", "inspecties")}>Naar inspecties</button>`);
     },

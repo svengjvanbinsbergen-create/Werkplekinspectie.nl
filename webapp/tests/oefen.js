@@ -199,7 +199,7 @@ async function nieuwePagina(b, w, h) {
   ok(await vast.isDisabled(), "actie: vastleggen pas als alles is ingevuld");
   ok(await p.locator("#oef-terPlaatse-maatregel").count() === 1 && /hijsen gestopt/.test(await p.locator("#oef-terPlaatse-maatregel").innerText()), "actie: keuze ‘Ter plaatse’ met ‘Maatregel genomen (hijsen gestopt)’");
   ok(!/Winfred|houder|Toetser \(/.test(await p.locator(".oef").innerText()), "actie: de inspecteur kiest geen actiehouder of toetser");
-  ok(/kiest de coördinator wie de actie uitvoert en wie toetst/.test(await p.locator("#oef-wie").innerText()), "actie: zonder keuze ‘de coördinator kiest wie uitvoert en wie toetst’");
+  ok(/stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst/.test(await p.locator("#oef-wie").innerText()), "actie: zonder keuze ‘iemand uit het team stelt de actie in: wie uitvoert en wie toetst’");
   await p.fill("#oef-f-actie", "Band later eens vervangen");
   await p.click("#oef-terPlaatse-niets"); await wacht();
   await p.click("#oef-prio-planmatig"); await wacht();

@@ -40,12 +40,15 @@
       const loopt = (a) => a.status === "Open" || a.status === "In uitvoering";
       const scope = A.filter((a) => loopt(a) && (hoofd || a.houder === me));
       const opDatum = (x, y) => (x.plandatum || "9").localeCompare(y.plandatum || "9");
+      const telaat = A.filter((a) => loopt(a) && a.plandatum && dagenTot(a.plandatum) < 0).sort(opDatum);   // hele team: iedereen krijgt de meldingen
+      const wie = this.user.full_name, betrokken = (a) => a.houder === me || a.toetser === me || a.status === "Voorstel" || telaat.includes(a)
+        || (a.log || []).some((l) => l.wie === wie);   // ook wat jij instelde of aanmaakte: "Alle" toont minstens wat de andere tabs tonen
       return {
-        telaat: A.filter((a) => loopt(a) && a.plandatum && dagenTot(a.plandatum) < 0).sort(opDatum),   // hele team: iedereen krijgt de meldingen
+        telaat,
         gepland: scope.filter((a) => !a.plandatum || dagenTot(a.plandatum) >= 0).sort(opDatum),
         toetsen: A.filter((a) => a.status === "Klaar voor toetsing" && a.toetser === me).sort(opDatum),
-        instellen: A.filter((a) => a.status === "Voorstel"),   // iedereen mag instellen
-        alle: (staf() ? A : A.filter((a) => a.houder === me || a.toetser === me)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
+        instellen: A.filter((a) => a.status === "Voorstel"),   // iedereen mag instellen (zoals de server: zie supabase/migrations/0003_rls_rechten.sql)
+        alle: (staf() ? A : A.filter(betrokken)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
       };
     },
 
@@ -56,7 +59,7 @@
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
       v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
-      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen.", alle: "" }[this.actFilter];
+      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: staf() ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];

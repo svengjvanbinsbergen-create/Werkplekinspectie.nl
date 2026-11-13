@@ -445,7 +445,6 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .pkaart .wijzig{margin-left:auto;font-size:13px;font-weight:800;color:var(--accent)}
 h2.warmkop{color:var(--warm-ink)}
 h2 .s{font-size:14px;font-weight:700}
-.card h2.rapkop{font:inherit;letter-spacing:inherit;color:inherit;margin:0}   /* rapport §1: echte kop, oogt als de tekstregel ervoor */
 @media(min-width:900px){.view[data-page=planning]{max-width:1100px}
   #app:not(.nonav):not(.x)[data-page=planning] .topbar,#app:not(.nonav):not(.x)[data-page=planning] .alertbar{max-width:1100px}}
 .pkaart .btn.sm{width:auto;min-height:38px;padding:0 18px}
@@ -927,6 +926,7 @@ button.alertbar{width:auto;text-align:left}
 g[role="button"]:focus-visible{outline:3px solid var(--accent)}
 #mod:focus,#view:focus,h1[tabindex="-1"]:focus,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
 body.zon :focus-visible{outline:3px solid #141A22;outline-offset:2px}
+body.zon #mod:focus,body.zon #view:focus,body.zon h1[tabindex="-1"]:focus{outline:none}   /* programmatische focus op de kop: ook in zonmodus geen kader (de zonregel hierboven heeft dezelfde specificiteit) */
 /* opslagstatus: "opnieuw" is een echte knop */
 .opnieuwlink{text-decoration:underline;font-weight:700;color:inherit;padding:0 2px;min-height:24px}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

@@ -65,7 +65,8 @@
           ${w.actie.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
           ${stBadge(live ? live.status : a.status || "Open")}</div>`;
       }).join("");
-      const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length;
+      const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length, meer = (n, een, veel) => n + " " + (n === 1 ? een : veel);
+      let nr = 0; const kop = (t) => `<h2>${++nr}. ${t}</h2>`;   // doorlopend genummerd, ook als een sectie ontbreekt
       // alle foto's per waarneming (hoofdfoto + extraFotos, zie App.fotoLijst); oude records met alleen w.foto blijven werken
       const fotos = ws.flatMap((w) => { const l = this.fotoLijst(w); return l.map((f, i) => ({ w, f, i, n: l.length })); });
       v.appendChild(el(`<div class="noprint"><button class="btn ghost sm"${act("go", "inspecties")}>${svg("back", 16)} Terug</button></div>`));
@@ -73,18 +74,18 @@
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
         <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
         <div class="s" style="margin-bottom:14px">Project ${esc(r.project || "–")} · inspecteur ${esc(r.inspecteur)}</div>
-        <div class="card"><h2 class="t rapkop">1. Getoetst tijdens bezoek</h2><div class="s">${taken.map(esc).join(" · ")}</div>
+        ${kop("Getoetst tijdens bezoek")}<div class="card"><div class="s">${taken.map(esc).join(" · ")}</div>
           <div class="s" style="margin-top:6px">Monteurs: ${(r.monteurs || []).length ? (r.monteurs || []).map(esc).join(", ") : "niet vastgelegd"}</div></div>
-        <h2>2. Waarnemingen</h2><div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>
-        ${acties.length ? `<h2>3. Acties</h2><div class="listcard">${aRows}</div>` : ""}
-        ${r.gesprek ? `<h2>4. Gesprek met de monteurs</h2><div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
-        ${r.positief ? `<h2>5. Wat ging opvallend goed</h2><div class="card" style="line-height:1.5">${esc(r.positief)}</div>` : ""}
-        ${fotos.length ? `<h2>Foto's</h2><div class="rapfotos" style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map(({ w, f, i, n }) => `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(f))}" alt="${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)} · foto ${i + 1} van ${n}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}${n > 1 ? ` · foto ${i + 1}/${n}` : ""}</figcaption></figure>`).join("")}</div>` : ""}
-        <h2>Ondertekening</h2>
+        ${kop("Waarnemingen")}<div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>
+        ${acties.length ? `${kop("Acties")}<div class="listcard">${aRows}</div>` : ""}
+        ${r.gesprek ? `${kop("Gesprek met de monteurs")}<div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
+        ${r.positief ? `${kop("Wat ging opvallend goed")}<div class="card" style="line-height:1.5">${esc(r.positief)}</div>` : ""}
+        ${fotos.length ? `${kop("Foto's")}<div class="rapfotos" style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map(({ w, f, i, n }) => `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(f))}" alt="${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)} · foto ${i + 1} van ${n}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}${n > 1 ? ` · foto ${i + 1}/${n}` : ""}</figcaption></figure>`).join("")}</div>` : ""}
+        ${kop("Ondertekening")}
         <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
           ${r.handtekening ? `<img src="${esc(WPI.fotoSrc(r.handtekening))}" alt="Handtekening van ${esc(r.inspecteur || "de inspecteur")}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
-        ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${kc("voorstel gebruikt")} voorstel(len) gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
-        ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${r.open_punten.length} open herinnering(en): ${esc(r.open_punten.join(" "))}</div>` : ""}
+        ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${meer(kc("voorstel gebruikt"), "voorstel", "voorstellen")} gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
+        ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${meer(r.open_punten.length, "open herinnering", "open herinneringen")}: ${esc(r.open_punten.join(" "))}</div>` : ""}
       </div>`));
       v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px"${act("printen")}>${svg("list", 18)} Opslaan als PDF / printen</button>`));
     },
