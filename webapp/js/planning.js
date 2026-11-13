@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, USERS, staf, naam, dag0, isoDag, plusDagen, dagLabel, dagenTot, stBadge, tril, act, op, WAARDE } = window.WPI;
+  const { $, el, esc, svg, DB, USERS, mag, personenOpties, nietKiesbaar, naam, dag0, isoDag, plusDagen, dagLabel, dagenTot, stBadge, tril, act, op, WAARDE } = window.WPI;
   Object.assign(window.App, {
     // ---------------- PLANNING ----------------
     planning: null,
@@ -20,7 +20,7 @@
     demoPlanning() {
       const b = (o) => Object.assign({ demo: true, status: "gepland", toelichting: "" }, o);
       return [
-        b({ id: "PL-demo1", datum: plusDagen(0), code: "DAM", project: "P26-168", locatie: "RWZI Voorbeeldstad", inspecteur: "u-insp", monteurs: 2 }),
+        b({ id: "PL-demo1", datum: plusDagen(0), code: "DAM", project: "P26-168", locatie: "RWZI Voorbeeldstad", inspecteur: "u-hoofd2", monteurs: 2 }),
         b({ id: "PL-demo2", datum: plusDagen(0), code: "POM", project: "P26-171", locatie: "Gemaal De Hoek", inspecteur: "u-coord1", monteurs: 3 }),
         b({ id: "PL-demo3", datum: plusDagen(1), code: "ROO", project: "P26-175", locatie: "RWZI Oostdijk", inspecteur: "u-coord2", monteurs: 2 }),
         b({ id: "PL-demo4", datum: plusDagen(5), code: "IDV", project: "P26-180", locatie: "Gemaal Noordpolder", inspecteur: "u-coord1", monteurs: 4 }),
@@ -33,9 +33,10 @@
       this.startInspectie(p.code, p.project || "", this.productNaam(p.code) + (p.locatie ? " · " + p.locatie : ""), false, p.id);
     },
     planForm(id) {
+      if (!mag("plant")) return;
       const p = id ? (this.planning || []).find((x) => x.id === id) : null, kb = this.data.kennisbank;
       const prod = Object.keys(kb).sort((a, b) => kb[a].naam.localeCompare(kb[b].naam)).map((c) => `<option value="${c}"${p && p.code === c ? " selected" : ""}>${esc(kb[c].naam)}</option>`).join("");
-      const mens = USERS.map((u) => `<option value="${esc(u.id)}"${(p ? p.inspecteur : this.user.id) === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
+      const mens = personenOpties("inspecteert", p ? p.inspecteur : this.user.id, { leeg: null });   // alleen wie inspecteert (hoofden, coördinatoren)
       const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       const snel = [[0, "Vandaag"], [1, "Morgen"], [7, "Over een week"]].map(([n, l]) => `<button class="chipb"${act("zetPlanDatum", plusDagen(n))}>${l}</button>`).join("");
       this.openModal(p ? "Inspectie wijzigen" : "Inspectie inplannen", "Wie inspecteert wat, waar en wanneer.",
@@ -52,8 +53,10 @@
     },
     zetPlanDatum(d) { document.getElementById("pl-datum").value = d; },   // snelkeuze Vandaag/Morgen/Over een week
     async bewaarPlan(id) {
+      if (!mag("plant")) return;
       const code = $("pl-code").value, datum = $("pl-datum").value, insp = $("pl-insp").value;
       if (!code) return this.fout("Kies een product.", "pl-code");
+      if (!insp || nietKiesbaar("inspecteert", insp)) return this.fout(nietKiesbaar("inspecteert", insp) || "Kies wie inspecteert.", "pl-insp");
       if (!datum) return this.fout("Kies een datum.", "pl-datum");
       await this.laadPlanning();
       let p = id ? this.planning.find((x) => x.id === id) : null;
@@ -67,21 +70,22 @@
     },
     // uniek, ook bij twee keer opslaan in dezelfde milliseconde (anders overschrijft de tweede de eerste op het toestel)
     nieuwPlanId() { const b = "PL-" + Date.now(); let id = b, n = 1; while ((this.planning || []).some((x) => x.id === id)) id = b + "-" + n++; return id; },
-    async verwijderPlan(id) { this.planning = this.planning.filter((x) => x.id !== id); try { await DB.del("planning", id); } catch (e) {} this.closeModal(); this.route(); },
+    async verwijderPlan(id) { if (!mag("plant")) return; this.planning = this.planning.filter((x) => x.id !== id); try { await DB.del("planning", id); } catch (e) {} this.closeModal(); this.route(); },
     async view_planning() {
       await this.laadPlanning();
       const v = $("view"), vandaag = isoDag(new Date()), me = this.user.id, P = this.planning;
-      const zicht = staf() ? P : P.filter((p) => p.inspecteur === me);
-      v.appendChild(el(`<div><div class="hi">${staf() ? "Inspectieprogramma van het team" : "Jouw inspecties"}</div><h1 class="groot">Planning</h1></div>`));
+      const zicht = mag("zietAlles") ? P : P.filter((p) => p.inspecteur === me);
+      v.appendChild(el(`<div><div class="hi">${mag("zietAlles") ? "Inspectieprogramma van het team" : "Jouw inspecties"}</div><h1 class="groot">Planning</h1></div>`));
       if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); window.WPI.zeg(this.toast); this.toast = null; }
-      v.appendChild(el(`<button id="pl-nieuwknop" class="btn primary" style="margin-bottom:16px"${act("planForm")}>${svg("plus", 18)} Inspectie inplannen</button>`));
-      if (staf()) this.progBlok(v);
+      // inplannen en het programma-voorstel: alleen wie plant (hoofden, coördinatoren); QHSE-manager en beheerder kijken mee
+      if (mag("plant")) v.appendChild(el(`<button id="pl-nieuwknop" class="btn primary" style="margin-bottom:16px"${act("planForm")}>${svg("plus", 18)} Inspectie inplannen</button>`));
+      if (mag("plant")) this.progBlok(v);
       const g = (l, lijst, warm) => lijst.length ? `<h2 class="${warm ? "warmkop" : ""}">${l} <span class="s">${lijst.length}</span></h2><div class="pkaarten">${lijst.map((p) => this.planKaart(p, vandaag)).join("")}</div>` : "";
       const gp = zicht.filter((p) => p.status === "gepland").sort((a, b) => a.datum.localeCompare(b.datum));
       const html = g("Nog niet gedaan", gp.filter((p) => p.datum < vandaag), true) + g("Vandaag", gp.filter((p) => p.datum === vandaag))
         + g("Komende 7 dagen", gp.filter((p) => p.datum > vandaag && dagenTot(p.datum) <= 7)) + g("Later", gp.filter((p) => dagenTot(p.datum) > 7))
         + (zicht.some((p) => p.status === "uitgevoerd") ? g("Uitgevoerd", zicht.filter((p) => p.status === "uitgevoerd").sort((a, b) => b.datum.localeCompare(a.datum)).slice(0, 6)) : "");
-      v.appendChild(el(`<div>${html || `<div class="leeg"><span class="bol">📅</span><div class="t">Nog niets ingepland</div><div class="s">Tik op “Inspectie inplannen”.</div></div>`}</div>`));
+      v.appendChild(el(`<div>${html || `<div class="leeg"><span class="bol">📅</span><div class="t">Nog niets ingepland</div><div class="s">${mag("plant") ? "Tik op “Inspectie inplannen”." : "De hoofden en coördinatoren plannen de inspecties."}</div></div>`}</div>`));
     },
     // ---------------- PROGRAMMA-VOORSTEL (VCA 7.1, trendactie TREND-2026-1) ----------------
     // Uit de projectplanning (voorbeelddata.projecten) een voorstel voor volgende maand. Niets wordt
@@ -277,7 +281,7 @@
           ${x.alleenVrij ? `<div class="s vslet">Dit project loopt in ${esc(mn)} alleen op ${esc(x.opties.map((d) => dagLabel(d)).join(", "))}. Kies zelf een dag.</div>` : ""}
           ${x.code ? "" : `<label class="flab">Product (“${esc(x.product)}” niet gevonden)</label><select class="fin" aria-label="Product"${op("change", "progZet", x.vid, "code", WAARDE)}><option value="">Kies…</option>${opts(x.code)}</select>`}
           <div class="vsvelden"><div><label class="flab">Dag</label><select class="fin vsdatum" aria-label="Dag"${op("change", "progZet", x.vid, "datum", WAARDE)}>${dagOpt(x)}</select></div>
-            <div><label class="flab">Inspecteur</label><select class="fin vsinsp" aria-label="Inspecteur"${op("change", "progZet", x.vid, "inspecteur", WAARDE)}>${USERS.map((u) => `<option value="${esc(u.id)}"${u.id === x.inspecteur ? " selected" : ""}>${esc(u.full_name)}</option>`).join("")}</select></div></div></div>`;
+            <div><label class="flab">Inspecteur</label><select class="fin vsinsp" aria-label="Inspecteur"${op("change", "progZet", x.vid, "inspecteur", WAARDE)}>${personenOpties("inspecteert", x.inspecteur, { leeg: null, zonderFunctie: true })}</select></div></div></div>`;
       // per reden gegroepeerd: de reden staat één keer boven de groep, niet op elke kaart
       const groepen = ["lang", "risico", "overig"].map((s) => [s, V.items.filter((x) => x.soort === s)]).filter(([, l]) => l.length);
       const n = V.items.length, nWeg = this.progWegOpen(m).filter((x) => !V.items.some((y) => y.project === x.project)).length;
@@ -299,7 +303,7 @@
       const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum), u = USERS.find((x) => x.id === p.inspecteur);
       const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
       return `<div class="pkaart"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
-          ${p.status === "gepland" ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzig planning: ${esc(this.productNaam(p.code))} · ${esc(dl)}">Wijzig</button>` : ""}</div>
+          ${p.status === "gepland" && mag("plant") ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzig planning: ${esc(this.productNaam(p.code))} · ${esc(dl)}">Wijzig</button>` : ""}</div>
         <div class="titel">${esc(this.productNaam(p.code))}</div>
         <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + esc(p.monteurs) + " monteurs" : ""}</div>
         ${p.toelichting && !(p.bron === "programma" && /^Inspectieprogramma /.test(p.toelichting)) ? `<div class="s" style="margin-top:4px">“${esc(p.toelichting)}”</div>` : ""}

@@ -16,8 +16,14 @@
 --   Winfred Loerts  -> coordinator  (Montage Coördinator)
 --   Douwe de Boer   -> coordinator  (Montage Coördinator)
 --
--- Het profiel ontstaat automatisch (trigger on_auth_user_created) met rol
--- 'inspecteur' en wordt actief zodra de uitnodiging is verstuurd. Het dialoogvenster
+-- De overige vaste gebruikers (het tweede hoofd met functie "Manager Projects", de QHSE-manager en de
+-- beheerder) nodig je op dezelfde manier uit; hun rol en functie kies je daarna in de app (Beheer › Team
+-- en rollen). Zo staan er niet meer echte namen in dit bestand dan nodig.
+--
+-- Het profiel ontstaat automatisch (trigger on_auth_user_created) ZONDER rol (nog geen
+-- toegang; migratie 0008) en wordt actief zodra de uitnodiging is verstuurd. Een hoofd, de
+-- QHSE-manager of de beheerder kiest daarna de rol in de app (Beheer › Team en rollen); voor
+-- de eerste inrichting doet dit bestand dat voor de vaste gebruikers hieronder. Het dialoogvenster
 -- "Invite user" kent geen user metadata: het profiel heet dan eerst naar het deel
 -- vóór de @ (bv. "bjorn.sloos"). Dit blok zet daarom ook de volledige naam.
 --
@@ -27,7 +33,7 @@
 -- e-mailadressen hieronder door de echte adressen (precies zoals in Authentication ›
 -- Users). Zolang de voorbeeldadressen op ".invalid" er staan, doet dit blok niets
 -- (dat domein bestaat niet). Opnieuw draaien is veilig: de rol wordt alleen gezet
--- zolang het profiel nog de beginrol 'inspecteur' heeft, de naam alleen zolang die nog
+-- zolang het profiel nog geen rol heeft (of de oude beginrol 'inspecteur'), de naam alleen zolang die nog
 -- de beginnaam (deel vóór de @) is, en 'actief' wordt nooit gewijzigd. Latere keuzes
 -- van het hoofd blijven dus staan.
 
@@ -59,7 +65,7 @@ update public.profiles p
    and lower(u.email) = lower(v.email)
    and u.invited_at is not null
    and p.actief
-   and p.role = 'inspecteur';   -- alleen de eerste inrichting; latere keuzes van het hoofd blijven staan
+   and (p.role is null or p.role = 'inspecteur');   -- alleen de eerste inrichting; latere keuzes blijven staan
 
 -- ---------- 2. Monteurs ----------
 -- Bewust GEEN voorbeeldnamen: voorbeelddata hoort nooit op de server (zie de CHECKs
@@ -68,9 +74,11 @@ update public.profiles p
 -- (De vijf fictieve testnamen staan in tests/testdata.sql en worden alleen lokaal geladen.)
 
 -- ---------- 3. Instellingen ----------
--- doel_conform wordt NIET vooraf gezet: geen doel = geen doellijn in het dashboard
--- en de kwartaalrapportage. Het hoofd stelt het in via Beheer (geheel getal 1..100).
--- mfa_verplicht_hoofd: op true zetten zodra het hoofd TOTP heeft ingesteld.
+-- doel_conform: 85 (besluit producteigenaar; ook de standaard van de app en van dashboard_cijfers als er geen
+-- rij is). Wijzigen via Beheer (geheel getal 1..100); "geen doel" = JSON null. Een bestaande keuze blijft staan.
+-- mfa_verplicht_hoofd: geldt voor alle beheerrollen (hoofd, QHSE-manager, beheerder; migratie 0008). Op true
+-- zetten zodra die drie TOTP hebben ingesteld (de app vraagt het hen al bij elke login).
 insert into public.instellingen (sleutel, waarde) values
-  ('mfa_verplicht_hoofd', 'false'::jsonb)
+  ('mfa_verplicht_hoofd', 'false'::jsonb),
+  ('doel_conform', '85'::jsonb)
 on conflict (sleutel) do nothing;

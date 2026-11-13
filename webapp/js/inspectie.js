@@ -11,6 +11,7 @@
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
     // Koppeling aan een TRA-regel is altijd een Voorstel; het oordeel kiest alleen de inspecteur.
     startInspectie(code, project, titel, zeker, planId) {
+      if (!WPI.mag("inspecteert")) return;   // QHSE-manager en beheerder inspecteren niet (rollen: js/kern.js)
       const lo = this.state.inspectie;
       if (lo && !zeker && (lo.waarnemingen.length || lo.taken.length)) {
         // geen (server)tekst in een attribuut: de keuze wacht in App._nieuweStart (zie nieuwToch)
@@ -750,7 +751,7 @@
       // (replace: 'terug' leidt niet naar de verouderde 'Klopt dit?'-pagina)
       location.replace("#/rapport/" + rec.id);
       const nv = nieuw.filter((a) => a.status === "Voorstel").length;
-      this.openModal("Vastgelegd", "Veilig bewaard op dit toestel (cloud-opslag volgt met de backend).",
+      this.openModal("Vastgelegd", this.vastgelegdTekst(),   // tekst per modus: js/sync.js
         `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Jij of een collega stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
          <button class="btn primary"${actSluit("go", "rapport/" + rec.id)}>Bekijk rapport</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${actSluit("go", "inspecties")}>Naar inspecties</button>`);

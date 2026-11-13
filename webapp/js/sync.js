@@ -1133,12 +1133,6 @@
       const h = document.querySelector("#view h1"), id = parts && parts[0];
       if (h && id && !document.querySelector("#view [data-sync]")) h.insertAdjacentHTML("afterend", `<div style="margin:-10px 0 14px">${App.syncChip("inspecties", id)}</div>`);
     };
-    // "Vastgelegd"-venster: met backend klopt "cloud-opslag volgt" niet meer
-    const mod0 = App.openModal;
-    App.openModal = function (title, sub, body) {
-      if (title === "Vastgelegd" && /cloud-opslag volgt/.test(sub || "")) sub = "Veilig bewaard op dit toestel en klaargezet voor de server. Zonder bereik gaat het mee zodra er weer verbinding is.";
-      return mod0.call(this, title, sub, body);
-    };
     // (hier en niet bij het laden: js/inspectie.js wordt ná dit bestand geladen)
     // Een planning (of inspectie) van de server kan een productcode hebben die niet in de kennisbank van
     // deze app staat (de server controleert dat niet; ook een inspecteur mag planning aanmaken). Dan geen
@@ -1183,6 +1177,12 @@
 
   Object.assign(App, {
     syncActief: actief,
+    // Eén plek voor de ondertitel van het venster "Vastgelegd" na een inspectie (js/inspectie.js, bewaarInspectie):
+    // klopt in beide modi. Voorbeeldmodus: er is geen server; met backend: in de wachtrij, gaat mee bij verbinding.
+    vastgelegdTekst() {
+      return actief() ? "Veilig bewaard op dit toestel en klaargezet voor de server. Zonder bereik gaat het mee zodra er weer verbinding is."
+        : "Veilig bewaard op dit toestel. Dit is de voorbeeldmodus: er is geen server gekoppeld, dus het gaat nergens heen.";
+    },
     // status van één record: "lokaal" | "wachtrij" | "ok" | "fout"
     syncStatus(store, id) { return actief() ? statusVan(store, id) : "lokaal"; },
     syncStatusTekst(store, id) { return TEKST[this.syncStatus(store, id)]; },

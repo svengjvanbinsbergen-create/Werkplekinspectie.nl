@@ -83,10 +83,13 @@
       v.appendChild(el(`<div class="muted" style="font-size:12.5px;line-height:1.5;margin-top:14px">Klik op een maand, een stuk van de ring of een klasse voor de details. Methode: momentopnames; alleen wat de inspecteur zelf zag telt. Een A betekent “op dat moment niet op orde”, geen oordeel over personen.</div>`));
     },
 
-    // doel % conform (ingesteld door het Hoofd S&M in Beheer); null = geen doel
+    // doel % conform (Beheer; standaard 85, zoals de server: instellingen.doel_conform). Nooit ingesteld = 85;
+    // bewust "geen doel" gekozen = lege waarde ("") → null (geen doellijn)
+    DOEL_STANDAARD: 85,
     doelConform() {
       let v = null; try { v = localStorage.getItem("wpi_doel_conform"); } catch (e) {}
-      const n = v == null || String(v).trim() === "" ? NaN : Math.round(+v);
+      if (v == null) return this.DOEL_STANDAARD;
+      const n = String(v).trim() === "" ? NaN : Math.round(+v);
       return n >= 1 && n <= 100 ? n : null;
     },
     // zachte, warme kleuren die bij de app passen

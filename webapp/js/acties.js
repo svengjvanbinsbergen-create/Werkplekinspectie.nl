@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, fotoDataURL, USERS, staf, isWeb, naam, kort, plusDagen, dagLabel, dagenTot, PRIO,
+  const { $, el, esc, svg, DB, fotoDataURL, USERS, staf, mag, personenOpties, nietKiesbaar, isWeb, naam, kort, plusDagen, dagLabel, dagenTot, PRIO,
     stBadge, tril, act } = window.WPI;
   // prioriteit volgens de inspecteur: rustige chip (warm oranje blijft voor "te laat")
   const prioChip = (p) => PRIO[p] ? `<span class="pchip p-${esc(p)}"><span class="pbol" aria-hidden="true"></span>Prio ${esc(PRIO[p].lab.split(" · ")[0].toLowerCase())}</span>` : "";
@@ -25,7 +25,7 @@
     },
     demoActies() {
       const t = "Voorbeeld · Damwand · P26-168", L = (wat) => [{ t: new Date().toISOString(), wie: "Voorbeelddata", wat }];
-      const b = (o) => Object.assign({ demo: true, inspectie_titel: t, inspecteur: "Inspecteur (demo)", foto: null, terPlaatse: "niets" }, o);
+      const b = (o) => Object.assign({ demo: true, inspectie_titel: t, inspecteur: "Carla Proef", foto: null, terPlaatse: "niets" }, o);
       return [
         b({ id: "ACT-demo1", ref: "DAM-2.07", oordeel: "A", waarneming: "Gasmeter hing boven aan de ladder, niet bij de man in de put.", tekst: "Gasmeter altijd meenemen naar de man in de put; toolbox gasmeting houden", prio: "kort", status: "In uitvoering", houder: "u-coord1", toetser: "u-hoofd", plandatum: plusDagen(-2), log: L("Ingesteld en gestart") }),
         b({ id: "ACT-demo2", ref: "Algemeen F", oordeel: "V", waarneming: "Afzetting rond de bouwput was aan één zijde weggehaald.", tekst: "Afzetting rond de bouwput rondom herstellen en dagelijks controleren", prio: "kort", status: "Open", houder: "u-coord2", toetser: "u-coord1", plandatum: plusDagen(0), log: L("Ingesteld") }),
@@ -34,9 +34,9 @@
         b({ id: "ACT-demo5", ref: "DAM-3.02", oordeel: "V", waarneming: "Kabels lagen over het looppad naar de keet.", tekst: "Kabels via een kabelbrug of opgehangen langs het looppad leggen", prio: "planmatig", status: "Klaar voor toetsing", houder: "u-coord2", toetser: "u-hoofd", plandatum: plusDagen(6), log: L("Klaar voor toetsing gemeld") }),
       ];
     },
-    // bakjes: hoofd ziet het hele team, anderen hun eigen acties
+    // bakjes: hoofd, QHSE-manager en beheerder zien het lopende werk van het hele team, anderen hun eigen acties
     bakjes() {
-      const me = this.user.id, A = this.acties || [], hoofd = this.user.role === "hoofd";
+      const me = this.user.id, A = this.acties || [], hoofd = mag("team");
       const loopt = (a) => a.status === "Open" || a.status === "In uitvoering";
       const scope = A.filter((a) => loopt(a) && (hoofd || a.houder === me));
       const opDatum = (x, y) => (x.plandatum || "9").localeCompare(y.plandatum || "9");
@@ -48,18 +48,18 @@
         gepland: scope.filter((a) => !a.plandatum || dagenTot(a.plandatum) >= 0).sort(opDatum),
         toetsen: A.filter((a) => a.status === "Klaar voor toetsing" && a.toetser === me).sort(opDatum),
         instellen: A.filter((a) => a.status === "Voorstel"),   // iedereen mag instellen (zoals de server: zie supabase/migrations/0003_rls_rechten.sql)
-        alle: (staf() ? A : A.filter(betrokken)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
+        alle: (mag("zietAlles") ? A : A.filter(betrokken)).slice().sort((x, y) => (x.status === "Afgerond") - (y.status === "Afgerond") || opDatum(x, y)),
       };
     },
 
     async view_acties() {
       await this.laadActies();
-      const v = $("view"), B = this.bakjes(), hoofd = this.user.role === "hoofd";
+      const v = $("view"), B = this.bakjes(), hoofd = mag("team");
       const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
       v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
-      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: staf() ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
+      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: mag("zietAlles") ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
@@ -97,13 +97,12 @@
     },
     // telefoon: zelf een actie aanmaken (los van een inspectie)
     nieuweActie() {
-      const opts = `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse").map((u) => `<option value="${esc(u.id)}">${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
       const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       this.openModal("Nieuwe actie", "Bijvoorbeeld uit een melding, toolbox of overleg.",
         `${veld("Wat moet er gebeuren?", `<textarea id="na-tekst" class="fin" rows="3" placeholder="Bijv. hijsbanden in de bus vervangen"></textarea>`)}
          ${veld("Aanleiding (optioneel)", `<textarea id="na-aanl" class="fin" rows="2" placeholder="Wat zag of hoorde je?"></textarea>`)}
-         ${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts}</select>`)}
-         ${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts}</select>`)}
+         ${veld("Actiehouder", `<select id="ai-houder" class="fin">${personenOpties("houder", null)}</select>`)}
+         ${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${personenOpties("toetser", null)}</select>`)}
          ${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen(14)}">`)}
          <div id="ai-fout" class="fout" role="alert"></div>
          <button class="btn primary" style="margin-top:10px"${act("maakActie")}>Actie aanmaken</button>`);
@@ -113,6 +112,8 @@
       if (!tekst) return this.fout("Beschrijf wat er moet gebeuren.", "na-tekst");
       if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.", houder ? "ai-toetser" : "ai-houder");
       if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.", "ai-toetser");
+      if (nietKiesbaar("houder", houder)) return this.fout(nietKiesbaar("houder", houder), "ai-houder");
+      if (nietKiesbaar("toetser", toetser)) return this.fout(nietKiesbaar("toetser", toetser), "ai-toetser");
       if (!plan) return this.fout("Kies een plandatum.", "ai-plan");
       await this.laadActies();
       const a = { id: "ACT-" + Date.now(), handmatig: true, inspectie_titel: "Handmatig aangemaakt", ref: "Handmatig", oordeel: "–", waarneming: $("na-aanl").value.trim(),
@@ -124,7 +125,6 @@
     openActie(id) {
       const a = (this.acties || []).find((x) => x.id === id); if (!a) return;
       const me = this.user.id, isHouder = a.houder === me, isToetser = a.toetser === me;
-      const opts = (sel, uitsluit) => `<option value="">Kies…</option>` + USERS.filter((u) => u.role !== "qhse" && u.id !== uitsluit).map((u) => `<option value="${esc(u.id)}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
       const veld = (lab, inner) => { const m = inner.match(/\bid="([^"]+)"/); return `<label class="flab"${m ? ` for="${m[1]}"` : ""}>${lab}</label>${inner}`; };   // label gekoppeld aan het veld (for=id)
       let h = `<div class="s" style="font-weight:600">${esc(a.inspectie_titel || "")} · ${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}${a.inspecteur ? " · gezien door " + esc(a.inspecteur) : ""}</div>
         <div style="margin:8px 0 14px;display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Waarneming</span><div style="flex:1;line-height:1.45">“${esc(a.waarneming || "")}”</div>${this.actieFotos(a)}</div>`;
@@ -133,8 +133,8 @@
           h += `<div class="vskop" style="margin-bottom:6px"><span class="lbl vs">Voorstel uit de inspectie</span><span class="s">· pas aan en stel in</span></div>
             <textarea id="ai-tekst" class="fin" rows="3" aria-label="Wat moet er gebeuren? (voorstel, pas aan)">${esc(a.tekst || "")}</textarea>
             <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:6px">
-              <div>${veld("Actiehouder", `<select id="ai-houder" class="fin">${opts(null)}</select>`)}</div>
-              <div>${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts(null)}</select>`)}</div>
+              <div>${veld("Actiehouder", `<select id="ai-houder" class="fin">${personenOpties("houder", null)}</select>`)}</div>
+              <div>${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${personenOpties("toetser", null)}</select>`)}</div>
               <div>${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen((PRIO[a.prio] || PRIO.kort).d)}">`)}</div></div>
             <div class="s" style="margin-top:6px">De inspecteur vond het: <b>${esc((PRIO[a.prio] || {}).lab || "–")}</b>. De plandatum staat daarop voorgesteld; pas gerust aan.</div>
             <div id="ai-fout" class="fout" role="alert"></div>
@@ -204,7 +204,8 @@
       if (!tekst) return this.fout("Vul de actietekst in.", "ai-tekst");
       if (!houder || !toetser) return this.fout("Kies een actiehouder én een toetser.", houder ? "ai-toetser" : "ai-houder");
       if (houder === toetser) return this.fout("De toetser mag niet de actiehouder zijn.", "ai-toetser");
-      if ((USERS.find((u) => u.id === houder) || {}).role === "qhse") return this.fout("De QHSE-manager kan geen actiehouder zijn.", "ai-houder");
+      if (nietKiesbaar("houder", houder)) return this.fout(nietKiesbaar("houder", houder), "ai-houder");
+      if (nietKiesbaar("toetser", toetser)) return this.fout(nietKiesbaar("toetser", toetser), "ai-toetser");
       if (!plan) return this.fout("Kies een plandatum.", "ai-plan");
       const aangepast = tekst !== a.tekst; Object.assign(a, { tekst, houder, toetser, plandatum: plan, status: "Open" });
       await this.bewaarActie(a, `Ingesteld${aangepast ? " (tekst aangepast)" : ""}: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);

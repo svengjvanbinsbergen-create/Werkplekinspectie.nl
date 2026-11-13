@@ -12,7 +12,7 @@
     zetInspFilter(k, waarde) { this.inspFilter[k] = waarde; this.route(); },
     wisInspFilter() { this.inspFilter = { insp: "", mont: "" }; this.route(); },
     async view_inspecties() {
-      const v = $("view"), mine = !staf(), f = this.inspFilter;
+      const v = $("view"), mine = !WPI.mag("zietAlles"), f = this.inspFilter;   // iedereen in het team ziet alle inspecties
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
       const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({

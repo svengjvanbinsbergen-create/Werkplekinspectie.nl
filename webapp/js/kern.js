@@ -102,23 +102,70 @@
 
   // Demo-gebruikers: FICTIEF (geen echte namen in publieke code; de echte accounts komen in productie uit
   // Supabase-profielen, zie js/auth.js en supabase/seed.sql). De id's zijn alleen interne sleutels.
+  // Het echte team: twee hoofden (Hoofd Service & Montage en Manager Projects, gelijke rechten), twee coördinatoren,
+  // één QHSE-manager en één beheerder (applicatiebeheer). De inspecteurs zijn de hoofden en de coördinatoren.
   const USERS = [
     { id: "u-hoofd", full_name: "Bram Voorbeeld", role: "hoofd", functie: "Hoofd Service & Montage" },
+    { id: "u-hoofd2", full_name: "Femke Fictief", role: "hoofd", functie: "Manager Projects" },
     { id: "u-coord1", full_name: "Carla Proef", role: "coordinator", functie: "Montage Coördinator" },
     { id: "u-coord2", full_name: "Dirk Demo", role: "coordinator", functie: "Montage Coördinator" },
-    { id: "u-insp", full_name: "Inspecteur (demo)", role: "inspecteur", functie: "Inspecteur op locatie" },
+    { id: "u-qhse", full_name: "Gijs Gefingeerd", role: "qhse", functie: "QHSE-manager" },
+    { id: "u-beheer", full_name: "Hanna Hypothese", role: "beheerder", functie: "Applicatiebeheerder" },
   ];
-  const ROL = { hoofd: "Hoofd S&M", coordinator: "Coördinator", inspecteur: "Inspecteur" };
-  // Welke tabs mag welke rol zien
+  const ROL = { hoofd: "Hoofd", coordinator: "Coördinator", qhse: "QHSE-manager", beheerder: "Beheerder" };
+  // ---- rollen en rechten: één bron voor tabs, schermen, knoppen en keuzelijsten ----
+  // De server dwingt hetzelfde af (RLS en triggers, supabase/migrations/0008_rollen_beheer.sql); dit is gebruiksgemak.
+  // De databaserol "inspecteur" bestaat alleen nog voor compatibiliteit: niemand krijgt hem en de app kent hem niet.
+  //   inspecteert  start inspecties en kan worden ingepland                  hoofd, coördinator
+  //   plant        planning maken en wijzigen, programma-voorstel             hoofd, coördinator
+  //   staf         ingestelde acties inhoudelijk wijzigen (plandatum)         hoofd, coördinator
+  //   zietAlles    alle inspecties, acties en planning; dashboard/rapportage  iedereen in het team
+  //   team         bij Acties het lopende werk van het hele team              hoofd, QHSE-manager, beheerder
+  //   beheer       Beheer: team en rollen, monteurs, doel % conform           hoofd, QHSE-manager, beheerder
+  //   houder       kan actiehouder zijn                                       hoofd, coördinator (QHSE-manager nooit)
+  //   toetser      kan toetser zijn                                           hoofd, coördinator, QHSE-manager
+  // De beheerder is geen actiehouder en geen toetser, inspecteert niet en telt niet als inspecteur.
+  const RECHTEN = {
+    hoofd: { inspecteert: true, plant: true, staf: true, zietAlles: true, team: true, beheer: true, houder: true, toetser: true },
+    coordinator: { inspecteert: true, plant: true, staf: true, zietAlles: true, houder: true, toetser: true },
+    qhse: { zietAlles: true, team: true, beheer: true, toetser: true },
+    beheerder: { zietAlles: true, team: true, beheer: true },
+  };
+  const ROLLEN = Object.freeze(Object.keys(RECHTEN));
+  const INSPECTEURS = ["hoofd", "coordinator"];
+  // mag(recht) voor de ingelogde gebruiker, mag(recht, persoon) voor een ander
+  const mag = (recht, u) => {
+    const p = u === undefined ? App.user : u;   // (App wordt hieronder gedefinieerd; mag() draait pas daarna)
+    return !!(p && Object.prototype.hasOwnProperty.call(RECHTEN, p.role) && RECHTEN[p.role][recht] === true);
+  };
+  // Welke tabs mag welke rol zien (dashboard en rapportage alleen in de webversie, ≥900px)
   const TABS = [
-    { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "planning", lab: "Planning", ic: "cal", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "inspecteur"] },
-    { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator"], web: true },   // alleen webversie (computer)
-    { id: "kwartaal", lab: "Rapportage", ic: "doc", rollen: ["hoofd", "coordinator"], web: true },
+    { id: "vandaag", lab: "Vandaag", ic: "home", rollen: ["hoofd", "coordinator", "qhse", "beheerder"] },
+    { id: "planning", lab: "Planning", ic: "cal", rollen: ["hoofd", "coordinator", "qhse", "beheerder"] },
+    { id: "inspecties", lab: "Inspecties", ic: "list", rollen: ["hoofd", "coordinator", "qhse", "beheerder"] },
+    { id: "acties", lab: "Acties", ic: "check", rollen: ["hoofd", "coordinator", "qhse", "beheerder"] },
+    { id: "dashboard", lab: "Dashboard", ic: "chart", rollen: ["hoofd", "coordinator", "qhse", "beheerder"], web: true },   // alleen webversie (computer)
+    { id: "kwartaal", lab: "Rapportage", ic: "doc", rollen: ["hoofd", "coordinator", "qhse", "beheerder"], web: true },
   ];
-  const staf = () => App.user && (App.user.role === "hoofd" || App.user.role === "coordinator");
+  // schermen buiten de tabs die een recht vragen (de route stuurt anders terug naar Vandaag)
+  const SCHERM_RECHT = { inspectie: "inspecteert", beheer: "beheer" };
+  const staf = () => mag("staf");
+  // Eén helper voor ALLE keuzelijsten met personen (actiehouder, toetser, inspecteur in de planning):
+  // alleen wie dat recht heeft, zonder `uitsluit`. opties(): de <option>'s, met "Kies…" voorop (leeg: null = geen).
+  const kandidaten = (recht, uitsluit) => USERS.filter((u) => mag(recht, u) && u.id !== uitsluit);
+  const personenOpties = (recht, sel, o = {}) => {
+    const leeg = o.leeg === undefined ? "Kies…" : o.leeg;
+    return (leeg === null ? "" : `<option value="">${esc(leeg)}</option>`) + kandidaten(recht, o.uitsluit).map((u) =>
+      `<option value="${esc(u.id)}"${sel === u.id ? " selected" : ""}>${esc(u.full_name)}${o.zonderFunctie ? "" : " · " + esc(u.functie)}</option>`).join("");
+  };
+  // waarom iemand niet gekozen kan worden (melding in een formulier), of "" als het mag
+  const nietKiesbaar = (recht, id) => {
+    const u = USERS.find((x) => x.id === id);
+    if (!u || mag(recht, u)) return "";
+    if (recht === "houder") return u.role === "qhse" ? "De QHSE-manager kan geen actiehouder zijn." : "De beheerder kan geen actiehouder zijn.";
+    if (recht === "toetser") return "De beheerder kan geen toetser zijn.";
+    return u.full_name + " inspecteert niet en kan niet worden ingepland.";
+  };
   // webversie = groot scherm (computer/tablet liggend); telefoon = de veld-app zonder dashboard en trendanalyse
   const isWeb = () => window.matchMedia("(min-width: 900px)").matches;
   const naam = (id) => { const u = USERS.find((x) => x.id === id); return u ? u.full_name : id ? String(id) : "–"; };
@@ -298,7 +345,7 @@
     openAccount() {
       const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
-        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${u.role === "hoofd" ? r("tand", "Beheer", "Monteurs en doel % conform", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${mag("beheer", u) ? r("tand", "Beheer", "Team en rollen, monteurs en doel % conform", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
@@ -337,6 +384,7 @@
       let page = parts[0];
       const tab = TABS.find((t) => t.id === page);
       if (tab && !tab.rollen.includes(this.user.role)) { return this.go("vandaag"); }  // geen toegang
+      if (SCHERM_RECHT[page] && !mag(SCHERM_RECHT[page])) { return this.go("vandaag"); }   // bijv. inspectie: alleen wie inspecteert
       if (tab && tab.web && !isWeb()) page = "alleenweb";
       this.renderTabs(page);
       $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
@@ -378,7 +426,7 @@
           <span aria-hidden="true" style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
           <span class="grow"><span class="t">${esc(u.full_name)}</span><div class="s">${esc(u.functie)} · ${ROL[u.role]}</div></span>
           <span class="s">${svg("chev", 18)}</span></div>`).join("")}</div>`));
-      v.appendChild(el(`<div class="muted" style="font-size:12px;margin-top:16px">Rollen bepalen wat je ziet: een inspecteur start en ziet eigen inspecties; een coördinator en het Hoofd S&amp;M zien alles, acties en het dashboard.</div>`));
+      v.appendChild(el(`<div class="muted" style="font-size:12px;margin-top:16px">Rollen bepalen wat je ziet: de hoofden en de coördinatoren inspecteren, plannen en zien alles. De QHSE-manager en de beheerder kijken overal mee en beheren het team, maar inspecteren niet.</div>`));
     },
 
     // actie: attributen van WPI.act(…) (klikbare tegel) of leeg
@@ -433,7 +481,8 @@
 
   // gedeelde helpers voor de andere modules (js/*.js)
   const WPI = window.WPI = {
-    $, el, esc, MND, mlabel, IC, svg, DB, fotoDataURL, USERS, ROL, TABS, staf, isWeb, naam, STOP, SYN, toks, overlap,
+    $, el, esc, MND, mlabel, IC, svg, DB, fotoDataURL, USERS, ROL, ROLLEN, INSPECTEURS, RECHTEN, TABS, mag, staf, kandidaten, personenOpties, nietKiesbaar,
+    isWeb, naam, STOP, SYN, toks, overlap,
     OW_KEYS, splitMaatregelen, kort, dag0, isoDag, plusDagen, dagLabel, dagenTot, PRIO, ST_CLS, stBadge, tril,
     eigenWoorden, act, actSluit, op, WAARDE, ELEMENT, EVENT, zeg
   };

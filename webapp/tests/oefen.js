@@ -1,7 +1,7 @@
 // Werkplekinspectie — tests/oefen.js: de Oefeninspectie (js/oefen.js) helemaal doorlopen als inspecteur.
 //
-//  - de tip "Nieuw als inspecteur?" staat op Vandaag en Inspecties bij een inspecteur zonder eigen inspecties
-//    (niet bij een coördinator); "Niet nu" haalt hem weg, maar alleen voor die gebruiker;
+//  - de tip "Nieuw als inspecteur?" staat op Vandaag en Inspecties bij wie inspecteert (coördinator, hoofd) en nog
+//    geen eigen inspecties heeft (niet bij een QHSE-manager); "Niet nu" haalt hem weg, maar alleen voor die gebruiker;
 //  - "Oefenen" in het accountmenu opent de oefening; elk oefenscherm toont het label "Oefening", zonder
 //    meldingenbalk, bel of accountknop en zonder tabbalk;
 //  - kort: hooguit 12 stappen; elke methoderegel komt bij precies één stap in beeld (één kaartje);
@@ -9,7 +9,10 @@
 //    waarneming (aannames worden letterlijk benoemd, "zit vast aan" niet), TRA-Voorstel en zelf oordelen op één
 //    scherm (uitleg noemt wat de TRA vraagt, geen verzonnen meerderheid), actievoorstel met "Ter plaatse" en
 //    terugkoppeling; bij "Direct gecorrigeerd" één zin over wie toetst (geen tegenstrijdige coördinator-tip);
-//  - scène 2 (sleuf): taak via het gesprek + Voorstel, bij A volgt een actievoorstel en daarna positief benoemen;
+//  - scène 2 (sleuf, in orde volgens de TRA): taak via het gesprek + Voorstel; C en V zijn allebei een goed oordeel:
+//    bij C rustige uitleg, bij V alleen de vraag om een concreet verbetervoorstel (geen ‘kijk nog eens’, niet terug
+//    naar het oordeel, geen afwijking in de samenvatting); alleen bij A een rustige ‘kijk nog eens’-hint (de
+//    oefenaar mag bij A blijven); daarna positief benoemen;
 //  - scène 3 (schakelkast): open vraag, de inspecteur ziet het label zelf ophangen, zelf koppelen, A volgens de
 //    TRA, "Direct gecorrigeerd" is afgerond omdat jij het herstel zag;
 //  - samenvatting (alleen wat je echt deed) en "Klaar om echt te beginnen"; teksten zonder "!", "≠",
@@ -23,6 +26,7 @@
 //   BASE=http://localhost:8540 node /home/user/Werkplekinspectie.nl/webapp/tests/oefen.js
 //
 // Schermafbeeldingen (390×844, dsf 2) in OEFEN_SHOTS, anders TESTS_OUT, anders de huidige map.
+// Logt in met eigen (verzonnen) profielen, niet met de demo-accounts uit kern.js (die kunnen veranderen).
 // Eindigt met "errs [...]" (leeg = alles in orde).
 "use strict";
 const path = require("path");
@@ -32,6 +36,10 @@ const BASE = process.env.BASE || "http://localhost:8540";
 const SHOTS = process.env.OEFEN_SHOTS || process.env.TESTS_OUT || process.cwd();
 fs.mkdirSync(SHOTS, { recursive: true });
 const errs = [];
+// eigen verzonnen profiel: de demo-accounts in kern.js kunnen veranderen
+// (coördinator = inspecteert; vóór de rollenwijziging herkende de app alleen de rol "inspecteur")
+const INSP = { id: "u-oefen-insp", full_name: "Oefen Inspecteur", role: "coordinator", functie: "Montage Coördinator" };
+const QHSE = { id: "u-oefen-qhse", full_name: "Oefen Adviseur", role: "qhse", functie: "QHSE-manager" };
 const ok = (cond, wat) => { if (!cond) errs.push("OEFEN: " + wat); console.log((cond ? "  ok    " : "  FOUT  ") + wat); };
 
 async function nieuwePagina(b, w, h) {
@@ -77,7 +85,7 @@ async function nieuwePagina(b, w, h) {
   const lsU = (id) => ev((id) => { const o = JSON.parse(localStorage.getItem("wpi_oefen") || "{}"); return (o.gebruikers || {})[id] || null; }, id);
 
   await p.goto(BASE + "/index.html"); await wacht(900);
-  await ev(() => App.login("u-insp")); await wacht(900);
+  await ev((u) => App.login(null, u), INSP); await wacht(900);
   const voor = await tellingen();
   console.log("tellingen vooraf", JSON.stringify(voor));
 
@@ -96,7 +104,7 @@ async function nieuwePagina(b, w, h) {
 
   // ---- tip op Vandaag (inspecteur zonder eigen inspecties) ----
   await p.waitForSelector(".oef-hint", { timeout: 4000 }).catch(() => {});
-  ok(await p.locator(".oef-hint").count() === 1, "Vandaag: tip ‘Nieuw als inspecteur?’ voor een inspecteur zonder inspecties");
+  ok(await p.locator(".oef-hint").count() === 1, "Vandaag: tip ‘Nieuw als inspecteur?’ voor wie inspecteert en nog geen inspecties heeft");
   await geenScroll("Vandaag met tip"); await shot("vandaag-tip");
 
   // ---- via het accountmenu ----
@@ -186,7 +194,7 @@ async function nieuwePagina(b, w, h) {
   await scherm("s1-oordeel", 1700);
   await p.locator(".oef .seg .t-V").focus(); await p.keyboard.press("Enter"); await wacht(300);
   const tv = await fbTekstR();
-  ok(/Jouw oordeel: Verbeterpunt/.test(tv) && /Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden/.test(tv) && /Jij beoordeelt/.test(tv) && /schrijf je hierna een actievoorstel/.test(tv), "oordeel V (toetsenbord): uitleg noemt wat de TRA vraagt, actievoorstel volgt");
+  ok(/Jouw oordeel: Verbeterpunt/.test(tv) && /Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden/.test(tv) && /Jij beoordeelt/.test(tv) && /schrijf je hierna een verbetervoorstel/.test(tv) && await p.locator(".oef-fb.let").count() === 1 && await knop("Verder").count() === 1, "oordeel V bij de hijsband (toetsenbord): rustige uitleg wat de TRA vraagt, Verder blijft (jij kiest)");
   await knop("Toch anders kiezen").click(); await wacht();
   await p.locator(".oef .seg .t-A").focus(); await p.keyboard.press("Enter"); await wacht(300);
   const tA = await fbTekstR();
@@ -243,9 +251,16 @@ async function nieuwePagina(b, w, h) {
   const vs2 = (await p.locator(".oef-vs").innerText()).replace(/\s+/g, " ");
   ok(/hoort bij deze taak/.test(vs2) && /Waarom: de monteur werkt onderin een sleuf/.test(vs2) && !/je zei/.test(vs2) && !/bij wat je zag/.test(vs2), "koppel sleuf: vraag en Waarom over de taak en de sleuf, geen zwak ‘je zei “leiding”’");
   await p.locator(".oef-vs .vpick").click(); await wacht();
+  // C: in orde volgens de TRA → rustige bevestiging, en V kan ook
+  await p.locator(".oef .seg .t-C").click(); await wacht();
+  const t2c = await fbTekstR();
+  ok(/Jouw oordeel: Conform/.test(t2c) && await p.locator(".oef-fb.let").count() === 0 && /past ook V/.test(t2c) && !/Kijk nog eens/.test(t2c), "sleuf C: goed oordeel, geen bijsturen; uitleg zegt dat V ook kan");
+  await knop("Toch anders kiezen").click(); await wacht();
+  // A: de enige keuze die een rustige ‘kijk nog eens’ krijgt; de oefenaar mag erbij blijven
   await p.locator(".oef .seg .t-A").click(); await wacht();
   const t2 = await fbTekstR();
-  ok(/Jouw oordeel: Afwijking/.test(t2) && /de TRA vraagt een gasmeter/.test(t2) && !/inspecteurs kiezen/.test(t2), "sleuf A: jouw keuze telt, uitleg noemt wat de TRA vraagt (geen verzonnen meerderheid)");
+  ok(/Jouw oordeel: Afwijking/.test(t2) && /Kijk nog eens/.test(t2) && /de TRA vraagt een gasmeter/.test(t2) && /dan past V/.test(t2) && await p.locator(".oef-fb.let").count() === 1 && await knop("Verder").count() === 1 && !/inspecteurs kiezen/.test(t2),
+    "sleuf A: rustige ‘kijk nog eens’ (i), uitleg noemt wat de TRA vraagt, ‘Verder’ blijft (de app overrulet niet)");
   await verder();
   ok(/Actievoorstel/.test(await p.locator(".oef h1").innerText()) && await p.locator("#oef-vastleg").count() === 1, "sleuf A: actievoorstel volgt (de app overrulet je oordeel niet)");
   // wat de critici vonden: A + ‘niks’ + niets gedaan + planmatig mag geen groen vinkje ‘Past bij wat je zag’ geven
@@ -256,16 +271,42 @@ async function nieuwePagina(b, w, h) {
   const t2a = await fbTekstR();
   ok(!/Past bij wat je zag/.test(t2a) && await p.locator(".oef-fb.let").count() === 1 && await p.locator(".oef-hierna").count() === 0 && /Volgens de TRA was hier alles in orde/.test(t2a) && /actie is dan niet nodig/.test(t2a) && await p.locator(".oef-fb .oef-regel").count() === 0,
     "sleuf A + actie: rustige i-uitleg ‘volgens de TRA was hier alles in orde’, geen groen vinkje, geen Hierna, geen regelkaartje");
+  ok(await p.locator('.oef-fb button.linkknop[data-action="oefVerder"]').count() === 1, "sleuf A + actie: ‘Verder’ blijft (bij A blijven mag)");
   await scherm("s2-actie-anders");
   await knop("Bekijk je oordeel opnieuw").click(); await wacht(300);
   ok(/Koppel en beoordeel/.test(await p.locator(".oef h1").innerText()) && await p.locator(".oef .seg button").count() === 3 && await ev(() => document.activeElement && document.activeElement.id === "oef-oordeel-lab"), "sleuf: ‘Bekijk je oordeel opnieuw’ → terug naar het oordeel, focus op ‘Jouw oordeel’");
-  // de oefenaar houdt vast aan A (het oordeel is van hem) en gaat via ‘Verder’ door
-  await p.locator(".oef .seg .t-A").click(); await wacht();
+  // V: in orde maar kan beter — een goed oordeel: alleen vragen om een concreet verbetervoorstel
+  await p.locator(".oef .seg .t-V").click(); await wacht(300);
+  const t2v = await fbTekstR();
+  ok(/Jouw oordeel: Verbeterpunt/.test(t2v) && /Dat kan/.test(t2v) && /Volgens de TRA is het hier in orde/.test(t2v) && /schrijf je hierna een verbetervoorstel/.test(t2v) && await p.locator(".oef-fb.let").count() === 0 && await p.locator(".oef-fb .oef-fb-ic svg").count() === 1,
+    "sleuf V: goed oordeel (vinkje, geen i), uitleg ‘dat kan’ + vraag om een verbetervoorstel");
+  ok(!/Kijk nog eens|afwijking|niet nodig|nog eens bekijken|Wil je je oordeel/i.test(t2v), "sleuf V: geen ‘kijk nog eens’, geen ‘afwijking’, geen ‘actie niet nodig’");
+  await scherm("s2-oordeel-V-terugkoppeling");
+  await p.locator(".oef-fb").scrollIntoViewIfNeeded(); await wacht(80);
+  await p.screenshot({ path: path.join(SHOTS, "s2-oordeel-V-terugkoppeling-scherm.png") });
   await verder();
-  ok((await p.inputValue("#oef-f-actie")) === "niks", "sleuf: eigen actietekst blijft staan");
+  ok(/Verbetervoorstel/.test(await p.locator(".oef h1").innerText()) && /Jouw verbetervoorstel/.test(await p.locator('label[for="oef-f-actie"]').innerText()) && /Wat kan er beter/.test(await p.locator("#oef-actiekop").innerText()) && /Verbetervoorstel vastleggen/.test(await p.locator("#oef-vastleg").innerText()),
+    "sleuf V: stap ‘Verbetervoorstel’ (‘Wat kan er beter?’, ‘Verbetervoorstel vastleggen’)");
+  ok((await p.inputValue("#oef-f-actie")) === "niks", "sleuf: eigen tekst blijft staan");
   await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-planmatig"); await wacht();
   await p.click("#oef-vastleg"); await wacht();
-  await p.locator('.oef-fb button.linkknop[data-action="oefVerder"]').click(); await wacht();
+  const t2vv = await fbTekstR();
+  ok(/Maak het nog wat concreter/.test(t2vv) && /Je oordeel V past hier/.test(t2vv) && /wát kan er beter/.test(t2vv) && !/Volgens de TRA was|niet nodig|Wil je je oordeel|afwijking/i.test(t2vv) && await knop("Bekijk je oordeel opnieuw").count() === 0 && await knop("Pas je verbetervoorstel aan").count() === 1,
+    "sleuf V + ‘niks’: alleen vragen om een concreet verbetervoorstel, nooit terug naar het oordeel");
+  await knop("Pas je verbetervoorstel aan").click(); await wacht();
+  await p.fill("#oef-f-actie", "De ladder bovenaan vastzetten aan de stempel, zodat hij niet kan wegglijden.");
+  await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
+  await p.click("#oef-vastleg"); await wacht();
+  const t2vg = await fbTekstR();
+  ok(/niets veranderd/.test(t2vg) && /Niets gedaan/.test(t2vg) && !/Wil je je oordeel|afwijking/i.test(t2vg) && await knop("Bekijk je oordeel opnieuw").count() === 0, "sleuf V + ‘Direct gecorrigeerd’: je zag geen herstel → ‘Niets gedaan’ (oordeel blijft staan)");
+  await knop("Pas je verbetervoorstel aan").click(); await wacht();
+  await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-planmatig"); await wacht();
+  await p.click("#oef-vastleg"); await wacht();
+  const t2vok = await fbTekstR();
+  ok(/Verbetervoorstel vastgelegd/.test(t2vok) && /geen afwijking/.test(t2vok) && /mag gewoon doorgaan/.test(t2vok) && await p.locator(".oef-fb.let").count() === 0 && await p.locator(".oef-corr").count() === 0 && await p.locator(".oef-hierna").count() === 1 && !/Volgens de TRA was|niet nodig|Wil je je oordeel/.test(t2vok),
+    "sleuf V + concreet verbetervoorstel: geaccepteerd (vinkje, Hierna), geen tegenspraak met de TRA");
+  await scherm("s2-verbetervoorstel-terugkoppeling");
+  await verder();
   const vraagPos = await p.locator(".oef-vraag").innerText();
   ok(/Wat gaat hier wél goed/.test(vraagPos) && !/Alles wat je zag was in orde/.test(await p.locator(".oef").innerText()), "positief na A: ‘wat gaat hier wél goed’, niet ‘alles was in orde’");
   await knop("Geef een voorbeeld").click(); await wacht();
@@ -320,11 +361,11 @@ async function nieuwePagina(b, w, h) {
   // ================= samenvatting =================
   ok(/De oefening zit erop/.test(await p.locator(".oef h1").innerText()), "samenvatting: ‘De oefening zit erop’");
   const kick = await p.locator(".oef-kicker").innerText();
-  ok(/Even terugkijken/.test(kick) && !/Goed gedaan/.test(kick), "samenvatting: neutrale ondertitel als je oordeel afweek (" + kick + ")");
+  ok(/Goed gedaan/.test(kick), "samenvatting: V in de sleuf is een goed oordeel → ‘Goed gedaan’ (" + kick + ")");
   ok(await p.locator(".oef-regels li").count() === 8 && await p.locator(".oef-regels svg").count() === 0 && await p.locator(".oef-regels .oef-bol").count() === 8, "samenvatting: acht methoderegels met neutrale bolletjes, geen vinkjes");
   const lijst = await p.locator(".oef-lijst").innerText();
-  ok(/werk laten stoppen/.test(lijst) && /gesprek begonnen met wat goed gaat/.test(lijst) && /waarneming beschreven/.test(lijst) && /taak gevraagd en bevestigd/.test(lijst) && /open vraag gesteld/.test(lijst) && /herstel gezien, actie afgerond/.test(lijst) && (lijst.match(/positief benoemd/g) || []).length === 1 && (lijst.match(/actievoorstel geschreven/g) || []).length === 2, "samenvatting: per scène wat je deed");
-  ok(await p.locator(".oef-anders").count() === 1 && /jij koos A; volgens de TRA conform \(C\)/.test(lijst) && !/Pomp uit de put[\s\S]*Kijk nog eens[\s\S]*Werken in de sleuf/.test(lijst), "samenvatting: alleen bij de sleuf ‘jij koos A; volgens de TRA conform (C)’");
+  ok(/werk laten stoppen/.test(lijst) && /gesprek begonnen met wat goed gaat/.test(lijst) && /waarneming beschreven/.test(lijst) && /taak gevraagd en bevestigd/.test(lijst) && /open vraag gesteld/.test(lijst) && /herstel gezien, actie afgerond/.test(lijst) && (lijst.match(/positief benoemd/g) || []).length === 1 && (lijst.match(/actievoorstel geschreven/g) || []).length === 1 && (lijst.match(/verbetervoorstel geschreven/g) || []).length === 1, "samenvatting: per scène wat je deed (bij V een verbetervoorstel)");
+  ok(await p.locator(".oef-anders").count() === 0 && /\[V\] Verbeterpunt/.test(lijst) && !/Kijk nog eens|jij koos V/.test(lijst), "samenvatting: V in de sleuf staat er als [V] Verbeterpunt, niet als afwijking of ‘kijk nog eens’");
   ok(await knop("Klaar om echt te beginnen").count() === 1, "samenvatting: ‘Klaar om echt te beginnen’");
   await scherm("samenvatting");
   const alles = teksten.join("\n");
@@ -337,14 +378,14 @@ async function nieuwePagina(b, w, h) {
   const na = await tellingen();
   console.log("tellingen na afloop", JSON.stringify(na));
   ok(JSON.stringify(na) === JSON.stringify(voor), "niets opgeslagen: IndexedDB-stores, acties, meldingen en lopende inspectie ongewijzigd");
-  const ls = await lsU("u-insp");
+  const ls = await lsU(INSP.id);
   ok(ls && ls.voortgang && ls.voortgang.s === 3, "voortgang alleen in localStorage ‘wpi_oefen’, per gebruiker");
 
   await knop("Klaar om echt te beginnen").click(); await wacht(700);
   ok(await ev(() => location.hash) === "#/vandaag", "Klaar → Vandaag");
   ok(!(await ev(() => document.getElementById("tabbar").classList.contains("hidden"))) && await ev(() => getComputedStyle(document.getElementById("acct")).display !== "none"), "tabbalk en accountknop weer zichtbaar");
   ok(await p.locator(".oef-hint").count() === 0, "na de oefening geen tip meer");
-  ok((await lsU("u-insp")).gedaan === true, "wpi_oefen: gedaan (voor deze gebruiker)");
+  ok((await lsU(INSP.id)).gedaan === true, "wpi_oefen: gedaan (voor deze gebruiker)");
   ok(JSON.stringify(await tellingen()) === JSON.stringify(voor), "ook na afsluiten niets opgeslagen");
 
   // ---- veld- en zonmodus ----
@@ -361,17 +402,17 @@ async function nieuwePagina(b, w, h) {
   // ================= 1440: computer, coördinator, tip ‘Niet nu’ per gebruiker, uitloggen =================
   const w = await nieuwePagina(b, 1440, 900), q = w.p;
   await q.goto(BASE + "/index.html"); await q.waitForTimeout(900);
-  await q.evaluate(() => App.login("u-coord1")); await q.waitForTimeout(800);
-  ok(await q.locator(".oef-hint").count() === 0, "coördinator: geen tip");
+  await q.evaluate((u) => App.login(null, u), QHSE); await q.waitForTimeout(800);
+  ok(await q.locator(".oef-hint").count() === 0, "QHSE-manager (inspecteert niet): geen tip");
   await q.evaluate(() => App.openAccount()); await q.waitForTimeout(200);
-  ok(await q.locator('#mod button[data-action="oefOpen"]').count() === 1, "coördinator: ‘Oefenen’ in het accountmenu");
+  ok(await q.locator('#mod button[data-action="oefOpen"]').count() === 1, "QHSE-manager: ‘Oefenen’ wel in het accountmenu");
   await q.evaluate(() => App.closeModal());
-  await q.evaluate(() => App.login("u-insp")); await q.waitForTimeout(800);
+  await q.evaluate((u) => App.login(null, u), INSP); await q.waitForTimeout(800);
   await q.evaluate(() => App.go("inspecties")); await q.waitForTimeout(800);
   ok(await q.locator(".oef-hint").count() === 1, "Inspecties: tip bij lege lijst");
   await q.locator(".oef-hint .oef-nietnu").click(); await q.waitForTimeout(200);
   const lq = (id) => q.evaluate((id) => { const o = JSON.parse(localStorage.getItem("wpi_oefen") || "{}"); return (o.gebruikers || {})[id] || null; }, id);
-  ok(await q.locator(".oef-hint").count() === 0 && (await lq("u-insp")).verborgen === true, "‘Niet nu’ verbergt de tip (wpi_oefen, per gebruiker)");
+  ok(await q.locator(".oef-hint").count() === 0 && (await lq(INSP.id)).verborgen === true, "‘Niet nu’ verbergt de tip (wpi_oefen, per gebruiker)");
   await q.evaluate(() => App.go("vandaag")); await q.waitForTimeout(600);
   ok(await q.locator(".oef-hint").count() === 0, "tip blijft weg na ‘Niet nu’");
   const v0 = await q.evaluate(async () => { const db = await WPI.DB.open(), u = {}; for (const n of Array.from(db.objectStoreNames)) u[n] = (await WPI.DB.getAll(n)).length; return u; });
@@ -403,6 +444,13 @@ async function nieuwePagina(b, w, h) {
     o.a[2] = { gesprek: 0, regel: "5.2", oordeel: "A", actie: "Label hangen", terPlaatse: "gecorrigeerd", actieKlaar: true }; o.s = 3; App.oefToon();
     return { kick: document.querySelector(".oef-kicker").textContent, n: document.querySelectorAll(".oef-anders").length }; });
   ok(sam3.kick === "Goed gedaan" && sam3.n === 0, "samenvatting: alles volgens de TRA → ‘Goed gedaan’, geen ‘Kijk nog eens’");
+  const sam4 = await q.evaluate(() => { const o = App.oefState();
+    o.a[1] = { taak: "leiding aansluiten", gekozenTaak: "Persleiding aansluiten in de sleuf", regel: "4.1", oordeel: "V", actie: "De ladder bovenaan vastzetten aan de stempel", terPlaatse: "niets", prio: "planmatig", actieKlaar: true, positief: "Goed dat de gasmeter bij je hangt" }; App.oefToon();
+    const v = { kick: document.querySelector(".oef-kicker").textContent, n: document.querySelectorAll(".oef-anders").length, lijst: document.querySelector(".oef-lijst").innerText };
+    o.a[1].oordeel = "A"; App.oefToon();
+    v.lijstA = document.querySelector(".oef-lijst").innerText; v.nA = document.querySelectorAll(".oef-anders").length; return v; });
+  ok(sam4.kick === "Goed gedaan" && sam4.n === 0 && /verbetervoorstel geschreven/.test(sam4.lijst), "samenvatting sleuf V: goed oordeel, ‘verbetervoorstel geschreven’, geen ‘Kijk nog eens’");
+  ok(sam4.nA === 1 && /jij koos A; volgens de TRA in orde \(C, of V als het beter kan\)/.test(sam4.lijstA), "samenvatting sleuf A: rustig ‘jij koos A; volgens de TRA in orde (C, of V als het beter kan)’");
   await q.evaluate(() => { const o = App.oefState(); o.s = 0; o.i = 4; o.fb = false; o.a[0].oordeel = "A"; App.oefToon(); }); await q.waitForTimeout(250);
   await q.screenshot({ path: path.join(SHOTS, "1440-actie.png"), fullPage: true });
   await q.evaluate(() => { const o = App.oefState(); o.s = 2; o.i = 0; o.fb = false; App.oefToon(); }); await q.waitForTimeout(250);
@@ -413,11 +461,11 @@ async function nieuwePagina(b, w, h) {
   ok(JSON.stringify(v0) === JSON.stringify(v1), "1440: niets opgeslagen in IndexedDB");
 
   // gedeeld toestel: uitloggen wist de lopende oefening (vrije tekst); de volgende inspecteur krijgt zijn eigen tip
-  ok(!!(await lq("u-insp")).voortgang, "voor uitloggen: lopende oefening bewaard");
+  ok(!!(await lq(INSP.id)).voortgang, "voor uitloggen: lopende oefening bewaard");
   await q.evaluate(() => App.logout()); await q.waitForTimeout(400);
-  const naUit = await lq("u-insp");
+  const naUit = await lq(INSP.id);
   ok(naUit && !naUit.voortgang && naUit.verborgen === true && !/leiding aansluiten|hijsband rafelig/.test(await q.evaluate(() => localStorage.getItem("wpi_oefen") || "")), "na uitloggen: geen voortgang of vrije tekst meer, ‘Niet nu’ blijft voor deze gebruiker");
-  await q.evaluate(() => App.login(null, { id: "u-oefen-test", full_name: "Tweede Inspecteur", role: "inspecteur", functie: "Inspecteur op locatie" })); await q.waitForTimeout(900);
+  await q.evaluate(() => App.login(null, { id: "u-oefen-test", full_name: "Tweede Inspecteur", role: "coordinator", functie: "Montage Coördinator" })); await q.waitForTimeout(900);
   await q.waitForSelector(".oef-hint", { timeout: 3000 }).catch(() => {});
   ok(await q.locator(".oef-hint").count() === 1, "andere inspecteur op hetzelfde toestel: tip wel zichtbaar");
   await q.evaluate(() => App.oefOpen()); await q.waitForTimeout(300);
