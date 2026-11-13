@@ -357,6 +357,8 @@ class Handler(SimpleHTTPRequestHandler):
         prof = x["profiel"]
         if not prof["actief"]:
             return self.stuur(200, []) if m == "GET" else self.fout(403, "42501", "new row violates row-level security policy")
+        if prof["role"] is None and tabel != "profiles":   # 0008: nog geen rol = nog geen toegang (alleen het eigen profiel)
+            return self.stuur(200, []) if m == "GET" else self.fout(403, "42501", "new row violates row-level security policy")
         if tabel == "rpc/report_security_event" and m == "POST":
             b = self.jbody() or {}
             STATE["security_events"].append({"id": len(STATE["security_events"]) + 1, "t": nu_iso(), "wie": x["id"],
