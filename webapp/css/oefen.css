@@ -114,7 +114,7 @@
 .oef-hint-ic{flex:none;width:42px;height:42px;border-radius:50%;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center}
 .oef-hint-ic svg{width:22px;height:22px}
 .oef-hint-knop{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.oef-hint-start{background:var(--accent);color:#fff;min-height:44px}
+.oef-hint-start{width:auto;min-height:44px;background:#fff;color:var(--accent);box-shadow:inset 0 0 0 1.5px #CFE0D8;font-weight:800}
 .oef-nietnu{min-height:44px;padding:0 12px;border-radius:12px;font-weight:800;font-size:14.5px;color:var(--accent)}
 .leeg .oef-hint{margin:18px auto 0;max-width:460px}
 
@@ -174,3 +174,17 @@ body.veld .oef-terug>summary{min-height:60px}
 .oef-fb.let .oef-fb-ic{background:#6B55B0;font-weight:900;font-size:16px;font-family:Georgia,serif;font-style:italic}
 body.zon .oef-fb.let{box-shadow:0 0 0 2px #141A22,inset 6px 0 0 #6B55B0}
 .oef-kaart .oef-p + .oef-vraag,.oef-keuzes + .oef-vraag{margin-top:16px}
+
+/* uitgeklapte situatie: de plaatsnaam staat al in het verhaal, niet nog eens in het kopje */
+.oef-terug[open]>summary .oef-terug-plek{display:none}
+/* methoderegels: één kaartje per terugkoppeling */
+.oef-regel-r{display:flex;flex-direction:column;gap:2px}
+.oef-regel-r+.oef-regel-r{margin-top:8px;padding-top:8px;border-top:1px solid #DCEBE3}
+/* wat de inspecteur daarna zelf ziet gebeuren */
+.oef-daarna .oef-p{font-weight:700}
+.oef-gezien{margin-bottom:12px;padding:10px 12px;border-radius:16px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA;font-size:14.5px;line-height:1.45}
+.oef .linkknop.oef-klein{min-height:44px;width:auto;display:inline-flex;padding:0 10px;font-size:14px}
+.oef-wie{margin-top:12px}
+body.zon .oef-gezien{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .oef-hint-start{box-shadow:inset 0 0 0 2px #141A22;color:#141A22}
+body.veld .oef-hint-start{min-height:56px}

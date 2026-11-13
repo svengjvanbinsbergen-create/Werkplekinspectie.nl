@@ -4,14 +4,16 @@
 //    (niet bij een coördinator); "Niet nu" haalt hem weg, maar alleen voor die gebruiker;
 //  - "Oefenen" in het accountmenu opent de oefening; elk oefenscherm toont het label "Oefening", zonder
 //    meldingenbalk, bel of accountknop en zonder tabbalk;
-//  - scène 1 (pomp, direct gevaar): eerst stoppen, gesprek met positief benoemen, waarneming (aannames worden
-//    letterlijk benoemd, "zit vast aan" niet), TRA-Voorstel, zelf oordelen, actievoorstel met "Ter plaatse"
-//    en terugkoppeling als urgentie of actie niet bij het gevaar past, "wie doet wat" (verzonnen collega's);
-//  - scène 2 (sleuf): taak via het gesprek + Voorstel, welke zinnen tellen, bij A volgt een actievoorstel en
-//    daarna positief benoemen zonder "alles was in orde";
-//  - scène 3 (schakelkast): open vraag, zelf koppelen, A volgens de TRA, "Niets gedaan" + Planmatig krijgt
-//    terugkoppeling, "Direct gecorrigeerd" verbergt de urgentie, positief benoemen;
-//  - samenvatting en "Klaar om echt te beginnen"; teksten zonder "!", "≠", "dringendheid" of echte collega's;
+//  - kort: hooguit 12 stappen; elke methoderegel komt bij precies één stap in beeld (één kaartje);
+//  - scène 1 (pomp, direct gevaar): eerst stoppen (zonder de goede keuze geen ‘Verder’), gesprek met open vraag,
+//    waarneming (aannames worden letterlijk benoemd, "zit vast aan" niet), TRA-Voorstel en zelf oordelen op één
+//    scherm (uitleg noemt wat de TRA vraagt, geen verzonnen meerderheid), actievoorstel met "Ter plaatse" en
+//    terugkoppeling; bij "Direct gecorrigeerd" één zin over wie toetst (geen tegenstrijdige coördinator-tip);
+//  - scène 2 (sleuf): taak via het gesprek + Voorstel, bij A volgt een actievoorstel en daarna positief benoemen;
+//  - scène 3 (schakelkast): open vraag, de inspecteur ziet het label zelf ophangen, zelf koppelen, A volgens de
+//    TRA, "Direct gecorrigeerd" is afgerond omdat jij het herstel zag;
+//  - samenvatting (alleen wat je echt deed) en "Klaar om echt te beginnen"; teksten zonder "!", "≠",
+//    "dringendheid", echte collega's of de afgekeurde formuleringen;
 //  - een deel met het toetsenbord (Tab/Enter/Spatie);
 //  - NIETS wordt opgeslagen: alle IndexedDB-stores (inspecties, acties, concept, planning, outbox, …) hebben
 //    na afloop evenveel records, er loopt geen inspectie, de acties en meldingen zijn gelijk;
@@ -109,84 +111,109 @@ async function nieuwePagina(b, w, h) {
   await scherm("intro");
 
   // ================= scène 1: pomp uit de put (direct gevaar) =================
+  // methoderegels: per regel bijhouden bij welke stap(pen) hij in beeld kwam (elke regel één stap)
+  const regelBij = {};
+  const noteerRegels = async () => {
+    const r = await ev(() => ({ k: ((document.querySelector(".oef-vg-t") || {}).textContent || "") + " / " + ((document.querySelector(".oef h1") || {}).textContent || ""),
+      t: [...document.querySelectorAll(".oef-fb .oef-regel-r b")].map((x) => x.textContent) }));
+    ok(await p.locator(".oef-fb .oef-regel").count() <= 1, r.k + ": hooguit één regelkaartje");
+    r.t.forEach((t) => { (regelBij[t] = regelBij[t] || new Set()).add(r.k); });
+  };
+  const fbTekstR = async () => { await noteerRegels(); return fbTekst(); };
+  const geenVerder = async (wat) => ok(await knop("Verder").count() === 0, wat + ": geen ‘Verder’ na een verkeerde keuze");
+
   await knop("Begin met oefenen").click(); await wacht();
   ok(await p.locator(".oef-scene svg[role=img]").count() === 1, "scène 1: tekening (inline SVG met beschrijving)");
   ok(/Twee monteurs/.test(await p.locator(".oef-verhaal").innerText()) && await ev(() => document.querySelectorAll(".oef-svg > g[transform^='translate']").length) === 2, "scène 1: tekst en tekening tonen allebei twee monteurs");
+  const totaal = await ev(() => +document.querySelector(".oef-balk").getAttribute("aria-valuemax"));
+  ok(totaal <= 12, "kort: hooguit 12 stappen in de hele oefening (" + totaal + ")");
   await scherm("s1-ingrijpen");
   await kies("ingrijpen", 1);
-  ok(/eerst stoppen/i.test(await fbTekst()) && await knop("Kies opnieuw").count() === 1, "ingrijpen: eerst een foto → uitleg ‘eerst stoppen’ + opnieuw kiezen");
+  ok(/eerst stoppen/i.test(await fbTekstR()) && await knop("Kies opnieuw").count() === 1, "ingrijpen: eerst een foto → uitleg ‘eerst stoppen’ + opnieuw kiezen");
+  await geenVerder("ingrijpen");
+  ok(await p.locator(".oef-fb .oef-regel").count() === 0, "ingrijpen fout: nog geen regelkaartje (dat komt bij de goede keuze)");
+  await ev(() => App.oefVerder()); await wacht();
+  ok(/Wat doe je eerst/.test(await p.locator(".oef h1").innerText()), "ingrijpen: zonder de goede keuze kom je niet verder (ook niet via oefVerder)");
   await knop("Kies opnieuw").click(); await wacht();
   await kies("ingrijpen", 0);
-  const ti = await fbTekst();
+  const ti = await fbTekstR();
   ok(/Goed: eerst stoppen/.test(ti) && /Direct gevaar\? Eerst stoppen/.test(ti), "ingrijpen: werk laten stoppen → regel ‘Direct gevaar? Eerst stoppen’");
   await scherm("s1-ingrijpen-terugkoppeling", 1700);
   await verder();
 
   ok(/staat weer op de grond/.test(await p.locator(".oef-kaart").first().innerText()), "gesprek: de pomp staat weer op de grond");
+  ok(/Hoe controleren jullie de band normaal voordat jullie gaan hijsen/.test(await p.locator(".oef").innerText()), "gesprek: natuurlijke open vraag");
   await scherm("s1-gesprek", 1700);
   await kies("gesprek", 2);
-  ok(/Probeer het anders/.test(await fbTekst()), "gesprek: ja/nee-vraag → probeer het anders");
+  ok(/Probeer het anders/.test(await fbTekstR()), "gesprek: ja/nee-vraag → probeer het anders");
+  await geenVerder("gesprek");
   await knop("Kies opnieuw").click(); await wacht();
   await kies("gesprek", 0);
-  const tg = await fbTekst();
-  ok(/Benoem wat goed gaat/.test(tg) && /Een gesprek, geen afvinklijst/.test(tg), "gesprek: positief beginnen + open vraag → regels positief en gesprek");
+  const tg = await fbTekstR();
+  ok(/Een gesprek, geen afvinklijst/.test(tg) && /helpt je te begrijpen/.test(tg), "gesprek: open vraag → regel ‘Een gesprek, geen afvinklijst’");
   await verder();
 
-  // wat zag je? eerst met een aanname (de zin van de kritiek), dan feitelijk
+  // wat zag je? eerst met een aanname, dan feitelijk
   ok(await ev(() => document.querySelector(".oef-terug").open), "zie: situatie staat open om nog eens te kijken");
+  ok(await p.locator(".oef-terug-plek").isHidden() && (await p.locator(".oef").innerText()).split("Gemaal De Oefenpolder (verzonnen)").length === 2, "zie: plaatsnaam staat één keer in beeld");
   await p.fill("#oef-f-zie", "De pomp zit vast aan een band die kapot is, ik denk dat ze dit vaker doen");
   await scherm("s1-zie");
   await p.locator('button[data-action="oefFeedback"]').click(); await wacht();
-  const tz = await fbTekst();
+  const tz = await fbTekstR();
   const let1 = await p.locator(".oef-fb .oef-let").innerText();
-  ok(/een deel is een aanname/.test(tz) && !/Goed gezien/.test(tz) && !/alleen wat je zelf zag/.test(tz), "zie: met aanname geen ‘Goed gezien’ maar ‘een deel is een aanname’");
-  ok(/ik denk dat ze dit vaker doen/.test(let1) && !/“vast”/.test(let1), "zie: de echte aanname wordt letterlijk benoemd, het feitelijke ‘vast’ niet");
+  ok(/een deel is een aanname/.test(tz) && !/Goed gezien/.test(tz), "zie: met aanname geen ‘Goed gezien’ maar ‘een deel is een aanname’");
+  ok(/Dit zie je nu niet/.test(let1) && /ik denk dat ze dit vaker doen/.test(let1) && !/“vast”/.test(let1), "zie: ‘Dit zie je nu niet’ + de echte aanname letterlijk, het feitelijke ‘vast’ niet");
   await scherm("s1-zie-aanname");
   await knop("Pas je waarneming aan").click(); await wacht();
   ok(/ik denk/.test(await p.inputValue("#oef-f-zie")), "zie: eigen tekst blijft staan bij aanpassen");
   await p.fill("#oef-f-zie", "De hijsband is aan één rand uitgerafeld en heeft een snee. De put is afgezet.");
   await p.locator('button[data-action="oefFeedback"]').click(); await wacht();
-  ok(/Goed gezien/.test(await fbTekst()) && await p.locator(".oef-fb .oef-let").count() === 0, "zie: feitelijk → ‘Goed gezien’, geen aanname-melding");
+  ok(/Goed gezien/.test(await fbTekstR()) && await p.locator(".oef-fb .oef-let").count() === 0, "zie: feitelijk → ‘Goed gezien’, geen aanname-melding");
   await verder();
 
+  // koppelen en oordelen op één scherm
+  ok(/Koppel en beoordeel/.test(await p.locator(".oef h1").innerText()), "koppel en oordeel: één stap");
   ok(/Voorstel/.test(await p.locator(".oef-vs .lbl.vs").innerText()) && await p.locator(".oef-vs .vpick").count() === 1, "koppel: TRA-stap als Voorstel");
-  ok(await p.locator(".seg button").count() === 0, "koppel: nog geen oordeel in beeld");
+  ok(await p.locator(".seg button").count() === 0, "koppel: nog geen oordeel in beeld zolang de TRA-stap niet bevestigd is");
   await scherm("s1-koppel", 1500);
-  await p.locator(".oef-vs .vpick").click(); await wacht();
-  ok(/altijd een Voorstel/.test(await fbTekst()), "koppel: uitleg ‘een koppeling is altijd een Voorstel’");
-  await verder();
-
-  // oordeel: niets voorgekozen, kiezen met het toetsenbord
+  await p.locator(".oef-vs .vpick").click(); await wacht(300);
+  ok(await p.locator(".oef-fb").count() === 0 && /Voorstel bevestigd/.test(await p.locator(".oef-gekozen").first().innerText()), "koppel: Voorstel bevestigd, geen apart terugkoppelscherm");
+  ok(await ev(() => document.activeElement && document.activeElement.id === "oef-oordeel-lab"), "koppel: focus gaat naar ‘Jouw oordeel’");
   const pressed = await ev(() => [...document.querySelectorAll(".oef .seg button")].map((x) => x.getAttribute("aria-pressed") + "|" + x.className));
   ok(pressed.length === 3 && pressed.every((x) => x.startsWith("false") && !/on-/.test(x)), "oordeel: C/A/V aanwezig en niets voorgekozen");
   ok(await p.locator('button[data-args=\'["NVT"]\']').count() === 1, "oordeel: ook ‘Niet van toepassing’");
-  await scherm("s1-oordeel", 1500);
+  await scherm("s1-oordeel", 1700);
   await p.locator(".oef .seg .t-V").focus(); await p.keyboard.press("Enter"); await wacht(300);
-  const tv = await fbTekst();
-  ok(/kiest nooit voor je/.test(tv) && /Jij beoordeelt/.test(tv) && /schrijf je hierna een actievoorstel/.test(tv), "oordeel V (toetsenbord): jouw keuze telt, actievoorstel volgt");
+  const tv = await fbTekstR();
+  ok(/Jouw oordeel: Verbeterpunt/.test(tv) && /Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden/.test(tv) && /Jij beoordeelt/.test(tv) && /schrijf je hierna een actievoorstel/.test(tv), "oordeel V (toetsenbord): uitleg noemt wat de TRA vraagt, actievoorstel volgt");
   await knop("Toch anders kiezen").click(); await wacht();
   await p.locator(".oef .seg .t-A").focus(); await p.keyboard.press("Enter"); await wacht(300);
-  ok(/\[A\]/.test(await p.locator(".oef-gekozen").innerText()) && /Klopt met de TRA/.test(await fbTekst()), "oordeel A: klopt met de TRA");
+  const tA = await fbTekstR();
+  ok(/\[A\]/.test(await p.locator(".oef-gekozen").last().innerText()) && /Jouw oordeel: Afwijking/.test(tA) && !/Klopt met de TRA/.test(tA), "oordeel A: ‘Jouw oordeel: Afwijking’");
   await scherm("s1-oordeel-terugkoppeling");
   await verder();
 
-  // actievoorstel: de walk van de kritiek (V-achtig ‘later’, niets gedaan, planmatig) krijgt correctie
+  // actievoorstel
   const vast = p.locator("#oef-vastleg");
   ok(await vast.isDisabled(), "actie: vastleggen pas als alles is ingevuld");
   ok(await p.locator("#oef-terPlaatse-maatregel").count() === 1 && /hijsen gestopt/.test(await p.locator("#oef-terPlaatse-maatregel").innerText()), "actie: keuze ‘Ter plaatse’ met ‘Maatregel genomen (hijsen gestopt)’");
   ok(!/Winfred|houder|Toetser \(/.test(await p.locator(".oef").innerText()), "actie: de inspecteur kiest geen actiehouder of toetser");
+  ok(/kiest de coördinator wie de actie uitvoert en wie toetst/.test(await p.locator("#oef-wie").innerText()), "actie: zonder keuze ‘de coördinator kiest wie uitvoert en wie toetst’");
   await p.fill("#oef-f-actie", "Band later eens vervangen");
   await p.click("#oef-terPlaatse-niets"); await wacht();
   await p.click("#oef-prio-planmatig"); await wacht();
   ok((await p.inputValue("#oef-f-actie")) === "Band later eens vervangen", "actie: eigen tekst blijft staan na een keuze");
   await vast.click(); await wacht();
-  const tc = await fbTekst();
+  const tc = await fbTekstR();
   ok(/Let op: dit is direct gevaar/.test(tc) && await p.locator(".oef-corr li").count() === 3 && /Kies ‘Direct’/.test(tc) && /‘Later’ past niet/.test(tc) && /Maatregel genomen/.test(tc), "actie: ‘later’ + niets gedaan + planmatig → drie correcties");
-  ok(!/Actievoorstel genoteerd/.test(tc), "actie: geen neutrale ‘genoteerd’ bij een onveilig voorstel");
   await scherm("s1-actie-correctie");
   await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
-  ok(await p.locator("#oef-prio-direct").count() === 0, "actie: bij ‘Direct gecorrigeerd’ geen urgentie te kiezen");
+  const wieG = await p.locator("#oef-wie").innerText();
+  ok(await p.locator("#oef-prio-direct").count() === 0 && /jij de toetser/.test(wieG) && !/coördinator/.test(wieG) && await p.locator(".oef .oef-wie").count() === 1, "actie: bij ‘Direct gecorrigeerd’ één zin (jij bent de toetser), geen tegenstrijdige coördinator-tip");
+  await vast.click(); await wacht();
+  ok(/jij hebt geen herstel gezien/.test(await fbTekstR()), "actie put: ‘Direct gecorrigeerd’ zonder gezien herstel → bijsturen");
+  await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-maatregel"); await wacht();
   ok(await vast.isDisabled(), "actie: na ‘Maatregel genomen’ weer een urgentie nodig");
   await p.getByRole("button", { name: "Laat de app een actie voorstellen" }).click(); await wacht();
@@ -195,25 +222,9 @@ async function nieuwePagina(b, w, h) {
   ok(!(await vast.isDisabled()), "actie: vastleggen kan (toetsenbord)");
   await scherm("s1-actie");
   await vast.click(); await wacht();
-  const ta = await fbTekst();
-  ok(/Past bij wat je zag/.test(ta) && await p.locator(".oef-corr").count() === 0 && /Afgerond pas na toetsing/.test(ta), "actie: Direct + maatregel + band afkeuren → past bij het gevaar");
+  const ta = await fbTekstR();
+  ok(/Past bij wat je zag/.test(ta) && await p.locator(".oef-corr").count() === 0 && /De toetser is niet de actiehouder/.test(ta) && /Afgerond pas na toetsing/.test(ta) && /QHSE-manager is nooit actiehouder/.test(ta) && await p.locator(".oef-fb .oef-regel-r").count() === 3, "actie: past bij het gevaar + de drie actieregels in één kaartje");
   await scherm("s1-actie-terugkoppeling");
-  await verder();
-
-  // wie doet wat (de coördinator kiest; verzonnen collega's)
-  const ctrl = knop("Controleer");
-  await p.click("#oef-verdeling-0"); await wacht();
-  ok(await ctrl.isDisabled(), "rollen: Controleer pas als beide vragen beantwoord zijn (ook bij keuze 0)");
-  await p.click("#oef-verdeling-1"); await wacht(); await p.click("#oef-klaar-0"); await wacht();
-  await scherm("s1-rollen");
-  await ctrl.click(); await wacht();
-  ok(/Bijna/.test(await fbTekst()) && await p.locator(".oef-quiz-uit li.mis").count() === 2, "rollen: Sanne/Sanne en ‘na ophangen’ → uitleg");
-  await knop("Kies opnieuw").click(); await wacht();
-  await p.click("#oef-verdeling-0"); await wacht(); await p.click("#oef-klaar-1"); await wacht();
-  await ctrl.click(); await wacht();
-  const tr = await fbTekst();
-  ok(/Je kent de regels/.test(tr) && /De toetser is niet de actiehouder/.test(tr) && /QHSE-manager is nooit actiehouder/.test(tr) && /Afgerond pas na toetsing/.test(tr) && /coördinator kiest/.test(tr), "rollen: drie actieregels, de coördinator kiest");
-  await scherm("s1-rollen-terugkoppeling");
   await verder();
 
   // ================= scène 2: werken in de sleuf =================
@@ -225,31 +236,19 @@ async function nieuwePagina(b, w, h) {
   await scherm("s2-taak");
   await p.locator(".oef-vs .vpick").click(); await wacht(300);
   ok(await ev(() => document.activeElement && document.activeElement.classList.contains("oef-fb")), "terugkoppeling krijgt de focus");
-  ok(/jij bevestigde/i.test(await fbTekst()), "taak: ‘jij bevestigde het Voorstel’");
+  ok(/jij bevestigde/i.test(await fbTekstR()), "taak: ‘jij bevestigde het Voorstel’");
   await verder();
-  // welke zinnen tellen: eerst niets aantikken, dan met het toetsenbord
-  await knop("Controleer").click(); await wacht();
-  ok(/Bijna/.test(await fbTekst()), "quiz: niets aangetikt → bijna");
-  await knop("Terug").click(); await wacht();
-  const chips = p.locator(".oef-keuzes .oef-chip");
-  await chips.nth(0).focus(); await p.keyboard.press("Space"); await wacht(100);
-  await p.keyboard.press("Tab"); await p.keyboard.press("Space"); await wacht(100);
-  ok(await chips.nth(0).getAttribute("aria-pressed") === "true" && await chips.nth(1).getAttribute("aria-pressed") === "true" && await chips.nth(2).getAttribute("aria-pressed") === "false", "quiz (toetsenbord): twee waarnemingen aangetikt, aanname niet");
-  await scherm("s2-quiz");
-  await knop("Controleer").click(); await wacht();
-  ok(/Precies/.test(await fbTekst()), "quiz: alles goed → ‘Precies: alleen wat je ziet’");
-  await verder();
-  await p.locator(".oef-vs .vpick").click(); await wacht(); await verder();
-  // jij beoordeelt: A in de sleuf → er volgt een actievoorstel
+  await p.locator(".oef-vs .vpick").click(); await wacht();
   await p.locator(".oef .seg .t-A").click(); await wacht();
-  ok(/Jij kiest A/.test(await fbTekst()), "sleuf A: jouw keuze telt");
+  const t2 = await fbTekstR();
+  ok(/Jouw oordeel: Afwijking/.test(t2) && /de TRA vraagt een gasmeter/.test(t2) && !/inspecteurs kiezen/.test(t2), "sleuf A: jouw keuze telt, uitleg noemt wat de TRA vraagt (geen verzonnen meerderheid)");
   await verder();
   ok(/Actievoorstel/.test(await p.locator(".oef h1").innerText()) && await p.locator("#oef-vastleg").count() === 1, "sleuf A: actievoorstel volgt (de app overrulet je oordeel niet)");
   await p.fill("#oef-f-actie", "Gasmeter vóór gebruik laten testen en dat noteren");
   await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-kort"); await wacht();
   await scherm("s2-actie");
   await p.click("#oef-vastleg"); await wacht();
-  ok(/Past bij wat je zag/.test(await fbTekst()), "sleuf: actievoorstel genoteerd");
+  ok(/Past bij wat je zag/.test(await fbTekstR()), "sleuf: actievoorstel genoteerd");
   await verder();
   const vraagPos = await p.locator(".oef-vraag").innerText();
   ok(/Wat gaat hier wél goed/.test(vraagPos) && !/Alles wat je zag was in orde/.test(await p.locator(".oef").innerText()), "positief na A: ‘wat gaat hier wél goed’, niet ‘alles was in orde’");
@@ -257,56 +256,63 @@ async function nieuwePagina(b, w, h) {
   ok((await p.inputValue("#oef-f-positief")).length > 10, "positief: voorbeeld ingevuld (Voorstel)");
   await scherm("s2-positief");
   await p.locator('button[data-action="oefFeedback"]').click(); await wacht();
-  ok(/Mooi benoemd/.test(await fbTekst()), "positief: mooi benoemd");
+  const tp2 = await fbTekstR();
+  ok(/Mooi benoemd/.test(tp2) && /Benoem wat goed gaat/.test(tp2), "positief: mooi benoemd + regel ‘Benoem wat goed gaat’");
   await verder();
 
   // ================= scène 3: bij de schakelkast =================
   await scherm("s3-gesprek");
   await kies("gesprek", 1);
-  ok(/Probeer een open vraag/.test(await fbTekst()), "gesprek: ja/nee-vraag → tip voor een open vraag");
+  ok(/Probeer een open vraag/.test(await fbTekstR()), "gesprek: ja/nee-vraag → tip voor een open vraag");
+  await geenVerder("kast gesprek");
   await knop("Kies opnieuw").click(); await wacht();
   await kies("gesprek", 0);
-  ok(/goede open vraag/.test(await fbTekst()), "gesprek: open vraag → goede vraag");
+  ok(/goede open vraag/.test(await fbTekstR()) && await p.locator(".oef-fb .oef-regel").count() === 0, "gesprek: open vraag → goede vraag (regel stond al in scène 1)");
   await verder();
+  ok(/Je ziet het hangen/.test(await p.locator(".oef-daarna").innerText()), "kast: je ziet zelf dat het label wordt opgehangen");
   ok(await p.locator(".oef-vs .vpick").count() === 0 && await ev(() => document.querySelector(".oef .zelfkies").open), "koppel scène 3: geen voorstel, zelf kiezen staat open");
   await p.locator('.zpick[data-args=\'["5.2"]\']').click(); await wacht();
-  ok(/zelf gekozen/.test(await p.locator(".oef-gekozen").innerText()), "koppel: zelf gekozen TRA-stap");
-  await verder();
+  ok(/zelf gekozen/.test(await p.locator(".oef-gekozen").first().innerText()), "koppel: zelf gekozen TRA-stap");
+  await scherm("s3-oordeel");
   await p.locator(".oef .seg .t-V").click(); await wacht();
-  const t3v = await fbTekst();
-  ok(/Jouw oordeel telt/.test(t3v) && /Dat is een afwijking/.test(t3v) && !/Goed onderbouwd/.test(t3v), "kast V: uitleg dat een ontbrekend label volgens de TRA een afwijking is");
+  const t3v = await fbTekstR();
+  ok(/Jouw oordeel: Verbeterpunt/.test(t3v) && /afwijking, geen verbeterpunt/.test(t3v) && !/inspecteurs kiezen/.test(t3v), "kast V: uitleg dat een ontbrekend label volgens de TRA een afwijking is");
   await knop("Toch anders kiezen").click(); await wacht();
   await p.locator(".oef .seg .t-A").click(); await wacht();
-  ok(/Klopt met de TRA/.test(await fbTekst()), "kast A: klopt met de TRA (slot én label)");
+  ok(/Jouw oordeel: Afwijking/.test(await fbTekstR()), "kast A: afwijking (slot én label)");
   await verder();
+  ok(/je zag het hangen/.test(await p.locator(".oef-gezien").innerText()), "kast actie: ‘Wat je zag’ staat erbij");
   await p.fill("#oef-f-actie", "Label met naam en datum aan het slot hangen");
   await p.click("#oef-terPlaatse-niets"); await wacht(); await p.click("#oef-prio-planmatig"); await wacht();
   await p.click("#oef-vastleg"); await wacht();
-  const t3a = await fbTekst();
-  ok(/Let op: hij begint zo/.test(t3a) && await p.locator(".oef-corr li").count() === 2, "kast: niets gedaan + planmatig → terugkoppeling (hij begint zo)");
+  const t3a = await fbTekstR();
+  ok(/Direct gecorrigeerd/.test(t3a) && await p.locator(".oef-corr li").count() === 1, "kast: niets gedaan → je zag het herstel, kies ‘Direct gecorrigeerd’");
   await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
-  ok(await p.locator("#oef-prio-kort").count() === 0, "kast: direct gecorrigeerd → geen urgentie meer");
+  ok(await p.locator("#oef-prio-kort").count() === 0 && !/coördinator/.test(await p.locator("#oef-wie").innerText()), "kast: direct gecorrigeerd → geen urgentie, geen coördinator-tip");
   await scherm("s3-actie");
   await p.click("#oef-vastleg"); await wacht();
-  ok(/jij zag het herstel/i.test(await fbTekst()), "direct gecorrigeerd: alleen afgerond omdat jij het herstel zag (toetsing)");
+  const t3k = await fbTekstR();
+  ok(/Je zag zelf dat het label nu aan het slot hangt/.test(t3k) && /jij de toetser/.test(t3k), "direct gecorrigeerd: afgerond omdat jij het herstel zag (toetsing)");
+  await scherm("s3-actie-terugkoppeling");
   await verder();
-  ok(/Wat gaat hier goed/.test(await p.locator(".oef-vraag").innerText()), "kast: positief benoemen tegen de monteur");
-  await p.fill("#oef-f-positief", "Goed dat je hebt afgeschakeld en rustig werkt met je handschoenen aan.");
-  await p.locator('button[data-action="oefFeedback"]').click(); await wacht();
-  ok(/Mooi benoemd/.test(await fbTekst()), "kast: positief benoemd");
-  await verder();
+
+  // elke methoderegel één keer in beeld (bij één stap), alle acht samen
+  const regelTelling = Object.fromEntries(Object.entries(regelBij).map(([t, s]) => [t, s.size]));
+  ok(Object.keys(regelTelling).length === 8 && Object.values(regelTelling).every((n) => n === 1), "methoderegels: alle acht, elk bij precies één stap " + JSON.stringify(regelTelling));
 
   // ================= samenvatting =================
   ok(/Oefening afgerond/.test(await p.locator(".oef h1").innerText()), "samenvatting: ‘Oefening afgerond’");
   ok(await p.locator(".oef-regels li").count() === 8, "samenvatting: acht methoderegels");
   const lijst = await p.locator(".oef-lijst").innerText();
-  ok(/werk laten stoppen/.test(lijst) && /rollen geoefend/.test(lijst) && /waarneming geoefend/.test(lijst) && (lijst.match(/positief benoemd/g) || []).length === 2 && (lijst.match(/actievoorstel geschreven/g) || []).length === 3, "samenvatting: per scène wat je deed");
+  ok(/werk laten stoppen/.test(lijst) && /gesprek begonnen met wat goed gaat/.test(lijst) && /waarneming beschreven/.test(lijst) && /taak gevraagd en bevestigd/.test(lijst) && /open vraag gesteld/.test(lijst) && /herstel gezien, actie afgerond/.test(lijst) && (lijst.match(/positief benoemd/g) || []).length === 1 && (lijst.match(/actievoorstel geschreven/g) || []).length === 2, "samenvatting: per scène wat je deed");
   ok(await knop("Klaar om echt te beginnen").count() === 1, "samenvatting: ‘Klaar om echt te beginnen’");
   await scherm("samenvatting");
   const alles = teksten.join("\n");
-  for (const [re, wat] of [[/!/, "uitroepteken"], [/≠/, "≠-teken"], [/dringendheid/i, "‘dringendheid’"], [/Winfred|Loerts|Douwe|Björn/, "echte collega"], [/moet opgelost\b/, "‘moet opgelost’"], [/inspreken kan dan ook/, "dubbel ‘ook’"]])
+  for (const [re, wat] of [[/!/, "uitroepteken"], [/≠/, "≠-teken"], [/dringendheid/i, "‘dringendheid’"], [/Winfred|Loerts|Douwe|Björn/, "echte collega"], [/moet opgelost\b/, "‘moet opgelost’"], [/inspreken kan dan ook/, "dubbel ‘ook’"],
+    [/inspecteurs kiezen/, "verzonnen meerderheid"], [/Klopt met de TRA/, "‘Klopt met de TRA’"], [/Dit zie je niet nu/, "‘Dit zie je niet nu’"], [/blijft het werk en de controle/, "‘blijft het werk en de controle’"], [/Zeg het hem\./, "‘Zeg het hem.’"], [/helpt je begrijpen/, "‘helpt je begrijpen’"], [/10 minuten/, "‘10 minuten’"]])
     ok(!re.test(alles), "teksten: geen " + wat);
+  ok(/±5 minuten/.test(alles), "teksten: ±5 minuten");
 
   // ---- niets opgeslagen ----
   const na = await tellingen();
@@ -326,7 +332,7 @@ async function nieuwePagina(b, w, h) {
   await ev(() => { App.pref = { veld: true, zon: true }; App.pasPrefToe(); App._oef = null; App.oefOpen(); }); await wacht(400);
   await p.getByRole("button", { name: /met oefenen/ }).click(); await wacht();
   await scherm("zonmodus-ingrijpen");
-  await ev(() => { const o = App.oefState(); o.s = 0; o.i = 5; o.fb = false; o.a[0].oordeel = "A"; App.oefToon(); }); await wacht();
+  await ev(() => { const o = App.oefState(); o.s = 0; o.i = 4; o.fb = false; o.a[0].oordeel = "A"; o.a[0].regel = "2.1"; App.oefToon(); }); await wacht();
   await scherm("zonmodus-actie");
   await ev(() => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.oefOpnieuw(); }); await wacht();
   ok(JSON.stringify(await tellingen()) === JSON.stringify(voor), "veld/zon: niets opgeslagen");
@@ -352,23 +358,24 @@ async function nieuwePagina(b, w, h) {
   const v0 = await q.evaluate(async () => { const db = await WPI.DB.open(), u = {}; for (const n of Array.from(db.objectStoreNames)) u[n] = (await WPI.DB.getAll(n)).length; return u; });
   // elk scherm op 1440: label + geen horizontaal scrollen
   await q.evaluate(() => App.oefOpen()); await q.waitForTimeout(500);
-  const stappen = [[-1, 0], [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6], [1, 0], [1, 1], [1, 3], [1, 4], [1, 5], [2, 0], [2, 1], [2, 3], [2, 4], [3, 0]];
+  const stappen = [[-1, 0], [0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 0], [1, 1], [1, 2], [1, 3], [2, 0], [2, 1], [2, 2], [3, 0]];
   for (const [s, i] of stappen) {
     for (const fb of s >= 0 && s < 3 ? [false, true] : [false]) {
       await q.evaluate(([s, i, fb]) => { const o = App.oefState(); o.s = s; o.i = i; o.fb = fb; const a = o.a[s];
-        if (a) Object.assign(a, { ingrijpen: 0, gesprek: 0, taak: "leiding aansluiten", gekozenTaak: "Persleiding aansluiten in de sleuf", zie: "hijsband rafelig", regel: s === 2 ? "5.2" : s === 1 ? "4.1" : "2.1", oordeel: "A", actie: "Actie", prio: "direct", terPlaatse: "maatregel", positief: "Goed zo", verdeling: 0, klaar: 1, quiz: [true, true], quizKlaar: true, actieKlaar: true });
+        if (a) Object.assign(a, { ingrijpen: 0, gesprek: 0, taak: "leiding aansluiten", gekozenTaak: "Persleiding aansluiten in de sleuf", zie: "hijsband rafelig", regel: s === 2 ? "5.2" : s === 1 ? "4.1" : "2.1", oordeel: "A", actie: "Actie", prio: "direct", terPlaatse: "maatregel", positief: "Goed zo", actieKlaar: true });
         App.oefToon(); }, [s, i, fb]);
       await q.waitForTimeout(200);
       const r = await q.evaluate(() => ({ x: document.documentElement.scrollWidth - innerWidth, lab: !!document.querySelector(".oef-label"), h1: (document.querySelector(".oef h1") || {}).textContent }));
       ok(r.x <= 0 && r.lab && r.h1, `1440 scène ${s} stap ${i}${fb ? " terugkoppeling" : ""} (${r.h1}): label en geen horizontaal scrollen`);
     }
   }
-  // bij C in de sleuf geen actievoorstel; samenvatting telt de quiz ook zonder aangetikte zinnen
-  const naC = await q.evaluate(() => { const o = App.oefState(); o.s = 1; o.i = 3; o.fb = true; o.a[1].oordeel = "C"; App.oefVerder(); return document.querySelector(".oef h1").textContent; });
+  // bij C in de sleuf geen actievoorstel
+  const naC = await q.evaluate(() => { const o = App.oefState(); o.s = 1; o.i = 1; o.fb = true; o.a[1].oordeel = "C"; App.oefVerder(); return document.querySelector(".oef h1").textContent; });
   ok(naC === "Benoem wat goed gaat", "sleuf C: na het oordeel meteen positief benoemen (geen actie)");
-  const sam = await q.evaluate(() => { const o = App.oefState(); o.a[1].quiz = undefined; o.s = 3; o.i = 0; App.oefToon(); return document.querySelector(".oef-lijst").innerText; });
-  ok(/waarneming geoefend/.test(sam), "samenvatting: ‘waarneming geoefend’ ook zonder aangetikte zinnen");
-  await q.evaluate(() => { const o = App.oefState(); o.s = 0; o.i = 5; o.fb = false; o.a[0].oordeel = "A"; App.oefToon(); }); await q.waitForTimeout(250);
+  // de samenvatting zegt alleen wat je echt deed: na een verkeerde keuze geen ‘werk laten stoppen’
+  const sam = await q.evaluate(() => { const o = App.oefState(); o.a[0].ingrijpen = 1; o.a[2].gesprek = 2; o.s = 3; o.i = 0; App.oefToon(); return document.querySelector(".oef-lijst").innerText; });
+  ok(!/werk laten stoppen/.test(sam) && !/open vraag gesteld/.test(sam), "samenvatting: verkeerde keuze → niet ‘werk laten stoppen’ of ‘open vraag gesteld’");
+  await q.evaluate(() => { const o = App.oefState(); o.s = 0; o.i = 4; o.fb = false; o.a[0].oordeel = "A"; App.oefToon(); }); await q.waitForTimeout(250);
   await q.screenshot({ path: path.join(SHOTS, "1440-actie.png"), fullPage: true });
   await q.evaluate(() => { const o = App.oefState(); o.s = 2; o.i = 0; o.fb = false; App.oefToon(); }); await q.waitForTimeout(250);
   await q.screenshot({ path: path.join(SHOTS, "1440-kast.png"), fullPage: true });

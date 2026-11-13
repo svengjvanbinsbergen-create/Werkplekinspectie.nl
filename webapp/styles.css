@@ -736,7 +736,7 @@ body.zon .seg.stapel button.on-C{background:var(--green-bg)}body.zon .seg.stapel
 .aw-blok{margin:2px 0 14px;padding:14px 12px 4px;border-radius:20px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA}
 .aw-blok:not(:has(.aw-feiten)){padding-bottom:14px}
 .aw-feiten{margin:12px 0 0}
-.aw-feiten>div{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:8px;min-height:48px;border-top:1px solid #EFE6DA;padding:4px 2px}
+.aw-feiten>div{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:8px;min-height:44px;border-top:1px solid #EFE6DA;padding:4px 2px}
 .aw-feiten dt{font-size:13px;font-weight:700;color:#6E6255}
 .aw-feiten dd{margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15px;font-weight:700;min-width:0}
 .jijtag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--accent-bg);color:var(--accent);font-size:12px;font-weight:800}

@@ -3,7 +3,7 @@
    verzonnen werkplek (drie scènes met een eenvoudige tekening, verzonnen collega's). De momentopname is een
    gesprek: de oefenaar grijpt in bij direct gevaar, praat met de ploeg (open vragen, positief benoemen), zegt
    wat hij ziet, bevestigt het Voorstel voor de taak en de TRA-stap, kiest zelf C/A/V/NVT en schrijft bij A/V
-   een actievoorstel. Na elke keuze volgt korte uitleg met de methoderegel die erbij hoort.
+   een actievoorstel. Na elke keuze volgt korte uitleg; elke methoderegel komt één keer in beeld, op het moment dat hij er toe doet.
 
    NIETS uit de oefening wordt een echte inspectie, actie of melding: geen IndexedDB, geen concept, geen
    wachtrij. De voortgang staat in het geheugen (App._oef) en in een eigen localStorage-sleutel "wpi_oefen",
@@ -111,71 +111,72 @@
   };
   const tekening = (k, alt) => `<svg class="oef-svg" viewBox="0 0 320 190" role="img" aria-label="${esc(alt)}" preserveAspectRatio="xMidYMid meet">${TEKEN[k]}</svg>`;
 
+
   // ---------------- de drie scènes ----------------
-  // stappen: ingrijpen/gesprek = keuze uit wat je zegt of doet (sc.keuzes), zie = vrije waarneming, taak = taak met
-  // Voorstel, quiz = welke zinnen tellen, koppel = TRA-stap, oordeel = C/A/V/NVT, actie = actievoorstel (alleen
-  // bij A/V), rollen = wie doet wat bij een actie, positief = afsluiten met wat goed gaat.
+  // stappen: ingrijpen/gesprek = keuze uit wat je doet of zegt (sc.keuzes), zie = vrije waarneming, taak = taak
+  // met Voorstel, oordeel = TRA-stap koppelen (Voorstel) en zelf C/A/V/NVT kiezen op één scherm, actie =
+  // actievoorstel (alleen bij A/V), positief = afsluiten met wat goed gaat.
+  // regels: per stap welke methoderegel in de terugkoppeling staat. Elke regel komt één keer in beeld, op het
+  // moment dat hij er voor het eerst toe doet; de samenvatting zet ze aan het eind nog eens op een rij.
   const SC = [
     { id: "put", titel: "Pomp uit de put", plek: "Gemaal De Oefenpolder (verzonnen)", leer: "Wat doe je bij direct gevaar?",
       alt: "Tekening: een kraantje hijst een pomp uit een put. De paarse hijsband is aan één kant uitgerafeld. Rood-wit lint zet de put af. Eén monteur staat bij het kraantje, de ander met de afstandsbediening naast de put.",
       tekst: ["Je komt aan bij het gemaal. Twee monteurs hijsen met een kraantje een dompelpomp uit de pompput: de een staat bij het kraantje, de ander bedient het met de afstandsbediening.",
         "De put is afgezet met rood-wit lint. Niemand staat onder de last.",
         "Je kijkt naar de paarse hijsband waar de pomp aan hangt: aan één rand zijn de vezels uitgerafeld en er zit een snee in."],
-      stappen: ["ingrijpen", "gesprek", "zie", "koppel", "oordeel", "actie", "rollen"],
+      stappen: ["ingrijpen", "gesprek", "zie", "oordeel", "actie"],
+      regels: { ingrijpen: ["stop"], gesprek: ["gesprek"], zie: ["zien"], oordeel: ["jij"], actie: ["toetser", "afgerond", "qhse"] },
       keuzes: {
-        ingrijpen: { vraag: "De pomp hangt nog aan de beschadigde band. Wat doe je als eerste?", regels: ["stop"],
+        ingrijpen: { vraag: "De pomp hangt nog aan de beschadigde band. Wat doe je als eerste?",
           opties: [
             ["Ik loop naar de monteurs en zeg rustig: ‘Stop even. Laat de pomp zakken, ik wil met jullie naar deze band kijken.’", true,
-              "Goed: bij direct gevaar laat je het werk stoppen, rustig en zonder verwijt. De monteurs laten de pomp zakken; hij staat weer op de grond."],
+              "Bij direct gevaar laat je het werk stoppen, rustig en zonder verwijt. De monteurs laten de pomp zakken; hij staat weer op de grond."],
             ["Ik maak eerst een foto en leg de waarneming vast in de app.", false,
               "Vastleggen kan straks. Zolang de pomp aan deze band hangt, kan de last vallen. Bij direct gevaar gaat veiligheid voor: eerst stoppen, dan pas de app."],
             ["Ik wacht tot de pomp boven is en bespreek het daarna.", false,
               "Dan hangt de last al die tijd aan een beschadigde band. Bij direct gevaar laat je het werk meteen stoppen."]],
-          goedTitel: "Goed: eerst stoppen", misTitel: "Bij direct gevaar: eerst stoppen" },
+          goedTitel: "Goed: eerst stoppen", misTitel: "Bij direct gevaar: eerst stoppen", samen: "werk laten stoppen" },
         gesprek: { intro: "De pomp staat weer op de grond. Een nieuwe band hebben de monteurs niet bij zich.",
-          vraag: "Hoe begin je het gesprek met de ploeg?", regels: ["positief", "gesprek"],
+          vraag: "Hoe begin je het gesprek met de ploeg?",
           opties: [
-            ["‘Goed dat jullie de put hebben afgezet en dat niemand onder de last stond. Deze band is wel beschadigd. Hoe kijken jullie normaal naar de band, voor het hijsen?’", true,
-              "Je begint met wat goed gaat, zegt feitelijk wat je zag en stelt een open vraag. De monteur vertelt: ‘Eerlijk gezegd keken we er vandaag niet naar. Er ligt geen reserveband in de bus.’ Wat de ploeg vertelt, helpt je begrijpen waarom. Je waarneming blijft wat je zelf zag."],
+            ["‘Goed dat jullie de put hebben afgezet en dat niemand onder de last stond. Deze band is wel beschadigd. Hoe controleren jullie de band normaal voordat jullie gaan hijsen?’", true,
+              "Je begint met wat goed gaat, zegt feitelijk wat je zag en stelt een open vraag. De monteur vertelt: ‘Eerlijk gezegd keken we er vandaag niet naar. Er ligt geen reserveband in de bus.’ Wat de ploeg vertelt, helpt je te begrijpen waarom het gebeurde."],
             ["‘Deze band is afgekeurd. Dit had nooit mogen gebeuren.’", false,
               "Dit klinkt als een verwijt. De monteurs gaan zich verdedigen in plaats van meedenken, en wat wél goed ging, blijft onbenoemd."],
             ["‘Hebben jullie de band voor gebruik gecontroleerd? Ja of nee.’", false,
               "Een ja/nee-vraag voelt als afvinken. Je krijgt een kort antwoord en mist het verhaal. En wat goed ging, benoem je niet."]],
-          goedTitel: "Een goed begin van het gesprek", misTitel: "Probeer het anders" },
+          goedTitel: "Een goed begin van het gesprek", misTitel: "Probeer het anders", samen: "gesprek begonnen met wat goed gaat" },
       },
       zieWoorden: ["hijsband", "band", "rafel", "uitgeraf", "snee", "kapot", "beschadig", "stuk", "vezel", "scheur", "ingesneden"],
       zieVoorbeeld: "De hijsband is aan één rand uitgerafeld en heeft een snee. De put is afgezet en niemand staat onder de last.",
-      koppel: { voorstel: ["2.1"], opties: [["2.1", "Oefen-TRA 2.1", "Hijsen: hijsmiddel beschadigd of niet gekeurd, last valt"], ["2.2", "Oefen-TRA 2.2", "Hijsen: iemand staat onder de hangende last"], ["ALG-F", "Algemeen F", "Orde en netheid, afzetting van de werkplek"]],
+      koppel: { voorstel: ["2.1"], goed: ["2.1"], opties: [["2.1", "Oefen-TRA 2.1", "Hijsen: hijsmiddel beschadigd of niet gekeurd, last valt"], ["2.2", "Oefen-TRA 2.2", "Hijsen: iemand staat onder de hangende last"], ["ALG-F", "Algemeen F", "Orde en netheid, afzetting van de werkplek"]],
         doc: "hijsband hijsmiddel band beschadigd rafelig snee gekeurd keuring last hijsen" },
       verwacht: "A",
-      uitleg: { A: "Klopt: met een beschadigde hijsband mag niet gehesen worden. Dat wijkt af van de TRA, dus A.",
-        V: "Jij kiest V. Let wel: V is voor iets dat in orde is maar beter kan. Een beschadigde hijsband is niet in orde; volgens de TRA mag je er niet mee hijsen. De meeste inspecteurs kiezen hier A.",
-        C: "Jij kiest C. Maar een beschadigde hijsband is niet in orde; volgens de TRA mag je er niet mee hijsen. De meeste inspecteurs kiezen hier A.",
-        NVT: "Er wordt hier echt gehesen, dus het is van toepassing. De meeste inspecteurs kiezen hier A." },
+      uitleg: { A: "Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden. Wat je zag, wijkt daarvan af: dat is een afwijking.",
+        V: "Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden. Wat je zag, is dus niet in orde: dat is een afwijking, geen verbeterpunt. V is voor iets dat in orde is maar beter kan.",
+        C: "Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden. Wat je zag, is dus niet in orde: dat is een afwijking.",
+        NVT: "Er wordt hier echt gehesen, dus deze TRA-stap is van toepassing. Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden." },
       actie: { vs: "Beschadigde hijsband afkeuren en uit gebruik nemen. Pas verder hijsen met een gekeurde band.", ph: "Bijv. hijsband afkeuren en …",
-        maatregel: "bijv. hijsen gestopt", verwachtTp: "maatregel", regels: ["stop", "afgerond"],
-        okTekst: "Het hijsen is gestopt en de band gaat uit gebruik. Dat past bij het gevaar. De actie blijft open tot een toetser heeft gezien dat er een gekeurde band hangt." } },
-    { id: "sleuf", titel: "Werken in de sleuf", plek: "Persleiding naast het gemaal (verzonnen)", leer: "Wat zie je echt, en wat gaat goed?",
+        maatregel: "bijv. hijsen gestopt", verwachtTp: "maatregel",
+        okTekst: "Het hijsen is gestopt en de band gaat uit gebruik. Dat past bij het gevaar. Daarna kiest de coördinator wie de actie uitvoert en wie toetst." } },
+    { id: "sleuf", titel: "Werken in de sleuf", plek: "Persleiding naast het gemaal (verzonnen)", leer: "Wat doen ze, en wat gaat goed?",
       alt: "Tekening: een gestutte sleuf met een ladder die boven de rand uitsteekt. Onderin werkt een monteur met een gele gasmeter op zijn borst; bovenaan staat een collega als wacht.",
       tekst: ["Even verderop ligt een open sleuf van ongeveer anderhalve meter diep. Onderin werkt een monteur aan een leiding.",
         "De sleuf is gestut en er staat een ladder in die boven de rand uitsteekt. De gasmeter hangt op de borst van de monteur in de sleuf.",
         "Zijn collega staat bovenaan de sleuf en houdt hem in het oog."],
-      stappen: ["taak", "quiz", "koppel", "oordeel", "actie", "positief"],
+      stappen: ["taak", "oordeel", "actie", "positief"],
+      regels: { positief: ["positief"] },
       taakGesprek: { vraag: "Vertel eens, waar zijn jullie mee bezig?", wie: "De collega bovenaan", antwoord: "We sluiten de nieuwe persleiding aan op de oude. Nog een uurtje werk." },
       taak: "Persleiding aansluiten in de sleuf", taken: ["Persleiding aansluiten in de sleuf", "Pomp uit de pompput hijsen", "Graven met de minigraver"],
       taakDoc: "persleiding leiding aansluiten koppelen sleuf nieuwe oude",
-      quiz: [["De gasmeter hangt op de borst van de monteur in de sleuf.", true],
-        ["De sleuf is gestut en de ladder steekt boven de rand uit.", true],
-        ["Ze hebben de gasmeter vanochtend vast gekalibreerd.", false, "Dat zie je niet; het is een aanname. Wil je het weten? Vraag het of kijk naar de meter."],
-        ["Deze ploeg werkt altijd netjes.", false, "‘Altijd’ gaat niet over nu. De momentopname gaat over wat je vandaag ziet."]],
-      koppel: { voorstel: ["4.1"], opties: [["4.1", "Oefen-TRA 4.1", "Werken in een sleuf: gasmeting bij de werknemer, stempels, vluchtweg"], ["2.2", "Oefen-TRA 2.2", "Hijsen: iemand staat onder de hangende last"], ["ALG-C", "Algemeen C", "Persoonlijke beschermingsmiddelen"]],
-        doc: "sleuf gasmeter gasmeting gestut stempels ladder vluchtweg wacht" },
+      koppel: { voorstel: ["4.1"], goed: ["4.1"], opties: [["4.1", "Oefen-TRA 4.1", "Werken in een sleuf: gasmeting bij de werknemer, stempels, vluchtweg"], ["2.2", "Oefen-TRA 2.2", "Hijsen: iemand staat onder de hangende last"], ["ALG-C", "Algemeen C", "Persoonlijke beschermingsmiddelen"]],
+        doc: "sleuf gasmeter gasmeting gestut stempels ladder vluchtweg wacht persleiding leiding" },
       verwacht: "C",
-      uitleg: { C: "Klopt met wat je zag: de gasmeter hangt bij de monteur, de sleuf is gestut en de ladder is een vluchtweg. Een conforme waarneming is net zo waardevol.",
-        A: "Jij kiest A. Dan hoort er een actievoorstel bij: schrijf zo op wat er volgens jou niet in orde is. Ter vergelijking: veel inspecteurs zien hier niets wat afwijkt en kiezen C.",
-        V: "Jij kiest V. Dan hoort er een actievoorstel bij: schrijf zo op wat er volgens jou beter kan. Ter vergelijking: veel inspecteurs kiezen hier C.",
-        NVT: "Er wordt hier echt in een sleuf gewerkt, dus het is van toepassing. Veel inspecteurs kiezen hier C." },
-      actie: { vs: "", ph: "Wat moet er volgens jou gebeuren?", regels: ["afgerond"], okTekst: "In het echt wordt dit een actie met status Voorstel. De coördinator kiest daarna wie de actie uitvoert en wie toetst." },
+      uitleg: { C: "De TRA vraagt een gasmeter bij de werknemer in de sleuf, stempels en een vluchtweg. Dat zag je allemaal. Een conforme waarneming is net zo waardevol als een afwijking.",
+        A: "Dan schrijf je zo een actievoorstel: wat is er volgens jou niet in orde? Ter vergelijking: de TRA vraagt een gasmeter bij de werknemer, stempels en een vluchtweg, en dat zag je allemaal.",
+        V: "V is voor iets dat in orde is maar beter kan. Schrijf zo op wat er volgens jou beter kan. Ter vergelijking: de TRA vraagt een gasmeter bij de werknemer, stempels en een vluchtweg, en dat zag je allemaal.",
+        NVT: "Er wordt hier echt in een sleuf gewerkt, dus deze TRA-stap is van toepassing. De TRA vraagt een gasmeter bij de werknemer, stempels en een vluchtweg." },
+      actie: { vs: "", ph: "Wat moet er volgens jou gebeuren?", okTekst: "In het echt wordt dit een actie met status Voorstel. De coördinator kiest daarna wie de actie uitvoert en wie toetst." },
       positief: { vraag: "Rond het gesprek af. Wat gaat hier goed? Zeg het tegen de ploeg.", vraagAV: "Je hebt iets aangesproken. Wat gaat hier wél goed? Zeg dat ook tegen de ploeg.",
         vs: "Fijn dat de gasmeter bij jou in de sleuf hangt: zo meet hij waar het telt. En de ladder staat goed als vluchtweg.", ph: "Bijv. goed dat de gasmeter …",
         woorden: ["gasmeter", "meter", "ladder", "gestut", "stempel", "vluchtweg", "wacht", "collega", "oog"] } },
@@ -184,9 +185,10 @@
       tekst: ["In het pompgebouw staat een monteur bij een geopende schakelkast. Hij gaat zo een motor losmaken.",
         "De hoofdschakelaar staat uit en er hangt een slot aan. Aan het slot hangt geen label met naam en datum.",
         "Je ziet dat de monteur rustig werkt en zijn handschoenen draagt."],
-      stappen: ["gesprek", "koppel", "oordeel", "actie", "positief"],
+      stappen: ["gesprek", "oordeel", "actie"],
+      regels: {},
       keuzes: {
-        gesprek: { vraag: "Je wilt weten hoe de monteur zijn werk veilig heeft gemaakt. Wat vraag je?", regels: ["gesprek"],
+        gesprek: { vraag: "Je wilt weten hoe de monteur zijn werk veilig heeft gemaakt. Wat vraag je?",
           opties: [
             ["Hoe weet een collega dat jij hier aan het werk bent?", true,
               "Een open vraag: de monteur denkt zelf na en vertelt. ‘Eh… eigenlijk alleen aan het slot. Mijn naam staat er niet op. De labels liggen in de bus, ik pak er een.’"],
@@ -194,35 +196,26 @@
               "Een ja/nee-vraag voelt als afvinken. Je krijgt ‘ja’ te horen en mist het verhaal achter het slot."],
             ["Waarom hangt er geen label aan? Dat is toch verplicht?", false,
               "Dit klinkt als een verwijt. De monteur gaat zich verdedigen in plaats van meedenken."]],
-          citaat: true, goedTitel: "Een goede open vraag", misTitel: "Probeer een open vraag" },
+          citaat: true, goedTitel: "Een goede open vraag", misTitel: "Probeer een open vraag", samen: "open vraag gesteld" },
       },
-      koppel: { voorstel: [], opties: [["5.2", "Oefen-TRA 5.2", "Afschakelen en vergrendelen (LOTOTO): slot én label met naam en datum"], ["ALG-B", "Algemeen B", "Afschakelen, vergrendelen, spanningsvrij maken"], ["ALG-D", "Algemeen D", "Gereedschap en arbeidsmiddelen"]] },
+      // wat de inspecteur daarna zelf ziet gebeuren: alleen daardoor mag het "direct gecorrigeerd" en afgerond zijn
+      daarna: "De monteur haalt een label uit de bus, schrijft zijn naam en de datum erop en hangt het aan het slot. Je ziet het hangen.",
+      gezien: "Toen je aankwam, hing er geen label aan het slot. Na jullie gesprek hing de monteur er een label aan met zijn naam en de datum; je zag het hangen.",
+      koppel: { voorstel: [], goed: ["5.2", "ALG-B"], opties: [["5.2", "Oefen-TRA 5.2", "Afschakelen en vergrendelen (LOTOTO): slot én label met naam en datum"], ["ALG-B", "Algemeen B", "Afschakelen, vergrendelen, spanningsvrij maken"], ["ALG-D", "Algemeen D", "Gereedschap en arbeidsmiddelen"]] },
       verwacht: "A",
-      uitleg: { A: "Klopt: de TRA vraagt slot én label met naam en datum. Het label ontbreekt, dus het werk wijkt af van de TRA. Dat is A.",
-        V: "Jij kiest V. Let wel: V is voor iets dat in orde is maar beter kan. Hier ontbreekt iets wat de TRA vraagt (het label met naam en datum). Dat is een afwijking: de meeste inspecteurs kiezen hier A.",
-        C: "Jij kiest C. Toch ontbreekt het label dat de TRA vraagt. Dat is een afwijking: de meeste inspecteurs kiezen hier A.",
-        NVT: "Er wordt hier echt afgeschakeld, dus het is van toepassing. De meeste inspecteurs kiezen hier A." },
-      actie: { vs: "Label met naam en datum aan het slot hangen vóór het werk begint. Labels standaard bij de sloten in de bus bewaren.", ph: "Bijv. label met naam en datum …",
-        verwachtTp: "gecorrigeerd", regels: ["afgerond"],
-        okTekst: "De monteur hing het label er meteen aan en jij zag het herstel. Dan ben jij de toetser en is de actie afgerond." },
-      positief: { vraag: "Rond het gesprek af met de monteur. Wat gaat hier goed? Zeg het hem.", vraagAV: "Rond het gesprek af met de monteur. Wat gaat hier goed? Zeg het hem.",
-        vs: "Goed dat je hebt afgeschakeld en het slot erop hebt gedaan. En je werkt rustig, met je handschoenen aan. Met het label erbij weet iedereen dat jij hier bezig bent.", ph: "Bijv. goed dat je hebt afgeschakeld …",
-        woorden: ["afgeschakeld", "afschakel", "slot", "vergrendel", "rustig", "handschoen", "label"] } },
+      uitleg: { A: "Volgens de TRA hoort aan het slot een label met naam en datum. Toen je aankwam, ontbrak dat: dat is een afwijking. Dat het label nu hangt, leg je zo vast bij ‘Ter plaatse’.",
+        V: "Volgens de TRA hoort aan het slot een label met naam en datum. Toen je aankwam, ontbrak dat: dat is een afwijking, geen verbeterpunt. V is voor iets dat in orde is maar beter kan.",
+        C: "Het label hangt nu, maar toen je aankwam ontbrak het, en de TRA vraagt slot én label. Je legt vast wat je zag: een afwijking. Het herstel leg je vast bij de actie als ‘Direct gecorrigeerd’.",
+        NVT: "Er wordt hier echt afgeschakeld, dus deze TRA-stap is van toepassing. Volgens de TRA hoort aan het slot een label met naam en datum; dat ontbrak toen je aankwam." },
+      actie: { vs: "Label met naam en datum aan het slot hangen vóór het werk begint.", ph: "Bijv. label met naam en datum …",
+        verwachtTp: "gecorrigeerd",
+        okTekst: "Je zag zelf dat het label nu aan het slot hangt. Dan ben jij de toetser en is de actie meteen afgerond. Sluit af met wat goed ging: ‘Goed dat je hebt afgeschakeld en je slot erop hebt gedaan.’" } },
   ];
-  const STAPNAAM = { ingrijpen: "Wat doe je eerst?", gesprek: "Het gesprek", zie: "Wat zag je?", taak: "De taak", quiz: "Wat telt?", koppel: "Koppel aan de TRA",
-    oordeel: "Jouw oordeel", actie: "Actievoorstel", rollen: "Wie doet wat?", positief: "Benoem wat goed gaat" };
-  // "wie doet wat": verzonnen collega's, geen echte namen
-  const ROLLEN = {
-    verdeling: { vraag: "Welke verdeling klopt?", opties: [
-      ["Actiehouder: Sanne (ploegleider) · Toetser: Pieter (uitvoerder)", true, "Klopt: Sanne regelt de nieuwe band, Pieter controleert of er echt een gekeurde band hangt."],
-      ["Actiehouder: Sanne (ploegleider) · Toetser: Sanne (ploegleider)", false, "Dan controleert Sanne haar eigen werk. De toetser is altijd iemand anders dan de actiehouder."],
-      ["Actiehouder: de QHSE-manager · Toetser: Sanne (ploegleider)", false, "De QHSE-manager adviseert en bewaakt, maar is nooit actiehouder."]] },
-    klaar: { vraag: "Wanneer is de actie afgerond?", opties: [
-      ["Als Sanne de nieuwe band heeft opgehangen", false, "Dan is de actie uitgevoerd, maar nog niet getoetst. Afgerond komt pas daarna."],
-      ["Als Pieter heeft gezien dat er een gekeurde band hangt", true, "Klopt: afgerond pas na toetsing door de toetser."],
-      ["Zodra jij het actievoorstel vastlegt", false, "Dan begint de actie pas. Eerst kiest de coördinator wie de actie uitvoert en wie toetst."]] },
-  };
+  const STAPNAAM = { ingrijpen: "Wat doe je eerst?", gesprek: "Het gesprek", zie: "Wat zag je?", taak: "De taak",
+    oordeel: "Koppel en beoordeel", actie: "Actievoorstel", positief: "Benoem wat goed gaat" };
   const isAV = (x) => x === "A" || x === "V";
+  const keuzeGoed = (sc, a, st) => { const K = sc.keuzes && sc.keuzes[st]; return !!(K && typeof a[st] === "number" && K.opties[a[st]] && K.opties[a[st]][1]); };
+  const VERSIE = 3;   // opbouw van de voortgang; een oudere voortgang (andere stappen) begint opnieuw
 
   // ---------------- opslag: alleen eigen sleutel, per gebruiker, nooit IndexedDB ----------------
   const uid = () => (App.user && App.user.id) || null;
@@ -233,8 +226,10 @@
   const schrijfAlles = (o) => { try { localStorage.setItem(SLEUTEL, JSON.stringify(o)); } catch (e) {} };
   const leesLS = () => { const id = uid(), g = id && leesAlles().gebruikers[id]; return g && typeof g === "object" ? g : {}; };
   const schrijfLS = (g) => { const id = uid(); if (!id) return; const o = leesAlles(); o.gebruikers[id] = g; schrijfAlles(o); };
-  const nieuw = () => ({ s: -1, i: 0, fb: false, a: SC.map(() => ({})) });
+  const nieuw = () => ({ ver: VERSIE, s: -1, i: 0, fb: false, a: SC.map(() => ({})) });
   const gevuld = (x) => x !== undefined && x !== null && String(x).trim() !== "";
+  const geldig = (v) => v && v.ver === VERSIE && Array.isArray(v.a) && v.a.length === SC.length && v.a.every((x) => x && typeof x === "object") &&
+    Number.isInteger(v.s) && Number.isInteger(v.i) && v.s >= -1 && v.s <= SC.length && (v.s < 0 || v.s >= SC.length || (v.i >= 0 && v.i < SC[v.s].stappen.length));
 
   Object.assign(App, {
     _oef: null,
@@ -242,7 +237,7 @@
     oefState() {
       if (!this._oef || this._oefVan !== uid()) {
         const v = leesLS().voortgang; this._oefVan = uid();
-        this._oef = v && Array.isArray(v.a) && v.a.length === SC.length && v.a.every((x) => x && typeof x === "object") ? v : nieuw();
+        this._oef = geldig(v) ? v : nieuw();
       }
       return this._oef;
     },
@@ -259,7 +254,8 @@
     oefOverslaan(sc, i, a) { return sc.stappen[i] === "actie" && !isAV(a.oordeel); },
     oefVerder() {
       const o = this.oefState(); if (o.s < 0 || o.s >= SC.length) return;
-      const sc = SC[o.s], a = o.a[o.s];
+      const sc = SC[o.s], a = o.a[o.s], st = sc.stappen[o.i];
+      if (sc.keuzes && sc.keuzes[st] && !keuzeGoed(sc, a, st)) return;   // bij een keuze ga je pas verder met de goede
       let i = o.i + 1;
       if (this.oefOverslaan(sc, i, a)) i++;
       if (i < sc.stappen.length) { o.i = i; } else { o.s++; o.i = 0; }
@@ -294,16 +290,14 @@
     },
     oefTaakVs() { const a = this.oefState().a[this._oef.s]; if (!gevuld(a.taak)) return; a.taakVs = true; this.oefToon(); },
     oefKiesTaak(t) { const o = this.oefState(), a = o.a[o.s]; a.gekozenTaak = t; a.taakUitVs = t === SC[o.s].taak; this.oefFeedback(); },
-    oefKiesRegel(id) { const o = this.oefState(), a = o.a[o.s]; a.regel = id; a.regelUitVs = (SC[o.s].koppel.voorstel || []).includes(id); this.oefFeedback(); },
-    oefOordeel(x) { const o = this.oefState(), a = o.a[o.s]; a.oordeel = x; tril(x === "C" ? 25 : [25, 60, 25]); this.oefFeedback(); },
-    oefOordeelOpnieuw() { const o = this.oefState(); o.a[o.s].oordeel = null; o.fb = false; this.oefToon(); },
-    oefQuiz(n, knop) {
-      const a = this.oefState().a[this._oef.s]; a.quiz = a.quiz || [];
-      a.quiz[n] = !a.quiz[n];
-      if (knop) { knop.setAttribute("aria-pressed", String(!!a.quiz[n])); knop.classList.toggle("on", !!a.quiz[n]); }
-      this.oefBewaar();
+    // TRA-stap gekozen: op hetzelfde scherm verschijnt het oordeel (geen apart terugkoppelscherm)
+    oefKiesRegel(id) {
+      const o = this.oefState(), a = o.a[o.s]; a.regel = id; a.regelUitVs = (SC[o.s].koppel.voorstel || []).includes(id); a.oordeel = null;
+      tril(12); this.oefBewaar(); this._oefFocusId = "oef-oordeel-lab"; this.route();
     },
-    oefQuizKlaar() { const o = this.oefState(); o.a[o.s].quizKlaar = true; this.oefFeedback(); },
+    oefRegelOpnieuw() { const o = this.oefState(), a = o.a[o.s]; a.regel = null; a.regelUitVs = null; a.oordeel = null; this.oefToon(); },
+    oefOordeel(x) { const o = this.oefState(), a = o.a[o.s]; if (!a.regel) return; a.oordeel = x; tril(x === "C" ? 25 : [25, 60, 25]); this.oefFeedback(); },
+    oefOordeelOpnieuw() { const o = this.oefState(); o.a[o.s].oordeel = null; o.fb = false; this.oefToon(); },
     oefKies(st, n) { const o = this.oefState(); o.a[o.s][st] = n; this.oefFeedback(); },
     oefActieVoorstel() {
       const o = this.oefState(), a = o.a[o.s], sc = SC[o.s];
@@ -320,7 +314,7 @@
       const k = $("oef-poskop"); if (k) k.innerHTML = `<span class="lbl vs">Voorstel</span><span class="s oef-s">zeg het in je eigen woorden</span>`;
       this.oefKnoppen(); this.oefBewaar();
     },
-    // een keuze (ter plaatse, urgentie, wie doet wat): opnieuw tekenen, scrollpositie en focus blijven
+    // een keuze (ter plaatse, urgentie): opnieuw tekenen, scrollpositie en focus blijven
     oefZet(k, val) {
       const o = this.oefState(), a = o.a[o.s]; if (!a) return;
       a[k] = val;
@@ -343,8 +337,8 @@
         if (/\b(later|ooit|binnenkort|op termijn|volgende week|na de klus|t\.z\.t)\b/.test(t)) c.push("‘Later’ past niet bij direct gevaar. De band gaat nu uit gebruik, en er wordt pas weer gehesen met een gekeurde band.");
         else if (!/(vervang|afkeur|afgekeurd|nieuwe|gekeurd|weggooi|uit gebruik|niet meer)/.test(t)) c.push("Maak je actie concreet: wat gebeurt er met de beschadigde band, en wanneer mag er weer gehesen worden?");
       } else if (sc.id === "kast") {
-        if (a.terPlaatse === "niets") c.push("De monteur gaat zo een motor losmaken. Spreek af dat het label aan het slot hangt voordat hij begint. De labels liggen in de bus: dat kan meteen.");
-        if (!gecorr && a.prio && a.prio !== "direct") c.push("Hij begint zo aan de motor; over een paar weken is te laat. Kies ‘Direct’, of laat het meteen herstellen.");
+        if (a.terPlaatse === "niets") c.push("Je zag de monteur het label ophangen. Dat herstel leg je vast als ‘Direct gecorrigeerd’.");
+        if (a.terPlaatse === "maatregel") c.push("Het label hangt er nu en jij zag het: het is dus niet alleen veilig gemaakt, het is hersteld. Kies ‘Direct gecorrigeerd’.");
       }
       return c;
     },
@@ -361,7 +355,7 @@
       this.oefKnoppen();
       const focus = this._oefFocus, fid = this._oefFocusId; this._oefFocus = false; this._oefFocusId = null;
       requestAnimationFrame(() => {
-        if (fid) { const f = document.getElementById(fid); if (f) { f.focus({ preventScroll: true }); return; } }
+        if (fid) { const f = document.getElementById(fid); if (f) { f.focus({ preventScroll: true }); if (fid === "oef-oordeel-lab") f.scrollIntoView({ block: "nearest" }); return; } }
         if (!focus) return;
         const fb = v.querySelector(".oef-fb");
         if (fb) { fb.focus({ preventScroll: true }); fb.scrollIntoView({ block: "nearest" }); }
@@ -384,10 +378,10 @@
     oefIntro() {
       const ls = leesLS(), o = this.oefState(), bezig = o.a.some((x) => Object.keys(x).length);
       const scene = (sc) => `<li><span class="oef-nr" aria-hidden="true">${svg("pin", 15)}</span><span><b>${esc(sc.titel)}</b><span class="oef-s">${esc(sc.leer)}</span></span></li>`;
-      return `${this.oefKop("Oefeninspectie", "Voor nieuwe inspecteurs · ±10 minuten")}
+      return `${this.oefKop("Oefeninspectie", "Voor nieuwe inspecteurs · ±5 minuten")}
         <div class="q oef-kaart">
           <p class="oef-p">Een momentopname is een gesprek op de werkplek. Je kijkt mee, praat met de ploeg, benoemt wat goed gaat en spreekt af wat beter moet. De app helpt je daarna met vastleggen.</p>
-          <p class="oef-p oef-p2">Je oefent dat in drie korte scènes op een verzonnen werkplek, met verzonnen collega's. Na elke keuze krijg je even uitleg.</p>
+          <p class="oef-p oef-p2">Je oefent dat in drie korte scènes op een verzonnen werkplek, met verzonnen collega's. Na elke keuze krijg je kort uitleg.</p>
           <ul class="oef-stappen" aria-label="De drie scènes">${SC.map(scene).join("")}</ul>
           <div class="oef-veilig">${svg("check", 18, 2.6)}<span>Er ontstaat geen echte inspectie, actie of melding. Je kunt altijd stoppen.</span></div>
         </div>
@@ -402,7 +396,8 @@
         <div class="oef-plaat">${tekening(sc.id, sc.alt)}</div>
         <div class="oef-verhaal"><div class="oef-plek">${svg("pin", 15)}${esc(sc.plek)}</div>${tekst}</div></section>`;
       if (modus === "vol") return blok;
-      return `<details class="oef-terug"${modus === "open" ? " open" : ""}><summary><span class="oef-terug-ic" aria-hidden="true">${svg("pin", 15)}</span><span class="grow">Bekijk de situatie nog eens<span class="oef-s">${esc(sc.plek)}</span></span></summary>${blok}</details>`;
+      // de plaatsnaam staat in het ingeklapte kopje; uitgeklapt staat hij al in het verhaal (niet dubbel)
+      return `<details class="oef-terug"${modus === "open" ? " open" : ""}><summary><span class="oef-terug-ic" aria-hidden="true">${svg("pin", 15)}</span><span class="grow">Bekijk de situatie nog eens<span class="oef-s oef-terug-plek">${esc(sc.plek)}</span></span></summary>${blok}</details>`;
     },
     oefStapHtml(o) {
       const sc = SC[o.s], st = sc.stappen[o.i], a = o.a[o.s];
@@ -411,12 +406,15 @@
       const body = sc.keuzes && sc.keuzes[st] ? this.oefKeuze(sc, a, o.fb, st) : this["oef_" + st] ? this["oef_" + st](sc, a, o.fb) : "";
       return kop + scene + body;
     },
-    // terugkoppeling na elke stap: wat ging goed, en welke methoderegel hoort erbij
+    // de methoderegels van deze stap (één kaartje; elke regel komt maar één keer in de oefening voor)
+    oefRegels(sc, st) { return (sc.regels && sc.regels[st]) || []; },
+    // terugkoppeling na een stap
     oefFb(titel, tekst, regels, extra, knoppen, bijsturen) {
+      const r = (regels || []).filter((x) => REGEL[x]);
       return `<section class="oef-fb${bijsturen ? " let" : ""}" tabindex="-1" aria-label="Terugkoppeling">
         <div class="oef-fb-kop"><span class="oef-fb-ic">${bijsturen ? '<span aria-hidden="true">i</span>' : svg("check", 16, 3)}</span>${esc(titel)}</div>
         <p>${tekst}</p>${extra || ""}
-        ${(regels || []).map((r) => `<div class="oef-regel"><b>${esc(REGEL[r][0])}</b><span>${esc(REGEL[r][1])}</span></div>`).join("")}
+        ${r.length ? `<div class="oef-regel">${r.map((x) => `<div class="oef-regel-r"><b>${esc(REGEL[x][0])}</b><span>${esc(REGEL[x][1])}</span></div>`).join("")}</div>` : ""}
         ${knoppen || `<button class="btn primary oef-verder"${act("oefVerder")}>Verder</button>`}</section>`;
     },
     oefJij(t) { return `<div class="oef-jij"><span class="lbl jij">Jij</span><span>${t}</span></div>`; },
@@ -424,21 +422,20 @@
       return `<label class="oef-lab" for="oef-f-${k}">${esc(label)}</label>
         <div class="inbox"><textarea id="oef-f-${k}" class="oef-ta" placeholder="${esc(ph)}"${op("input", "oefVeld", k, WAARDE)}>${esc(waarde || "")}</textarea></div>`;
     },
-    oefKnoppenOpnieuw(label, actie) {
-      return `<div class="oef-knoppen"><button class="btn primary oef-verder"${act(actie)}>${esc(label)}</button><button class="linkknop"${act("oefVerder")}>Verder</button></div>`;
+    // opnieuw proberen; "Verder" ernaast alleen waar je eigen tekst de keuze blijft (waarneming, actievoorstel)
+    oefKnoppenOpnieuw(label, actie, metVerder) {
+      return `<div class="oef-knoppen"><button class="btn primary oef-verder"${act(actie)}>${esc(label)}</button>${metVerder ? `<button class="linkknop"${act("oefVerder")}>Verder</button>` : ""}</div>`;
     },
 
-    // --- stap: een keuze uit wat je doet of zegt (ingrijpen, gesprek) ---
+    // --- stap: een keuze uit wat je doet of zegt (ingrijpen, gesprek): verder gaat pas met de goede keuze ---
     oefKeuze(sc, a, fb, st) {
       const K = sc.keuzes[st];
       if (fb) {
         const n = typeof a[st] === "number" ? a[st] : 0, x = K.opties[n] || K.opties[0], goed = x[1];
-        const beste = K.opties.find((y) => y[1]);
         const zeg = K.citaat ? "“" + esc(x[0]) + "”" : esc(x[0]);
         return `<div class="q oef-kaart">${this.oefJij(zeg)}</div>` +
-          this.oefFb(goed ? K.goedTitel : K.misTitel,
-            esc(x[2]) + (goed ? "" : ` <span class="oef-beter">Beter: ${K.citaat ? "‘" + esc(beste[0]) + "’" : esc(beste[0])}</span>`),
-            K.regels, "", goed ? null : this.oefKnoppenOpnieuw("Kies opnieuw", "oefTerug"), !goed);
+          this.oefFb(goed ? K.goedTitel : K.misTitel, esc(x[2]) + (goed ? "" : " Kies nog eens."),
+            goed ? this.oefRegels(sc, st) : [], "", goed ? null : this.oefKnoppenOpnieuw("Kies opnieuw", "oefTerug"), !goed);
       }
       return `<div class="q oef-kaart">${K.intro ? `<p class="oef-p oef-intro">${esc(K.intro)}</p>` : ""}<p class="oef-vraag" id="oef-k-${st}">${esc(K.vraag)}</p>
         <div class="oef-keuzes kolom" role="group" aria-labelledby="oef-k-${st}">${K.opties.map((x, n) => `<button class="chipb oef-chip oef-groot"${act("oefKies", st, n)}>${K.citaat ? "“" + esc(x[0]) + "”" : esc(x[0])}</button>`).join("")}</div></div>`;
@@ -448,10 +445,10 @@
       if (fb) {
         const goed = a.gekozenTaak === sc.taak;
         return `<div class="q oef-kaart">${this.oefJij("“" + esc(String(a.taak || "").trim()) + "”")}<div class="oef-gekozen">Taak: <b>${esc(a.gekozenTaak)}</b> ${a.taakUitVs ? '<span class="lbl vs">Voorstel bevestigd</span>' : '<span class="lbl jij">zelf gekozen</span>'}</div></div>` +
-          this.oefFb(goed ? "Goed: dit is de taak" : "Jouw keuze telt",
-            goed ? "Je vroeg het de ploeg en vertelde het in je eigen woorden. De app zocht de taak erbij en <b>jij bevestigde</b> het Voorstel. Zo gaat het in het echt ook; daar kun je de taak ook inspreken."
-              : "In het echt beslis jij welke taak je toetst. Hier sluit de ploeg een persleiding aan; luister nog eens naar wat ze zeiden.",
-            ["jij", "gesprek"]);
+          this.oefFb(goed ? "Goed: dit is de taak" : "Kijk nog eens naar de taak",
+            goed ? "Je vroeg het de ploeg en zei het in je eigen woorden. De app zocht de taak erbij en jij bevestigde het Voorstel. In het echt kun je de taak ook inspreken."
+              : "Hier sluit de ploeg een persleiding aan; luister nog eens naar wat ze zeiden. In het echt kies jij welke taak je bekijkt.",
+            this.oefRegels(sc, "taak"), "", goed ? null : this.oefKnoppenOpnieuw("Kies opnieuw", "oefTerug", true), !goed);
       }
       const G = sc.taakGesprek, w = eigenWoorden(a.taak || "", sc.taak + " " + (sc.taakDoc || ""));
       const vs = a.taakVs ? `<div class="q vskaart oef-vs" aria-live="polite"><div class="vskop"><span class="lbl vs">Voorstel</span><span class="s oef-s">· is dit de taak?</span></div>
@@ -470,79 +467,58 @@
         const tekst = String(a.zie || "").trim(), ann = aannames(tekst);
         let rest = tekst.toLowerCase(); ann.forEach((x) => { rest = rest.split(x.toLowerCase()).join(" "); });
         const raak = sc.zieWoorden.some((x) => rest.includes(x));
-        const extra = (ann.length ? `<div class="oef-let"><b>Dit zie je niet nu:</b> ${ann.map((x) => "“" + esc(x) + "”").join(", ")}. Laat het weg, of vraag het de ploeg in het gesprek.</div>` : "") +
+        const extra = (ann.length ? `<div class="oef-let"><b>Dit zie je nu niet:</b> ${ann.map((x) => "“" + esc(x) + "”").join(", ")}. Laat het weg, of vraag het de ploeg in het gesprek.</div>` : "") +
           `<div class="oef-vb"><div class="oef-vb-t">Zo zou een ervaren inspecteur het zeggen</div>“${esc(sc.zieVoorbeeld)}”</div>`;
         const titel = raak ? (ann.length ? "Bijna: een deel is een aanname" : "Goed gezien") : "Kijk nog eens naar de hijsband";
         const p = raak ? (ann.length ? "Wat je over de band zegt, zag je zelf: dat is een waarneming. Maar niet alles in je zin heb je gezien."
-            : "Je beschreef alleen wat je zelf zag. Kort en feitelijk is genoeg; de app helpt straks met de koppeling.")
+            : "Je beschreef wat je zelf zag. Kort en feitelijk is genoeg.")
           : "Je beschrijving is van jou, maar het belangrijkste in deze situatie is de beschadigde hijsband. Beschrijf feitelijk wat je zag.";
         return `<div class="q oef-kaart">${this.oefJij("“" + esc(tekst) + "”")}</div>` +
-          this.oefFb(titel, p, ["zien"], extra, ann.length || !raak ? this.oefKnoppenOpnieuw("Pas je waarneming aan", "oefAanpassen") : null, ann.length > 0 || !raak);
+          this.oefFb(titel, p, this.oefRegels(sc, "zie"), extra, ann.length || !raak ? this.oefKnoppenOpnieuw("Pas je waarneming aan", "oefAanpassen", true) : null, ann.length > 0 || !raak);
       }
-      return `<div class="q oef-kaart"><p class="oef-vraag">De pomp staat veilig. Leg nu vast wat je zag. Alleen wat je zelf zag telt: beschrijf het kort, zoals je het in het echt zou inspreken.</p>
+      return `<div class="q oef-kaart"><p class="oef-vraag">De pomp staat veilig. Wat zag je? Beschrijf het kort, zoals je het in het echt zou inspreken.</p>
         ${this.oefInvoer("zie", "Bijv. de hijsband is …", "Wat zag je?", a.zie)}
         <div class="s oef-s oef-tip">In de app kun je ook inspreken of een foto maken. Hier typ je.</div>
         <button class="btn primary oef-verder" data-oef-need="zie"${act("oefFeedback")}>Volgende</button></div>`;
     },
-    // --- stap: welke zinnen tellen (alleen wat je ziet) ---
-    oef_quiz(sc, a, fb) {
-      const q = a.quiz || [];
-      if (fb) {
-        const rij = (x, n) => { const gekozen = !!q[n], goed = gekozen === x[1];
-          return `<li class="${goed ? "goed" : "mis"}"><span class="oef-mk">${x[1] ? "Gezien" : "Niet gezien"}</span><span><b>${esc(x[0])}</b>
-            <span class="oef-s">${x[1] ? (gekozen ? "Klopt, dit zie je." : "Dit zie je wel; neem het gerust mee.") : (gekozen ? esc(x[2]) : "Goed weggelaten. " + esc(x[2]))}</span></span></li>`; };
-        const fout = sc.quiz.filter((x, n) => !!q[n] !== x[1]).length;
-        return this.oefFb(fout ? "Bijna: kijk naar wat je echt ziet" : "Precies: alleen wat je ziet",
-          "Een momentopname gaat over wat je nu, op deze plek, met eigen ogen ziet. Wat je niet ziet, vraag je na in het gesprek.",
-          ["zien"], `<ul class="oef-quiz-uit">${sc.quiz.map(rij).join("")}</ul>`);
-      }
-      return `<div class="q oef-kaart"><p class="oef-vraag" id="oef-quiz-v">Welke zinnen horen in je waarneming? Tik alles aan wat je echt ziet.</p>
-        <div class="oef-keuzes" role="group" aria-labelledby="oef-quiz-v">${sc.quiz.map((x, n) => `<button class="chipb oef-chip${q[n] ? " on" : ""}" aria-pressed="${!!q[n]}"${act("oefQuiz", n, ELEMENT)}>${esc(x[0])}</button>`).join("")}</div>
-        <button class="btn primary oef-verder"${act("oefQuizKlaar")}>Controleer</button></div>`;
-    },
-    // --- stap: koppel aan de TRA (Voorstel of zelf kiezen) ---
-    oef_koppel(sc, a, fb) {
-      const k = sc.koppel, info = (id) => k.opties.find((x) => x[0] === id) || [id, id, id];
-      if (fb) {
-        const i = info(a.regel), goed = k.voorstel.length ? k.voorstel.includes(a.regel) : a.regel === "5.2" || a.regel === "ALG-B";
-        return `<div class="q oef-kaart"><div class="koppelrij"><span class="vp-ref">${esc(i[1])}</span><div class="t">${esc(i[2])}</div></div>
-          <div class="oef-gekozen">${a.regelUitVs ? '<span class="lbl vs">Voorstel bevestigd</span>' : '<span class="lbl jij">zelf gekozen</span>'}</div></div>` +
-          this.oefFb(goed ? "Goed gekoppeld" : "Jouw keuze telt",
-            (k.voorstel.length ? "Een koppeling aan de TRA is altijd een <b>Voorstel</b>. Pas als jij het aantikt, telt het. Klopt het niet? Dan kies je zelf, of je legt het vast als ‘staat niet in de TRA’."
-              : "Deze keer had de app geen duidelijk voorstel. Dan kies je zelf uit de TRA; dat is net zo goed.") +
-            (goed ? "" : " Bij deze situatie past " + esc(k.voorstel.length ? info(k.voorstel[0])[1] : "Oefen-TRA 5.2 (LOTOTO)") + " het best."),
-            ["jij"]);
-      }
-      const w = () => { const ww = eigenWoorden(String(a.zie || "") + " " + String(a.taak || ""), k.doc || ""); return ww.length ? "je zei " + ww.map((x) => "“" + esc(x) + "”").join(", ") : ""; };
-      const pick = (id) => { const i = info(id), wa = w(); return `<button class="pick vpick"${act("oefKiesRegel", id)}><span class="vp-ref">${esc(i[1])}</span><span class="t">${esc(i[2])}</span>${wa ? `<span class="waarom">Waarom: ${wa}</span>` : ""}<span class="gebruik">${svg("check", 18)}Ja, dit klopt</span></button>`; };
-      const zelf = k.opties.map((x) => `<button class="zpick"${act("oefKiesRegel", x[0])}><span class="vp-ref">${esc(x[1])}</span><span class="t">${esc(x[2])}</span></button>`).join("");
-      return `<div class="q vskaart oef-vs">${k.voorstel.length ? `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s oef-s">· klopt dit?</span></div>${k.voorstel.map(pick).join("")}`
-          : `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s oef-s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies hieronder zelf uit de TRA.</div>`}</div>
-        <details class="zelfkies"${k.voorstel.length ? "" : " open"}><summary>Zelf kiezen uit de TRA <span class="n">${k.opties.length}</span></summary><div class="zlijst">${zelf}</div></details>`;
-    },
-    // --- stap: jouw oordeel (niets voorgekozen; de uitleg achteraf overrulet je keuze niet) ---
+    // --- stap: koppel aan de TRA (Voorstel of zelf kiezen) en kies zelf C/A/V/NVT, op één scherm ---
     oef_oordeel(sc, a, fb) {
-      if (fb) {
-        const x = a.oordeel, zelfde = x === sc.verwacht;
+      const k = sc.koppel, info = (id) => k.opties.find((x) => x[0] === id) || [id, id, id];
+      const daarna = sc.daarna ? `<div class="q oef-kaart oef-daarna"><p class="oef-p">${esc(sc.daarna)}</p></div>` : "";
+      const gekozenRegel = () => { const i = info(a.regel);
+        return `<div class="koppelrij"><span class="vp-ref">${esc(i[1])}</span><div class="t">${esc(i[2])}</div></div>
+          <div class="oef-gekozen">${a.regelUitVs ? '<span class="lbl vs">Voorstel bevestigd</span>' : '<span class="lbl jij">zelf gekozen</span>'}${fb ? "" : `<button class="linkknop oef-klein"${act("oefRegelOpnieuw")}>Andere TRA-stap</button>`}</div>`; };
+      if (fb && a.regel && a.oordeel) {
+        const x = a.oordeel, zelfde = x === sc.verwacht, regelGoed = (k.goed || []).includes(a.regel);
+        const koppelTekst = regelGoed ? "" : ` Let ook op de koppeling: bij deze situatie past ${esc(info(k.goed[0])[1])} het best.`;
         const volgt = isAV(x) ? " Omdat je " + x + " koos, schrijf je hierna een actievoorstel." : "";
-        return `<div class="q oef-kaart"><div class="oef-gekozen">Jouw oordeel: <span class="badge b-${x === "NVT" ? "N" : x}">[${x}] ${OORDEEL[x][0]}</span></div></div>` +
-          this.oefFb(zelfde ? "Klopt met de TRA" : "Jouw oordeel telt",
-            esc(sc.uitleg[x]) + " <b>De app kiest nooit voor je</b>, ook hier niet: je ziet alleen uitleg achteraf." + volgt,
-            ["jij"], "",
-            `<div class="oef-knoppen"><button class="btn primary oef-verder"${act("oefVerder")}>Verder</button><button class="linkknop"${act("oefOordeelOpnieuw")}>Toch anders kiezen</button></div>`);
+        return `<div class="q oef-kaart">${gekozenRegel()}<div class="oef-gekozen">Jouw oordeel: <span class="badge b-${x === "NVT" ? "N" : x}">[${x}] ${OORDEEL[x][0]}</span></div></div>` +
+          this.oefFb("Jouw oordeel: " + OORDEEL[x][0], esc(sc.uitleg[x]) + koppelTekst + volgt,
+            this.oefRegels(sc, "oordeel"), "",
+            `<div class="oef-knoppen"><button class="btn primary oef-verder"${act("oefVerder")}>Verder</button><button class="linkknop"${act("oefOordeelOpnieuw")}>Toch anders kiezen</button></div>`,
+            !zelfde || !regelGoed);
       }
-      const K = sc.koppel.opties.find((x) => x[0] === a.regel) || sc.koppel.opties[0];
-      return `<div class="q okaart oef-kaart"><div class="koppelrij"><span class="vp-ref">${esc(K[1])}</span><div class="t">${esc(K[2])}</div></div></div>
-        <div class="oef-odock"><div class="otitel" id="oef-oordeel-lab">Jouw oordeel <span>· alleen jij beslist</span></div>
+      if (!a.regel) {
+        const w = () => { const ww = eigenWoorden(String(a.zie || "") + " " + String(a.taak || ""), k.doc || ""); return ww.length ? "je zei " + ww.map((x) => "“" + esc(x) + "”").join(", ") : ""; };
+        const pick = (id) => { const i = info(id), wa = w(); return `<button class="pick vpick"${act("oefKiesRegel", id)}><span class="vp-ref">${esc(i[1])}</span><span class="t">${esc(i[2])}</span>${wa ? `<span class="waarom">Waarom: ${wa}</span>` : ""}<span class="gebruik">${svg("check", 18)}Ja, dit klopt</span></button>`; };
+        const zelf = k.opties.map((x) => `<button class="zpick"${act("oefKiesRegel", x[0])}><span class="vp-ref">${esc(x[1])}</span><span class="t">${esc(x[2])}</span></button>`).join("");
+        return `${daarna}<div class="q vskaart oef-vs"><p class="oef-vraag">Welke stap uit de TRA hoort bij wat je zag?</p>${k.voorstel.length ? `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s oef-s">· klopt dit?</span></div>${k.voorstel.map(pick).join("")}`
+            : `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s oef-s">· geen duidelijke stap gevonden</span></div><div class="vs-geen">Kies hieronder zelf uit de TRA.</div>`}</div>
+          <details class="zelfkies"${k.voorstel.length ? "" : " open"}><summary>Zelf kiezen uit de TRA <span class="n">${k.opties.length}</span></summary><div class="zlijst">${zelf}</div></details>`;
+      }
+      return `${daarna}<div class="q okaart oef-kaart">${gekozenRegel()}</div>
+        <div class="oef-odock"><div class="otitel" id="oef-oordeel-lab" tabindex="-1">Jouw oordeel</div>
           <div class="seg stapel" role="group" aria-labelledby="oef-oordeel-lab">${["C", "A", "V"].map((x) => `<button class="t-${x}"${act("oefOordeel", x)} aria-pressed="false"><span class="l">${x}</span><span class="w">${OORDEEL[x][0]}</span><span class="u">${OORDEEL[x][1]}</span></button>`).join("")}</div>
           <button class="linkknop nvt"${act("oefOordeel", "NVT")}>Niet van toepassing</button></div>`;
     },
     // --- stap: actievoorstel (bij A of V) ---
     oef_actie(sc, a, fb) {
       const A = sc.actie, gecorr = a.terPlaatse === "gecorrigeerd";
+      const gezien = sc.gezien ? `<div class="oef-gezien"><b>Wat je zag:</b> ${esc(sc.gezien)}</div>` : "";
       if (fb) {
         const corr = this.oefActieCheck(sc, a);
-        const stappen = this.actieStappen ? this.actieStappen({ status: gecorr && !corr.length ? "Afgerond" : "Voorstel" }, { gecorr: gecorr && !corr.length }) : "";
+        const afgerond = gecorr && !corr.length;
+        const stappen = this.actieStappen ? this.actieStappen({ status: afgerond ? "Afgerond" : "Voorstel" }, { gecorr: afgerond }) : "";
         const tp = { niets: "niets gedaan", maatregel: "maatregel genomen", gecorrigeerd: "direct gecorrigeerd" }[a.terPlaatse] || "–";
         const ok = corr.length ? "" : a.terPlaatse === "maatregel" && A.verwachtTp !== "maatregel"
           ? "Een maatregel maakt het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
@@ -550,45 +526,28 @@
           : A.okTekst;
         return `<div class="q oef-kaart">${this.oefJij("“" + esc(String(a.actie || "").trim()) + "”")}
           <div class="oef-gekozen">${a.actieHerkomst === "Voorstel" ? '<span class="lbl vs">Voorstel gebruikt</span>' : '<span class="lbl jij">zelf geschreven</span>'} · ter plaatse: <b>${esc(tp)}</b>${gecorr ? "" : ` · urgentie: <b>${esc({ direct: "direct", kort: "kort (±2 weken)", planmatig: "planmatig (±8 weken)" }[a.prio] || "–")}</b>`}</div></div>` +
-          this.oefFb(corr.length ? (sc.id === "put" ? "Let op: dit is direct gevaar" : sc.id === "kast" ? "Let op: hij begint zo" : "Kijk nog eens") : "Past bij wat je zag",
+          this.oefFb(corr.length ? (sc.id === "put" ? "Let op: dit is direct gevaar" : sc.id === "kast" ? "Kijk nog eens naar wat je zag" : "Kijk nog eens") : "Past bij wat je zag",
             corr.length ? "Het actievoorstel is van jou. Toch past het nog niet bij wat je zag:" : esc(ok),
-            A.regels, (corr.length ? `<ul class="oef-corr">${corr.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : "") +
+            this.oefRegels(sc, "actie"), (corr.length ? `<ul class="oef-corr">${corr.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>` : "") +
               (stappen && !corr.length ? `<div class="hierna oef-hierna"><div class="hierna-t">Hierna</div>${stappen}</div>` : ""),
-            corr.length ? this.oefKnoppenOpnieuw("Pas je actievoorstel aan", "oefAanpassen") : null, corr.length > 0);
+            corr.length ? this.oefKnoppenOpnieuw("Pas je actievoorstel aan", "oefAanpassen", true) : null, corr.length > 0);
       }
       const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}" id="oef-${k}-${val}"${act("oefZet", k, val)} aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${esc(u)}</span>` : ""}</button>`;
-      const uitleg = a.terPlaatse === "maatregel" ? "Een direct genomen maatregel maakt alleen het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
-        : gecorr ? "De ploeg heeft het ter plaatse opgelost en jij hebt het herstel gezien. Dan ben jij de toetser en is de actie afgerond; een urgentie is niet meer nodig." : "";
-      return `<div class="q akaart2 oef-kaart">
+      // één duidelijke zin over wie toetst, passend bij wat je kiest (nooit twee tegenstrijdige)
+      const wie = a.terPlaatse === "maatregel" ? "Een maatregel maakt alleen het lopende werk veilig. De actie blijft open; daarna kiest de coördinator wie haar uitvoert en wie toetst."
+        : gecorr ? "Direct gecorrigeerd: de ploeg heeft het ter plaatse opgelost en jij hebt het herstel zelf gezien. Dan ben jij de toetser en is de actie afgerond; een urgentie is niet nodig."
+        : "Jij schrijft alleen het voorstel. Daarna kiest de coördinator wie de actie uitvoert en wie toetst.";
+      return `<div class="q akaart2 oef-kaart">${gezien}
           <div class="arij"><span id="oef-actiekop" class="oef-arijkop">${a.actieHerkomst === "Voorstel" ? `<span class="lbl vs">Voorstel</span><span class="s oef-s">pas gerust aan; het telt pas als jij het vastlegt</span>` : `<span class="arij-t">Wat moet er gebeuren?</span>`}</span>
             ${A.vs ? `<button class="wijzig arij-k"${act("oefActieVoorstel")}>Laat de app een actie voorstellen</button>` : ""}</div>
           ${this.oefInvoer("actie", A.ph, "Jouw actievoorstel", a.actie)}
           <div class="otitel" id="oef-tp-lab">Ter plaatse</div>
           <div class="kvlakken" role="group" aria-labelledby="oef-tp-lab">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen", A.maatregel)}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
-          ${uitleg ? `<div class="kvuitleg">${uitleg}</div>` : ""}
           ${gecorr ? "" : `<div class="otitel" id="oef-prio-lab">Hoe dringend vind jij het?</div>
           <div class="kvlakken" role="group" aria-labelledby="oef-prio-lab">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>`}
-          <div class="s oef-s oef-tip">Wie de actie uitvoert en wie toetst, kiest daarna de coördinator. Jij schrijft alleen het voorstel.</div>
+          <div class="kvuitleg oef-wie" id="oef-wie">${wie}</div>
         </div>
         <button class="btn primary oef-verder" id="oef-vastleg"${act("oefVastleggen")}>${svg("check", 20)} Actievoorstel vastleggen (oefening)</button>`;
-    },
-    // --- stap: wie doet wat (de coördinator kiest; jij kent de regels) ---
-    oef_rollen(sc, a, fb) {
-      const vraag = (k) => { const R = ROLLEN[k];
-        return `<p class="oef-vraag" id="oef-r-${k}">${esc(R.vraag)}</p><div class="oef-keuzes kolom" role="group" aria-labelledby="oef-r-${k}">${R.opties.map((x, n) =>
-          `<button class="chipb oef-chip oef-groot${a[k] === n ? " on" : ""}" id="oef-${k}-${n}" aria-pressed="${a[k] === n}"${act("oefZet", k, n)}>${esc(x[0])}</button>`).join("")}</div>`; };
-      if (fb) {
-        const rij = (k) => { const x = ROLLEN[k].opties[a[k]] || ROLLEN[k].opties[0];
-          return `<li class="${x[1] ? "goed" : "mis"}"><span class="oef-mk">${x[1] ? "Klopt" : "Niet zo"}</span><span><b>${esc(x[0])}</b><span class="oef-s">${esc(x[2])}</span></span></li>`; };
-        const fout = ["verdeling", "klaar"].filter((k) => !(ROLLEN[k].opties[a[k]] || [])[1]).length;
-        return this.oefFb(fout ? "Bijna: kijk nog eens naar de regels" : "Je kent de regels",
-          "Jij schrijft het actievoorstel; de coördinator kiest wie het uitvoert en wie toetst. Zo blijft het werk en de controle gescheiden.",
-          ["toetser", "qhse", "afgerond"], `<ul class="oef-quiz-uit">${rij("verdeling")}${rij("klaar")}</ul>`,
-          fout ? this.oefKnoppenOpnieuw("Kies opnieuw", "oefAanpassen") : null, fout > 0);
-      }
-      return `<div class="q oef-kaart"><p class="oef-p">Stel: er komt een actie voor een nieuwe hijsband. Jij schrijft het voorstel. Daarna kiest de coördinator wie de actie uitvoert (actiehouder) en wie controleert of het echt is opgelost (toetser). Sanne en Pieter zijn verzonnen collega's.</p>
-          ${vraag("verdeling")}${vraag("klaar")}</div>
-        <button class="btn primary oef-verder" data-oef-need="verdeling,klaar"${act("oefFeedback")}>Controleer</button>`;
     },
     // --- stap: afsluiten met wat goed gaat ---
     oef_positief(sc, a, fb) {
@@ -597,24 +556,26 @@
         const t = String(a.positief || "").toLowerCase(), concreet = P.woorden.some((x) => t.includes(x));
         return `<div class="q oef-kaart">${this.oefJij("“" + esc(String(a.positief || "").trim()) + "”")}</div>` +
           this.oefFb(concreet ? "Mooi benoemd" : "Maak het concreet",
-            concreet ? "Je zei concreet wát er goed gaat. Dat werkt beter dan alleen fouten zoeken, en de ploeg weet wat ze moet vasthouden."
+            concreet ? "Je zei concreet wát er goed gaat. Dan weet de ploeg wat ze moet vasthouden."
               : "Een algemeen ‘goed bezig’ is aardig, maar zeg ook wát er goed gaat. Dan weet de ploeg wat ze moet vasthouden.",
-            ["positief", "gesprek"]);
+            this.oefRegels(sc, "positief"), "", concreet ? null : this.oefKnoppenOpnieuw("Maak het concreter", "oefAanpassen", true), !concreet);
       }
       return `<div class="q oef-kaart"><p class="oef-vraag">${esc(isAV(a.oordeel) ? P.vraagAV : P.vraag)}</p>
         <div class="arij"><span id="oef-poskop" class="oef-arijkop"><span class="arij-t">Jouw woorden</span></span><button class="wijzig arij-k"${act("oefPositiefVoorstel")}>Geef een voorbeeld</button></div>
         ${this.oefInvoer("positief", P.ph, "Wat zeg je?", a.positief)}
         <button class="btn primary oef-verder" data-oef-need="positief"${act("oefFeedback")}>Volgende</button></div>`;
     },
-    // --- samenvatting ---
+    // --- samenvatting: alleen wat je echt deed ---
     oefSamenvatting() {
       const o = this.oefState();
       const regel = (r) => `<li><span class="oef-vink">${svg("check", 14, 3)}</span><span><b>${esc(REGEL[r][0])}</b><span class="oef-s">${esc(REGEL[r][1])}</span></span></li>`;
       const scRij = (sc, i) => { const a = o.a[i] || {}, x = a.oordeel;
-        const delen = [a.ingrijpen != null ? "werk laten stoppen" : "", a.gesprek != null ? "gesprek geoefend" : "", a.zie ? "waarneming beschreven" : "",
-          a.gekozenTaak ? "taak bevestigd" : "", a.quizKlaar ? "waarneming geoefend" : "", a.regel ? "TRA-stap gekoppeld" : "",
-          a.actieKlaar ? "actievoorstel geschreven" : isAV(x) ? "actievoorstel nog niet vastgelegd" : "", a.verdeling != null ? "rollen geoefend" : "", a.positief ? "positief benoemd" : ""];
-        return `<div class="row"><span class="grow"><span class="t">${esc(sc.titel)}</span><div class="s oef-s">${delen.filter(Boolean).join(" · ")}</div></span>
+        const keuzes = Object.keys(sc.keuzes || {}).map((st) => keuzeGoed(sc, a, st) ? sc.keuzes[st].samen : "");
+        const delen = keuzes.concat([a.zie ? "waarneming beschreven" : "", a.gekozenTaak ? "taak gevraagd en bevestigd" : "", a.regel ? "TRA-stap gekoppeld" : "",
+          a.actieKlaar ? (a.terPlaatse === "gecorrigeerd" && sc.actie.verwachtTp === "gecorrigeerd" ? "herstel gezien, actie afgerond" : "actievoorstel geschreven") : isAV(x) ? "actievoorstel nog niet vastgelegd" : "",
+          a.positief ? "positief benoemd" : ""]);
+        const tekst = delen.filter(Boolean).join(" · ") || "nog niet gedaan";
+        return `<div class="row"><span class="grow"><span class="t">${esc(sc.titel)}</span><div class="s oef-s">${esc(tekst)}</div></span>
           ${x ? `<span class="badge b-${x === "NVT" ? "N" : x}">[${x}] ${OORDEEL[x][0]}</span>` : ""}</div>`; };
       return `${this.oefKop("Oefening afgerond", "Goed gedaan")}
         <div class="q oef-kaart"><p class="oef-p">Je hebt drie momentopnames geoefend. Dit neem je mee naar de echte inspectie:</p>
@@ -625,7 +586,7 @@
         <button class="linkknop"${act("oefOpnieuw")}>Nog een keer oefenen</button>`;
     },
 
-    // ---- tip voor een inspecteur zonder eigen inspecties ----
+    // ---- tip voor een inspecteur zonder eigen inspecties (rustig: geen tweede donkergroene knop) ----
     async oefTipNodig() {
       if (!this.user || this.user.role !== "inspecteur") return false;
       const ls = leesLS(); if (ls.gedaan || ls.verborgen) return false;
@@ -633,8 +594,8 @@
     },
     oefTipHtml() {
       return `<div class="oef-hint"><span class="oef-hint-ic" aria-hidden="true">${svg("oefen", 22)}</span>
-        <div class="grow"><div class="t">Nieuw als inspecteur?</div><div class="oef-s">Oefen de methode eerst op een verzonnen werkplek. ±10 minuten, er wordt niets opgeslagen.</div>
-          <div class="oef-hint-knop"><button class="btn sm oef-hint-start"${act("oefOpen")}>Oefenen</button><button class="oef-nietnu"${act("oefNietNu")}>Niet nu</button></div></div></div>`;
+        <div class="grow"><div class="t">Nieuw als inspecteur?</div><div class="oef-s">Oefen de methode eerst op een verzonnen werkplek. ±5 minuten, er wordt niets opgeslagen.</div>
+          <div class="oef-hint-knop"><button class="btn sm ghost oef-hint-start"${act("oefOpen")}>Oefenen</button><button class="oef-nietnu"${act("oefNietNu")}>Niet nu</button></div></div></div>`;
     },
   });
 

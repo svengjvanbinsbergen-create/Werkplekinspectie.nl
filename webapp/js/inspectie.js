@@ -489,9 +489,9 @@
         <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div>`;
       h += `</div>`;
       // wat er na je keuze gebeurt: rustig onderaan, zodat het scherm niet in een lege vlakte eindigt
-      const hierna = `<div class="hierna ohierna"><div class="hierna-t">Hierna</div>
+      const hierna = `<section class="hierna ohierna" aria-labelledby="ohierna-t"><div class="hierna-t" id="ohierna-t">Hierna</div>
         <div class="oh-rij"><span class="oh-l">C · NVT</span><span>Vastgelegd. Door naar de volgende waarneming.</span></div>
-        <div class="oh-rij"><span class="oh-l">A · V</span><span>Je legt er meteen een actievoorstel bij vast.</span></div></div>`;
+        <div class="oh-rij"><span class="oh-l">A · V</span><span>Je legt er meteen een actievoorstel bij vast.</span></div></section>`;
       v.appendChild(el(`<div class="stapwrap ostap">${this.insHead(ins, cur.onderwerp ? "Algemeen onderwerp" : cur.buiten ? "Buiten de TRA" : "Taak · " + ins.taak, "Hoe beoordeel je dit?")}${h}
         ${this.oordeelBlok(cur, "oordeel")}${hierna}</div>`));
     },
