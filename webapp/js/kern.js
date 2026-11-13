@@ -179,10 +179,12 @@
 
   // ---- toegankelijkheid: focus terugvinden na opnieuw tekenen, en korte meldingen voor schermlezers ----
   // focusSleutel/zoekSleutel: hetzelfde element (id, of data-action + data-args) in nieuw getekende HTML terugvinden
-  const focusSleutel = (x) => ({ id: x.id || "", act: x.getAttribute("data-action") || "", args: x.getAttribute("data-args") || "" });
+  // (zonder id/data-action, zoals de monteurchips uit js/beheer.js: zelfde soort knop met dezelfde tekst, zonder "✓ ")
+  const knopTekst = (x) => (x.textContent || "").replace(/^\s*✓\s*/, "").replace(/\s+/g, " ").trim();
+  const focusSleutel = (x) => ({ id: x.id || "", act: x.getAttribute("data-action") || "", args: x.getAttribute("data-args") || "", tag: x.tagName, tekst: knopTekst(x) });
   const zoekSleutel = (root, k) => {
     if (k.id) return root.querySelector("#" + CSS.escape(k.id));
-    if (!k.act) return null;
+    if (!k.act) return k.tag === "BUTTON" && k.tekst ? [...root.querySelectorAll("button")].find((x) => knopTekst(x) === k.tekst) || null : null;
     return [...root.querySelectorAll("[data-action]")].find((x) => x.getAttribute("data-action") === k.act && (x.getAttribute("data-args") || "") === k.args) || null;
   };
   // zeg("…"): tekst in de verborgen live-regio #meldtekst (index.html), bijv. bij een toast of zoekresultaat
@@ -320,6 +322,8 @@
       // van het nieuwe scherm (in de inspectie: de nieuwe vraag), zodat toetsenbord en schermlezer meegaan
       const fa = document.activeElement, inMenu = fa && $("tabbar").contains(fa);
       const naarKop = !inMenu && (!fa || fa === document.body || $("view").contains(fa));
+      // zelfde scherm opnieuw getekend (bijv. een keuzechip aan/uit): focus terug op hetzelfde element
+      const h0 = $("view").querySelector("h1"), zelfde = { page: this._page, kop: h0 ? h0.textContent : null, sleutel: fa && fa !== document.body && $("view").contains(fa) ? focusSleutel(fa) : null };
       this.renderAcct();
       if (!this.user) { $("app").classList.add("nonav"); $("view").dataset.page = "login"; $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
@@ -339,7 +343,11 @@
       else this.view_vandaag();
       window.scrollTo(0, 0);
       if (inMenu) { const a = $("tabbar").querySelector("a.on"); if (a) a.focus({ preventScroll: true }); }
-      else if (naarKop && this.user) this.focusKop();
+      else if (naarKop && this.user) {
+        const h1 = $("view").querySelector("h1"), a = document.activeElement;
+        const terug = zelfde.sleutel && zelfde.page === page && h1 && h1.textContent === zelfde.kop && (!a || a === document.body) ? zoekSleutel($("view"), zelfde.sleutel) : null;
+        if (terug) { try { terug.focus({ preventScroll: true }); } catch (e) {} } else this.focusKop();
+      }
     },
     renderTabs(active) {
       $("tabbar").innerHTML = `<div class="sidebrand"><span class="logo" aria-hidden="true">N</span><span>Werkplekinspectie<small>Noardling</small></span></div>` + TABS.filter((t) => t.rollen.includes(this.user.role) && (!t.web || isWeb())).map((t) =>
@@ -384,10 +392,13 @@
       ov.classList.remove("on");
       if (!was) return;
       const t = this._modTerug, a = document.activeElement; this._modTerug = null;
-      if (t && t.isConnected && typeof t.focus === "function" && (!a || a === document.body || mod.contains(a))) { try { t.focus({ preventScroll: true }); } catch (e) {} }
+      if (!a || a === document.body || mod.contains(a)) {
+        if (t && t.isConnected && typeof t.focus === "function") { try { t.focus({ preventScroll: true }); } catch (e) {} }
+        else if (this.user) this.focusKop();   // opener bestaat niet meer (scherm intussen opnieuw getekend): naar de kop
+      }
     },
     focusKop() {
-      const a = document.activeElement; if (a && a !== document.body && a.isConnected) return;   // het scherm zette zelf al focus (bijv. een invoerveld)
+      const a = document.activeElement; if (a && a !== document.body && a.isConnected && !$("mod").contains(a)) return;   // het scherm zette zelf al focus (bijv. een invoerveld)
       if ($("ov").classList.contains("on")) return;
       const h = $("view").querySelector("h1"); if (!h) return;
       if (!h.hasAttribute("tabindex")) h.setAttribute("tabindex", "-1");

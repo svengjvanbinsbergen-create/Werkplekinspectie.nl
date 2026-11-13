@@ -638,7 +638,7 @@
       v.appendChild(el(this.insHead(ins, "Vast onderdeel", "Gesprek met de monteurs")));
       const gekozen = ins.monteurs || [], lijst = this.monteursLijst();
       v.appendChild(el(`<div class="q"><div class="qt">Wie waren er aan het werk?</div><div class="qs">Tik de monteurs aan die je hebt geïnspecteerd. Alleen de naam wordt vastgelegd.</div>
-        <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}"${act("togMonteur", n)}>${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
+        <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}"${act("togMonteur", n)} aria-pressed="${gekozen.includes(n)}">${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
         <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" placeholder="Andere naam toevoegen" style="flex:1"${op("enter", "voegMonteurToe")}><button class="btn ghost sm"${act("voegMonteurToe")}>${svg("plus", 16)} Toevoegen</button></div>
         ${gekozen.length ? `<div class="s" style="margin-top:10px;font-weight:700">${gekozen.length} monteur${gekozen.length === 1 ? "" : "s"} gekoppeld</div>` : ""}</div>`));
       v.appendChild(el(`<div class="q"><div class="qt">Wat heb je besproken en hoe reageerden ze?</div><div class="qs">Ideeën van de monteurs komen in het rapport.</div>
@@ -682,10 +682,10 @@
       if (ws.length) v.appendChild(el(this.vastgelegdLijst(ins)));
       v.appendChild(el(`<h2>Handtekening inspecteur</h2>`));
       v.appendChild(el(`<div class="card">
-        <canvas id="sig" width="640" height="200" style="width:100%;height:160px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);touch-action:none;background:#fff;display:block"></canvas>
+        <canvas id="sig" width="640" height="200" role="img" aria-label="Handtekeningvak: teken met vinger, pen of muis. Zonder tekenen: knop ‘Onderteken met je naam’." style="width:100%;height:160px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);touch-action:none;background:#fff;display:block"></canvas>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <span class="s" id="sigstat">${ins.handtekening ? "Ondertekend ✓" : "Teken in het vak"}</span>
-          <button class="btn ghost sm"${act("clearSig")}>Wissen</button></div></div>`));
+          <span class="s" id="sigstat" role="status">${ins.handtekening ? "Ondertekend ✓" : "Teken in het vak"}</span>
+          <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm"${act("sigNaam")}>Onderteken met je naam</button><button class="btn ghost sm"${act("clearSig")}>Wissen</button></span></div></div>`));
       v.appendChild(el(`<button class="btn primary" style="margin-top:16px"${act("bewaarInspectie")}>Inspectie vastleggen</button>`));
       v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%"${act("go", "vandaag")}>Later afmaken (blijft bewaard)</button>`));
     },
@@ -700,6 +700,16 @@
       cv.onpointermove = (e) => { if (!drawing) return; e.preventDefault(); const p = pos(e); ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke(); last = p; };
       const end = () => { if (!drawing) return; drawing = false; ins.handtekening = cv.toDataURL("image/png"); const s = $("sigstat"); if (s) s.textContent = "Ondertekend ✓ · " + new Date().toLocaleString("nl-NL"); };
       cv.onpointerup = end; cv.onpointerleave = end;
+    },
+    // toetsenbord-/schakelaar-alternatief voor tekenen (WCAG 2.1.1 / 2.5.1): de naam van de inspecteur als handtekening
+    sigNaam() {
+      const cv = $("sig"), ins = this.state.inspectie; if (!cv || !ins || !this.user) return;
+      const ctx = cv.getContext("2d"); ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = "#141A22"; ctx.font = "italic 700 54px Nunito, system-ui, sans-serif"; ctx.textBaseline = "middle";
+      ctx.fillText(this.user.full_name, 28, cv.height / 2, cv.width - 56);
+      ctx.fillRect(28, cv.height - 46, cv.width - 56, 2);
+      ins.handtekening = cv.toDataURL("image/png"); this.bewaarConcept();
+      const st = $("sigstat"); if (st) st.textContent = "Ondertekend ✓ (met je naam) · " + new Date().toLocaleString("nl-NL");
     },
     clearSig() { const cv = $("sig"); if (cv) cv.getContext("2d").clearRect(0, 0, cv.width, cv.height); if (this.state.inspectie) this.state.inspectie.handtekening = null; const s = $("sigstat"); if (s) s.textContent = "Teken in het vak"; },
     async bewaarInspectie(toch) {
