@@ -150,7 +150,7 @@
         // De uitleg per rol ("Jij bent de actiehouder/toetser …") staat in de kop van het venster (verrijkActie).
         if (a.status === "Open" || a.status === "In uitvoering") {
           if (isHouder && !isToetser && a.status === "Open") h += `<button class="btn primary"${act("zetStatus", a.id, "In uitvoering", "Uitvoering gestart")}>${svg("play", 18)} Start uitvoering</button>
-            <div class="alklaar"><span class="s">Al klaar?</span><button class="btn ghost"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
+            <div class="alklaar"><div class="alk-t">Al klaar? Meld het meteen</div><button class="btn ghost"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
             <button class="btn ghost"${act("zetStatus", a.id, "Klaar voor toetsing", "Klaar voor toetsing gemeld (zonder na-foto)")}>Klaar voor toetsing, zonder foto</button></div>`;
           else if (isHouder && !isToetser) h += `<button class="btn primary"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
             <button class="btn ghost" style="width:100%;margin-top:10px"${act("zetStatus", a.id, "Klaar voor toetsing", "Klaar voor toetsing gemeld (zonder na-foto)")}>Klaar voor toetsing, zonder foto</button>`;
@@ -206,12 +206,14 @@
       inp.click();
     },
     async akkoord(id) {
-      const a = this.acties.find((x) => x.id === id); if (!a || a.toetser !== this.user.id) return;
+      // alleen de toetser, en alleen na "Klaar voor toetsing": de keten Open → In uitvoering → Klaar voor toetsing
+      // → Afgerond is niet over te slaan (zelfde regel als de knoppen in openActie)
+      const a = (this.acties || []).find((x) => x.id === id); if (!a || a.toetser !== this.user.id || a.status !== "Klaar voor toetsing") return;
       if (a.houder === a.toetser) return this.fout("Toetser en actiehouder zijn dezelfde persoon; afronden kan niet.");
       a.status = "Afgerond"; await this.bewaarActie(a, "Getoetst en akkoord · afgerond"); tril([30, 50, 30]); this.closeModal(); this.route();
     },
     async nietAkkoord(id) {
-      const a = this.acties.find((x) => x.id === id), r = ($("ai-reden") || {}).value || ""; if (!a || a.toetser !== this.user.id) return;
+      const a = (this.acties || []).find((x) => x.id === id), r = ($("ai-reden") || {}).value || ""; if (!a || a.toetser !== this.user.id || a.status !== "Klaar voor toetsing") return;
       if (!r.trim()) return this.fout("Geef een reden, zodat de actiehouder weet wat er nog moet gebeuren.");
       a.status = "In uitvoering"; await this.bewaarActie(a, "Niet akkoord na toetsing: " + r.trim()); this.closeModal(); this.route();
     },

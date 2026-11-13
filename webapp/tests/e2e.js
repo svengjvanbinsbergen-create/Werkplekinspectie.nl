@@ -69,6 +69,16 @@ const eind=await ev((id)=>{const a=App.acties.find(a=>a.id===id);return a.status
 const rep=await ev(async()=>{const all=await new Promise(r=>{const q=indexedDB.open('wpi');q.onsuccess=()=>{const g=q.result.transaction('inspecties').objectStore('inspecties').getAll();g.onsuccess=()=>r(g.result)}});return all[0].id});
 await ev((id)=>{location.hash='#/rapport/'+id},rep);await p.waitForTimeout(700);
 await p.screenshot({path:'t10-rapport.png',fullPage:true});
+// meerdere foto's per waarneming (overzicht + detail): beide moeten in het rapport staan
+{const png=async(k)=>Buffer.from(await ev((k)=>{const c=document.createElement('canvas');c.width=320;c.height=240;const g=c.getContext('2d');g.fillStyle=k;g.fillRect(0,0,320,240);return c.toDataURL('image/png').split(',')[1]},k),'base64');
+await ev(()=>{App.startInspectie('DAM','P26-168','Foto-test',true);App.kiesTaak(App.data.kennisbank.DAM.regels[0].taak)});await p.waitForTimeout(300);
+await p.fill('#f-zie','afzetting bij de bouwput is weg');
+const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.click('.fotogroot')]);
+await fc.setFiles([{name:'a.png',mimeType:'image/png',buffer:await png('#c00')},{name:'b.png',mimeType:'image/png',buffer:await png('#0a0')}]);await p.waitForTimeout(900);
+const nf=await ev(()=>App.fotoLijst(App.state.inspectie.cur).length);if(nf!==2)errs.push('FOTO: 2 foto\'s verwacht bij de waarneming, '+nf);
+await ev(()=>{App.state.inspectie.cur.regel_id=App.state.inspectie.cur.regel_id||App.data.kennisbank.DAM.regels[0].id;App.oordeel('C')});await p.waitForTimeout(300);
+await ev(()=>App.bewaarInspectie(true));await p.waitForTimeout(800);await ev(()=>App.closeModal());await p.waitForTimeout(500);
+const nr=await p.locator('#rap .rapfotos img').count();console.log('rapport-fotos:',nr);if(nr!==2)errs.push('RAPPORT: 2 foto\'s bij één waarneming verwacht, gevonden '+nr);}
 // dashboard + weergave
 await ev(()=>{App.dashFilter.locatie='';App.go('dashboard')});await p.waitForTimeout(500);
 await ev(()=>{App.pref={veld:true,zon:true};App.pasPrefToe();App.startInspectie('DAM','x','Damwand test',true)});await p.waitForTimeout(400);

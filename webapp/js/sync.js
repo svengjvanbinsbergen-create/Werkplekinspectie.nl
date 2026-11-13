@@ -945,6 +945,11 @@
         if (bron) a.inspecteur = bron.inspecteur;
         a.terPlaatse = vEnum((w && w.actie.terPlaatse) || b.terPlaatse, TERPLAATSE) || "niets";
         a.foto = row.foto_pad ? await beeld(row.foto_pad, fotos, ctx) : null;
+        // extra foto's (overzicht + detail) staan niet in een kolom van acties: neem ze over uit de bron-waarneming,
+        // zodat de actiehouder en de toetser op hun eigen toestel alle foto's zien (zelfde volgorde als fotoLijst)
+        if (w) { const l = [w.foto].concat(Array.isArray(w.extraFotos) ? w.extraFotos.map((x) => (isObj(x) ? x.foto : x)) : []).filter((f) => typeof f === "string" && f);
+          a.extraFotos = l.slice(1).map((foto) => ({ foto })); }
+        else if (!Array.isArray(a.extraFotos)) a.extraFotos = [];
         a.nafoto = row.nafoto_pad ? await beeld(row.nafoto_pad, fotos, ctx) : null;
         const lg = logPer.get(row.id);
         if (lg) { a.log = lg.map((l) => logRegel(l, naam)); await zetMeta("logn:" + row.id, a.log.length); }

@@ -397,7 +397,7 @@
       const id0 = een ? vs.ids[0] : null, info0 = id0 ? this.regelInfo(id0) : null;
       const pick = (id) => { const i = this.regelInfo(id), k = kand.find((x) => x.id === id), w = this.waarom(cur.tekst, k ? k.doc + " " + k.naam : i.titel, vs.bron);
         return `<button class="pick vpick een"${act("kiesRegel", id)}><span class="vp-top"><span class="vp-ref">${esc(i.ref)}</span>
-          <span class="vp-meer">Hele regel ›</span></span>
+          <span class="vp-meer">Details ›</span></span>
           <span class="t">${esc(kort(i.titel, 120))}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}</button>`; };
       const zelf = (id, ref, titel) => `<button class="zpick"${act("kiesRegel", id)}><span class="vp-ref">${esc(ref)}</span><span class="t">${esc(kort(titel, 90))}</span></button>`;
       // maatregelen van de voorgestelde regel: optioneel aantikken, ook als je meteen je oordeel kiest
@@ -488,8 +488,12 @@
       if (info.maatregelen.length) h += `<div class="otitel">Welke maatregel zag je? <span>(optioneel)</span></div>
         <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div>`;
       h += `</div>`;
+      // wat er na je keuze gebeurt: rustig onderaan, zodat het scherm niet in een lege vlakte eindigt
+      const hierna = `<div class="hierna ohierna"><div class="hierna-t">Hierna</div>
+        <div class="oh-rij"><span class="oh-l">C · NVT</span><span>Vastgelegd. Door naar de volgende waarneming.</span></div>
+        <div class="oh-rij"><span class="oh-l">A · V</span><span>Je legt er meteen een actievoorstel bij vast.</span></div></div>`;
       v.appendChild(el(`<div class="stapwrap ostap">${this.insHead(ins, cur.onderwerp ? "Algemeen onderwerp" : cur.buiten ? "Buiten de TRA" : "Taak · " + ins.taak, "Hoe beoordeel je dit?")}${h}
-        ${this.oordeelBlok(cur, "oordeel")}</div>`));
+        ${this.oordeelBlok(cur, "oordeel")}${hierna}</div>`));
     },
     wijzigKoppeling() { const ins = this.state.inspectie; if (ins && ins.voorstel && !ins.voorstel.bezig) this.stap("koppel"); else this.koppel(); },
     oordeel(o) {

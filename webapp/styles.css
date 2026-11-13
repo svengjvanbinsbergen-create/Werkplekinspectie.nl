@@ -781,24 +781,36 @@ body.zon #mod.actiemod>details>summary{color:#141A22}
 .aw-stap li:not(.klaar):not(.nu) .n,.leegw{color:#6E6255}
 .aw-kick .b-todo,.aw-feiten .dchip.warm{color:#7E4706}
 
-/* ---- Prioriteit (volgens de inspecteur) op actiekaart en actievenster: rustig, nooit warm oranje (dat is "te laat") ---- */
+/* ---- Prioriteit (volgens de inspecteur) op actiekaart en actievenster: oplopende schaal ----
+   direct = rood (hoogste), kort = geel/amber, planmatig = neutraal. Groen betekent "in orde/klaar" en
+   warm oranje blijft voor "te laat"; daarom geen van beide hier. De punt wordt voller naarmate het dringender is. */
 .pchip{display:inline-flex;align-items:center;gap:6px;height:25px;padding:0 10px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1.5px #E2D6C5;color:#5E544A;font-size:12.5px;font-weight:800;white-space:nowrap}
-.pchip .pbol{width:8px;height:8px;border-radius:50%;background:#B9AD9E;flex:none}
-.pchip.p-kort .pbol{background:var(--accent);opacity:.55}
-.pchip.p-direct{background:var(--accent);color:#fff;box-shadow:none}
-.pchip.p-direct .pbol{background:#fff}
+.pchip .pbol{width:8px;height:8px;border-radius:50%;background:transparent;box-shadow:inset 0 0 0 2px #A99D8F;flex:none}
+.pchip.p-kort{background:#FBF3D2;color:#6B4E00;box-shadow:inset 0 0 0 1.5px #E7CF7A}
+.pchip.p-kort .pbol{background:#C99A06;box-shadow:none}
+.pchip.p-direct{background:var(--red-bg);color:var(--red);box-shadow:inset 0 0 0 2px var(--red)}
+.pchip.p-direct .pbol{width:9px;height:9px;background:var(--red);box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--red)}
 .aw-feiten .pchip{height:28px;font-size:13.5px}
 body.zon .pchip{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
-body.zon .pchip.p-direct{background:#141A22;color:#fff}
+body.zon .pchip .pbol{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .pchip.p-kort{background:#FFE58A;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .pchip.p-kort .pbol{background:#141A22;box-shadow:none}
+body.zon .pchip.p-direct{background:var(--red);color:#fff;box-shadow:none}
+body.zon .pchip.p-direct .pbol{background:#fff;box-shadow:none}
 /* actievenster: foto's bij de waarneming, "al klaar?"-keuzes voor de actiehouder */
 .afotos{display:flex;gap:6px;flex:none;flex-wrap:wrap;max-width:45%;justify-content:flex-end}
 .afotos img{width:64px;height:64px;object-fit:cover;border-radius:12px;background:#F0E6D8}
-.alklaar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.alklaar .s{grid-column:1/-1;font-weight:700;color:#6E6255;margin:2px 2px 0}
-.alklaar .btn{min-height:56px;padding:8px 10px;white-space:normal;line-height:1.2;font-size:15px}
-.alklaar .btn svg{flex:none}
-body.veld .alklaar .btn{min-height:64px}
-body.zon .alklaar .s{color:#141A22}
+/* "Al klaar?": twee lichte keuzes onder elkaar, volle breedte, één regel tekst; de hoofdknop staat in de dock */
+.alklaar{display:grid;grid-template-columns:1fr;gap:8px;margin-top:14px;padding:12px;border-radius:18px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA}
+.alk-t{font-size:13.5px;font-weight:800;color:#6E6255;margin:0 2px 2px}
+.alklaar .btn{width:100%;min-height:48px;padding:6px 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;font-size:15px;font-weight:700;background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px #E2D6C5}
+.alklaar .btn svg{flex:none;color:var(--accent)}
+body.veld .alklaar .btn{min-height:58px}
+body.zon .alklaar{background:#fff;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .alk-t{color:#141A22}
+body.zon .alklaar .btn{box-shadow:inset 0 0 0 2px #141A22;color:#141A22}
+/* zachte overgang boven de vaste knop: wat eronder doorloopt vervaagt in plaats van hard afgesneden te worden */
+.aw-dock::before{content:"";position:absolute;left:0;right:0;top:-28px;height:28px;pointer-events:none;background:linear-gradient(rgba(255,255,255,0),#fff)}
 
 /* ---- Koppelen + oordelen op één scherm (stap koppel) en compacte oordeelstap: geen lege middenruimte ---- */
 .kstap,.ostap{min-height:0}
@@ -838,17 +850,23 @@ body.zon .odock.uit .seg.stapel button{background:#fff;box-shadow:inset 0 0 0 2p
 .fb-kop b{font-size:15px}
 .fb-kop .s{font-size:13px;color:#6B6055;font-weight:600}
 .fb-rij{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
-.fb-item{position:relative;aspect-ratio:1/1;border-radius:14px;background:#F0E6D8}
-.fb-item img{width:100%;height:100%;object-fit:cover;border-radius:14px;display:block}
+.fb-item{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fb-beeld{position:relative;aspect-ratio:1/1;border-radius:14px;background:#F0E6D8;overflow:hidden}
+.fb-beeld img{width:100%;height:100%;object-fit:cover;display:block}
+.fb-nr{position:absolute;left:6px;top:6px;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:rgba(42,38,34,.72);color:#fff;font-size:12.5px;font-weight:800;display:grid;place-items:center}
 .fb-leeg{display:grid;place-items:center;height:100%;font-size:13px;color:#6B6055}
-.fb-item .fotoweg{position:absolute;top:-6px;right:-6px;width:44px;height:44px;font-size:24px;box-shadow:0 2px 6px rgba(0,0,0,.18),inset 0 0 0 1.5px #EADFCF}
+/* verwijderknop ónder de foto (niet erop): de foto blijft heel zichtbaar, misgrijpen met handschoenen raakt de foto niet */
+.fb-item .fotoweg{position:static;width:100%;height:auto;min-width:0;min-height:44px;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:12px;background:#fff;color:#5E544A;font-size:14px;font-weight:800;box-shadow:inset 0 0 0 1.5px #EADFCF}
+.fb-item .fotoweg span{font-size:20px;line-height:1;font-weight:700}
+.fb-item .fotoweg:active{background:#F4EDE3}
+.fototoast{margin-top:10px}
 .fotogroot:disabled{opacity:.45;cursor:default}
 .fduimen{display:inline-flex;gap:4px;flex:none;align-items:center}
 .fduimen img{height:var(--fh,52px);width:var(--fh,52px);object-fit:cover;border-radius:10px;background:#F0E6D8}
 .fduimen .fmeer{min-width:30px;height:30px;padding:0 6px;border-radius:999px;background:#F4EDE3;color:#5E544A;font-size:12.5px;font-weight:800;display:grid;place-items:center}
-body.veld .fb-item .fotoweg{width:52px;height:52px;min-width:52px;min-height:52px}
+body.veld .fb-item .fotoweg{width:100%;height:auto;min-width:0;min-height:52px}
 body.zon .fb-kop .s{color:#141A22}
-body.zon .fb-item .fotoweg{box-shadow:inset 0 0 0 2px #141A22}
+body.zon .fb-item .fotoweg{box-shadow:inset 0 0 0 2px #141A22;color:#141A22}
 .vs-alt-kop{margin:12px 2px 2px;font-size:13.5px;font-weight:800;color:#5E544A}
 .kstap .vpick.alt{flex-direction:row;align-items:center;gap:10px;margin-top:6px;padding:8px 8px 8px 12px;background:#fff;box-shadow:inset 0 0 0 1.5px #E6DEF6;min-height:56px}
 .kstap .vpick.alt .vp-ref{align-self:center}
@@ -866,3 +884,28 @@ body.zon .kstap .vpick.alt .gebruik{background:#fff;color:#141A22;box-shadow:ins
 .vs-alt summary .n{min-width:24px;height:22px;padding:0 7px;border-radius:999px;background:#EAE4F7;color:#5B46A0;font-size:12.5px;display:grid;place-items:center}
 body.veld .vs-alt summary{min-height:58px}
 body.zon .vs-alt summary,body.zon .vs-alt summary .n{color:#141A22}
+
+/* ---- Koppelen: Voorstel-kaart met optionele maatregelen; de regelkaart zelf = de hele regel lezen (geen tweede "ja") ---- */
+.kstap .vp-meer{font-size:13.5px;font-weight:800;color:#5B46A0;white-space:nowrap}
+.vs-mr{margin-top:10px;border-radius:16px;background:#FCFAF6;box-shadow:inset 0 0 0 1.5px #EFE6DA}
+.vs-mr summary{list-style:none;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-height:52px;padding:0 14px;font-size:15px;font-weight:800;cursor:pointer}
+.vs-mr summary::-webkit-details-marker{display:none}
+.vs-mr summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2.5px solid currentColor;border-bottom:2.5px solid currentColor;transform:rotate(45deg) translateY(-3px);transition:transform .15s}
+.vs-mr[open] summary::after{transform:rotate(225deg) translateY(-3px)}
+.vs-mr .opt{font-size:13px;font-weight:700;color:#6E6255}
+.vs-mr summary:has(.n) .opt{display:none}
+.vs-mr .n{height:24px;padding:0 9px;border-radius:999px;background:var(--accent-bg);color:var(--accent-ink);font-size:12.5px;display:inline-grid;place-items:center}
+.vs-mr .chips{padding:0 10px 12px}
+.zbuiten .vp-ref{min-width:30px;justify-content:center}
+body.veld .vs-mr summary{min-height:60px}
+body.zon .kstap .vp-meer{color:#141A22}
+body.zon .vs-mr{background:#fff;box-shadow:inset 0 0 0 2px #141A22}
+body.zon .vs-mr .opt{color:#141A22}
+body.zon .vs-mr .n{background:#141A22;color:#fff}
+/* oordeelstap: rustige "Hierna"-strook onder de knoppen in plaats van een lege vlakte */
+.ohierna{margin:6px 0 24px}
+.oh-rij{display:flex;align-items:baseline;gap:10px;padding:6px 2px;font-size:14px;font-weight:600;color:#5E544A;line-height:1.35}
+.oh-rij + .oh-rij{border-top:1px solid #EFE6DA}
+.oh-l{flex:none;min-width:64px;font-weight:800;color:var(--ink)}
+body.zon .oh-rij{color:#141A22}
+body.zon .oh-rij + .oh-rij{border-top-color:#141A22}

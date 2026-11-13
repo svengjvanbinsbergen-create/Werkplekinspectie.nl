@@ -64,7 +64,8 @@
           ${stBadge(live ? live.status : a.status || "Open")}</div>`;
       }).join("");
       const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length;
-      const fotos = ws.filter((w) => w.foto);
+      // alle foto's per waarneming (hoofdfoto + extraFotos, zie App.fotoLijst); oude records met alleen w.foto blijven werken
+      const fotos = ws.flatMap((w) => { const l = this.fotoLijst(w); return l.map((f, i) => ({ w, f, i, n: l.length })); });
       v.appendChild(el(`<div class="noprint"><button class="btn ghost sm"${act("go", "inspecties")}>${svg("back", 16)} Terug</button></div>`));
       v.appendChild(el(`<div id="rap">
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
@@ -76,7 +77,7 @@
         ${acties.length ? `<h2>3. Acties</h2><div class="listcard">${aRows}</div>` : ""}
         ${r.gesprek ? `<h2>4. Gesprek met de monteurs</h2><div class="card" style="line-height:1.5">${esc(r.gesprek)}</div>` : ""}
         ${r.positief ? `<h2>5. Wat ging opvallend goed</h2><div class="card" style="line-height:1.5">${esc(r.positief)}</div>` : ""}
-        ${fotos.length ? `<h2>Foto's</h2><div style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map((w) => `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(w.foto))}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}</figcaption></figure>`).join("")}</div>` : ""}
+        ${fotos.length ? `<h2>Foto's</h2><div class="rapfotos" style="display:flex;gap:10px;flex-wrap:wrap">${fotos.map(({ w, f, i, n }) => `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(f))}" alt="${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)} · foto ${i + 1} van ${n}" style="width:180px;border-radius:12px"><figcaption class="s">${esc(this.infoVoor(r.code, w.regel_id, w.buiten).ref)}${n > 1 ? ` · foto ${i + 1}/${n}` : ""}</figcaption></figure>`).join("")}</div>` : ""}
         <h2>Ondertekening</h2>
         <div class="card"><div class="s">Inspecteur: ${esc(r.inspecteur)} · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
           ${r.handtekening ? `<img src="${esc(WPI.fotoSrc(r.handtekening))}" style="height:90px;margin-top:8px">` : `<div class="s" style="margin-top:8px">Niet ondertekend</div>`}</div>
