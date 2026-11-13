@@ -4,10 +4,13 @@
 (function () {
   "use strict";
   const { $, el, esc, svg, DB, fotoDataURL, USERS, staf, isWeb, naam, kort, plusDagen, dagLabel, dagenTot, PRIO,
-    stBadge, tril } = window.WPI;
+    stBadge, tril, act } = window.WPI;
   Object.assign(window.App, {
     // ---------------- ACTIES ----------------
     acties: null, actFilter: null,
+    actTab(k) { this.actFilter = k; this.route(); },   // tabblad op Acties
+    // naar Acties met een filter (null = standaard); al op Acties: opnieuw tekenen
+    naarActies(f) { this.actFilter = f == null ? null : f; if (location.hash === "#/acties") this.route(); else this.go("acties"); },
     async laadActies() {
       if (this.acties) return this.acties;
       let a = []; try { a = await DB.getAll("acties"); } catch (e) {}
@@ -49,12 +52,12 @@
       const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
-      v.appendChild(el(`<div class="tabs">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}" onclick="App.actFilter='${k}';App.route()">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
+      v.appendChild(el(`<div class="tabs">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)}>${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
       const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen.", alle: "" }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
-      if (!isWeb()) v.appendChild(el(`<button class="btn primary" style="margin:0 0 14px" onclick="App.nieuweActie()">${svg("plus", 18)} Nieuwe actie</button>`));
+      if (!isWeb()) v.appendChild(el(`<button class="btn primary" style="margin:0 0 14px"${act("nieuweActie")}>${svg("plus", 18)} Nieuwe actie</button>`));
       if (isWeb() && lijst.length) { v.appendChild(el(this.actieTabel(lijst))); return; }
       v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
         : `<div class="leeg"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
@@ -65,7 +68,7 @@
         : loopt && d < 0 ? `<span class="dchip warm">${-d} dag${d === -1 ? "" : "en"} te laat</span>`
         : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : `<span class="dchip">📅 ${dagLabel(a.plandatum)}</span>`;
       const h = a.houder ? USERS.find((u) => u.id === a.houder) : null;
-      return `<button class="akaart" onclick="App.openActie('${a.id}')">
+      return `<button class="akaart"${act("openActie", a.id)}>
         <div class="boven">${stBadge(a.status)}${plan}</div>
         <div class="titel">${esc(kort(a.tekst || "(geen tekst)", 110))}</div>
         <div class="onder"><span class="mini-av">${h ? esc(h.full_name[0]) : "?"}</span><span>${h ? esc(h.full_name) : "nog geen actiehouder"}</span><span class="dot">·</span><span>${esc(a.ref || "")}</span>${a.demo ? `<span class="dot">·</span><span>voorbeeld</span>` : ""}</div></button>`;
@@ -77,7 +80,7 @@
         return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip warm">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : dagLabel(a.plandatum); };
       const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers"><span class="mini-av">${esc(u.full_name[0])}</span>${esc(u.full_name)}</span>` : `<span class="s">–</span>`; };
       return `<div class="card tabelkaart"><div class="tablewrap"><table class="atabel"><thead><tr><th>Status</th><th>Actie</th><th>Actiehouder</th><th>Toetser</th><th>Plandatum</th><th>Herkomst</th></tr></thead><tbody>
-        ${lijst.map((a) => `<tr onclick="App.openActie('${a.id}')"><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}</div></td>
+        ${lijst.map((a) => `<tr${act("openActie", a.id)}><td>${stBadge(a.status)}</td><td><div class="at">${esc(kort(a.tekst || "", 120))}</div><div class="s">${esc(a.ref || "")} · oordeel ${esc(a.oordeel || "–")}</div></td>
           <td>${persoon(a.houder)}</td><td>${persoon(a.toetser)}</td><td>${plan(a)}</td><td class="s">${esc(a.handmatig ? "Handmatig" : (a.inspectie_titel || "").replace(/^Voorbeeld · /, "").split(" · ")[0])}${a.demo ? " · voorbeeld" : ""}</td></tr>`).join("")}
       </tbody></table></div></div>`;
     },
@@ -92,7 +95,7 @@
          ${veld("Toetser (niet de actiehouder)", `<select id="ai-toetser" class="fin">${opts}</select>`)}
          ${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen(14)}">`)}
          <div id="ai-fout" class="fout"></div>
-         <button class="btn primary" style="margin-top:10px" onclick="App.maakActie()">Actie aanmaken</button>`);
+         <button class="btn primary" style="margin-top:10px"${act("maakActie")}>Actie aanmaken</button>`);
     },
     async maakActie() {
       const tekst = $("na-tekst").value.trim(), houder = $("ai-houder").value, toetser = $("ai-toetser").value, plan = $("ai-plan").value;
@@ -124,29 +127,29 @@
               <div>${veld("Plandatum", `<input type="date" id="ai-plan" class="fin" value="${plusDagen((PRIO[a.prio] || PRIO.kort).d)}">`)}</div></div>
             <div class="s" style="margin-top:6px">De inspecteur vond het: <b>${esc((PRIO[a.prio] || {}).lab || "–")}</b>. De plandatum staat daarop voorgesteld; pas gerust aan.</div>
             <div id="ai-fout" class="fout"></div>
-            <button class="btn primary" style="margin-top:12px" onclick="App.stelIn('${a.id}')">Actie instellen</button>
+            <button class="btn primary" style="margin-top:12px"${act("stelIn", a.id)}>Actie instellen</button>
             <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Geen actie nodig?</summary>
               <textarea id="ai-reden" class="fin" rows="2" placeholder="Reden, bijv. al opgelost via trendactie T-04"></textarea>
-              <button class="btn ghost sm" style="margin-top:8px" onclick="App.vervalVoorstel('${a.id}')">Voorstel laten vervallen</button></details>`;
+              <button class="btn ghost sm" style="margin-top:8px"${act("vervalVoorstel", a.id)}>Voorstel laten vervallen</button></details>`;
         }
       } else {
         h += `<div class="card" style="background:var(--mist);box-shadow:none;margin-bottom:12px"><div class="t" style="font-size:16px">${esc(a.tekst)}</div>
           <div class="s" style="margin-top:6px;line-height:1.7">${stBadge(a.status)} · actiehouder <b>${esc(naam(a.houder))}</b> · toetser <b>${esc(naam(a.toetser))}</b> · plandatum <b>${dagLabel(a.plandatum)}</b></div></div>`;
         if (a.nafoto) h += `<div class="s" style="font-weight:600;margin-bottom:4px">Na-foto (na uitvoering)</div><div style="display:flex;gap:10px;margin-bottom:12px">${a.foto ? `<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.foto))}" style="height:110px;border-radius:10px"><figcaption class="s">voor</figcaption></figure>` : ""}<figure style="margin:0"><img src="${esc(WPI.fotoSrc(a.nafoto))}" style="height:110px;border-radius:10px"><figcaption class="s">na</figcaption></figure></div>`;
         if ((a.status === "Open" || a.status === "In uitvoering") && (isHouder || staf())) {
-          if (a.status === "Open") h += `<button class="btn ghost" style="width:100%;margin-bottom:10px" onclick="App.zetStatus('${a.id}','In uitvoering','Uitvoering gestart')">Start uitvoering</button>`;
-          h += `<button class="btn primary" onclick="App.naFoto('${a.id}')">${svg("cam", 18)} Klaar · na-foto maken</button>
-            <button class="btn ghost" style="width:100%;margin-top:10px" onclick="App.zetStatus('${a.id}','Klaar voor toetsing','Klaar voor toetsing gemeld (zonder na-foto)')">Klaar voor toetsing, zonder foto</button>`;
+          if (a.status === "Open") h += `<button class="btn ghost" style="width:100%;margin-bottom:10px"${act("zetStatus", a.id, "In uitvoering", "Uitvoering gestart")}>Start uitvoering</button>`;
+          h += `<button class="btn primary"${act("naFoto", a.id)}>${svg("cam", 18)} Klaar · na-foto maken</button>
+            <button class="btn ghost" style="width:100%;margin-top:10px"${act("zetStatus", a.id, "Klaar voor toetsing", "Klaar voor toetsing gemeld (zonder na-foto)")}>Klaar voor toetsing, zonder foto</button>`;
         }
         if (a.status === "Klaar voor toetsing") {
-          if (isToetser) h += `<button class="btn primary" onclick="App.akkoord('${a.id}')">${svg("check", 18)} Akkoord na toetsing · afronden</button>
+          if (isToetser) h += `<button class="btn primary"${act("akkoord", a.id)}>${svg("check", 18)} Akkoord na toetsing · afronden</button>
             <textarea id="ai-reden" class="fin" rows="2" style="margin-top:12px" placeholder="Reden bij niet akkoord"></textarea><div id="ai-fout" class="fout"></div>
-            <button class="btn danger" style="width:100%;margin-top:8px" onclick="App.nietAkkoord('${a.id}')">Niet akkoord · terug naar actiehouder</button>`;
+            <button class="btn danger" style="width:100%;margin-top:8px"${act("nietAkkoord", a.id)}>Niet akkoord · terug naar actiehouder</button>`;
           else h += `<div class="hint">Wacht op toetsing door <b>${esc(naam(a.toetser))}</b>. Alleen de toetser kan afronden.</div>`;
         }
         if (staf() && (a.status === "Open" || a.status === "In uitvoering" || a.status === "Klaar voor toetsing")) {
           h += `<details style="margin-top:14px"><summary class="s" style="cursor:pointer;font-weight:600">Plandatum wijzigen</summary>
-            <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" value="${a.plandatum || ""}"><button class="btn ghost sm" onclick="App.wijzigPlan('${a.id}')">Opslaan</button></div></details>`;
+            <div style="display:flex;gap:8px;margin-top:8px"><input type="date" id="ai-plan2" class="fin" style="flex:1" value="${a.plandatum || ""}"><button class="btn ghost sm"${act("wijzigPlan", a.id)}>Opslaan</button></div></details>`;
         }
       }
       h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${esc(l.wat)}</div>`).join("")}</div>`;

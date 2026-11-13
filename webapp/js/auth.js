@@ -46,7 +46,7 @@
      (Supabase rate limits per IP/e-mail, CAPTCHA); dit is extra en geeft de gebruiker uitleg. */
 (function () {
   "use strict";
-  const { $, el, esc, svg, USERS, ROL } = window.WPI;
+  const { $, el, esc, svg, USERS, ROL, act, actSluit, op } = window.WPI;
   const App = window.App;
   const CFG = window.WPI_CONFIG || {};
   const actief = () => !!(CFG.supabaseUrl && CFG.supabaseAnonKey);
@@ -206,7 +206,7 @@
   function scherm_login(v) {
     const vorige = (lees(K_PROF) || {}).v;
     v.appendChild(el(`<div>${kop("Inloggen", "Log in met je werk-e-mailadres.")}${melding()}
-      <form class="card" id="l-form" autocomplete="on" novalidate onsubmit="event.preventDefault();App.authInloggen()">
+      <form class="card" id="l-form" autocomplete="on" novalidate${op("submit", "authInloggen")}>
         <label class="flab" for="l-mail">E-mailadres</label>
         <input id="l-mail" class="fin" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required maxlength="200" value="${esc(vorige && vorige.email || "")}">
         <label class="flab" for="l-ww">Wachtwoord</label>
@@ -216,23 +216,23 @@
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" id="l-knop" type="submit" style="margin-top:8px">Inloggen</button>
       </form>
-      <button class="linkknop" type="button" onclick="App.authScherm('vergeten')">Wachtwoord vergeten?</button>
+      <button class="linkknop" type="button"${act("authScherm", "vergeten")}>Wachtwoord vergeten?</button>
       <div class="muted" style="font-size:12px;margin-top:6px">Geen account? Het Hoofd Service &amp; Montage nodigt je uit.</div></div>`));
     toonSlot();
   }
   function scherm_vergeten(v) {
     v.appendChild(el(`<div>${kop("Wachtwoord vergeten", "We sturen je een e-mail met een link om een nieuw wachtwoord in te stellen.")}${melding()}
-      <form class="card" novalidate onsubmit="event.preventDefault();App.authVergeten()">
+      <form class="card" novalidate${op("submit", "authVergeten")}>
         <label class="flab" for="v-mail">E-mailadres</label>
         <input id="v-mail" class="fin" type="email" autocomplete="username" inputmode="email" autocapitalize="off" required maxlength="200" value="${esc(($("l-mail") || {}).value || "")}">
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" id="v-knop" type="submit" style="margin-top:8px">Herstelmail versturen</button>
       </form>
-      <button class="linkknop" type="button" onclick="App.authScherm('login')">Terug naar inloggen</button></div>`));
+      <button class="linkknop" type="button"${act("authScherm", "login")}>Terug naar inloggen</button></div>`));
   }
   function scherm_nieuwww(v) {
     v.appendChild(el(`<div>${kop("Nieuw wachtwoord", "Kies een nieuw wachtwoord van minstens 12 tekens. Een zin van een paar woorden werkt goed.")}${melding()}
-      <form class="card" novalidate onsubmit="event.preventDefault();App.authNieuwWachtwoord()">
+      <form class="card" novalidate${op("submit", "authNieuwWachtwoord")}>
         <label class="flab" for="n-ww">Nieuw wachtwoord</label>
         <input id="n-ww" class="fin" type="password" autocomplete="new-password" required minlength="12" maxlength="200">
         <label class="flab" for="n-ww2">Herhaal</label>
@@ -240,7 +240,7 @@
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" type="submit" style="margin-top:8px">Wachtwoord opslaan</button>
       </form>
-      <button class="linkknop" type="button" onclick="App.authAnnuleer()">Annuleren, terug naar inloggen</button></div>`));
+      <button class="linkknop" type="button"${act("authAnnuleer")}>Annuleren, terug naar inloggen</button></div>`));
   }
   // QR-code van GoTrue (een SVG, rauw of als data-URL) → veilige data-URL. Rauwe SVG-tekst moet
   // procent-gecodeerd worden: een "#" (bijv. fill="#fff") breekt anders de data-URL af.
@@ -260,7 +260,7 @@
     const m = S.mfa || {};
     const qr = qrSrc(m.qr);
     v.appendChild(el(`<div>${kop("Tweestapsverificatie", m.enrol ? "Voor jouw rol is een tweede stap verplicht. Koppel eenmalig een authenticator-app (bijv. Microsoft of Google Authenticator)." : "Voer de 6-cijferige code uit je authenticator-app in.")}${melding()}
-      <form class="card" novalidate onsubmit="event.preventDefault();App.authMfa()">
+      <form class="card" novalidate${op("submit", "authMfa")}>
         ${m.enrol ? `<div style="text-align:center"><img src="${esc(qr)}" alt="QR-code voor de authenticator-app" style="width:200px;height:200px;background:#fff;border-radius:12px"></div>
           <div class="s" style="margin:8px 0 12px;word-break:break-all">Of voer deze sleutel handmatig in: <b>${esc(m.secret || "")}</b></div>` : ""}
         <label class="flab" for="m-code">Code</label>
@@ -268,7 +268,7 @@
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" id="m-knop" type="submit" style="margin-top:8px">Bevestigen</button>
       </form>
-      <button class="linkknop" type="button" onclick="App.authAnnuleer()">Annuleren</button></div>`));
+      <button class="linkknop" type="button"${act("authAnnuleer")}>Annuleren</button></div>`));
     const i = $("m-code"); if (i) i.focus();
   }
   function fout(t) { const f = $("l-fout"); if (f) { f.dataset.slot = ""; f.textContent = t; } }
@@ -380,8 +380,8 @@
       if (!App.user || App._page === "inspectie" || ($("ov") && $("ov").classList.contains("on"))) return;
       App.openModal("Is dit je eigen telefoon?", "Dan kun je ingelogd blijven, zodat je de app ook zonder bereik opnieuw kunt openen (bijv. op een locatie zonder signaal).",
         `<div class="s" style="margin-bottom:12px;line-height:1.45">Doe dit alleen op een toestel dat alleen jij gebruikt. Op een gedeeld toestel ben je uitgelogd zodra de app of het tabblad sluit; je vastgelegde gegevens blijven dan wel veilig bewaard.</div>
-         <button class="btn primary" onclick="App.authOnthoud(true)">Ja, ingelogd blijven</button>
-         <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.authOnthoud(false)">Nee, gedeeld toestel</button>`);
+         <button class="btn primary"${act("authOnthoud", true)}>Ja, ingelogd blijven</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${act("authOnthoud", false)}>Nee, gedeeld toestel</button>`);
     },
     authOnthoud(aan) {
       try { localStorage.setItem(K_KEUZE, aan ? "1" : "0"); } catch (e) {}
@@ -416,12 +416,12 @@
     authLogoutOveral() { S.scope = "global"; App.closeModal(); App.logout(); },
     // uitloggen via het menu: eerst waarschuwen als er nog wijzigingen in de wachtrij staan (gedeeld toestel)
     authUitloggenVraag(overal) {
-      const n = App.syncWachtrij ? App.syncWachtrij() : 0, doe = overal ? "App.authLogoutOveral()" : "App.closeModal();App.logout()";
+      const n = App.syncWachtrij ? App.syncWachtrij() : 0, doe = overal ? act("authLogoutOveral") : actSluit("logout");
       if (!n) return overal ? App.authLogoutOveral() : (App.closeModal(), App.logout());
       App.openModal("Nog niet alles verstuurd", n + (n === 1 ? " wijziging staat" : " wijzigingen staan") + " nog in de wachtrij.",
         `<div class="s" style="margin-bottom:12px;line-height:1.45">Ze blijven veilig op dit toestel en zijn onzichtbaar voor anderen die hier inloggen. Ze worden pas verstuurd als jíj hier weer inlogt. Synchroniseer liever eerst.</div>
-         <button class="btn primary" onclick="App.closeModal();App.syncOpnieuw()">Eerst synchroniseren</button>
-         <button class="btn ghost" style="margin-top:10px;width:100%" onclick="${doe}">Toch uitloggen</button>`);
+         <button class="btn primary"${actSluit("syncOpnieuw")}>Eerst synchroniseren</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${doe}>Toch uitloggen</button>`);
     },
     authScherm(s) { S.scherm = s; S.melding = ""; App.route(); },
     authAnnuleer() { uitloggenServer("local"); wisSessie(); S.scherm = "login"; S.melding = ""; App.route(); },
@@ -513,12 +513,13 @@
       acct0.apply(this, arguments);
       if (!actief()) return;
       const lc = document.querySelector("#mod .listcard"); if (!lc) return;
-      lc.querySelectorAll("button[onclick]").forEach((b) => { if (b.getAttribute("onclick") === "App.closeModal();App.logout()") b.setAttribute("onclick", "App.authUitloggenVraag()"); });
-      const r = (ic, t, s, on) => `<button class="row prefrow" onclick="${on}"><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
+      // "Uitloggen" (sluit + logout) wordt "eerst vragen" (zonder sluiten: authUitloggenVraag doet dat zelf)
+      lc.querySelectorAll('button[data-action="logout"][data-sluit]').forEach((b) => { b.removeAttribute("data-sluit"); b.removeAttribute("data-args"); b.setAttribute("data-action", "authUitloggenVraag"); });
+      const r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       const n = App.syncWachtrij ? App.syncWachtrij() : 0;
       lc.insertAdjacentHTML("beforeend",
-        r("check", "Synchronisatie", n ? n + " wijziging" + (n === 1 ? "" : "en") + " in de wachtrij" : "Alles is verstuurd", "App.syncDetails()") +
-        r("back", "Overal uitloggen", "Ook op je andere toestellen (bijv. bij een verloren telefoon)", "App.authUitloggenVraag(true)") +
+        r("check", "Synchronisatie", n ? n + " wijziging" + (n === 1 ? "" : "en") + " in de wachtrij" : "Alles is verstuurd", act("syncDetails")) +
+        r("back", "Overal uitloggen", "Ook op je andere toestellen (bijv. bij een verloren telefoon)", act("authUitloggenVraag", true)) +
         (MFA_ROLLEN.includes(this.user.role) ? `<div class="row"><span class="cirkel">${svg("check", 18)}</span><span class="grow"><span class="t">Tweestapsverificatie</span><div class="s">${S.aal === "aal2" ? "Actief" : "Wordt gevraagd bij de volgende login"}</div></span></div>` : ""));
     },
   });

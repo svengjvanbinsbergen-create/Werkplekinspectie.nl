@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden } = window.WPI;
+  const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden, act, actSluit, op, WAARDE } = window.WPI;
   Object.assign(window.App, {
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
@@ -11,11 +11,11 @@
     startInspectie(code, project, titel, zeker, planId) {
       const lo = this.state.inspectie;
       if (lo && !zeker && (lo.waarnemingen.length || lo.taken.length)) {
-        // geen (server)tekst in het onclick-attribuut: de keuze wacht in App._nieuweStart
+        // geen (server)tekst in een attribuut: de keuze wacht in App._nieuweStart (zie nieuwToch)
         this._nieuweStart = [code, project, titel, planId || null];
         return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + " waarneming(en)",
-          `<button class="btn primary" onclick="App.closeModal();App.goIns()">Verder met de lopende inspectie</button>
-           <button class="btn danger" style="margin-top:10px;width:100%" onclick="App.closeModal();var a=App._nieuweStart||[];App._nieuweStart=null;if(a.length)App.startInspectie(a[0],a[1],a[2],true,a[3])">Lopende weggooien en nieuw starten</button>`);
+          `<button class="btn primary"${actSluit("goIns")}>Verder met de lopende inspectie</button>
+           <button class="btn danger" style="margin-top:10px;width:100%"${actSluit("nieuwToch")}>Lopende weggooien en nieuw starten</button>`);
       }
       this.stopMic();
       this.state.inspectie = { code, project, titel, taak: null, taken: [], stap: "taak", taakTekst: "",
@@ -24,6 +24,8 @@
       this._opslag = null;
       this.goIns();
     },
+    // "Lopende weggooien en nieuw starten": de bewaarde keuze uit startInspectie
+    nieuwToch() { const a = this._nieuweStart || []; this._nieuweStart = null; if (a.length) this.startInspectie(a[0], a[1], a[2], true, a[3]); },
     // vastleggen wat de inspecteur met elk voorstel deed (bewijs: de mens beslist)
     logKeuze(soort, uitkomst, wat) { const ins = this.state.inspectie; if (!ins) return; (ins.keuzes = ins.keuzes || []).push({ soort, uitkomst, wat: String(wat || "").slice(0, 120), t: new Date().toISOString() }); },
     goIns() { if (location.hash === "#/inspectie") this.route(); else this.go("inspectie"); },
@@ -40,6 +42,8 @@
       this.logKeuze("taak", (this._taakVs || []).includes(t) ? "voorstel gebruikt" : "zelf gekozen", t);
       tril(20); this.nieuweWaarneming(); this.stap("zie");
     },
+    // "Ja, volgende waarneming" / een algemeen onderwerp kiezen
+    waarnemingOver(onderwerp) { this.nieuweWaarneming(onderwerp); this.stap("zie"); },
     andereTaak() { const ins = this.state.inspectie; ins.taakTekst = ""; ins.cur = null; this.stap("taak"); },
     terug() {
       const ins = this.state.inspectie; if (!ins) return this.go("vandaag");
@@ -88,10 +92,8 @@
       });
     },
     invoer(key, ph) {
-      return `<div class="inbox"><textarea id="f-${key}" placeholder="${esc(ph)}" oninput="App.setVeld('${key}',this.value)">${esc(this.veld(key))}</textarea>
-        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" aria-label="Inspreken: ingedrukt houden of aantikken" title="Ingedrukt houden = praten, loslaten = klaar. Kort tikken = aan/uit."
-          onpointerdown="App.micDown('${key}',event)" onpointerup="App.micUp('${key}')" onpointercancel="App.micUp('${key}')" oncontextmenu="return false"
-          onclick="if(event.detail===0)App.toggleMic('${key}')">${svg("mic", 24)}</button></div>
+      return `<div class="inbox"><textarea id="f-${key}" placeholder="${esc(ph)}"${op("input", "setVeld", key, WAARDE)}>${esc(this.veld(key))}</textarea>
+        <button class="mic${this.micKey === key ? " on" : ""}" data-mic="${key}" aria-label="Inspreken: ingedrukt houden of aantikken" title="Ingedrukt houden = praten, loslaten = klaar. Kort tikken = aan/uit.">${svg("mic", 24)}</button></div>
         <div class="partial" id="p-${key}"></div>`;
     },
 
@@ -217,8 +219,8 @@
     regelInfo(id, buiten) { return this.infoVoor(this.state.inspectie.code, id, buiten); },
     // ---- één vaste Voorstel-component: label, bron, waarom, en jij kiest ----
     vsKop(vraag, bron) { return `<div class="vskop"><span class="lbl vs">Voorstel</span>${bron ? `<span class="s">via ${esc(bron)}</span>` : ""}<span class="s">· ${esc(vraag)}</span></div>`; },
-    vsPick(onclick, titel, sub, waarom) {
-      return `<button class="pick" onclick="${onclick}"><div class="t">${titel}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ""}${waarom ? `<div class="waarom">Waarom: ${waarom}</div>` : ""}<div class="gebruik">Gebruik dit ›</div></button>`;
+    vsPick(actie, titel, sub, waarom) {   // actie = attributen van act(…)
+      return `<button class="pick"${actie}><div class="t">${titel}</div>${sub ? `<div class="s">${esc(sub)}</div>` : ""}${waarom ? `<div class="waarom">Waarom: ${waarom}</div>` : ""}<div class="gebruik">Gebruik dit ›</div></button>`;
     },
     waarom(tekst, doc, bron) {
       const w = eigenWoorden(tekst, doc);
@@ -232,7 +234,7 @@
       const vs = ins.taakTekst.trim() ? this.lokaalVoorstel(ins.taakTekst, taken.map((t) => ({ id: t, naam: t, doc: docVan(t) }))).slice(0, 2) : [];
       this._taakVs = vs;
       box.innerHTML = vs.length ? this.vsKop("is dit de taak?") +
-        vs.map((t) => this.vsPick(`App.kiesTaak(${esc(JSON.stringify(t))})`, esc(t), regels.filter((r) => r.taak === t).length + " risicoregels in de TRA", this.waarom(ins.taakTekst, docVan(t)))).join("") : "";
+        vs.map((t) => this.vsPick(act("kiesTaak", t), esc(t), regels.filter((r) => r.taak === t).length + " risicoregels in de TRA", this.waarom(ins.taakTekst, docVan(t)))).join("") : "";
     },
 
     // --- schermen ---
@@ -249,11 +251,11 @@
     insHead(ins, kicker, titel, rechts) {
       const n = ins.waarnemingen.length, a = ins.waarnemingen.filter((w) => w.oordeel === "A" || w.oordeel === "V").length;
       return `<div class="inshead"><div class="ih-rij">
-        <button class="ih-rond" onclick="App.terug()" aria-label="Terug" title="Terug">${svg("back", 22)}</button>
+        <button class="ih-rond"${act("terug")} aria-label="Terug" title="Terug">${svg("back", 22)}</button>
         <div class="ih-meta"><div class="ih-titel">${esc(ins.titel)}</div>
           <div class="ih-sub">${n} waarneming${n === 1 ? "" : "en"}${a ? " · " + a + " actievoorstel" + (a === 1 ? "" : "len") : ""}</div>
           <span id="opslag" class="opslag"></span></div>
-        <button class="ih-rond" onclick="App.openWeergave()" aria-label="Weergave: veldmodus en zonmodus" title="Weergave">${svg("sun", 22)}</button></div>
+        <button class="ih-rond"${act("openWeergave")} aria-label="Weergave: veldmodus en zonmodus" title="Weergave">${svg("sun", 22)}</button></div>
         <div class="kicker" style="margin-top:14px">${esc(kicker)}</div>
         <div class="ih-vraag"><h1>${esc(titel)}</h1>${rechts || ""}</div></div>`;
     },
@@ -266,7 +268,7 @@
       const w = ins.waarnemingen.find((x) => x.id === ins.laatste); if (!w) return "";
       const info = this.regelInfo(w.regel_id, w.buiten);
       return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${w.oordeel}]${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
-        <button class="btn ghost sm" onclick="App.ongedaan()">Ongedaan maken</button></div>`;
+        <button class="btn ghost sm"${act("ongedaan")}>Ongedaan maken</button></div>`;
     },
 
     ins_taak(ins, v) {
@@ -276,45 +278,44 @@
         ${this.invoer("taak", "Bijv. ze halen de damwand eruit met de kraan")}
         <div id="taakvs"></div>
         <details style="margin-top:12px"><summary class="s" style="cursor:pointer;font-weight:600">Zelf kiezen uit alle taken (${taken.length})</summary>
-          <div class="chips" style="margin-top:8px">${taken.map((t) => `<button class="chipb" onclick="App.kiesTaak(${esc(JSON.stringify(t))})">${esc(t)}</button>`).join("")}</div></details></div>`));
+          <div class="chips" style="margin-top:8px">${taken.map((t) => `<button class="chipb"${act("kiesTaak", t)}>${esc(t)}</button>`).join("")}</div></details></div>`));
       this.renderTaakVs();
     },
     // "Wat zie je?": vastleggen met stem of foto, één hand. Grote microfoon en camera onderin (duimzone).
     ins_zie(ins, v) {
       const cur = ins.cur; if (!cur) { this.nieuweWaarneming(); return this.ins_zie(ins, v); }
       const ow = cur.onderwerp ? this.onderwerpen().find((o) => o.ref === cur.onderwerp) : null;
-      const gevaar = ow || cur.direct ? "" : `<button class="gevaarknop" onclick="App.directGevaar()" aria-label="Direct gevaar: werk stilleggen">${svg("warn", 18)}<span>Direct gevaar</span></button>`;
+      const gevaar = ow || cur.direct ? "" : `<button class="gevaarknop"${act("directGevaar")} aria-label="Direct gevaar: werk stilleggen">${svg("warn", 18)}<span>Direct gevaar</span></button>`;
       const aan = this.micKey === "zie", fotoOk = /^data:image\/[a-z+.-]+;base64,[A-Za-z0-9+/=]+$/i.test(cur.foto || "");
       v.appendChild(el(`<div class="ziewrap">
         ${this.insHead(ins, ow ? "Algemeen onderwerp · " + ow.naam : "Taak · " + ins.taak, "Wat zie je?", gevaar)}
         ${cur.direct ? `<div class="gevaarbalk" role="status">${svg("warn", 20)}<span>Direct gevaar · werk is stilgelegd</span></div>` : ""}
         <div class="q ziekaart">
           <div class="ziehint">${ow ? "Vertel wat je zag bij " + esc(ow.naam.toLowerCase()) + "." : "Alleen wat je nu ziet telt."} Praat, typ of maak een foto.</div>
-          <textarea id="f-zie" class="ziebox" aria-label="Wat zie je?" placeholder="Bijv. de gasmeter hangt boven aan de ladder, niet bij de man in de put" oninput="App.setVeld('zie',this.value)">${esc(this.veld("zie"))}</textarea>
+          <textarea id="f-zie" class="ziebox" aria-label="Wat zie je?" placeholder="Bijv. de gasmeter hangt boven aan de ladder, niet bij de man in de put"${op("input", "setVeld", "zie", WAARDE)}>${esc(this.veld("zie"))}</textarea>
           <div class="partial" id="p-zie" aria-live="polite"></div>
           ${cur.foto ? `<div class="fotoblok">${fotoOk ? `<img src="${esc(WPI.fotoSrc(cur.foto))}" alt="Foto bij deze waarneming">` : ""}
             <div class="grow"><b>Foto toegevoegd</b><div class="s">Hoort bij deze waarneming</div></div>
-            <button class="fotoweg" onclick="App.fotoWeg()" aria-label="Foto verwijderen">×</button></div>` : ""}
+            <button class="fotoweg"${act("fotoWeg")} aria-label="Foto verwijderen">×</button></div>` : ""}
         </div>
         <div class="dock">
           <div class="vangrij">
-            <button class="micgroot${aan ? " on" : ""}" data-mic="zie" aria-label="Inspreken: houd vast en praat, of tik voor aan en uit"
-              onpointerdown="App.micDown('zie',event)" onpointerup="App.micUp('zie')" onpointercancel="App.micUp('zie')" oncontextmenu="return false"
-              onclick="if(event.detail===0)App.toggleMic('zie')">
+            <button class="micgroot${aan ? " on" : ""}" data-mic="zie" aria-label="Inspreken: houd vast en praat, of tik voor aan en uit">
               <span class="mg-ic">${svg("mic", 28)}</span>
               <span class="mg-t"><b class="m-uit">Inspreken</b><b class="m-aan">Luistert…</b><small class="m-uit">Houd vast en praat</small><small class="m-aan">Loslaten = klaar</small></span>
             </button>
-            <button class="fotogroot" onclick="App.addFoto()" aria-label="${cur.foto ? "Foto vervangen" : "Foto maken"}">${svg("cam", 28)}<span>Foto</span></button>
+            <button class="fotogroot"${act("addFoto")} aria-label="${cur.foto ? "Foto vervangen" : "Foto maken"}">${svg("cam", 28)}<span>Foto</span></button>
           </div>
-          <button class="btn primary volgknop" data-need="zie,foto" onclick="App.koppel()">${ow ? "Volgende: beoordelen" : "Volgende: koppel aan de TRA"}</button>
-          ${ins.waarnemingen.length && !ow ? `<button class="linkknop" onclick="App.terug()">Niets meer gezien bij deze taak</button>` : ""}
+          <button class="btn primary volgknop" data-need="zie,foto"${act("koppel")}>${ow ? "Volgende: beoordelen" : "Volgende: koppel aan de TRA"}</button>
+          ${ins.waarnemingen.length && !ow ? `<button class="linkknop"${act("terug")}>Niets meer gezien bij deze taak</button>` : ""}
         </div></div>`));
     },
     fotoWeg() { const ins = this.state.inspectie; if (!ins || !ins.cur) return; ins.cur.foto = null; tril(15); this.route(); },
+    gevaarStilgelegd() { this.state.inspectie.cur.direct = true; this.route(); },   // na "Werk is stilgelegd" (modal is al dicht)
     directGevaar() {
       this.openModal("Direct gevaar", "Eerst veiligheid, dan vastleggen.",
         `<div style="font-size:15px;line-height:1.5">1. Laat de monteurs het werk direct stilleggen.<br>2. Spreek in wat je zag en koppel het aan de TRA.<br>3. Het wordt een actie met prioriteit <b>Direct</b>; het oordeel kies jij.</div>
-         <button class="btn primary" style="margin-top:16px" onclick="App.closeModal();App.state.inspectie.cur.direct=true;App.route()">Werk is stilgelegd</button>`);
+         <button class="btn primary" style="margin-top:16px"${actSluit("gevaarStilgelegd")}>Werk is stilgelegd</button>`);
     },
     async koppel() {
       this.stopMic();
@@ -348,10 +349,10 @@
       const cur = ins.cur, vs = ins.voorstel || { ids: [], bezig: true };
       const kand = this.kandidaten(ins), regels = this.regelsVanTaak(ins), ows = this.onderwerpen();
       const pick = (id) => { const i = this.regelInfo(id), k = kand.find((x) => x.id === id), w = this.waarom(cur.tekst, k ? k.doc + " " + k.naam : i.titel, vs.bron);
-        return `<button class="pick vpick" onclick="App.kiesRegel(${esc(JSON.stringify(id))})"><span class="vp-ref">${esc(i.ref)}</span>
+        return `<button class="pick vpick"${act("kiesRegel", id)}><span class="vp-ref">${esc(i.ref)}</span>
           <span class="t">${esc(kort(i.titel, 120))}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}
           <span class="gebruik">${svg("check", 18)}Ja, dit klopt</span></button>`; };
-      const zelf = (id, ref, titel) => `<button class="zpick" onclick="App.kiesRegel(${esc(JSON.stringify(id))})"><span class="vp-ref">${esc(ref)}</span><span class="t">${esc(kort(titel, 90))}</span></button>`;
+      const zelf = (id, ref, titel) => `<button class="zpick"${act("kiesRegel", id)}><span class="vp-ref">${esc(ref)}</span><span class="t">${esc(kort(titel, 90))}</span></button>`;
       v.appendChild(el(`<div class="stapwrap">
         ${this.insHead(ins, "Taak · " + ins.taak, "Waar hoort dit bij?")}
         <div class="q jijkaart">${this.citaat(cur)}</div>
@@ -364,7 +365,7 @@
           <details class="zelfkies"${!vs.bezig && !vs.ids.length ? " open" : ""}><summary>Zelf kiezen uit de TRA <span class="n">${regels.length + ows.length}</span></summary>
             <div class="zlijst"><div class="zkop">Risico's van deze taak</div>${regels.map((r) => zelf(r.id, r.id, r.risico)).join("")}
             <div class="zkop">Algemene onderwerpen</div>${ows.map((o) => zelf("ALG-" + o.ref, "Algemeen " + o.ref, o.naam)).join("")}</div></details>
-          <button class="linkknop" onclick="App.buitenTRA()">Staat niet in de TRA</button>
+          <button class="linkknop"${act("buitenTRA")}>Staat niet in de TRA</button>
         </div></div>`));
     },
     kiesRegel(id) {
@@ -384,16 +385,16 @@
       const O = { C: ["Conform", "In orde, zoals het hoort"], A: ["Afwijking", "Niet in orde, moet opgelost"], V: ["Verbeterpunt", "In orde, maar kan beter"] };
       let h = `<div class="q okaart">${this.citaat(cur)}
         <div class="koppelrij"><span class="vp-ref">${esc(info.ref)}</span><div class="t clamp3" title="${esc(info.titel)}">${esc(info.titel)}</div>
-          ${cur.onderwerp ? "" : `<button class="wijzig" onclick="App.wijzigKoppeling()" aria-label="Andere TRA-regel kiezen">Wijzig</button>`}</div>`;
+          ${cur.onderwerp ? "" : `<button class="wijzig"${act("wijzigKoppeling")} aria-label="Andere TRA-regel kiezen">Wijzig</button>`}</div>`;
       if (cur.direct) h += `<div class="gevaarbalk" role="status">${svg("warn", 20)}<span>Direct gevaar · werk is stilgelegd</span></div>`;
       if (cur.vraag) h += `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(cur.vraag)}</div>`;
       if (info.maatregelen.length) h += `<div class="otitel">Welke maatregel zag je? <span>(optioneel)</span></div>
-        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}" onclick="App.togMaatregel(${i})" aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div>`;
+        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div>`;
       h += `</div>`;
       v.appendChild(el(`<div class="stapwrap">${this.insHead(ins, cur.onderwerp ? "Algemeen onderwerp" : cur.buiten ? "Buiten de TRA" : "Taak · " + ins.taak, "Hoe beoordeel je dit?")}${h}
         <div class="dock odock"><div class="otitel" id="oordeel-lab">Jouw oordeel <span>· alleen jij beslist</span></div>
-          <div class="seg stapel" role="group" aria-labelledby="oordeel-lab">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}" onclick="App.oordeel('${o}')" aria-pressed="${cur.oordeel === o}"><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
-          <button class="linkknop nvt" onclick="App.oordeel('NVT')">Niet van toepassing</button></div></div>`));
+          <div class="seg stapel" role="group" aria-labelledby="oordeel-lab">${["C", "A", "V"].map((o) => `<button class="t-${o}${cur.oordeel === o ? " on-" + o : ""}"${act("oordeel", o)} aria-pressed="${cur.oordeel === o}"><span class="l">${o}</span><span class="w">${O[o][0]}</span><span class="u">${O[o][1]}</span></button>`).join("")}</div>
+          <button class="linkknop nvt"${act("oordeel", "NVT")}>Niet van toepassing</button></div></div>`));
     },
     wijzigKoppeling() { const ins = this.state.inspectie; if (ins && ins.voorstel && !ins.voorstel.bezig) this.stap("koppel"); else this.koppel(); },
     oordeel(o) {
@@ -423,7 +424,7 @@
     ins_actie(ins, v) {
       const cur = ins.cur, info = this.regelInfo(cur.regel_id, cur.buiten), a = cur.actie;
       const gecorr = a.terPlaatse === "gecorrigeerd";
-      const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}" onclick="App.zetActie('${k}','${val}')" aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${u}</span>` : ""}</button>`;
+      const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}"${act("zetActie", k, val)} aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${u}</span>` : ""}</button>`;
       const kop = a.bezig ? `<span class="lbl vs">Voorstel</span><span class="s">wordt gemaakt…</span>`
         : a.herkomst === "Voorstel" ? `<span class="lbl vs">Voorstel</span><span class="s">pas gerust aan</span>`
         : `<span class="arij-t">Actie</span>`;
@@ -431,7 +432,7 @@
         : gecorr ? "De ploeg heeft het ter plaatse opgelost en jij hebt het gezien. Het wordt vastgelegd als afgerond, met jou als toetser." : "";
       v.appendChild(el(`<div class="stapwrap">${this.insHead(ins, info.ref + " · " + (cur.oordeel === "A" ? "Afwijking" : "Verbeterpunt"), "Wat moet er gebeuren?")}
         <div class="q akaart2">${this.citaat(cur)}
-          <div class="arij">${kop}<button class="wijzig arij-k" id="btn-av" onclick="App.actieVoorstel()"${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
+          <div class="arij">${kop}<button class="wijzig arij-k" id="btn-av"${act("actieVoorstel")}${a.bezig ? " disabled" : ""}>${a.bezig ? "Even denken…" : a.tekst ? "Nieuw voorstel" : "Laat de app een actie voorstellen"}</button></div>
           ${a.herkomst === "Voorstel" && !a.bezig ? `<div class="waarom arij-w">Via ${esc(a.vsBron || "de app")}${a.vsWaarom ? " · waarom: " + esc(a.vsWaarom) : ""}</div>` : ""}
           ${this.invoer("actie", "Bijv. gasmeter altijd bij de man in de put; toolbox gasmeting")}
           <div class="otitel">Hoe dringend vind jij het?</div>
@@ -443,7 +444,7 @@
             ? this.actieStappen({ status: "Afgerond" }, { gecorr: true }) + `<div class="aw-regel">Jij zag het herstel: jij bent de toetser. Geen verdere instelling nodig.</div>`
             : this.actieStappen({ status: "Voorstel" }) + `<div class="aw-regel">Een coördinator kiest actiehouder, toetser en plandatum. <b>Afgerond pas na toetsing</b>; de toetser is nooit de actiehouder.</div>`}</div>
         </div>
-        <div class="dock adock"><button class="btn primary volgknop" data-need="actie" onclick="App.bevestigActie()">${svg("check", 20)} Actievoorstel vastleggen</button></div></div>`));
+        <div class="dock adock"><button class="btn primary volgknop" data-need="actie"${act("bevestigActie")}>${svg("check", 20)} Actievoorstel vastleggen</button></div></div>`));
     },
     // statusverloop van een actie: Instellen → Uitvoeren → Toetsen → Afgerond (wie bij elke stap)
     actieStappen(a, o) {
@@ -501,10 +502,10 @@
       v.appendChild(el(this.insHead(ins, "Taak · " + ins.taak, "Nog iets gezien?")));
       const t = this.toastLaatste(ins); if (t) v.appendChild(el(t));
       v.appendChild(el(`<div class="q">
-        <button class="btn primary" onclick="App.nieuweWaarneming();App.stap('zie')">${svg("mic", 18)} Ja, volgende waarneming</button>
-        <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.stap('algemeen')">Algemene onderwerpen nalopen</button>
-        <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.andereTaak()">Andere taak toetsen</button>
-        <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.stap('monteurs')">Nee, naar het gesprek met de monteurs</button></div>`));
+        <button class="btn primary"${act("waarnemingOver")}>${svg("mic", 18)} Ja, volgende waarneming</button>
+        <button class="btn ghost" style="margin-top:10px;width:100%"${act("stap", "algemeen")}>Algemene onderwerpen nalopen</button>
+        <button class="btn ghost" style="margin-top:10px;width:100%"${act("andereTaak")}>Andere taak toetsen</button>
+        <button class="btn ghost" style="margin-top:10px;width:100%"${act("stap", "monteurs")}>Nee, naar het gesprek met de monteurs</button></div>`));
       if (ins.waarnemingen.length) v.appendChild(el(this.vastgelegdLijst(ins)));
     },
     ins_algemeen(ins, v) {
@@ -513,11 +514,11 @@
       v.appendChild(el(`<div class="q"><div class="qs" style="margin-top:0">Leg alleen vast wat je zag. Tik op een onderwerp om er een waarneming bij te geven.</div>
         ${this.onderwerpen().map((o) => {
           const ws = ins.waarnemingen.filter((x) => x.regel_id === "ALG-" + o.ref);
-          return `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:12px" onclick="App.nieuweWaarneming('${o.ref}');App.stap('zie')">
+          return `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:12px"${act("waarnemingOver", o.ref)}>
             <span style="width:30px;height:30px;border-radius:8px;background:var(--mist);display:grid;place-items:center;font-weight:700;flex:none">${o.ref}</span>
             <span style="flex:1" class="t">${esc(o.naam)}</span>${ws.map((x) => `<span class="badge b-${x.oordeel === "NVT" ? "N" : x.oordeel}">[${x.oordeel}]</span>`).join(" ")}</button>`;
         }).join("")}
-        <button class="btn primary" style="margin-top:14px" onclick="App.stap('meer')">Klaar met de onderwerpen</button></div>`));
+        <button class="btn primary" style="margin-top:14px"${act("stap", "meer")}>Klaar met de onderwerpen</button></div>`));
     },
     // ---- monteurs bij de inspectie (alleen naam; voor koppeling en filter, nooit voor een score per persoon) ----
     // tijdelijke nepnamen; de echte monteurslijst vult Sven later zelf in
@@ -536,14 +537,14 @@
       v.appendChild(el(this.insHead(ins, "Vast onderdeel", "Gesprek met de monteurs")));
       const gekozen = ins.monteurs || [], lijst = this.monteursLijst();
       v.appendChild(el(`<div class="q"><div class="qt">Wie waren er aan het werk?</div><div class="qs">Tik de monteurs aan die je hebt geïnspecteerd. Alleen de naam wordt vastgelegd.</div>
-        <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}" onclick="App.togMonteur(${esc(JSON.stringify(n))})">${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
-        <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" placeholder="Andere naam toevoegen" style="flex:1" onkeydown="if(event.key==='Enter')App.voegMonteurToe()"><button class="btn ghost sm" onclick="App.voegMonteurToe()">${svg("plus", 16)} Toevoegen</button></div>
+        <div class="chips">${lijst.map((n) => `<button class="chipb${gekozen.includes(n) ? " on" : ""}"${act("togMonteur", n)}>${gekozen.includes(n) ? "✓ " : ""}${esc(n)}</button>`).join("")}</div>
+        <div style="display:flex;gap:8px;margin-top:12px"><input id="nieuwe-monteur" class="fin" placeholder="Andere naam toevoegen" style="flex:1"${op("enter", "voegMonteurToe")}><button class="btn ghost sm"${act("voegMonteurToe")}>${svg("plus", 16)} Toevoegen</button></div>
         ${gekozen.length ? `<div class="s" style="margin-top:10px;font-weight:700">${gekozen.length} monteur${gekozen.length === 1 ? "" : "s"} gekoppeld</div>` : ""}</div>`));
       v.appendChild(el(`<div class="q"><div class="qt">Wat heb je besproken en hoe reageerden ze?</div><div class="qs">Ideeën van de monteurs komen in het rapport.</div>
         ${this.invoer("gesprek", "Bijv. besproken dat de gasmeter bij de man hoort; monteurs stelden een clip aan het harnas voor")}</div>`));
       v.appendChild(el(`<div class="q"><div class="qt">Wat ging opvallend goed?</div><div class="qs">Elk rapport bevat ten minste één positieve bevinding.</div>
         ${this.invoer("positief", "Bijv. LOTOTO netjes toegepast: sloten van opdrachtgever en Noardling hingen erop")}
-        <button class="btn primary" style="margin-top:14px" onclick="App.stap('klaar')">Naar afronden</button></div>`));
+        <button class="btn primary" style="margin-top:14px"${act("stap", "klaar")}>Naar afronden</button></div>`));
     },
     vastgelegdLijst(ins) {
       return `<div class="vastgelegd"><h2>Vastgelegd</h2><div class="listcard">${ins.waarnemingen.map((w) => {
@@ -583,9 +584,9 @@
         <canvas id="sig" width="640" height="200" style="width:100%;height:160px;border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);touch-action:none;background:#fff;display:block"></canvas>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
           <span class="s" id="sigstat">${ins.handtekening ? "Ondertekend ✓" : "Teken in het vak"}</span>
-          <button class="btn ghost sm" onclick="App.clearSig()">Wissen</button></div></div>`));
-      v.appendChild(el(`<button class="btn primary" style="margin-top:16px" onclick="App.bewaarInspectie()">Inspectie vastleggen</button>`));
-      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.go('vandaag')">Later afmaken (blijft bewaard)</button>`));
+          <button class="btn ghost sm"${act("clearSig")}>Wissen</button></div></div>`));
+      v.appendChild(el(`<button class="btn primary" style="margin-top:16px"${act("bewaarInspectie")}>Inspectie vastleggen</button>`));
+      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%"${act("go", "vandaag")}>Later afmaken (blijft bewaard)</button>`));
     },
     setupSignature() {
       const cv = $("sig"); if (!cv) return;
@@ -607,8 +608,8 @@
       if (p.length && !toch) {
         return this.openModal("Nog " + p.length + " punt" + (p.length === 1 ? "" : "en") + " open", "Herinnering: je kunt aanvullen of toch vastleggen.",
           `<div class="card" style="background:var(--butter);box-shadow:none">${p.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:3px 0">• ${esc(x)}</div>`).join("")}</div>
-           <button class="btn ghost" style="margin-top:14px;width:100%" onclick="App.closeModal()">Terug om aan te vullen</button>
-           <button class="btn primary" style="margin-top:10px" onclick="App.closeModal();App.bewaarInspectie(true)">Toch vastleggen</button>`);
+           <button class="btn ghost" style="margin-top:14px;width:100%"${act("closeModal")}>Terug om aan te vullen</button>
+           <button class="btn primary" style="margin-top:10px"${actSluit("bewaarInspectie", true)}>Toch vastleggen</button>`);
       }
       const rec = { id: "WPI-" + Date.now(), versie: 3, titel: ins.titel, code: ins.code, project: ins.project,
         taken: ins.taken.slice(), taak: ins.taken[0] || ins.taak || "", waarnemingen: ins.waarnemingen,
@@ -627,7 +628,7 @@
       });
       let ok = true;
       try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }
-      if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary" onclick="App.closeModal();App.bewaarInspectie(true)">Opnieuw proberen</button>`);
+      if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary"${actSluit("bewaarInspectie", true)}>Opnieuw proberen</button>`);
       this.acties = null;
       if (ins.plan_id) { await this.laadPlanning(); const pl = this.planning.find((x) => x.id === ins.plan_id); if (pl) { pl.status = "uitgevoerd"; pl.inspectie_id = rec.id; try { await DB.put("planning", pl); } catch (e) {} } }
       this.state.inspectie = null; this.bewaarConcept(true); tril([30, 50, 30]);
@@ -637,11 +638,11 @@
       const nv = nieuw.filter((a) => a.status === "Voorstel").length;
       this.openModal("Vastgelegd", "Veilig bewaard op dit toestel (cloud-opslag volgt met de backend).",
         `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Een coördinator stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
-         <button class="btn primary" onclick="App.closeModal();location.hash='#/rapport/${rec.id}'">Bekijk rapport</button>
-         <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.closeModal();App.go('inspecties')">Naar inspecties</button>`);
+         <button class="btn primary"${actSluit("go", "rapport/" + rec.id)}>Bekijk rapport</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${actSluit("go", "inspecties")}>Naar inspecties</button>`);
     },
     // Actievenster (Acties › openActie): na het tekenen rustiger ordenen. Alleen opmaak en volgorde;
-    // knoppen, velden en hun onclick blijven dezelfde elementen. Lukt iets niet, dan blijft het venster zoals het was.
+    // knoppen, velden en hun acties (data-action) blijven dezelfde elementen. Lukt iets niet, dan blijft het venster zoals het was.
     verrijkActie(id) {
       const a = (this.acties || []).find((x) => x.id === id), mod = $("mod"), ov = $("ov");
       const kop = mod && mod.firstElementChild, titel = kop && kop.firstElementChild;

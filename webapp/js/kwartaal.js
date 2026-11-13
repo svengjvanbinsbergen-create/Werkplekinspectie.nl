@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, isoDag, stBadge } = window.WPI;
+  const { $, el, esc, svg, isoDag, stBadge, act } = window.WPI;
   Object.assign(window.App, {
     // ---------------- KWARTAALRAPPORTAGE (directie, webversie) ----------------
     kwartaal: null,
@@ -24,14 +24,15 @@
       return { q, mnd, wpis, regels, o, beo, pct: beo >= 5 ? Math.round(100 * o.Conform / beo) : null, prog, progPct: prog.y ? Math.round(100 * prog.ok / prog.y) : null,
         klasse, acties, af, optijd, open, over, themas, om, maanden: Object.keys(om).sort(), producten: [...new Set(wpis.map((w) => w.product))] };
     },
+    kiesKwartaal(q) { this.kwartaal = q; this.route(); },
     view_kwartaal() {
       const qs = Object.keys(this.KW); if (!this.kwartaal) this.kwartaal = qs[qs.length - 1];
       const K = this.kwCijfers(this.kwartaal), qi = qs.indexOf(this.kwartaal), V = qi > 0 ? this.kwCijfers(qs[qi - 1]) : null, P = this.PAL, v = $("view");
       const delta = (nu, toen, eenheid) => nu == null || toen == null ? "" : nu === toen ? `<span class="delta">= gelijk aan ${V.q}</span>` : `<span class="delta ${nu > toen ? "op" : "neer"}">${nu > toen ? "▲" : "▼"} ${Math.abs(nu - toen)}${eenheid} t.o.v. ${V.q}</span>`;
       const lopend = K.mnd.some((m) => m >= isoDag(new Date()).slice(0, 7));
       v.appendChild(el(`<div class="noprint"><div class="hi">Voor de directie · VCA 7.1 en 7.2</div><h1 class="groot">Kwartaalrapportage</h1>
-        <div class="tabs" style="margin-bottom:16px">${qs.map((q) => `<button class="tabp${q === this.kwartaal ? " on" : ""}" onclick="App.kwartaal='${q}';App.route()">${q}</button>`).join("")}
-        <button class="tabp" style="margin-left:auto" onclick="window.print()">${svg("doc", 16)} Opslaan als PDF</button></div></div>`));
+        <div class="tabs" style="margin-bottom:16px">${qs.map((q) => `<button class="tabp${q === this.kwartaal ? " on" : ""}"${act("kiesKwartaal", q)}>${q}</button>`).join("")}
+        <button class="tabp" style="margin-left:auto"${act("printen")}>${svg("doc", 16)} Opslaan als PDF</button></div></div>`));
       const top3 = Object.entries(K.klasse).filter(([, x]) => x.AV).sort((a, b) => b[1].AV - a[1].AV).slice(0, 3);
       const goed = Object.entries(K.klasse).filter(([, x]) => x.C >= 3).sort((a, b) => (b[1].C / (b[1].C + b[1].AV)) - (a[1].C / (a[1].C + a[1].AV)) || b[1].C - a[1].C).slice(0, 3);
       const zin = [];
@@ -72,7 +73,7 @@
             <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#A3610F" : "inherit"}">${K.over.length}</b></div></div>
           <div class="card"><h3>5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h3>
             ${this.data.trendacties.slice(0, 5).map((t) => `<div class="kwrij"><span class="grow">${esc(t.onderwerp)}</span>${stBadge(t.status === "Open" ? "Open" : "Afgerond")}</div>`).join("")}
-            <div class="s noprint" style="margin-top:8px"><a href="#/kwartaal" onclick="event.preventDefault();App.drill('acties')" style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
+            <div class="s noprint" style="margin-top:8px"><a href="#/kwartaal" data-geen-default${act("drill", "acties")} style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>
         </div>
 
         <div class="card kwnoot"><h3>Methode</h3><p class="s">Werkplekinspecties zijn momentopnames: alleen wat de inspecteur zelf zag telt (VCA 2026/6.1 eis 7.1). Conform-% is berekend over beoordeelde waarnemingen (C, A, V), zonder ‘niet van toepassing’. Bij minder dan 5 waarnemingen tonen we geen percentage. Een afwijking zegt iets over de situatie op dat moment, niet over personen. Acties zijn pas afgerond na toetsing door een ander dan de actiehouder.</p>

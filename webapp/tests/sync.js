@@ -662,7 +662,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await xp.evaluate(() => { App.state.inspectie = { code: 'DAM', titel: 'Lopend', waarnemingen: [{}], taken: [] }; });
     await xp.evaluate(async () => { if (!App.planning) App.planning = await WPI.DB.getAll('planning'); App.startGepland('PL-xss1'); }); await xp.waitForTimeout(300);
     ok(/Er loopt nog een inspectie/.test(await xp.locator('#mod').innerText()), 'venster "Er loopt nog een inspectie"');
-    ok(!(await geinjecteerd(xp)) && !/__xss/.test(await xp.locator('#mod .btn.danger').getAttribute('onclick')), 'geen servertekst in het onclick-attribuut');
+    ok(!(await geinjecteerd(xp)) && !/__xss/.test(await xp.locator('#mod .btn.danger').evaluate((k) => [...k.attributes].map((x) => x.name + '=' + x.value).join(' '))), 'geen servertekst in de attributen van de knop (data-action/data-args)');
     await xp.locator('#mod .btn.danger').dispatchEvent('pointerdown'); await xp.click('#mod .btn.danger'); await xp.waitForTimeout(400);
     ok(await xp.evaluate(() => window.__xss === undefined), 'opgeslagen XSS via planning: geen script uitgevoerd');
     ok(await xp.evaluate((k) => !!App.state.inspectie && App.state.inspectie.project === k && App.state.inspectie.plan_id === 'PL-xss1', kwaadP), 'nieuwe inspectie gestart met de projectnaam als gewone tekst');

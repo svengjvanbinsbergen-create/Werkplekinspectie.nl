@@ -5,8 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Werkplekinspectie</title>
 <meta name="description" content="Werkplekinspectie — momentopname-methode (voorbeeld, fictieve data)">
-<!-- CSP: inline <script> en javascript:-URL's zijn geblokkeerd (script-src-elem 'self'); alleen inline handler-attributen (onclick) mogen nog (script-src-attr). TODO volgende fase: event-delegatie, dan script-src-attr 'none' en script-src zonder 'unsafe-inline' (ook in _headers, netlify.toml, vercel.json). -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; connect-src 'self' https://project-ref.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!-- CSP (strikt): alleen scripts uit eigen bestanden (script-src 'self'); geen inline <script>, geen javascript:-URL's,
+     geen eval en GEEN inline handler-attributen (script-src-attr 'none'). Klikken, invoer, formulieren en de
+     microfoon lopen via event-delegatie in js/kern.js (data-action="naam" + data-args, zie WPI.act/WPI.op).
+     Nog open: style-src houdt 'unsafe-inline' vanwege style="…"-attributen in de gegenereerde HTML.
+     Gelijk houden met _headers, netlify.toml en vercel.json ("project-ref" bij livegang vervangen). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; connect-src 'self' https://project-ref.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="theme-color" content="#FAF6EF">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -22,11 +26,11 @@
     <div class="brand"><span class="logo">N</span><span>Werkplekinspectie</span></div>
     <div id="acct"></div>
   </div>
-  <div id="alert" class="alertbar hidden" role="alert" onclick="App.actFilter='telaat';location.hash==='#/acties'?App.route():App.go('acties')"></div>
+  <div id="alert" class="alertbar hidden" role="alert" data-action="alertKlik"></div>
   <div class="view" id="view"></div>
   <nav class="tabbar" id="tabbar"></nav>
 </div>
-<div id="ov" onclick="if(event.target===this)App.closeModal()"><div id="mod"></div></div>
+<div id="ov" data-action="closeModal" data-zelf><div id="mod"></div></div>
 <script src="js/kern.js"></script>
 <script src="js/config.js"></script>
 <script src="js/sync.js"></script>

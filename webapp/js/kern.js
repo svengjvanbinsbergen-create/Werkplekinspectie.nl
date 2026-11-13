@@ -29,6 +29,27 @@
   };
   const svg = (n, s = 24, w = 2) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${IC[n] || ""}</svg>`;
 
+  // ---- event-delegatie: GEEN inline handler-attributen (onclick e.d.) meer, zodat de CSP script-src-attr 'none' kan zijn ----
+  // In gegenereerde HTML zet je attributen met deze helpers; één luisteraar op document (zie onderaan) roept
+  // de genoemde App-methode aan. Alleen eigen functies van window.App, nooit eval/new Function of andere code.
+  //   act("naam", ...args)       klik → App.naam(...args)        →  data-action="naam" data-args="[…]"
+  //   actSluit("naam", ...args)  eerst App.closeModal(), dan App.naam(...args)  (+ data-sluit)
+  //   op("change"|"input"|"submit"|"enter"|"escape", "naam", ...args)
+  //                              →  data-change / data-input / data-submit (altijd preventDefault) /
+  //                                 data-enter / data-escape (keydown met die toets), met data-<soort>-args
+  //   args: JSON (strings, getallen, null, true/false); WAARDE, ELEMENT en EVENT worden bij het aanroepen
+  //   vervangen door element.value, het element zelf en het event (vroeger this.value, this en event).
+  //   Extra (los attribuut): data-stop (stopPropagation, ook geen verdere data-action hogerop),
+  //   data-geen-default (preventDefault bij klik), data-zelf (alleen als event.target het element zelf is),
+  //   data-mic="sleutel" (push-to-talk: pointerdown/up/cancel → micDown/micUp, toetsenbordklik → toggleMic,
+  //   geen contextmenu). Args komen altijd door esc(): servertekst kan nooit uit het attribuut breken.
+  const WAARDE = Object.freeze({ "@": "waarde" }), ELEMENT = Object.freeze({ "@": "element" }), EVENT = Object.freeze({ "@": "event" });
+  const argAttr = (n, args) => (args.length ? ` ${n}="${esc(JSON.stringify(args))}"` : "");
+  const op = (soort, naam, ...args) => soort === "click" ? ` data-action="${esc(naam)}"${argAttr("data-args", args)}`
+    : ` data-${soort}="${esc(naam)}"${argAttr("data-" + soort + "-args", args)}`;
+  const act = (naam, ...args) => op("click", naam, ...args);
+  const actSluit = (naam, ...args) => " data-sluit" + act(naam, ...args);
+
   // ---- lokale opslag (IndexedDB): inspecties blijven bewaard tot er een backend is ----
   // stores: inspecties (afgerond), acties (los van de inspectie in te stellen), concept (lopende inspectie)
   const DB = {
@@ -202,7 +223,7 @@
     pasPrefToe() { document.body.classList.toggle("veld", !!this.pref.veld); document.body.classList.toggle("zon", !!this.pref.zon); },
     zetPref(k) { this.pref[k] = !this.pref[k]; try { localStorage.setItem("wpi_pref", JSON.stringify(this.pref)); } catch (e) {} this.pasPrefToe(); tril(15); this.openWeergave(); },
     openWeergave() {
-      const sw = (k, t, s) => `<button class="row prefrow" onclick="App.zetPref('${k}')"><span class="grow"><span class="t">${t}</span><div class="s">${s}</div></span><span class="sw${this.pref[k] ? " on" : ""}" role="switch" aria-checked="${!!this.pref[k]}"></span></button>`;
+      const sw = (k, t, s) => `<button class="row prefrow"${act("zetPref", k)}><span class="grow"><span class="t">${t}</span><div class="s">${s}</div></span><span class="sw${this.pref[k] ? " on" : ""}" role="switch" aria-checked="${!!this.pref[k]}"></span></button>`;
       this.openModal("Weergave", "Voor op locatie. Wordt onthouden op dit toestel.",
         `<div class="listcard">${sw("veld", "Veldmodus", "Grotere knoppen en microfoon, voor werken met handschoenen")}${sw("zon", "Zonmodus", "Hoog contrast: zwart op wit met dikke randen, leesbaar in fel licht")}</div>
          <div class="s" style="margin-top:12px">Tijdens een inspectie blijft het scherm automatisch aan.</div>`);
@@ -238,25 +259,25 @@
     toonOpslag() {
       const c = $("opslag"); if (!c) return; const o = this._opslag || {};
       c.className = "opslag " + (o.s || "");
-      c.innerHTML = o.s === "fout" ? `Niet opgeslagen · <u style="cursor:pointer" onclick="App.bewaarConcept()">opnieuw</u>`
+      c.innerHTML = o.s === "fout" ? `Niet opgeslagen · <u style="cursor:pointer"${act("bewaarConcept")}>opnieuw</u>`
         : o.t ? `✓ Veilig op dit toestel · ${o.t.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "Wordt op dit toestel bewaard";
     },
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
       $("acct").innerHTML = `<div style="display:flex;gap:8px;align-items:center">
-        <button class="rondknop bel" onclick="App.openMeldingen()" title="Meldingen" aria-label="Meldingen">${svg("bell", 19)}<span id="belnr" class="belnr hidden"></span></button>
-        <button class="rondknop avatar" onclick="App.openAccount()" title="${esc(this.user.full_name)}" aria-label="Account">${esc(this.user.full_name[0])}</button></div>`;
+        <button class="rondknop bel"${act("openMeldingen")} title="Meldingen" aria-label="Meldingen">${svg("bell", 19)}<span id="belnr" class="belnr hidden"></span></button>
+        <button class="rondknop avatar"${act("openAccount")} title="${esc(this.user.full_name)}" aria-label="Account">${esc(this.user.full_name[0])}</button></div>`;
     },
     openAccount() {
-      const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow" onclick="${on}"><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
+      const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
-        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", "App.closeModal();App.openSearch()")}${r("sun", "Weergave", "Veldmodus en zonmodus", "App.openWeergave()")}${u.role === "hoofd" ? r("tand", "Beheer", "Monteurs en doel % conform", "App.closeModal();App.go('beheer')") : ""}${r("back", "Uitloggen", "", "App.closeModal();App.logout()")}</div>`);
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${u.role === "hoofd" ? r("tand", "Beheer", "Monteurs en doel % conform", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       this._search = { prod: Object.values(this.data.kennisbank).map((p) => p.naam), trend: this.data.trendacties, saved };
       this.openModal("Zoeken", "Producten, trendacties en je inspecties.",
-        `<input id="zq" placeholder="Typ om te zoeken…" autocomplete="off" oninput="App.doSearch(this.value)" style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
+        `<input id="zq" placeholder="Typ om te zoeken…" autocomplete="off"${op("input", "doSearch", WAARDE)} style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
          <div id="zr"></div>`);
       const i = $("zq"); if (i) i.focus();
     },
@@ -269,7 +290,7 @@
       (isWeb() ? s.trend : []).filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
       s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie", r.titel + " · " + r.taak, "#/rapport/" + r.id]));
       out.innerHTML = hit.length ? `<div class="listcard">${hit.map(([k, lab, href]) =>
-        `<div class="row"${href ? ` style="cursor:pointer" onclick="App.closeModal();location.hash='${href}'"` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
+        `<div class="row"${href ? ` style="cursor:pointer"${actSluit("go", href.replace(/^#\//, ""))}` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
         : `<div class="s">Niets gevonden voor “${esc(q)}”.</div>`;
     },
 
@@ -304,31 +325,33 @@
       v.appendChild(el(`<div style="padding:30px 0 10px"><div class="kicker">Werkplekinspectie · Noardling</div><h1>Inloggen</h1>
         <div class="muted" style="margin-top:-8px;margin-bottom:8px">Kies je account. (Voorbeeld-login; later Supabase Auth.)</div></div>`));
       v.appendChild(el(`<div class="listcard">${USERS.map((u) =>
-        `<div class="row" style="cursor:pointer" onclick="App.login('${u.id}')">
+        `<div class="row" style="cursor:pointer"${act("login", u.id)}>
           <span style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
           <span class="grow"><span class="t">${esc(u.full_name)}</span><div class="s">${esc(u.functie)} · ${ROL[u.role]}</div></span>
           <span class="s">${svg("chev", 18)}</span></div>`).join("")}</div>`));
       v.appendChild(el(`<div class="muted" style="font-size:12px;margin-top:16px">Rollen bepalen wat je ziet: een inspecteur start en ziet eigen inspecties; een coördinator en het Hoofd S&amp;M zien alles, acties en het dashboard.</div>`));
     },
 
-    tile(cls, n, lab, sub, onclick) {
-      return `<div class="tile ${cls}${onclick ? " click" : ""}" ${onclick ? `onclick="${onclick}"` : ""}>
-        <div class="lab">${lab}</div><div class="n">${n}</div><div class="sub">${sub}${onclick ? " ›" : ""}</div></div>`;
+    // actie: attributen van WPI.act(…) (klikbare tegel) of leeg
+    tile(cls, n, lab, sub, actie) {
+      return `<div class="tile ${cls}${actie ? " click" : ""}"${actie || ""}>
+        <div class="lab">${lab}</div><div class="n">${n}</div><div class="sub">${sub}${actie ? " ›" : ""}</div></div>`;
     },
 
     openModal(title, sub, body) {
       $("mod").innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
         <div style="font-size:20px;font-weight:700">${esc(title)}</div>
-        <button onclick="App.closeModal()" style="background:#F3F4F6;width:36px;height:36px;border-radius:50%;font-size:18px;color:#4A5565">×</button></div>
+        <button${act("closeModal")} style="background:#F3F4F6;width:36px;height:36px;border-radius:50%;font-size:18px;color:#4A5565">×</button></div>
         ${sub ? `<div class="muted" style="font-size:13px;margin:4px 0 14px">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
       $("ov").classList.add("on");
     },
     closeModal() { $("ov").classList.remove("on"); },
+    printen() { window.print(); },   // "Opslaan als PDF / printen" (rapport, kwartaal)
 
     view_alleenweb() {
       $("view").appendChild(el(`<div class="leeg" style="margin-top:40px"><span class="bol">💻</span><h1 style="margin:14px 0 6px">Alleen op de computer</h1>
         <div class="s" style="max-width:300px;margin:0 auto">Het dashboard, de trendanalyse en de rapportages open je in de webversie op je computer.</div>
-        <button class="btn primary" style="margin-top:20px;max-width:260px" onclick="App.go('vandaag')">Naar Vandaag</button></div>`));
+        <button class="btn primary" style="margin-top:20px;max-width:260px"${act("go", "vandaag")}>Naar Vandaag</button></div>`));
     },
   };
   window.App = App;
@@ -337,6 +360,55 @@
   const WPI = window.WPI = {
     $, el, esc, MND, mlabel, IC, svg, DB, fotoDataURL, USERS, ROL, TABS, staf, isWeb, naam, STOP, SYN, toks, overlap,
     OW_KEYS, splitMaatregelen, kort, dag0, isoDag, plusDagen, dagLabel, dagenTot, PRIO, ST_CLS, stBadge, tril,
-    eigenWoorden
+    eigenWoorden, act, actSluit, op, WAARDE, ELEMENT, EVENT
   };
+
+  // ---- de delegatielaag (zie act/op hierboven): één luisteraar per eventsoort op document ----
+  const NAAM_OK = /^[A-Za-z_$][\w$]*$/;
+  const SPECIAAL = { waarde: (x) => x.value, element: (x) => x, event: (x, e) => e };
+  function roep(x, naam, ruw, e) {
+    // alleen eigen functies van App (Object.assign in js/*.js); niets van Object.prototype en geen andere globals
+    if (!naam || !NAAM_OK.test(naam) || !Object.prototype.hasOwnProperty.call(App, naam) || typeof App[naam] !== "function") {
+      console.warn("Werkplekinspectie: onbekende actie", naam); return;
+    }
+    let args = [];
+    if (ruw) { try { args = JSON.parse(ruw); } catch (err) { console.warn("Werkplekinspectie: ongeldige args bij", naam); return; } }
+    if (!Array.isArray(args)) args = [args];
+    args = args.map((a) => (a && typeof a === "object" && !Array.isArray(a) && SPECIAAL[a["@"]] ? SPECIAAL[a["@"]](x, e) : a));
+    return App[naam].apply(App, args);
+  }
+  // loopt het pad van het event af (doel → document), zoals de inline handlers vroeger opborrelden
+  function delegeer(e, attr, argsAttr, voor) {
+    const pad = e.composedPath ? e.composedPath() : [];
+    for (const x of pad) {
+      if (!x || x.nodeType !== 1) continue;
+      if (!x.hasAttribute(attr)) continue;
+      if (x.hasAttribute("data-zelf") && e.target !== x) continue;
+      if (e.type === "click" && x.disabled === true) continue;   // uitgeschakelde knop: nooit een actie
+      if (voor) voor(x);
+      roep(x, x.getAttribute(attr), x.getAttribute(argsAttr), e);
+      if (x.hasAttribute("data-stop")) { e.stopPropagation(); break; }
+    }
+  }
+  const mic = (e) => (e.target && e.target.closest ? e.target.closest("[data-mic]") : null);
+  document.addEventListener("click", (e) => {
+    const m = mic(e);
+    if (m && e.detail === 0) App.toggleMic(m.getAttribute("data-mic"));   // toetsenbord/schakelaar: aan/uit
+    delegeer(e, "data-action", "data-args", (x) => {
+      if (x.hasAttribute("data-geen-default")) e.preventDefault();
+      if (x.hasAttribute("data-sluit")) App.closeModal();
+    });
+  });
+  document.addEventListener("change", (e) => delegeer(e, "data-change", "data-change-args"));
+  document.addEventListener("input", (e) => delegeer(e, "data-input", "data-input-args"));
+  document.addEventListener("submit", (e) => { if (e.target && e.target.hasAttribute && e.target.hasAttribute("data-submit")) e.preventDefault(); delegeer(e, "data-submit", "data-submit-args"); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") delegeer(e, "data-enter", "data-enter-args");
+    if (e.key === "Escape") delegeer(e, "data-escape", "data-escape-args");
+  });
+  // push-to-talk (inspreken): ingedrukt houden = praten, loslaten = klaar (450 ms, zie App.micDown/micUp)
+  document.addEventListener("pointerdown", (e) => { const m = mic(e); if (m) App.micDown(m.getAttribute("data-mic"), e); });
+  document.addEventListener("pointerup", (e) => { const m = mic(e); if (m) App.micUp(m.getAttribute("data-mic")); });
+  document.addEventListener("pointercancel", (e) => { const m = mic(e); if (m) App.micUp(m.getAttribute("data-mic")); });
+  document.addEventListener("contextmenu", (e) => { if (mic(e)) e.preventDefault(); });
 })();

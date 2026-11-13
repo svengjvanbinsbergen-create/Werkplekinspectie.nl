@@ -8,7 +8,7 @@
 // selectors, genormaliseerd tot een "vorm" (:nth-child(3) → :nth-child(n), lange getallen zoals
 // ACT-1731…-ids → #) met het aantal ELEMENTEN per vorm. Elk element telt, ook als meerdere elementen
 // dezelfde selector hebben (de eigen controle klik-zonder-toetsenbord maakt geen unieke selectors: tien
-// rijen div.row.prodrij[onclick^="App.closeModal();App.startIn"] tellen als 10, niet als 1; een interne
+// rijen div.row.prodrij[data-action="startInspectie"] tellen als 10, niet als 1; een interne
 // controle bewaakt dat de nulmeting precies evenveel elementen telt als er gevonden zijn).
 // Regressie = een regel × scherm die er nog niet was, een vorm die er nog niet was (bijv. een nieuw
 // invoerveld #sab1 zonder label), of MEER elementen van een bestaande vorm (bijv. een extra klikbare rij
@@ -80,7 +80,7 @@ const ev = (p, f, a) => p.evaluate(f, a);
 const login = (id) => async (p) => { await ev(p, (u) => { App.closeModal(); return App.login(u); }, id); await wacht(p, 700); };
 const ga = (h) => async (p) => { await ev(p, (h) => { App.closeModal(); App.go(h); }, h); await wacht(p, 700); };
 const EIGEN = {
-  "klik-zonder-toetsenbord": "Klikbaar element (div/tr/g/span met onclick) zonder role=button en tabindex: niet met toetsenbord of schakelaar te bedienen (WCAG 2.1.1)",
+  "klik-zonder-toetsenbord": "Klikbaar element (div/tr/g/span met data-action) zonder role=button en tabindex: niet met toetsenbord of schakelaar te bedienen (WCAG 2.1.1)",
   "modal-zonder-dialog-rol": "Modal heeft geen role=\"dialog\" en aria-modal=\"true\" (WCAG 4.1.2)",
   "modal-focus-niet-in-dialoog": "Bij openen van de modal gaat de focus niet naar de dialoog (WCAG 2.4.3)",
   "sluitknop-zonder-naam": "Sluitknop \"×\" heeft geen aria-label (schermlezer leest \"maal\")",
@@ -128,8 +128,9 @@ async function eigen(p) {
   return p.evaluate(() => {
     const uit = [];
     const interactief = new Set(["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "LABEL", "SUMMARY", "OPTION"]);
-    const sel = (e) => e.id ? "#" + e.id : e.tagName.toLowerCase() + (e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : "") + (e.getAttribute("onclick") ? '[onclick^="' + e.getAttribute("onclick").slice(0, 28).replace(/"/g, "'") + '"]' : "");
-    document.querySelectorAll("[onclick]").forEach((e) => {
+    const sel = (e) => e.id ? "#" + e.id : e.tagName.toLowerCase() + (e.className && typeof e.className === "string" ? "." + e.className.trim().split(/\s+/).slice(0, 2).join(".") : "") + (e.getAttribute("data-action") ? '[data-action="' + e.getAttribute("data-action").replace(/"/g, "'") + '"]' : "");
+    // klikbaar = data-action (event-delegatie in js/kern.js; inline onclick-attributen bestaan niet meer)
+    document.querySelectorAll("[data-action]").forEach((e) => {
       if (interactief.has(e.tagName) || e.id === "ov") return;
       if (e.closest("#ov") && !document.getElementById("ov").classList.contains("on")) return;
       const r = e.getBoundingClientRect(); if (!r.width && !r.height) return;
@@ -171,7 +172,7 @@ async function axe(p) {
   const b = await chromium.launch();
   // id → { impact, help, url, n, schermen:Set, sel: Map(selector → { schermen: Map(scherm → AANTAL elementen), … }) }
   // Per selector en scherm wordt het aantal ELEMENTEN geteld, niet alleen of de selector voorkomt: twee
-  // elementen met dezelfde (niet-unieke) selector, zoals rijen div.row.prodrij[onclick^="…"] in de
+  // elementen met dezelfde (niet-unieke) selector, zoals rijen div.row.prodrij[data-action="…"] in de
   // productkiezer, tellen dus als 2. Zo ziet de nulmeting elk extra element (zie de kop van dit bestand).
   const regels = new Map();
   const perScherm = [];

@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, esc, svg, naam, kort, dagLabel, dagenTot, staf } = window.WPI;
+  const { $, esc, svg, naam, kort, dagLabel, dagenTot, staf, act } = window.WPI;
   Object.assign(window.App, {
     // ---- meldingen over plandata: 1× een week vooraf, daarna na verstrijken elke 2 dagen; voor iedereen ----
     meldingen() {
@@ -49,8 +49,7 @@
         al.innerHTML = laat.length || gemist.length ? `${svg("warn", 16)}<span class="al-t">${tekst}</span><b>Bekijk ›</b>` : "";
         // de balk opent wat hij noemt: alleen acties → de acties die te laat zijn (zoals altijd); alleen inspecties → de
         // Planning; allebei → de meldingenlijst, waar beide staan en elke regel naar de juiste plek leidt
-        if (this._alertKlik === undefined) this._alertKlik = al.onclick;
-        al.onclick = laat.length && gemist.length ? () => this.openMeldingen() : gemist.length ? () => this.go("planning") : this._alertKlik;
+        this._alertDoel = laat.length && gemist.length ? "meldingen" : gemist.length ? "planning" : "acties";   // zie alertKlik
       }
       // meldingen van het toestel (als toegestaan) voor alles wat nog niet getoond is
       let nieuw = false;
@@ -67,6 +66,12 @@
         return true;
       } catch (e) { return false; }
     },
+    // klik op de alertbalk (#alert, data-action="alertKlik" in index.html)
+    alertKlik() {
+      if (this._alertDoel === "meldingen") return this.openMeldingen();
+      if (this._alertDoel === "planning") return this.go("planning");
+      this.naarActies("telaat");   // alleen acties: de acties die te laat zijn (zoals altijd)
+    },
     async meldingenAan() {
       try { const r = await Notification.requestPermission(); if (r === "granted") { this._bewaarSet("wpi_getoond", new Set()); await this.checkMeldingen(); } } catch (e) {}
       this.openMeldingen();
@@ -78,15 +83,15 @@
       const permHtml = perm === "granted" ? `<div class="s" style="margin-top:12px">✓ Meldingen op dit toestel staan aan.</div>`
         : perm === "denied" ? `<div class="hint" style="margin-top:12px">Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</div>`
         : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de balk bovenin het scherm.</div>`
-        : `<button class="btn primary" style="margin-top:14px" onclick="App.meldingenAan()">${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
+        : `<button class="btn primary" style="margin-top:14px"${act("meldingenAan")}>${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
       this.openModal("Meldingen", "Acties en inspecties die aandacht vragen.",
         // één signaal per regel: groene stip = ongelezen; de status als rustige pil (warm oranje alleen voor "te laat",
         // net als op de Planning en Vandaag; nooit de kleur van een oordeel)
         (M.length ? `<div class="listcard">${M.map((m) => { const nieuw = !gelezen.has(m.id), laat = m.soort !== "week";
-            return `<div class="row mrij ${m.soort} ${nieuw ? "nieuw" : "gelezen"}" onclick="App.leesMelding('${m.id}','${m.actie || ""}')">
+            return `<div class="row mrij ${m.soort} ${nieuw ? "nieuw" : "gelezen"}"${act("leesMelding", m.id, m.actie || "")}>
             <span class="mstip" ${nieuw ? 'role="img" aria-label="Nieuw"' : 'aria-hidden="true"'}></span>
             <span class="grow"><span class="t">${esc(m.titel)}</span><span class="mmeta"><span class="mpil${laat ? " laat" : ""}">${esc(m.pil || (laat ? "te laat" : "binnenkort"))}</span><span class="s">${esc(m.tekst)}</span></span></span></div>`; }).join("")}</div>
-            <button class="btn ghost sm" style="margin-top:10px" onclick="App.allesGelezen()">Alles gelezen</button>`
+            <button class="btn ghost sm" style="margin-top:10px"${act("allesGelezen")}>Alles gelezen</button>`
           : `<div class="s">Geen meldingen. Alle acties en inspecties liggen op schema.</div>`) + permHtml
         + `<p class="s mritme">Acties: een week vóór de plandatum, daarna elke 2 dagen zolang ze te laat zijn. Inspecties die nog niet gedaan zijn: de dag erna, daarna elke 2 dagen.</p>`);
     },
@@ -105,7 +110,7 @@
       const n = G.length, p = G[0];
       const sub = n === 1 ? "Gepland " + dagLabel(p.datum) + " · " + this.productNaam(p.code) + " · " + naam(p.inspecteur) : kort(G.map((x) => this.productNaam(x.code)).join(" · "), 60);
       const b = document.createElement("div");
-      b.innerHTML = `<button class="vknop warm vgemist" onclick="App.go('planning')"><span class="nr">${n}</span><span class="grow"><span class="t">${n === 1 ? "Inspectie" : "Inspecties"} nog niet gedaan</span><span class="s">${esc(sub)}</span></span>${svg("chev", 18)}</button>`;
+      b.innerHTML = `<button class="vknop warm vgemist"${WPI.act("go", "planning")}><span class="nr">${n}</span><span class="grow"><span class="t">${n === 1 ? "Inspectie" : "Inspecties"} nog niet gedaan</span><span class="s">${esc(sub)}</span></span>${svg("chev", 18)}</button>`;
       const laat = lc.querySelector(".vknop.warm");
       lc.insertBefore(b.firstElementChild, laat ? laat.nextSibling : lc.firstChild);
       const kop = act.querySelector(".vsectie"); if (kop && kop.textContent === "Acties") kop.textContent = "Acties en inspecties";

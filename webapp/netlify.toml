@@ -97,10 +97,10 @@
   for = "/*"
   [headers.values]
     Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
-    # script-src-elem 'self': geen inline <script> en geen javascript:-URL's; alleen inline handler-attributen mogen nog.
-    # TODO(volgende fase): script-src-attr 'none' en 'unsafe-inline' uit script-src zodra de inline onclick-handlers weg zijn.
+    # Scripts strikt: alleen eigen bestanden, geen inline <script>/javascript:-URL's/eval en geen inline handler-attributen
+    # (script-src-attr 'none'; de app gebruikt event-delegatie, zie js/kern.js). Nog open: 'unsafe-inline' in style-src (style="…").
     # VERPLICHT bij livegang: "project-ref" vervangen door de echte Supabase-ref (zie _headers en js/config.js).
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"

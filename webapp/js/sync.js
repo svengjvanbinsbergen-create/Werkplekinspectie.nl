@@ -63,7 +63,7 @@
    anders "Veilig op dit toestel" met uitleg. */
 (function () {
   "use strict";
-  const { $, esc, DB } = window.WPI;
+  const { $, esc, DB, act, actSluit } = window.WPI;
   const App = window.App;
   const CFG = window.WPI_CONFIG || {};
   const BASIS = String(CFG.supabaseUrl || "").replace(/\/+$/, "");
@@ -727,8 +727,8 @@
     }
     m.innerHTML = `<div style="font-weight:700;margin-bottom:4px">Wijziging niet doorgevoerd</div>
       <div class="s" style="margin-bottom:10px">Iemand anders wijzigde hetzelfde tegelijk. De stand van de server blijft; jouw versie is bewaard op dit toestel.</div>
-      <button class="btn primary" style="width:auto;padding:10px 16px" onclick="App.syncConflictSluit();App.syncDetails()">Bekijken</button>
-      <button class="btn ghost" style="width:auto;padding:10px 16px;margin-left:8px" onclick="App.syncConflictSluit()">Later</button>`;
+      <button class="btn primary" style="width:auto;padding:10px 16px"${act("syncConflictBekijk")}>Bekijken</button>
+      <button class="btn ghost" style="width:auto;padding:10px 16px;margin-left:8px"${act("syncConflictSluit")}>Later</button>`;
   }
   const toonWaarde = (v) => {
     if (v == null || v === "") return "(leeg)";
@@ -940,7 +940,7 @@
     return "Nog geen contact met de server — je gegevens staan veilig op dit toestel";
   }
   const tijd = (d) => d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
-  const chipHtml = (s, extra, attr) => `<span class="opslag ${KLASSE[s]}" ${attr || ""}${s === "fout" ? ` role="button" tabindex="0" style="cursor:pointer" onclick="event.stopPropagation();App.syncOpnieuw()"` : ""}>${esc(TEKST[s] + (extra || ""))}</span>`;
+  const chipHtml = (s, extra, attr) => `<span class="opslag ${KLASSE[s]}" ${attr || ""}${s === "fout" ? ` role="button" tabindex="0" style="cursor:pointer" data-stop${act("syncOpnieuw")}` : ""}>${esc(TEKST[s] + (extra || ""))}</span>`;
   function toonStatus() {
     if (!actief()) return;
     const c = $("syncchip");
@@ -980,7 +980,7 @@
       const a = $("acct"); if (!a) return;
       if (!this.user) { a.innerHTML = ""; return; }
       const box = a.firstElementChild;
-      if (box) box.insertAdjacentHTML("afterbegin", `<span id="syncchip" class="opslag" role="status" aria-live="polite" style="cursor:pointer" onclick="App.syncChipKlik()"></span>`);
+      if (box) box.insertAdjacentHTML("afterbegin", `<span id="syncchip" class="opslag" role="status" aria-live="polite" style="cursor:pointer"${act("syncChipKlik")}></span>`);
       toonStatus();
       laad().then(toonStatus);   // koude start: de wachtrij staat pas na het inlezen van IndexedDB in het geheugen
     };
@@ -1007,7 +1007,7 @@
       if (typeof code !== "string" || !Object.prototype.hasOwnProperty.call(kb, code) || !kb[code] || !Array.isArray(kb[code].regels)) {
         return this.openModal("Product onbekend", "Voor dit product (" + String(code == null ? "zonder code" : code).slice(0, 40) + ") staat geen TRA in de app, dus een inspectie kan niet starten.",
           `<div class="s" style="margin-bottom:12px;line-height:1.45">Vraag de coördinator de planning aan te passen naar een product uit de lijst. Je kunt ook zelf een inspectie starten via <b>Andere inspectie starten</b> op Vandaag.</div>
-           <button class="btn primary" onclick="App.closeModal()">Sluiten</button>`);
+           <button class="btn primary"${act("closeModal")}>Sluiten</button>`);
       }
       return start0.apply(this, arguments);
     };
@@ -1052,6 +1052,7 @@
     syncWachtrij() { return actief() ? [...OB.values()].filter((e) => App.user && e.uid === App.user.id).length : 0; },
     syncConflicten() { return (META.get("conflicten") || []).slice(); },
     syncConflictSluit() { const m = $("syncconflict"); if (m) m.remove(); },
+    syncConflictBekijk() { this.syncConflictSluit(); this.syncDetails(); },   // "Bekijken" in de conflictmelding
     // jouw bewaarde waarden alsnog toepassen: als nieuwe wijziging bovenop de huidige serverstand
     // (de server controleert opnieuw of het mag, bijv. wie een actie mag toetsen)
     async syncConflictToepassen(cid) {
@@ -1059,7 +1060,7 @@
       if (!c || !App.user || c.uid !== App.user.id) return;
       await syncHaal();
       const rec = await DB.get(c.store, c.id);
-      if (!rec) { this.closeModal(); return this.openModal("Niet meer beschikbaar", "Dit record staat niet (meer) op de server of je hebt er geen toegang meer toe.", `<button class="btn primary" onclick="App.closeModal()">Sluiten</button>`); }
+      if (!rec) { this.closeModal(); return this.openModal("Niet meer beschikbaar", "Dit record staat niet (meer) op de server of je hebt er geen toegang meer toe.", `<button class="btn primary"${act("closeModal")}>Sluiten</button>`); }
       c.velden.forEach((v) => { if (!VERBODEN.has(v.veld)) rec[v.veld] = v.waarde; });
       if (c.store === "acties") (rec.log = Array.isArray(rec.log) ? rec.log : []).push({ t: nu(), wie: App.user.full_name, wat: "Eerder niet doorgevoerde wijziging alsnog toegepast: " + c.velden.map((v) => VELDNAAM[v.veld] || v.veld).join(", ") });
       try { await DB.put(c.store, rec); } catch (e) { return; }
@@ -1103,9 +1104,9 @@
            Opnieuw proberen helpt alleen als de oorzaak is opgelost (bijv. als je de rechten hebt gekregen).</div>
          ${velden ? `<div class="listcard" style="margin-bottom:12px">${velden}</div>` : ""}
          <div class="s" style="margin-bottom:12px;line-height:1.45">${esc(gevolg)}</div>
-         <button class="btn primary" onclick="App.closeModal();App.syncOpnieuw()">Opnieuw proberen</button>
-         <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.syncWeggooien('${esc(e.id)}')">Wijziging weggooien</button>
-         <button class="linkknop" style="margin-top:10px" onclick="App.syncDetails()">Terug</button>`);
+         <button class="btn primary"${actSluit("syncOpnieuw")}>Opnieuw proberen</button>
+         <button class="btn ghost" style="margin-top:10px;width:100%"${act("syncWeggooien", e.id)}>Wijziging weggooien</button>
+         <button class="linkknop" style="margin-top:10px"${act("syncDetails")}>Terug</button>`);
     },
     async syncWeggooien(id) {
       await laad(true);
@@ -1163,17 +1164,17 @@
       const soort = SOORT;
       const conRij = (c) => c.weg ? `<div class="row" data-conflict="${esc(c.cid)}"><span class="grow"><span class="t">${esc(SOORT[c.store] || c.store)} · ${esc(recordNaam(c))}</span>
         <div class="s">${esc(kortDatum(c.t))}${esc(tijd(new Date(c.t)))} · <b>verwijderd op de server</b> (door het Hoofd Service &amp; Montage, of je hebt er geen toegang meer toe). Jouw wijziging is daarom niet verstuurd; jouw versie is bewaard op dit toestel.</div>
-        <div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px" onclick="App.syncConflictHerstel('${esc(c.cid)}')">Opnieuw aanmaken</button>
-        <button class="linkknop" style="margin-left:8px" onclick="App.syncConflictWeg('${esc(c.cid)}')">Weggooien</button></div></span></div>`
+        <div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px"${act("syncConflictHerstel", c.cid)}>Opnieuw aanmaken</button>
+        <button class="linkknop" style="margin-left:8px"${act("syncConflictWeg", c.cid)}>Weggooien</button></div></span></div>`
         : `<div class="row" data-conflict="${esc(c.cid)}"><span class="grow"><span class="t">${esc(SOORT[c.store] || c.store)} · ${esc(recordNaam(c))}</span>
         <div class="s">${esc(kortDatum(c.t))}${esc(tijd(new Date(c.t)))} · jouw versie: ${c.velden.map((v) => esc(VELDNAAM[v.veld] || v.veld) + " <b>" + esc(toonWaarde(v.waarde)) + "</b>").join(" · ")}</div>
-        <div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px" onclick="App.syncConflictToepassen('${esc(c.cid)}')">Mijn versie toepassen</button>
-        <button class="linkknop" style="margin-left:8px" onclick="App.syncConflictWeg('${esc(c.cid)}')">Weggooien</button></div></span></div>`;
+        <div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px"${act("syncConflictToepassen", c.cid)}>Mijn versie toepassen</button>
+        <button class="linkknop" style="margin-left:8px"${act("syncConflictWeg", c.cid)}>Weggooien</button></div></span></div>`;
       const namen = new Map();
       for (const e of mijn.slice(0, 20)) { let r = null; try { r = await g0(e.store, e.rid); } catch (x) {} namen.set(e.id, leesbaar(e.store, r || e.basis, e.rid)); }
       const rij = (e) => `<div class="row" data-wachtrij="${esc(e.id)}"><span class="grow"><span class="t">${soort[e.store] || e.store} · ${esc(namen.get(e.id) || e.rid)}</span>
         <div class="s">${e.op === "del" ? "Verwijderen" : "Bijwerken"} · ${e.fout ? "geweigerd door de server" + (e.melding ? ": " + esc(e.melding) : "") : e.pogingen ? "in de wachtrij — " + esc(e.melding || "geen verbinding met de server") + "; volgt vanzelf" : "wacht op verbinding"}</div>
-        ${e.fout ? `<div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px" onclick="App.syncWijziging('${esc(e.id)}')">Bekijken en oplossen</button></div>` : ""}</span></div>`;
+        ${e.fout ? `<div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px"${act("syncWijziging", e.id)}>Bekijken en oplossen</button></div>` : ""}</span></div>`;
       this.openModal("Synchronisatie", !navigator.onLine ? "Geen verbinding — wijzigingen blijven veilig op dit toestel staan." : serverBereikt() ? "Verbonden met de server" : uitlegLokaal() + ".",
         `<div style="margin-bottom:12px">${chipHtml(t.s, t.s === "wachtrij" ? " · " + t.n : "")}${laatsteOk ? `<span class="s" style="margin-left:8px">laatst ${tijd(laatsteOk)}</span>` : ""}</div>
          ${cspFout ? `<div class="hint" style="margin-bottom:12px">De beveiligingsinstellingen (CSP) van deze website blokkeren de server. Vraag de beheerder het project-adres toe te voegen.</div>` : ""}
@@ -1181,8 +1182,8 @@
          ${con.length ? `<div style="font-weight:700;margin:4px 0 4px">Niet doorgevoerd</div>
            <div class="s" style="margin-bottom:8px;line-height:1.45">Iemand anders wijzigde of verwijderde hetzelfde intussen; de stand van de server is gebleven. Jouw versie staat hieronder en is bewaard op dit toestel.</div>
            <div class="listcard" style="margin-bottom:12px">${con.slice(-10).reverse().map(conRij).join("")}</div>` : ""}
-         ${oud ? `<div class="hint" style="margin-bottom:12px">${oud} ${oud === 1 ? "record" : "records"} uit de voorbeeldversie ${oud === 1 ? "staat" : "staan"} alleen op dit toestel en ${oud === 1 ? "wordt" : "worden"} niet verstuurd. <button class="linkknop" onclick="App.syncOudVraag()">Bekijken</button></div>` : ""}
-         <button class="btn primary" onclick="App.closeModal();App.syncOpnieuw()">Nu synchroniseren</button>`);
+         ${oud ? `<div class="hint" style="margin-bottom:12px">${oud} ${oud === 1 ? "record" : "records"} uit de voorbeeldversie ${oud === 1 ? "staat" : "staan"} alleen op dit toestel en ${oud === 1 ? "wordt" : "worden"} niet verstuurd. <button class="linkknop"${act("syncOudVraag")}>Bekijken</button></div>` : ""}
+         <button class="btn primary"${actSluit("syncOpnieuw")}>Nu synchroniseren</button>`);
     },
     // oude gegevens: overnemen (komen op jouw naam en gaan naar de server) of laten staan
     async syncOudVraag(o) {
@@ -1198,15 +1199,15 @@
       const c0 = con[0], ci = c0 && c0.ins;
       const conceptHtml = !c0 ? "" : `<div class="hint" style="margin:12px 0;line-height:1.45"><b>Onafgemaakte inspectie</b> uit de voorbeeldversie: ${esc(ci.titel || "zonder titel")} · ${meervoud((ci.waarnemingen || []).length, "waarneming", "waarnemingen")}${c0.t ? " · " + esc(kortDatum(c0.t).trim()) : ""}.
           ${App.state.inspectie ? "Je hebt zelf al een lopende inspectie; rond die eerst af. Deze blijft op dit toestel staan." : `Alleen verdergaan als <b>jij</b> deze inspectie bent begonnen.
-          <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.syncNeemConceptOver(0)">Verder als mijn lopende inspectie</button>`}</div>`;
+          <button class="btn ghost" style="margin-top:10px;width:100%"${act("syncNeemConceptOver", 0)}>Verder als mijn lopende inspectie</button>`}</div>`;
       this.openModal("Oude gegevens op dit toestel", (delen ? "Uit de voorbeeldversie van de app: " + delen + ". " : "") + "Deze staan alleen hier en gaan niet naar de server.",
         `${delen ? `<div class="s" style="margin-bottom:12px;line-height:1.45">Neem ze alleen over als <b>jij</b> deze inspecties zelf hebt gedaan: ze komen op jouw naam.
            Acties gaan terug naar <b>Voorstel</b>, zodat actiehouder en toetser ze echt opnieuw doorlopen (alleen open acties met echte collega's als actiehouder en toetser blijven Open).
            De oude historie komt als één regel bij de actie; niets wordt achteraf op naam van een ander gezet.</div>` : ""}
          ${blijft.length ? `<div class="s" style="margin-bottom:12px;line-height:1.45">${blijft.map((x) => esc(x) + ".").join(" ")} Dit blijft alleen op dit toestel.</div>` : ""}
          ${conceptHtml}
-         ${delen ? `<button class="btn primary" onclick="App.syncNeemOver()">Overnemen en versturen</button>` : ""}
-         <button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.closeModal()">Laten staan (alleen op dit toestel)</button>`);
+         ${delen ? `<button class="btn primary"${act("syncNeemOver")}>Overnemen en versturen</button>` : ""}
+         <button class="btn ghost" style="margin-top:10px;width:100%"${act("closeModal")}>Laten staan (alleen op dit toestel)</button>`);
     },
     async syncNeemOver() {
       const u = App.user; if (!u || !actief()) return;

@@ -70,15 +70,15 @@
   "aria-toggle-field-name|weergave-modal@1440": {
    "impact": "serious",
    "vormen": {
-    "button[onclick=\"App.zetPref('veld')\"] > .sw[role=\"switch\"]": 1,
-    "button[onclick=\"App.zetPref('zon')\"] > .sw[role=\"switch\"]": 1
+    "button[data-args=\"[\\\"veld\\\"]\"] > .sw[role=\"switch\"]": 1,
+    "button[data-args=\"[\\\"zon\\\"]\"] > .sw[role=\"switch\"]": 1
    }
   },
   "aria-toggle-field-name|weergave-modal@390": {
    "impact": "serious",
    "vormen": {
-    "button[onclick=\"App.zetPref('veld')\"] > .sw[role=\"switch\"]": 1,
-    "button[onclick=\"App.zetPref('zon')\"] > .sw[role=\"switch\"]": 1
+    "button[data-args=\"[\\\"veld\\\"]\"] > .sw[role=\"switch\"]": 1,
+    "button[data-args=\"[\\\"zon\\\"]\"] > .sw[role=\"switch\"]": 1
    }
   },
   "color-contrast|account-modal@1440": {
@@ -87,17 +87,17 @@
     ".b-todo": 1,
     ".hi": 1,
     ".muted": 1,
-    ".row.prefrow:nth-child(n) > .grow > .s": 1,
     "a[href$=\"#/dashboard\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/kwartaal\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openWeergave()\"] > .grow > .s": 1,
+    "button[data-action=\"openSearch\"] > .grow > .s": 1,
+    "button[data-action=\"openWeergave\"] > .grow > .s": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|account-modal@390": {
@@ -106,18 +106,18 @@
     ".b-todo": 1,
     ".hi": 1,
     ".muted": 1,
-    ".row.prefrow:nth-child(n) > .grow > .s": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openWeergave()\"] > .grow > .s": 1
+    "button[data-action=\"openSearch\"] > .grow > .s": 1,
+    "button[data-action=\"openWeergave\"] > .grow > .s": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3
    }
   },
   "color-contrast|actie-modal-open@1440": {
@@ -134,26 +134,26 @@
     "small": 1,
     "td:nth-child(n) > .b-todo.badge": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"][data-action=\"openActie\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|actie-modal-open@390": {
    "impact": "serious",
    "vormen": {
+    ".akaart[data-args=\"[\\\"ACT-demo2\\\"]\"][data-action=\"openActie\"] > .boven > .warm.dchip": 1,
+    ".akaart[data-args=\"[\\\"ACT-demo2\\\"]\"][data-action=\"openActie\"] > .onder > span:nth-child(n)": 3,
     ".boven > .b-todo.badge": 1,
     ".hi": 1,
     ".muted": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3
    }
   },
   "color-contrast|actie-modal-voorstel@1440": {
@@ -171,26 +171,26 @@
     "div:nth-child(n) > label": 3,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|actie-modal-voorstel@390": {
    "impact": "serious",
    "vormen": {
+    ".akaart[data-args=\"[\\\"ACT-demo4\\\"]\"][data-action=\"openActie\"] > .onder > span:nth-child(n)": 3,
     ".b-todo": 1,
     ".hi": 1,
     ".muted": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3,
     "div:nth-child(n) > label": 3
    }
   },
@@ -206,8 +206,8 @@
     "a[href$=\"#/vandaag\"]": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|acties@390": {
@@ -218,13 +218,13 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3
    }
   },
   "color-contrast|beheer@1440": {
@@ -272,11 +272,13 @@
     "a[href$=\"#/kwartaal\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "div[onclick=\"App.drill('acties')\"] > .lab": 1,
-    "div[onclick=\"App.drill('acties')\"] > .sub": 1,
-    "div[onclick=\"App.drill('programma')\"] > .lab": 1,
-    "div[onclick=\"App.drill('programma')\"] > .sub": 1,
-    "select:nth-child(n)": 3,
+    "div[data-args=\"[\\\"acties\\\"]\"] > .lab": 1,
+    "div[data-args=\"[\\\"acties\\\"]\"] > .sub": 1,
+    "div[data-args=\"[\\\"programma\\\"]\"] > .lab": 1,
+    "div[data-args=\"[\\\"programma\\\"]\"] > .sub": 1,
+    "select[data-change-args=\"[\\\"locatie\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"periode\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"product\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
     "small": 1
    }
   },
@@ -403,14 +405,16 @@
    "impact": "serious",
    "vormen": {
     ".brand > span:nth-child(n)": 1,
-    ".pick:nth-child(n) > .s": 2,
+    ".pick[data-args=\"[\\\"Situatie Kraanopstelling\\\"]\"][data-action=\"kiesTaak\"] > .s": 1,
+    ".pick[data-args=\"[\\\"Verwijderen damwand\\\"]\"][data-action=\"kiesTaak\"] > .s": 1,
     ".qs": 1
    }
   },
   "color-contrast|ins-taak@390": {
    "impact": "serious",
    "vormen": {
-    ".pick:nth-child(n) > .s": 2,
+    ".pick[data-args=\"[\\\"Situatie Kraanopstelling\\\"]\"][data-action=\"kiesTaak\"] > .s": 1,
+    ".pick[data-args=\"[\\\"Verwijderen damwand\\\"]\"][data-action=\"kiesTaak\"] > .s": 1,
     ".qs": 1
    }
   },
@@ -480,10 +484,10 @@
     ".chip": 1,
     ".kicker": 1,
     "div:nth-child(n) > .muted": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-insp')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > .grow > .s": 1
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow > .s": 1
    }
   },
   "color-contrast|login@390": {
@@ -493,10 +497,10 @@
     ".chip": 1,
     ".kicker": 1,
     "div:nth-child(n) > .muted": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-insp')\"] > .grow > .s": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > .grow > .s": 1
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow > .s": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow > .s": 1
    }
   },
   "color-contrast|meldingen-modal@1440": {
@@ -512,8 +516,8 @@
     "a[href$=\"#/vandaag\"]": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|meldingen-modal@390": {
@@ -525,13 +529,13 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3
    }
   },
   "color-contrast|nieuwe-actie-modal@1440": {
@@ -548,8 +552,8 @@
     "label:nth-child(n)": 5,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|nieuwe-actie-modal@390": {
@@ -561,13 +565,13 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3,
     "label:nth-child(n)": 5
    }
   },
@@ -658,8 +662,8 @@
     "div[data-naam=\"landox\"] > .grow > .s": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|product-kiezen-modal@390": {
@@ -671,13 +675,13 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3,
     "div[data-naam=\"bandfilter\"] > .grow > .s": 1,
     "div[data-naam=\"beluchter\"] > .grow > .s": 1,
     "div[data-naam=\"borstelbeluchter\"] > .grow > .s": 1,
@@ -697,13 +701,13 @@
     ".grow > .s:nth-child(n)": 1,
     ".kicker": 1,
     ".listcard:nth-child(n) > .row > .grow > .s": 1,
-    ".listcard:nth-child(n) > .row > .grow > .s:nth-child(n)": 1,
     "a[href$=\"#/acties\"]": 1,
     "a[href$=\"#/dashboard\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/kwartaal\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
+    "div[data-action=\"openActie\"] > .grow > .s:nth-child(n)": 1,
     "small": 1
    }
   },
@@ -713,11 +717,11 @@
     ".grow > .s:nth-child(n)": 1,
     ".kicker": 1,
     ".listcard:nth-child(n) > .row > .grow > .s": 1,
-    ".listcard:nth-child(n) > .row > .grow > .s:nth-child(n)": 1,
     "a[href$=\"#/acties\"]": 1,
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
-    "a[href$=\"#/vandaag\"]": 1
+    "a[href$=\"#/vandaag\"]": 1,
+    "div[data-action=\"openActie\"] > .grow > .s:nth-child(n)": 1
    }
   },
   "color-contrast|vandaag-zonmodus@1440": {
@@ -768,12 +772,12 @@
     "a[href$=\"#/kwartaal\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.zetPref('veld')\"] > .grow > .s": 1,
-    "button[onclick=\"App.zetPref('zon')\"] > .grow > .s": 1,
+    "button[data-args=\"[\\\"veld\\\"]\"] > .grow > .s": 1,
+    "button[data-args=\"[\\\"zon\\\"]\"] > .grow > .s": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|weergave-modal@390": {
@@ -785,14 +789,14 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.zetPref('veld')\"] > .grow > .s": 1
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"veld\\\"]\"] > .grow > .s": 1
    }
   },
   "color-contrast|zoeken-modal@1440": {
@@ -809,8 +813,8 @@
     "a[href$=\"#/vandaag\"]": 1,
     "small": 1,
     "th:nth-child(n)": 6,
-    "tr[onclick=\"App.openActie('ACT-demo1')\"] > td:nth-child(n) > .dchip.warm": 1,
-    "tr[onclick=\"App.openActie('ACT-demo2')\"] > td:nth-child(n) > .dchip.warm": 1
+    "tr[data-args=\"[\\\"ACT-demo1\\\"]\"] > td:nth-child(n) > .dchip.warm": 1,
+    "tr[data-args=\"[\\\"ACT-demo2\\\"]\"] > td:nth-child(n) > .dchip.warm": 1
    }
   },
   "color-contrast|zoeken-modal@390": {
@@ -823,13 +827,13 @@
     "a[href$=\"#/inspecties\"]": 1,
     "a[href$=\"#/planning\"]": 1,
     "a[href$=\"#/vandaag\"]": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo1')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .boven > .warm.dchip": 1,
-    "button[onclick=\"App.openActie('ACT-demo2')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo3')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo4')\"] > .onder > span:nth-child(n)": 3,
-    "button[onclick=\"App.openActie('ACT-demo5')\"] > .onder > span:nth-child(n)": 3
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo1\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .boven > .warm.dchip": 1,
+    "button[data-args=\"[\\\"ACT-demo2\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo3\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo4\\\"]\"] > .onder > span:nth-child(n)": 3,
+    "button[data-args=\"[\\\"ACT-demo5\\\"]\"] > .onder > span:nth-child(n)": 3
    }
   },
   "heading-order|dashboard@1440": {
@@ -848,11 +852,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|account-modal@390": {
@@ -865,11 +865,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|actie-modal-open@390": {
@@ -882,11 +878,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|actie-modal-voorstel@390": {
@@ -899,11 +891,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|acties@390": {
@@ -928,14 +916,12 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.tile.blush[onclick^=\"App.drill('acties')\"]": 1,
-    "div.tile.blush[onclick^=\"App.drill('programma')\"]": 1,
-    "div.tile.lilac[onclick^=\"App.drill('inspecties')\"]": 1,
-    "div.tile.sage[onclick^=\"App.drill('conform')\"]": 1,
-    "div.tile.sky[onclick^=\"App.drill('waarnemingen')\"]": 1,
-    "g[onclick^=\"App.drill('oordeelmaand','20\"]": 14,
-    "g[onclick^=\"App.drill('programma','2026-\"]": 7,
-    "path[onclick^=\"App.drill('conform')\"]": 4
+    "div.tile.blush[data-action=\"drill\"]": 2,
+    "div.tile.lilac[data-action=\"drill\"]": 1,
+    "div.tile.sage[data-action=\"drill\"]": 1,
+    "div.tile.sky[data-action=\"drill\"]": 1,
+    "g[data-action=\"drill\"]": 21,
+    "path[data-action=\"drill\"]": 4
    }
   },
   "klik-zonder-toetsenbord|dashboard@390": {
@@ -960,7 +946,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "g[onclick^=\"App.drill('oordeelmaand','20\"]": 2
+    "g[data-action=\"drill\"]": 2
    }
   },
   "klik-zonder-toetsenbord|kwartaal@390": {
@@ -972,53 +958,35 @@
   "klik-zonder-toetsenbord|login@1440": {
    "impact": "serious",
    "vormen": {
-    "div.row[onclick^=\"App.login('u-bjorn')\"]": 1,
-    "div.row[onclick^=\"App.login('u-douwe')\"]": 1,
-    "div.row[onclick^=\"App.login('u-insp')\"]": 1,
-    "div.row[onclick^=\"App.login('u-winfred')\"]": 1
+    "div.row[data-action=\"login\"]": 4
    }
   },
   "klik-zonder-toetsenbord|login@390": {
    "impact": "serious",
    "vormen": {
-    "div.row[onclick^=\"App.login('u-bjorn')\"]": 1,
-    "div.row[onclick^=\"App.login('u-douwe')\"]": 1,
-    "div.row[onclick^=\"App.login('u-insp')\"]": 1,
-    "div.row[onclick^=\"App.login('u-winfred')\"]": 1
+    "div.row[data-action=\"login\"]": 4
    }
   },
   "klik-zonder-toetsenbord|meldingen-modal@1440": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('ACT-demo1:l\"]": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('ACT-demo2:w\"]": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('PL-demo6:ge\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "div.row.mrij[data-action=\"leesMelding\"]": 3,
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|meldingen-modal@390": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('ACT-demo1:l\"]": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('ACT-demo2:w\"]": 1,
-    "div.row.mrij[onclick^=\"App.leesMelding('PL-demo6:ge\"]": 1
+    "div.row.mrij[data-action=\"leesMelding\"]": 3
    }
   },
   "klik-zonder-toetsenbord|nieuwe-actie-modal@1440": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|nieuwe-actie-modal@390": {
@@ -1055,44 +1023,36 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row.prodrij[onclick^=\"App.closeModal();App.startIn\"]": 21,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "div.row.prodrij[data-action=\"startInspectie\"]": 21,
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|product-kiezen-modal@390": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row.prodrij[onclick^=\"App.closeModal();App.startIn\"]": 21
+    "div.row.prodrij[data-action=\"startInspectie\"]": 21
    }
   },
   "klik-zonder-toetsenbord|rapport@1440": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row[onclick^=\"App.openActie('ACT-#\"]": 1
+    "div.row[data-action=\"openActie\"]": 1
    }
   },
   "klik-zonder-toetsenbord|rapport@390": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "div.row[onclick^=\"App.openActie('ACT-#\"]": 1
+    "div.row[data-action=\"openActie\"]": 1
    }
   },
   "klik-zonder-toetsenbord|weergave-modal@1440": {
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|weergave-modal@390": {
@@ -1105,11 +1065,7 @@
    "impact": "serious",
    "vormen": {
     "#alert": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo1')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo2')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo3')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo4')\"]": 1,
-    "tr[onclick^=\"App.openActie('ACT-demo5')\"]": 1
+    "tr[data-action=\"openActie\"]": 5
    }
   },
   "klik-zonder-toetsenbord|zoeken-modal@390": {
@@ -1380,48 +1336,48 @@
    "impact": "serious",
    "vormen": {
     ".bel": 1,
-    "button[onclick=\"App.planForm('PL-demo1')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo2')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo3')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo4')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo5')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo6')\"]": 1
+    ".wijzig[data-args=\"[\\\"PL-demo2\\\"]\"][aria-label=\"Wijzigen\"]": 1,
+    "button[data-args=\"[\\\"PL-demo1\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo3\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo4\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo5\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo6\\\"]\"]": 1
    }
   },
   "label-content-name-mismatch|plan-modal@390": {
    "impact": "serious",
    "vormen": {
     ".bel": 1,
-    "button[onclick=\"App.planForm('PL-demo1')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo2')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo3')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo4')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo5')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo6')\"]": 1
+    ".wijzig[data-args=\"[\\\"PL-demo2\\\"]\"][aria-label=\"Wijzigen\"]": 1,
+    "button[data-args=\"[\\\"PL-demo1\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo3\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo4\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo5\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo6\\\"]\"]": 1
    }
   },
   "label-content-name-mismatch|planning@1440": {
    "impact": "serious",
    "vormen": {
     ".bel": 1,
-    "button[onclick=\"App.planForm('PL-demo1')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo2')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo3')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo4')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo5')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo6')\"]": 1
+    ".wijzig[data-args=\"[\\\"PL-demo2\\\"]\"][aria-label=\"Wijzigen\"]": 1,
+    "button[data-args=\"[\\\"PL-demo1\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo3\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo4\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo5\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo6\\\"]\"]": 1
    }
   },
   "label-content-name-mismatch|planning@390": {
    "impact": "serious",
    "vormen": {
     ".bel": 1,
-    "button[onclick=\"App.planForm('PL-demo1')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo2')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo3')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo4')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo5')\"]": 1,
-    "button[onclick=\"App.planForm('PL-demo6')\"]": 1
+    ".wijzig[data-args=\"[\\\"PL-demo2\\\"]\"][aria-label=\"Wijzigen\"]": 1,
+    "button[data-args=\"[\\\"PL-demo1\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo3\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo4\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo5\\\"]\"]": 1,
+    "button[data-args=\"[\\\"PL-demo6\\\"]\"]": 1
    }
   },
   "label-content-name-mismatch|product-kiezen-modal@1440": {
@@ -2571,14 +2527,14 @@
     "#view > div:nth-child(n)": 1,
     ".hint": 1,
     ".topbar": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-insp')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-insp')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > span:nth-child(n)": 1
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > span:nth-child(n)": 1
    }
   },
   "region|login@390": {
@@ -2589,14 +2545,14 @@
     "#view > div:nth-child(n)": 1,
     ".hint": 1,
     ".logo": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-bjorn')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-douwe')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-insp')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-insp')\"] > span:nth-child(n)": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > .grow": 1,
-    "div[onclick=\"App.login('u-winfred')\"] > span:nth-child(n)": 1
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-bjorn\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-douwe\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-insp\\\"]\"] > span:nth-child(n)": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > .grow": 1,
+    "div[data-args=\"[\\\"u-winfred\\\"]\"] > span:nth-child(n)": 1
    }
   },
   "region|meldingen-modal@1440": {
@@ -2929,19 +2885,23 @@
   "select-name|dashboard@1440": {
    "impact": "critical",
    "vormen": {
-    "select:nth-child(n)": 3
+    "select[data-change-args=\"[\\\"locatie\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"periode\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"product\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1
    }
   },
   "select-name|inspecties@1440": {
    "impact": "critical",
    "vormen": {
-    ".filtersel:nth-child(n)": 2
+    "select[data-change-args=\"[\\\"insp\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"mont\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1
    }
   },
   "select-name|inspecties@390": {
    "impact": "critical",
    "vormen": {
-    ".filtersel:nth-child(n)": 2
+    "select[data-change-args=\"[\\\"insp\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1,
+    "select[data-change-args=\"[\\\"mont\\\",{\\\"@\\\":\\\"waarde\\\"}]\"]": 1
    }
   },
   "select-name|nieuwe-actie-modal@1440": {

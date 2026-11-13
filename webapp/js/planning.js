@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, USERS, staf, naam, dag0, isoDag, plusDagen, dagLabel, dagenTot, stBadge, tril } = window.WPI;
+  const { $, el, esc, svg, DB, USERS, staf, naam, dag0, isoDag, plusDagen, dagLabel, dagenTot, stBadge, tril, act, op, WAARDE } = window.WPI;
   Object.assign(window.App, {
     // ---------------- PLANNING ----------------
     planning: null,
@@ -37,7 +37,7 @@
       const prod = Object.keys(kb).sort((a, b) => kb[a].naam.localeCompare(kb[b].naam)).map((c) => `<option value="${c}"${p && p.code === c ? " selected" : ""}>${esc(kb[c].naam)}</option>`).join("");
       const mens = USERS.map((u) => `<option value="${u.id}"${(p ? p.inspecteur : this.user.id) === u.id ? " selected" : ""}>${esc(u.full_name)} · ${esc(u.functie)}</option>`).join("");
       const veld = (lab, inner) => `<label class="flab">${lab}</label>${inner}`;
-      const snel = [[0, "Vandaag"], [1, "Morgen"], [7, "Over een week"]].map(([n, l]) => `<button class="chipb" onclick="document.getElementById('pl-datum').value='${plusDagen(n)}'">${l}</button>`).join("");
+      const snel = [[0, "Vandaag"], [1, "Morgen"], [7, "Over een week"]].map(([n, l]) => `<button class="chipb"${act("zetPlanDatum", plusDagen(n))}>${l}</button>`).join("");
       this.openModal(p ? "Inspectie wijzigen" : "Inspectie inplannen", "Wie inspecteert wat, waar en wanneer.",
         `${veld("Product", `<select id="pl-code" class="fin"><option value="">Kies…</option>${prod}</select>`)}
          <div class="grid" style="grid-template-columns:1fr 1fr;gap:10px"><div>${veld("Project", `<input id="pl-project" class="fin" placeholder="P26-…" value="${esc(p ? p.project : "")}">`)}</div>
@@ -47,9 +47,10 @@
          ${veld("Inspecteur", `<select id="pl-insp" class="fin">${mens}</select>`)}
          ${veld("Toelichting (optioneel)", `<textarea id="pl-toel" class="fin" rows="2" placeholder="Bijv. let op hijswerk met mobiele kraan">${esc(p ? p.toelichting : "")}</textarea>`)}
          <div id="ai-fout" class="fout"></div>
-         <button class="btn primary" style="margin-top:8px" onclick="App.bewaarPlan(${p ? `'${p.id}'` : "null"})">${p ? "Opslaan" : "Inplannen"}</button>
-         ${p ? `<button class="btn ghost" style="margin-top:10px;width:100%" onclick="App.verwijderPlan('${p.id}')">Uit de planning halen</button>` : ""}`);
+         <button class="btn primary" style="margin-top:8px"${act("bewaarPlan", p ? p.id : null)}>${p ? "Opslaan" : "Inplannen"}</button>
+         ${p ? `<button class="btn ghost" style="margin-top:10px;width:100%"${act("verwijderPlan", p.id)}>Uit de planning halen</button>` : ""}`);
     },
+    zetPlanDatum(d) { document.getElementById("pl-datum").value = d; },   // snelkeuze Vandaag/Morgen/Over een week
     async bewaarPlan(id) {
       const code = $("pl-code").value, datum = $("pl-datum").value, insp = $("pl-insp").value;
       if (!code) return this.fout("Kies een product.");
@@ -73,7 +74,7 @@
       const zicht = staf() ? P : P.filter((p) => p.inspecteur === me);
       v.appendChild(el(`<div><div class="hi">${staf() ? "Inspectieprogramma van het team" : "Jouw inspecties"}</div><h1 class="groot">Planning</h1></div>`));
       if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); this.toast = null; }
-      v.appendChild(el(`<button id="pl-nieuwknop" class="btn primary" style="margin-bottom:16px" onclick="App.planForm()">${svg("plus", 18)} Inspectie inplannen</button>`));
+      v.appendChild(el(`<button id="pl-nieuwknop" class="btn primary" style="margin-bottom:16px"${act("planForm")}>${svg("plus", 18)} Inspectie inplannen</button>`));
       if (staf()) this.progBlok(v);
       const g = (l, lijst, warm) => lijst.length ? `<h2 class="${warm ? "warmkop" : ""}">${l} <span class="s">${lijst.length}</span></h2><div class="pkaarten">${lijst.map((p) => this.planKaart(p, vandaag)).join("")}</div>` : "";
       const gp = zicht.filter((p) => p.status === "gepland").sort((a, b) => a.datum.localeCompare(b.datum));
@@ -253,10 +254,10 @@
       if (!V) {
         // rustige rij, alleen als er iets voor te stellen is
         const n = this.maakProgVoorstel(m).length, nWeg = this.progWegOpen(m).length, wegT = nWeg + " weggehaald";
-        if (n) v.appendChild(el(`<div class="listcard progrij"><button class="vknop progknop" onclick="App.startProgVoorstel()"><span class="cirkel">${svg("cal", 20)}</span>
+        if (n) v.appendChild(el(`<div class="listcard progrij"><button class="vknop progknop"${act("startProgVoorstel")}><span class="cirkel">${svg("cal", 20)}</span>
           <span class="grow"><span class="t">Voorstel programma ${esc(mn)}</span><span class="s">${n} inspectie${n === 1 ? "" : "s"} uit de projectplanning${nWeg ? " · " + wegT : ""}</span></span>${svg("chev", 18)}</button></div>`));
         // alles wat over was, is weggehaald: één rustige regel, zodat de keuze zichtbaar blijft en terug te draaien is
-        else if (nWeg) v.appendChild(el(`<p class="s progweg">Voorstel programma ${esc(mn)}: ${nWeg === 1 ? "1 voorstel" : nWeg + " voorstellen"} weggehaald. <button class="bhlinkk" onclick="App.progTerug()">Terugzetten</button></p>`));
+        else if (nWeg) v.appendChild(el(`<p class="s progweg">Voorstel programma ${esc(mn)}: ${nWeg === 1 ? "1 voorstel" : nWeg + " voorstellen"} weggehaald. <button class="bhlinkk"${act("progTerug")}>Terugzetten</button></p>`));
         return;
       }
       // intussen via een andere weg ingepland: uit het voorstel halen en dat rustig melden
@@ -268,15 +269,15 @@
       const dagOpt = (x) => (x.datum ? "" : `<option value="" selected>Kies een dag…</option>`) + x.opties.map((d) => { const vrij = this.progVrij(d);
         return `<option value="${d}"${d === x.datum ? " selected" : ""}>${esc(dagLabel(d))}${vrij ? " (" + vrij + ")" : ""}</option>`; }).join("");
       const kaart = (x) => `<div class="pkaart vskaart" data-vid="${x.vid}">
-          <button class="vsweg" onclick="App.progWeg('${x.vid}')" aria-label="Voorstel weghalen" title="Weghalen">×</button>
+          <button class="vsweg"${act("progWeg", x.vid)} aria-label="Voorstel weghalen" title="Weghalen">×</button>
           ${x.soort === "risico" && x.risico.length ? `<div class="s vsreden">${esc(x.risico.join(", "))}</div>` : ""}
           <div class="titel">${esc(x.code ? this.productNaam(x.code) : x.product)}</div>
           <div class="s">${esc([x.project, x.locatie].filter(Boolean).join(" · "))}</div>
           <div class="s vslooptijd">${esc(looptijd(x))}</div>
           ${x.alleenVrij ? `<div class="s vslet">Dit project loopt in ${esc(mn)} alleen op ${esc(x.opties.map((d) => dagLabel(d)).join(", "))}. Kies zelf een dag.</div>` : ""}
-          ${x.code ? "" : `<label class="flab">Product (“${esc(x.product)}” niet gevonden)</label><select class="fin" onchange="App.progZet('${x.vid}','code',this.value)"><option value="">Kies…</option>${opts(x.code)}</select>`}
-          <div class="vsvelden"><div><label class="flab">Dag</label><select class="fin vsdatum" onchange="App.progZet('${x.vid}','datum',this.value)">${dagOpt(x)}</select></div>
-            <div><label class="flab">Inspecteur</label><select class="fin vsinsp" onchange="App.progZet('${x.vid}','inspecteur',this.value)">${USERS.map((u) => `<option value="${u.id}"${u.id === x.inspecteur ? " selected" : ""}>${esc(u.full_name)}</option>`).join("")}</select></div></div></div>`;
+          ${x.code ? "" : `<label class="flab">Product (“${esc(x.product)}” niet gevonden)</label><select class="fin"${op("change", "progZet", x.vid, "code", WAARDE)}><option value="">Kies…</option>${opts(x.code)}</select>`}
+          <div class="vsvelden"><div><label class="flab">Dag</label><select class="fin vsdatum"${op("change", "progZet", x.vid, "datum", WAARDE)}>${dagOpt(x)}</select></div>
+            <div><label class="flab">Inspecteur</label><select class="fin vsinsp"${op("change", "progZet", x.vid, "inspecteur", WAARDE)}>${USERS.map((u) => `<option value="${u.id}"${u.id === x.inspecteur ? " selected" : ""}>${esc(u.full_name)}</option>`).join("")}</select></div></div></div>`;
       // per reden gegroepeerd: de reden staat één keer boven de groep, niet op elke kaart
       const groepen = ["lang", "risico", "overig"].map((s) => [s, V.items.filter((x) => x.soort === s)]).filter(([, l]) => l.length);
       const n = V.items.length, nWeg = this.progWegOpen(m).filter((x) => !V.items.some((y) => y.project === x.project)).length;
@@ -289,21 +290,21 @@
           ${groepen.map(([s, l]) => `<div class="vsgroep">${esc(this.PROG_GROEP[s])}</div><div class="pkaarten">${l.map(kaart).join("")}</div>`).join("")}`
           : V.weg || nWeg ? `<div class="leeg"><span class="bol">🌿</span><div class="t">Alle voorstellen weggehaald</div><div class="s">Er is niets ingepland voor ${esc(mn)}.</div></div>`
           : `<div class="leeg"><span class="bol">🌿</span><div class="t">Geen voorstellen</div><div class="s">Alle verplichte inspecties voor ${esc(mn)} staan al in de planning.</div></div>`}
-          ${nWeg ? `<p class="s progweg">${nWeg === 1 ? "1 voorstel" : nWeg + " voorstellen"} weggehaald; ${nWeg === 1 ? "komt" : "komen"} deze maand niet terug. <button class="bhlinkk" onclick="App.progTerug()">Terugzetten</button></p>` : ""}
+          ${nWeg ? `<p class="s progweg">${nWeg === 1 ? "1 voorstel" : nWeg + " voorstellen"} weggehaald; ${nWeg === 1 ? "komt" : "komen"} deze maand niet terug. <button class="bhlinkk"${act("progTerug")}>Terugzetten</button></p>` : ""}
           <div id="prog-fout" class="fout"></div>
-          <div class="vsacties">${n ? `<button id="prog-alles" class="btn primary" onclick="App.progAllesInplannen()">${svg("check", 18)} Alles inplannen (${n})</button>` : ""}
-            <button class="btn ghost" onclick="App.progAnnuleer()">${n ? "Annuleren" : "Sluiten"}</button></div></section>`));
+          <div class="vsacties">${n ? `<button id="prog-alles" class="btn primary"${act("progAllesInplannen")}>${svg("check", 18)} Alles inplannen (${n})</button>` : ""}
+            <button class="btn ghost"${act("progAnnuleer")}>${n ? "Annuleren" : "Sluiten"}</button></div></section>`));
     },
     planKaart(p, vandaag) {
       const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum), u = USERS.find((x) => x.id === p.inspecteur);
       const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
       return `<div class="pkaart"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
-          ${p.status === "gepland" ? `<button class="wijzig" onclick="App.planForm('${p.id}')" aria-label="Wijzigen">Wijzig</button>` : ""}</div>
+          ${p.status === "gepland" ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzigen">Wijzig</button>` : ""}</div>
         <div class="titel">${esc(this.productNaam(p.code))}</div>
         <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + p.monteurs + " monteurs" : ""}</div>
         ${p.toelichting && !(p.bron === "programma" && /^Inspectieprogramma /.test(p.toelichting)) ? `<div class="s" style="margin-top:4px">“${esc(p.toelichting)}”</div>` : ""}
         <div class="onder"><span class="mini-av">${u ? esc(u.full_name[0]) : "?"}</span><span>${u ? esc(u.full_name) : "–"}</span>
-          ${magStarten ? `<button class="btn primary sm" style="margin-left:auto" onclick="App.startGepland('${p.id}')">Start</button>` : ""}
+          ${magStarten ? `<button class="btn primary sm" style="margin-left:auto"${act("startGepland", p.id)}>Start</button>` : ""}
           ${p.status === "uitgevoerd" && p.inspectie_id ? `<a class="s" style="margin-left:auto;color:var(--accent);font-weight:800" href="#/rapport/${p.inspectie_id}">Rapport ›</a>` : ""}</div></div>`;
     },
   });

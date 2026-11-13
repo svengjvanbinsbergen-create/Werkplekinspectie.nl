@@ -3,10 +3,12 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, staf, naam, kort, dagLabel, stBadge } = window.WPI;
+  const { $, el, esc, svg, DB, staf, naam, kort, dagLabel, stBadge, act, op, WAARDE } = window.WPI;
   Object.assign(window.App, {
     // ---------------- INSPECTIES ----------------
     inspFilter: { insp: "", mont: "" },
+    zetInspFilter(k, waarde) { this.inspFilter[k] = waarde; this.route(); },
+    wisInspFilter() { this.inspFilter = { insp: "", mont: "" }; this.route(); },
     async view_inspecties() {
       const v = $("view"), mine = !staf(), f = this.inspFilter;
       let saved = []; try { saved = await DB.all(); } catch (e) {}
@@ -19,11 +21,11 @@
       const inspecteurs = [...new Set(rijen.map((r) => r.inspecteur))].sort(), monteurs = [...new Set(rijen.flatMap((r) => r.monteurs))].sort();
       const lijst = rijen.filter((r) => (!f.insp || r.inspecteur === f.insp) && (!f.mont || r.monteurs.includes(f.mont)));
       v.appendChild(el(`<div><div class="hi">${mine ? "Jouw inspecties" : "Alle inspecties"}</div><h1 class="groot">Inspecties</h1></div>`));
-      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}" onchange="App.inspFilter.${k}=this.value;App.route()"><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      const sel = (k, opts, lab) => `<select class="fin filtersel${f[k] ? " aan" : ""}"${op("change", "zetInspFilter", k, WAARDE)}><option value="">${lab}</option>${opts.map((o) => `<option${f[k] === o ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
       v.appendChild(el(`<div class="filterbalk">${mine ? "" : sel("insp", inspecteurs, "Alle inspecteurs")}${sel("mont", monteurs, "Alle monteurs")}
-        ${f.insp || f.mont ? `<button class="linkje" onclick="App.inspFilter={insp:'',mont:''};App.route()">Wis filter</button>` : ""}</div>`));
+        ${f.insp || f.mont ? `<button class="linkje"${act("wisInspFilter")}>Wis filter</button>` : ""}</div>`));
       v.appendChild(el(`<div class="s uitleg">${lijst.length} inspectie${lijst.length === 1 ? "" : "s"}${f.mont ? ` waarbij ${esc(f.mont)} aan het werk was` : ""}${f.insp ? ` door ${esc(f.insp)}` : ""}. Eigen inspecties staan veilig op dit toestel; voorbeelden zijn fictief.</div>`));
-      v.appendChild(el(lijst.length ? `<div class="ikaarten">${lijst.map((r) => `<div class="ikaart"${r.eigen ? ` style="cursor:pointer" onclick="location.hash='#/rapport/${r.id}'"` : ""}>
+      v.appendChild(el(lijst.length ? `<div class="ikaarten">${lijst.map((r) => `<div class="ikaart"${r.eigen ? ` style="cursor:pointer"${act("go", "rapport/" + r.id)}` : ""}>
           <div class="boven"><span class="dchip">📅 ${dagLabel(r.datum)}</span>${r.eigen ? `<span class="badge b-done">op dit toestel</span>` : `<span class="s">voorbeeld</span>`}</div>
           <div class="titel">${esc(r.titel)}</div><div class="s">${esc(r.sub)}</div>
           <div class="onder"><span class="mini-av">${esc((r.inspecteur || "?")[0])}</span><span>${esc(r.inspecteur || "")}</span></div>
@@ -35,7 +37,7 @@
       const v = $("view");
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       const r = saved.find((x) => x.id === id);
-      if (!r) { v.appendChild(el(`<div><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
+      if (!r) { v.appendChild(el(`<div><button class="btn ghost sm"${act("go", "inspecties")}>${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
       const ws = r.versie >= 2 ? r.waarnemingen : Object.entries(r.oordelen || {}).filter(([, o]) => o)
         .map(([rid, o]) => ({ regel_id: rid, oordeel: o, tekst: "", foto: (r.fotos || {})[rid] || null, maatregelen: [], actie: { tekst: "" } }));
       const taken = r.taken || [r.taak];
@@ -55,7 +57,7 @@
         const a = live || w.actie;   // live status uit Acties; oude rapporten (v2) vallen terug op het record
         const houder = live ? (live.houder ? naam(live.houder) : "nog in te stellen") : a.houder || "–";
         const toetser = live ? (live.toetser ? naam(live.toetser) : "nog in te stellen") : a.toetser || "–";
-        return `<div class="row" style="align-items:flex-start${live ? ";cursor:pointer" : ""}"${live ? ` onclick="App.openActie('${live.id}')"` : ""}><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
+        return `<div class="row" style="align-items:flex-start${live ? ";cursor:pointer" : ""}"${live ? `${act("openActie", live.id)}` : ""}><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
           <div class="s">${esc(i.ref)} · dringendheid volgens inspecteur: ${prioLab[w.actie.prio] || "–"}${live ? " · plandatum " + dagLabel(live.plandatum) : a.termijn ? " · termijn " + esc(a.termijn) : ""}</div>
           <div class="s">Actiehouder: ${esc(houder)} · toetser: ${esc(toetser)}</div>
           ${w.actie.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
@@ -63,7 +65,7 @@
       }).join("");
       const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length;
       const fotos = ws.filter((w) => w.foto);
-      v.appendChild(el(`<div class="noprint"><button class="btn ghost sm" onclick="App.go('inspecties')">${svg("back", 16)} Terug</button></div>`));
+      v.appendChild(el(`<div class="noprint"><button class="btn ghost sm"${act("go", "inspecties")}>${svg("back", 16)} Terug</button></div>`));
       v.appendChild(el(`<div id="rap">
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
         <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
@@ -81,7 +83,7 @@
         ${kz.length ? `<div class="s" style="margin-top:14px;line-height:1.5">Hulp van de app bij deze inspectie: ${kc("voorstel gebruikt")} voorstel(len) gebruikt · ${kc("voorstel aangepast")} aangepast · ${kc("zelf gekozen") + kc("zelf geschreven")} keer zelf gekozen. Elk oordeel (C/A/V) is door de inspecteur zelf gegeven.</div>` : ""}
         ${r.open_punten && r.open_punten.length ? `<div class="s" style="margin-top:6px">Vastgelegd met ${r.open_punten.length} open herinnering(en): ${esc(r.open_punten.join(" "))}</div>` : ""}
       </div>`));
-      v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px" onclick="window.print()">${svg("list", 18)} Opslaan als PDF / printen</button>`));
+      v.appendChild(el(`<button class="btn primary noprint" style="margin-top:16px"${act("printen")}>${svg("list", 18)} Opslaan als PDF / printen</button>`));
     },
   });
 })();

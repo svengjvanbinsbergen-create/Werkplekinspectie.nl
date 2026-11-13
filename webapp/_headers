@@ -1,13 +1,13 @@
 # Werkplekinspectie — beveiligingsheaders voor statische hosting (Netlify en Cloudflare Pages).
 # Publicatiemap = webapp/. Vercel gebruikt vercel.json; Netlify leest dit bestand én netlify.toml.
 #
-# CSP: inline <script>-elementen en javascript:-URL's zijn geblokkeerd (script-src-elem 'self'); alleen inline
-#   handler-attributen (onclick="App.x()") mogen nog (script-src-attr 'unsafe-inline'). script-src houdt
-#   'unsafe-inline' alleen als terugval voor browsers zonder script-src-elem/-attr (CSP 3).
-#   Gevolg: een in de HTML geïnjecteerd on*-attribuut wordt NIET door de CSP tegengehouden. De verdediging
-#   daartegen is escaping (WPI.esc) en geen servertekst in handler-attributen (zie tests/sync.js, XSS-planning).
-# TODO(volgende fase): inline onclick-handlers vervangen door event-delegatie, daarna script-src-attr 'none' en
-#   script-src 'self' (zonder 'unsafe-inline') — hier, in netlify.toml, vercel.json en de meta-CSP in index.html.
+# CSP (strikt voor scripts): script-src 'self' zonder 'unsafe-inline' en zonder 'unsafe-eval'; geen inline
+#   <script>, geen javascript:-URL's (script-src-elem 'self') en GEEN inline handler-attributen
+#   (script-src-attr 'none'). De app gebruikt event-delegatie (js/kern.js: data-action="naam" + data-args,
+#   zie WPI.act/WPI.op); een in de HTML geïnjecteerd on*-attribuut wordt dus ook door de CSP tegengehouden,
+#   naast escaping (WPI.esc). Gelijk houden met netlify.toml, vercel.json en de meta-CSP in index.html.
+# Nog open: style-src houdt 'unsafe-inline' vanwege style="…"-attributen in de gegenereerde HTML; die eerst
+#   naar classes in styles.css verplaatsen, daarna 'unsafe-inline' uit style-src.
 # connect-src noemt alleen het EIGEN Supabase-project (geen wildcard *.supabase.co: daarmee kan een
 #   geïnjecteerd script data naar elk willekeurig Supabase-project sturen). VERPLICHT bij livegang:
 #   "project-ref" vervangen door de echte ref uit js/config.js — hier, in netlify.toml, vercel.json en
@@ -31,11 +31,11 @@
 #
 # Vercel (vercel.json, Root Directory = webapp): dezelfde headers via "routes"; /docs, /tests,
 # /supabase en *.md geven daar 404 vóór de bestandscontrole. Vercel stuurt http altijd door naar
-# https (niet uit te zetten). vercel.json kan geen commentaar bevatten; de TODO's hierboven gelden ook daar.
+# https (niet uit te zetten). vercel.json kan geen commentaar bevatten; de opmerkingen hierboven (CSP, project-ref) gelden ook daar.
 
 /*
   Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; script-src-elem 'self'; script-src-attr 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; script-src-elem 'self'; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://project-ref.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin

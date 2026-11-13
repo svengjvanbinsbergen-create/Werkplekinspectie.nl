@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, mlabel, svg } = window.WPI;
+  const { $, el, esc, mlabel, svg, act, op, WAARDE } = window.WPI;
   Object.assign(window.App, {
     exportCSV() {
       const t = this.data.trendacties;
@@ -50,23 +50,23 @@
       const v = $("view");
       const prods = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.product))].sort();
       const locs = [...new Set(this.data.voorbeelddata.wpis.map((x) => x.locatie))].sort();
-      const sel = (k, opts, lab) => `<select onchange="App.setFilter('${k}',this.value)" style="height:38px;border-radius:12px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 10px;font-size:13px;font-weight:600;background:#fff;color:${f[k] ? "var(--ink)" : "var(--soft)"}">
+      const sel = (k, opts, lab) => `<select${op("change", "setFilter", k, WAARDE)} style="height:38px;border-radius:12px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 10px;font-size:13px;font-weight:600;background:#fff;color:${f[k] ? "var(--ink)" : "var(--soft)"}">
         <option value=""${f[k] ? "" : " selected"}>${lab}</option>${opts.map((o) => `<option value="${esc(o.v)}"${f[k] === o.v ? " selected" : ""}>${esc(o.l)}</option>`).join("")}</select>`;
       v.appendChild(el(`<div><div class="kicker">Trendanalyse · mei–nov 2026 · peildatum 11-11-2026</div><h1>Dashboard</h1></div>`));
       v.appendChild(el(`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
         ${sel("product", prods.map((p) => ({ v: p, l: p })), "Alle producten")}
         ${sel("locatie", locs.map((p) => ({ v: p, l: p })), "Alle locaties")}
         ${sel("periode", [{ v: "Q2", l: "Q2 (mei–jun)" }, { v: "Q3", l: "Q3 (jul–sep)" }, { v: "Q4", l: "Q4 (okt–nov)" }], "Hele periode")}
-        ${f.klasse ? `<button class="chip" onclick="App.setFilter('klasse','${esc(f.klasse).replace(/'/g, "\\'")}')" style="box-shadow:inset 0 0 0 1px var(--line)">klasse: ${esc(f.klasse)} ×</button>` : ""}
+        ${f.klasse ? `<button class="chip"${act("setFilter", "klasse", f.klasse)} style="box-shadow:inset 0 0 0 1px var(--line)">klasse: ${esc(f.klasse)} ×</button>` : ""}
       </div>`));
       v.appendChild(el(`<div class="muted" style="margin-bottom:10px;font-size:13px">Filters werken op waarnemingen en oordelen. Tik op een tegel, staaf of klasse voor detail / kruis-filter.</div>`));
       v.appendChild(el(`<div class="grid kpis">
-        ${beo >= 5 ? this.tile(doelC != null && pct < doelC ? "mist" : "sage", pct + "%", "Conform", (doelC != null ? "doel " + doelC + "% · " : "") + D.oordeel.Conform + " van " + beo + " beoordeeld", "App.drill('conform')")
-          : this.tile("mist", "n = " + beo, "Conform", "te weinig voor een percentage (n < 5)", "App.drill('conform')")}
-        ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, "App.drill('waarnemingen')")}
-        ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, "App.drill('programma')")}
-        ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", "App.drill('acties')")}
-        ${this.tile("lilac", D.n_wpi, "Inspecties", f.product || f.locatie || f.periode ? "in selectie" : c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", "App.drill('inspecties')")}
+        ${beo >= 5 ? this.tile(doelC != null && pct < doelC ? "mist" : "sage", pct + "%", "Conform", (doelC != null ? "doel " + doelC + "% · " : "") + D.oordeel.Conform + " van " + beo + " beoordeeld", act("drill", "conform"))
+          : this.tile("mist", "n = " + beo, "Conform", "te weinig voor een percentage (n < 5)", act("drill", "conform"))}
+        ${this.tile("sky", w.totaal, "Waarnemingen", "TRA " + w.TRA + " · onderw. " + w.Algemeen, act("drill", "waarnemingen"))}
+        ${this.tile(progPct >= progDoel ? "sage" : "blush", progPct + "%", "Programma", "doel " + progDoel + "% · " + c.vp_x + "/" + c.vp_y, act("drill", "programma"))}
+        ${this.tile(c.act_over.length ? "blush" : "mist", c.act_open_n, "Open acties", c.act_over.length + " over termijn", act("drill", "acties"))}
+        ${this.tile("lilac", D.n_wpi, "Inspecties", f.product || f.locatie || f.periode ? "in selectie" : c.ingang.ingepland + " ingepland · " + c.ingang.spontaan + " spontaan", act("drill", "inspecties"))}
       </div>`));
       const PAL = this.PAL, leg = (items) => `<div class="legend">${items.map(([c, l]) => `<span><i style="background:${c}"></i>${l}</span>`).join("")}</div>`;
       const chartCard = el(`<div class="grid dashgrid" style="gap:14px;margin-top:14px"></div>`);
@@ -117,7 +117,7 @@
         // label boven de punt; raakt het de doellijn, dan eronder (en met een witte rand voor de leesbaarheid)
         const ly = yDoel != null && Math.abs(yDoel - (yy - 19)) < 12.5 && yy + 26 < T + ih + 4 ? yy + 26 : yy - 14;
         const lx = q.x === L && mnd.length > 1 ? q.x - 6 : q.x, la = lx === q.x ? "middle" : "start";   // eerste punt: niet over de as-labels
-        g += `<g style="cursor:pointer" onclick="App.drill('oordeelmaand','${q.m}')"><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
+        g += `<g style="cursor:pointer"${act("drill", "oordeelmaand", q.m)}><rect x="${q.x - 30}" y="0" width="60" height="${H}" fill="transparent"/>
           <circle cx="${q.x}" cy="${yy}" r="7" fill="${klein ? "#fff" : P.C}" stroke="${klein ? P.N : "#fff"}" stroke-width="3"/>
           ${q.p !== null && !klein ? `<text class="pctlab" x="${lx}" y="${ly}" text-anchor="${la}" font-size="13" font-weight="800" fill="${P.ink}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">${Math.round(q.p * 100)}%</text>` : `<text x="${lx}" y="${ly}" text-anchor="${la}" font-size="12" fill="${P.soft}" stroke="#fff" stroke-width="4" stroke-linejoin="round" paint-order="stroke">n=${q.tot}</text>`}
           <text x="${q.x}" y="${H - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${P.soft}">${mlabel(q.m)}</text></g>`;
@@ -125,7 +125,7 @@
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },
     // gestapelde ronde staven met een zacht spoor erachter
-    staven(kol, max, labels, onclickFn) {
+    staven(kol, max, labels, actieFn) {   // actieFn(i) → attributen van act(…)
       const P = this.PAL, W = 560, H = 230, pad = 8, top = 30, bot = 30, gap = (W - pad * 2) / kol.length, bw = Math.min(42, gap * 0.5), ih = H - top - bot;
       let g = "";
       kol.forEach((segs, i) => {
@@ -136,20 +136,20 @@
         p += `<text x="${x + bw / 2}" y="${yb - 8}" text-anchor="middle" font-size="15" font-weight="800" fill="${P.ink}">${labels[i][0]}</text>`;
         p += `<text x="${x + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="15" font-weight="700" fill="${P.soft}">${labels[i][1]}</text>`;
         p += `<rect x="${pad + gap * i}" y="0" width="${gap}" height="${H}" fill="transparent"/>`;
-        g += `<g style="cursor:pointer" onclick="${onclickFn(i)}">${p}</g>`;
+        g += `<g style="cursor:pointer"${actieFn(i)}>${p}</g>`;
       });
       return `<svg viewBox="0 0 ${W} ${H}" class="svgchart">${g}</svg>`;
     },
     chartOordeel(mnd, om) {
       const P = this.PAL, tot = mnd.map((m) => ["Conform", "Verbeterpunt", "Afwijking"].reduce((a, k) => a + ((om[m] || {})[k] || 0), 0));
       return this.staven(mnd.map((m) => [[(om[m] || {}).Conform, P.C], [(om[m] || {}).Verbeterpunt, P.V], [(om[m] || {}).Afwijking, P.A]]),
-        Math.max(...tot, 1), mnd.map((m, i) => [tot[i], mlabel(m)]), (i) => `App.drill('oordeelmaand','${mnd[i]}')`);
+        Math.max(...tot, 1), mnd.map((m, i) => [tot[i], mlabel(m)]), (i) => act("drill", "oordeelmaand", mnd[i]));
     },
     chartProg() {
       const P = this.PAL, c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
       const kol = mnd.map((m) => { const d = vm[m] || {}; return [[d.ok || 0, P.C], [(d.y || 0) - (d.ok || 0), P.A], [d.lopend || 0, "#EFE6D8", true]]; });
       const max = Math.max(...mnd.map((m) => ((vm[m] || {}).y || 0) + ((vm[m] || {}).lopend || 0)), 1);
-      return this.staven(kol, max, mnd.map((m) => [((vm[m] || {}).ok || 0) + "/" + ((vm[m] || {}).y || 0), mlabel(m)]), (i) => `App.drill('programma','${mnd[i]}')`);
+      return this.staven(kol, max, mnd.map((m) => [((vm[m] || {}).ok || 0) + "/" + ((vm[m] || {}).y || 0), mlabel(m)]), (i) => act("drill", "programma", mnd[i]));
     },
     // ring met verdeling, conform-% in het midden
     chartDonut(o) {
@@ -160,7 +160,7 @@
         if (!val) return; const a1 = a0 + val / tot * Math.PI * 2 - 0.03;
         const pt = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)], big = a1 - a0 > Math.PI ? 1 : 0;
         const [x0, y0] = pt(R, a0), [x1, y1] = pt(R, a1), [x2, y2] = pt(r, a1), [x3, y3] = pt(r, a0);
-        g += `<path d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${col}" style="cursor:pointer" onclick="App.drill('conform')"/>`;
+        g += `<path d="M${x0},${y0} A${R},${R} 0 ${big} 1 ${x1},${y1} L${x2},${y2} A${r},${r} 0 ${big} 0 ${x3},${y3} Z" fill="${col}" style="cursor:pointer"${act("drill", "conform")}/>`;
         a0 = a1 + 0.03;
       });
       const ok = (o.Conform || 0) + (o.Afwijking || 0) + (o.Verbeterpunt || 0), pc = ok >= 5 ? Math.round(100 * (o.Conform || 0) / ok) + "%" : "n=" + ok;
@@ -174,7 +174,7 @@
       const rows = Object.entries(kg).map(([k, v]) => [k, v.Afwijking || 0, v.Verbeterpunt || 0]).filter((r) => r[1] + r[2] > 0).sort((a, b) => (b[1] + b[2]) - (a[1] + a[2])).slice(0, 6);
       if (!rows.length) return `<div class="muted" style="font-size:13px">Geen afwijkingen of verbeterpunten in deze selectie. 🌿</div>`;
       const mx = Math.max(...rows.map((r) => r[1] + r[2]), 1);
-      return `<div class="kbars">${rows.map(([k, a, vv]) => `<button class="kbar" onclick="App.setFilter('klasse','${esc(k).replace(/'/g, "\\'")}')">
+      return `<div class="kbars">${rows.map(([k, a, vv]) => `<button class="kbar"${act("setFilter", "klasse", k)}>
         <span class="kl">${esc(k)}</span><span class="spoor"><span style="width:${(a / mx * 100).toFixed(1)}%;background:${P.A}"></span><span style="width:${(vv / mx * 100).toFixed(1)}%;background:${P.V}"></span></span><b>${a + vv}</b></button>`).join("")}</div>`;
     },
     drill(key, param) {
@@ -211,7 +211,7 @@
       if (key === "acties") {
         const rows = this.data.trendacties.map((a) => [esc(a.nr), esc(a.onderwerp), esc(a.actiehouder), esc(a.termijn), `<span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span>`]);
         return this.openModal("Trendacties (VCA 7.2)", "Acties uit de trendanalyse, met actiehouder en termijn.", `<div class="tablewrap">${tbl(["Nr", "Onderwerp", "Actiehouder", "Termijn", "Status"], rows)}</div>
-          <button class="btn ghost sm" style="margin-top:14px" onclick="App.exportCSV()">${svg("list", 16)} Exporteer CSV</button>`);
+          <button class="btn ghost sm" style="margin-top:14px"${act("exportCSV")}>${svg("list", 16)} Exporteer CSV</button>`);
       }
     },
   });

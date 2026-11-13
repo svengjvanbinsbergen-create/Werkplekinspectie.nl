@@ -13,7 +13,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, tril, isWeb, IC } = window.WPI;
+  const { $, el, esc, svg, tril, isWeb, IC, act, op } = window.WPI;
   IC.tand = IC.tand || '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>';
   const K_ACTIEF = "wpi_monteurs", K_INACTIEF = "wpi_monteurs_inactief", K_DOEL = "wpi_doel_conform";
   const K_WACHT = "wpi_beheer_wachtrij", K_SYNCFOUT = "wpi_beheer_syncfout";
@@ -41,12 +41,12 @@
   };
 
   // Inspectie, stap "Gesprek met de monteurs": de chips opnieuw opbouwen met de DOM in plaats van een naam in een
-  // onclick-attribuut. Namen uit Beheer mogen alles bevatten (Jan d'Hondt, aanhalingstekens …); zo breekt er niets
+  // attribuut (data-args). Namen uit Beheer mogen alles bevatten (Jan d'Hondt, aanhalingstekens …); zo breekt er niets
   // en kan een naam nooit code worden.
   const insMonteursOrig = window.App.ins_monteurs;
   if (insMonteursOrig) window.App.ins_monteurs = function (ins, v) {
     const r = insMonteursOrig.apply(this, arguments);
-    const box = v && [...v.querySelectorAll(".chips")].find((c) => c.querySelector('[onclick^="App.togMonteur"]'));
+    const box = v && [...v.querySelectorAll(".chips")].find((c) => c.querySelector('[data-action="togMonteur"]'));
     if (box) {
       // vergelijken met sleutel(): "henk voorbeeld" (oud concept) is de chip "Henk Voorbeeld". Gekozen namen die niet
       // (meer) in de lijst staan (intussen op non-actief of hernoemd in Beheer) blijven als gekozen chip zichtbaar,
@@ -222,33 +222,33 @@
       if (!isHoofd()) return this.go("vandaag");   // alleen Hoofd S&M
       // de hele pagina in één benoemd gebied (landmark), zodat een schermlezer er direct naartoe kan
       const v = el(`<section class="bhpagina" aria-labelledby="bh-titel"></section>`); $("view").appendChild(v);
-      const act = this.monteursLijst(), ina = this.monteursInactief(), doel = this.doelConform ? this.doelConform() : null, b = this._beheer || {};
+      const actieven = this.monteursLijst(), ina = this.monteursInactief(), doel = this.doelConform ? this.doelConform() : null, b = this._beheer || {};
       v.appendChild(el(`<div><div class="hi">Monteurs en doelen</div><h1 class="groot" id="bh-titel">Beheer</h1></div>`));
       if (this.toast) { v.appendChild(el(`<div class="toast" style="margin:-6px 0 12px">✓ ${esc(this.toast)}</div>`)); this.toast = null; }
       let sf = null; try { sf = JSON.parse(localStorage.getItem(K_SYNCFOUT) || "null"); } catch (e) {}
-      if (sf && sf.tekst) v.appendChild(el(`<div class="hint bhsyncfout" role="status">Een wijziging is niet op de server bewaard: ${esc(sf.tekst)}. Hier zie je weer wat er op de server staat. <button class="bhlink" onclick="App.beheerFoutWeg()">Begrepen</button></div>`));
+      if (sf && sf.tekst) v.appendChild(el(`<div class="hint bhsyncfout" role="status">Een wijziging is niet op de server bewaard: ${esc(sf.tekst)}. Hier zie je weer wat er op de server staat. <button class="bhlink"${act("beheerFoutWeg")}>Begrepen</button></div>`));
       const rij = (n, i, actief) => actief && b.hernoem === n
-        ? `<div class="row bhrij bewerk"><input id="bh-hernoem" class="fin" value="${esc(b.hernoemWaarde != null ? b.hernoemWaarde : n)}" aria-label="Naam van ${esc(n)}" onkeydown="if(event.key==='Enter')App.beheerHernoem(${i});if(event.key==='Escape')App.beheerAnnuleer()">
-            <div class="bhbew"><button class="btn primary sm" onclick="App.beheerHernoem(${i})">Opslaan</button><button class="btn ghost sm" onclick="App.beheerAnnuleer()">Annuleren</button></div>
-            <button class="bhlink" onclick="App.beheerActief(${i},false)">Op non-actief zetten <span>· niet meer te kiezen, oude inspecties houden de naam</span></button></div>`
+        ? `<div class="row bhrij bewerk"><input id="bh-hernoem" class="fin" value="${esc(b.hernoemWaarde != null ? b.hernoemWaarde : n)}" aria-label="Naam van ${esc(n)}"${op("enter", "beheerHernoem", i)}${op("escape", "beheerAnnuleer")}>
+            <div class="bhbew"><button class="btn primary sm"${act("beheerHernoem", i)}>Opslaan</button><button class="btn ghost sm"${act("beheerAnnuleer")}>Annuleren</button></div>
+            <button class="bhlink"${act("beheerActief", i, false)}>Op non-actief zetten <span>· niet meer te kiezen, oude inspecties houden de naam</span></button></div>`
         : `<div class="row bhrij${actief ? "" : " uit"}"><span class="mini-av">${esc(n[0] || "?")}</span><span class="grow"><span class="t">${esc(n)}</span></span>
-            ${actief ? `<button class="bhknop" onclick="App.beheerBewerk(${i})">Wijzig<span class="bhvh"> ${esc(n)}: hernoemen of op non-actief zetten</span></button>`
-              : `<button class="bhknop" onclick="App.beheerActief(${i},true)">Weer actief</button>`}</div>`;
+            ${actief ? `<button class="bhknop"${act("beheerBewerk", i)}>Wijzig<span class="bhvh"> ${esc(n)}: hernoemen of op non-actief zetten</span></button>`
+              : `<button class="bhknop"${act("beheerActief", i, true)}>Weer actief</button>`}</div>`;
       v.appendChild(el(`<div class="bhgrid">
         <section class="card bhkaart" id="bh-monteurs">
-          <h2 class="bhkop">Monteurs <span class="sub">${act.length} actief</span></h2>
+          <h2 class="bhkop">Monteurs <span class="sub">${actieven.length} actief</span></h2>
           <p class="s bhuitleg">Uit deze lijst kiest de inspecteur wie er aan het werk was.</p>
-          <div class="bhtoevoeg"><input id="bh-nieuw" class="fin" placeholder="Naam van de monteur" autocomplete="off" maxlength="80" value="${esc(b.nieuw || "")}" onkeydown="if(event.key==='Enter')App.beheerToevoegen()">
-            <button class="btn primary sm" onclick="App.beheerToevoegen()">${svg("plus", 16)} Toevoegen</button></div>
+          <div class="bhtoevoeg"><input id="bh-nieuw" class="fin" placeholder="Naam van de monteur" autocomplete="off" maxlength="80" value="${esc(b.nieuw || "")}"${op("enter", "beheerToevoegen")}>
+            <button class="btn primary sm"${act("beheerToevoegen")}>${svg("plus", 16)} Toevoegen</button></div>
           <div id="bh-fout" class="fout">${esc(b.fout || "")}</div>
-          <div class="bhlijst">${act.length ? act.map((n, i) => rij(n, i, true)).join("") : `<div class="s" style="padding:12px 0">Nog geen actieve monteurs.</div>`}</div>
+          <div class="bhlijst">${actieven.length ? actieven.map((n, i) => rij(n, i, true)).join("") : `<div class="s" style="padding:12px 0">Nog geen actieve monteurs.</div>`}</div>
           ${ina.length ? `<div class="bhsub">Non-actief</div><div class="bhlijst">${ina.map((n, i) => rij(n, i, false)).join("")}</div>` : ""}
         </section>
         <section class="card bhkaart" id="bh-doel">
           <h2 class="bhkop">Doel % conform</h2>
           <p class="s bhuitleg">Zie je terug in de trendgrafieken. Leeg laten is geen doel.</p>
-          <div class="bhdoel"><input id="bh-doel-in" class="fin" type="text" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="bijv. 85" value="${esc(b.doelWaarde != null ? b.doelWaarde : doel != null ? doel : "")}" aria-label="Doel procent conform" onkeydown="if(event.key==='Enter')App.beheerDoel()"><span class="bhpct">%</span>
-            <button class="btn primary sm" onclick="App.beheerDoel()">Opslaan</button></div>
+          <div class="bhdoel"><input id="bh-doel-in" class="fin" type="text" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="bijv. 85" value="${esc(b.doelWaarde != null ? b.doelWaarde : doel != null ? doel : "")}" aria-label="Doel procent conform"${op("enter", "beheerDoel")}><span class="bhpct">%</span>
+            <button class="btn primary sm"${act("beheerDoel")}>Opslaan</button></div>
           <div id="bh-doel-fout" class="fout">${esc(b.doelFout || "")}</div>
           <div class="s bhstand">${doel != null ? `Huidig doel: <b>${doel}% conform</b>` : "Er is nu geen doel ingesteld."}</div>
         </section></div>`));
