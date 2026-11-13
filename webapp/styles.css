@@ -913,18 +913,18 @@ body.zon .oh-rij + .oh-rij{border-top-color:#141A22}
 /* ================= Toegankelijkheid (WCAG 2.2 AA) ================= */
 /* landmarks: <header>, <main id="hoofd"> (alertbalk + #view) en <nav> (index.html) */
 #hoofd{flex:1;display:flex;flex-direction:column;min-width:0}
-button.alertbar{width:auto;text-align:left;font:inherit;font-weight:700}
+button.alertbar{width:auto;text-align:left}
 /* alleen voor schermlezers */
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 /* skiplink: pas zichtbaar bij toetsenbordfocus */
 .skiplink{position:absolute;left:12px;top:-60px;z-index:100;background:var(--accent);color:#fff;font-weight:700;padding:10px 16px;border-radius:12px;transition:top .1s}
 .skiplink:focus{top:12px}
 /* zichtbare focus voor toetsenbord (muis/aanraken: geen ring) */
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .inbox textarea:focus-visible,.fin:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
 .row[role="button"]:focus-visible,tr[role="button"]:focus-visible{outline-offset:-3px;border-radius:12px}
 g[role="button"]:focus-visible{outline:3px solid var(--accent)}
-#mod:focus,#view:focus,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
+#mod:focus,#view:focus,h1[tabindex="-1"]:focus,[tabindex="-1"]:focus:not(:focus-visible){outline:none}
 body.zon :focus-visible{outline:3px solid #141A22;outline-offset:2px}
 /* opslagstatus: "opnieuw" is een echte knop */
 .opnieuwlink{text-decoration:underline;font-weight:700;color:inherit;padding:0 2px;min-height:24px}
