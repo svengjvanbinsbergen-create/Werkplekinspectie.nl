@@ -116,6 +116,12 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok((await state()).security_events.some((e) => e.soort === 'login_na_mislukte_pogingen'), 'report_security_event: login_na_mislukte_pogingen');
     ok(await p.evaluate(() => !localStorage.getItem('wpi_login_pogingen')), 'teller mislukte pogingen gereset');
     ok(await p.evaluate(() => { const s = JSON.parse(localStorage.getItem('wpi_sessie') || '{}'); return !!s.rt && !JSON.stringify(s).includes('access'); }), 'alleen refresh-token bewaard (geen access-token)');
+    // het wachtwoord staat nergens in de browseropslag (localStorage, sessionStorage, IndexedDB-stores)
+    ok(await p.evaluate(async (ww) => {
+      const alles = [JSON.stringify(Object.assign({}, localStorage)), JSON.stringify(Object.assign({}, sessionStorage))];
+      for (const st of ['inspecties', 'acties', 'planning']) { try { alles.push(JSON.stringify(await WPI.DB.getAll(st))); } catch (e) {} }
+      return !alles.some((t) => t.includes(ww));
+    }, WW), 'wachtwoord nergens in localStorage/sessionStorage/IndexedDB');
     ok(await p.evaluate(async () => (await WPI.DB.getAll('acties')).every((a) => !a.demo) && (await WPI.DB.getAll('planning')).every((x) => !x.demo)), 'geen fictieve voorbeelddata met backend');
     ok(await totdat(async () => /Gesynchroniseerd/.test(await p.locator('#syncchip').innerText())), 'statuschip: Gesynchroniseerd');
 

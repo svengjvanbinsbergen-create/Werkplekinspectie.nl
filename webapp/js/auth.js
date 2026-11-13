@@ -569,7 +569,8 @@
       renderAcct0.apply(this, arguments);
       const a = $("acct"), box = this.user && a && a.firstElementChild;
       // een knop (geen losse tekst): tikken geeft uitleg; ook voor een schermlezer duidelijk wat "Demo" betekent
-      if (box) box.insertAdjacentHTML("afterbegin", `<button type="button" class="chip demolabel"${act("demoUitleg")} aria-label="Demo: voorbeeldmodus, uitleg" style="color:var(--accent);background:var(--accent-bg);box-shadow:none">Demo</button>`);
+      // in een eigen (benoemd) landmark: de topbar zelf is geen landmark en axe ("region") wil alle inhoud in een landmark
+      if (box) box.insertAdjacentHTML("afterbegin", `<aside aria-label="Modus" style="display:flex"><button type="button" class="chip demolabel"${act("demoUitleg")} aria-label="Demo: voorbeeldmodus, uitleg" style="color:var(--accent);background:var(--accent-bg);box-shadow:none">Demo</button></aside>`);
     };
     App.demoUitleg = function () {
       App.openModal("Voorbeeldmodus", "Er is geen server gekoppeld.",

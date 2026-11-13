@@ -3,7 +3,7 @@
    Voegt methoden toe aan window.App (zie js/kern.js). */
 (function () {
   "use strict";
-  const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden, act, actSluit, op, WAARDE } = window.WPI;
+  const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden, act, actSluit, op, WAARDE, ELEMENT } = window.WPI;
   Object.assign(window.App, {
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
@@ -35,7 +35,7 @@
       ins.cur = { id: "w" + Date.now(), taak: ins.taak, tekst: "", foto: null, extraFotos: [], regel_id: null, onderwerp: onderwerp || null,
         buiten: false, direct: false, maatregelen: [], oordeel: null, vraag: "",
         actie: { tekst: "", herkomst: "", prio: null, terPlaatse: "niets" } };
-      ins.voorstel = null; ins.stap = "zie";
+      ins.voorstel = null; ins.stap = "zie"; this._fotoUndo = null;
     },
     kiesTaak(t) {
       const ins = this.state.inspectie; ins.taak = t; if (!ins.taken.includes(t)) ins.taken.push(t);
@@ -191,15 +191,25 @@
           if (d) lijst.push(d);
         }
         if (this.state.inspectie !== ins || ins.cur !== cur) return;
-        this.zetFotos(cur, lijst); tril(15); this.route();
+        this._fotoUndo = null; this.zetFotos(cur, lijst); tril(15); this.route();
       };
       inp.click();
     },
+    // verwijderen met één tik, maar altijd terug te halen ("Foto verwijderd · Ongedaan maken"): met handschoenen
+    // tik je makkelijk mis, en de enige detailfoto mag niet zomaar verdwijnen
     fotoWeg(i) {
       const ins = this.state.inspectie; if (!ins || !ins.cur) return;
       const lijst = this.fotoLijst(ins.cur), n = Number.isInteger(i) ? i : lijst.length - 1;
       if (n < 0 || n >= lijst.length) return;
-      lijst.splice(n, 1); this.zetFotos(ins.cur, lijst); tril(15); this.route();
+      const weg = lijst.splice(n, 1)[0];
+      this._fotoUndo = { cur: ins.cur, i: n, foto: weg };
+      this.zetFotos(ins.cur, lijst); tril(15); this.route();
+    },
+    fotoTerug() {
+      const u = this._fotoUndo, ins = this.state.inspectie; this._fotoUndo = null;
+      if (!u || !ins || ins.cur !== u.cur) return;
+      const lijst = this.fotoLijst(u.cur); if (lijst.length >= this.MAX_FOTOS) return this.route();
+      lijst.splice(Math.min(u.i, lijst.length), 0, u.foto); this.zetFotos(u.cur, lijst); tril(15); this.route();
     },
     // kleine foto's naast de tekst ("Jij"-regel, vastgelegd-lijst); max = hoeveel er zichtbaar zijn
     fotoDuimen(w, max, h) {
@@ -317,6 +327,7 @@
       const gevaar = ow || cur.direct ? "" : `<button class="gevaarknop"${act("directGevaar")} aria-label="Direct gevaar: werk stilleggen">${svg("warn", 18)}<span>Direct gevaar</span></button>`;
       const aan = this.micKey === "zie", fotoOk = (f) => /^data:image\/[a-z+.-]+;base64,[A-Za-z0-9+/=]+$/i.test(f || "");
       const fotos = this.fotoLijst(cur), nf = fotos.length, vol = nf >= this.MAX_FOTOS;
+      const undo = this._fotoUndo && this._fotoUndo.cur === cur;
       v.appendChild(el(`<div class="ziewrap">
         ${this.insHead(ins, ow ? "Algemeen onderwerp · " + ow.naam : "Taak · " + ins.taak, "Wat zie je?", gevaar)}
         ${cur.direct ? `<div class="gevaarbalk" role="status">${svg("warn", 20)}<span>Direct gevaar · werk is stilgelegd</span></div>` : ""}
@@ -325,8 +336,9 @@
           <textarea id="f-zie" class="ziebox" aria-label="Wat zie je?" placeholder="Bijv. de gasmeter hangt boven aan de ladder, niet bij de man in de put"${op("input", "setVeld", "zie", WAARDE)}>${esc(this.veld("zie"))}</textarea>
           <div class="partial" id="p-zie" aria-live="polite"></div>
           ${nf ? `<div class="fotoblok multi"><div class="fb-kop"><b>${nf === 1 ? "1 foto" : nf + " foto's"}</b><span class="s">${nf === 1 ? "Tip: maak ook een detail of overzicht" : vol ? "Maximaal " + this.MAX_FOTOS + " per waarneming" : "Horen bij deze waarneming"}</span></div>
-            <div class="fb-rij">${fotos.map((f, i) => `<div class="fb-item">${fotoOk(f) ? `<img src="${esc(WPI.fotoSrc(f))}" alt="Foto ${i + 1} van ${nf} bij deze waarneming">` : `<span class="fb-leeg">foto</span>`}
-              <button class="fotoweg"${act("fotoWeg", i)} aria-label="Foto ${i + 1} verwijderen">×</button></div>`).join("")}</div></div>` : ""}
+            <div class="fb-rij">${fotos.map((f, i) => `<div class="fb-item"><div class="fb-beeld">${fotoOk(f) ? `<img src="${esc(WPI.fotoSrc(f))}" alt="Foto ${i + 1} van ${nf} bij deze waarneming">` : `<span class="fb-leeg">foto</span>`}<span class="fb-nr" aria-hidden="true">${i + 1}</span></div>
+              <button class="fotoweg"${act("fotoWeg", i)} aria-label="Foto ${i + 1} verwijderen"><span aria-hidden="true">×</span> Verwijder</button></div>`).join("")}</div></div>` : ""}
+          ${undo ? `<div class="toast fototoast" role="status"><span>Foto verwijderd</span><button class="btn ghost sm"${act("fotoTerug")}>Ongedaan maken</button></div>` : ""}
         </div>
         <div class="dock">
           <div class="vangrij">
@@ -340,7 +352,6 @@
           ${ins.waarnemingen.length && !ow ? `<button class="linkknop"${act("terug")}>Niets meer gezien bij deze taak</button>` : ""}
         </div></div>`));
     },
-    fotoWeg() { const ins = this.state.inspectie; if (!ins || !ins.cur) return; ins.cur.foto = null; tril(15); this.route(); },
     gevaarStilgelegd() { this.state.inspectie.cur.direct = true; this.route(); },   // na "Werk is stilgelegd" (modal is al dicht)
     directGevaar() {
       this.openModal("Direct gevaar", "Eerst veiligheid, dan vastleggen.",
@@ -348,7 +359,7 @@
          <button class="btn primary" style="margin-top:16px"${actSluit("gevaarStilgelegd")}>Werk is stilgelegd</button>`);
     },
     async koppel() {
-      this.stopMic();
+      this.stopMic(); this._fotoUndo = null;
       const ins = this.state.inspectie, cur = ins.cur;
       if (cur.onderwerp) { cur.regel_id = "ALG-" + cur.onderwerp; return this.stap("oordeel"); }
       const kand = this.kandidaten(ins);
@@ -375,44 +386,68 @@
       ins.voorstel = { ids, bron, bezig: false, vraag }; this.route();
     },
     // "Klopt dit?": jouw woorden, het Voorstel en direct daaronder jouw oordeel, op één scherm.
-    // Met je oordeel (C/A/V/NVT) bevestig je meteen de best passende koppeling (één tik; de kop boven de
-    // knoppen zegt dat). Past een andere mogelijkheid beter: die aantikken ("Deze klopt"), dan het oordeel.
-    // Niets is voorgekozen; de AI koppelt alleen voor en oordeelt nooit. Zelf kiezen en "buiten de TRA" eronder.
+    // Eén manier om te bevestigen: je oordeel (C/A/V/NVT) bevestigt de voorgestelde regel (de kop boven de
+    // knoppen zegt dat). Niets is voorgekozen; de AI koppelt alleen voor en oordeelt nooit. Welke maatregel je
+    // zag kun je (optioneel) in de Voorstel-kaart aantikken. Past een andere regel beter, of staat het niet in
+    // de TRA: één lijst eronder ("Andere regel kiezen"). De regelkaart zelf aantikken = de hele regel lezen.
     ins_koppel(ins, v) {
       const cur = ins.cur, vs = ins.voorstel || { ids: [], bezig: true };
       const kand = this.kandidaten(ins), regels = this.regelsVanTaak(ins), ows = this.onderwerpen();
       const een = !vs.bezig && vs.ids.length >= 1;   // er is een (best passend) Voorstel om te bevestigen
+      const id0 = een ? vs.ids[0] : null, info0 = id0 ? this.regelInfo(id0) : null;
       const pick = (id) => { const i = this.regelInfo(id), k = kand.find((x) => x.id === id), w = this.waarom(cur.tekst, k ? k.doc + " " + k.naam : i.titel, vs.bron);
         return `<button class="pick vpick een"${act("kiesRegel", id)}><span class="vp-top"><span class="vp-ref">${esc(i.ref)}</span>
-          <span class="gebruik">${svg("check", 16, 3)}Ja, dit klopt</span></span>
+          <span class="vp-meer">Hele regel ›</span></span>
           <span class="t">${esc(kort(i.titel, 120))}</span>${w ? `<span class="waarom">Waarom: ${w}</span>` : ""}</button>`; };
-      const alt = (id) => { const i = this.regelInfo(id);
-        return `<button class="pick vpick alt"${act("kiesRegel", id)}><span class="vp-ref">${esc(i.ref)}</span><span class="t">${esc(kort(i.titel, 90))}</span><span class="gebruik">Deze klopt</span></button>`; };
       const zelf = (id, ref, titel) => `<button class="zpick"${act("kiesRegel", id)}><span class="vp-ref">${esc(ref)}</span><span class="t">${esc(kort(titel, 90))}</span></button>`;
+      // maatregelen van de voorgestelde regel: optioneel aantikken, ook als je meteen je oordeel kiest
+      const mrGezien = cur.mrVoor === id0 ? cur.maatregelen || [] : [];
+      const mr = info0 && info0.maatregelen.length ? `<details class="vs-mr"${mrGezien.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${mrGezien.length ? `<span class="n">${mrGezien.length} gezien</span>` : ""}</summary>
+          <div class="chips">${info0.maatregelen.map((m, i) => `<button class="chipb${mrGezien.includes(m) ? " on" : ""}"${act("togVsMaatregel", i, ELEMENT)} aria-pressed="${mrGezien.includes(m)}">${esc(m)}</button>`).join("")}</div></details>` : "";
+      // één lijst met alle andere mogelijkheden (ook voorgesteld, de taak, algemene onderwerpen, buiten de TRA)
+      const ook = een ? vs.ids.slice(1) : [], rest = regels.filter((r) => !vs.ids.includes(r.id)), owRest = ows.filter((o) => !vs.ids.includes("ALG-" + o.ref));
       const vraag = een ? "Klopt dit?" : "Waar hoort dit bij?";
       v.appendChild(el(`<div class="stapwrap kstap">
         ${this.insHead(ins, "Taak · " + ins.taak, vraag)}
         <div class="q jijkaart">${this.citaat(cur)}</div>
         <div class="q vskaart${vs.bezig ? " bezig" : ""}" aria-live="polite">
           ${vs.bezig ? `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">Even koppelen aan de TRA…</span></div><div class="vpick-leeg" aria-hidden="true"></div>`
-            : vs.ids.length ? `${this.vsKop("klopt dit?", vs.bron)}${pick(vs.ids[0])}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}
-              ${vs.ids.length > 1 ? `<details class="vs-alt"><summary>Of past een andere regel beter? <span class="n">${vs.ids.length - 1}</span></summary>${vs.ids.slice(1).map(alt).join("")}</details>` : ""}`
+            : een ? `${this.vsKop("klopt dit?", vs.bron)}${pick(id0)}${vs.vraag ? `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(vs.vraag)}</div>` : ""}${mr}`
             : `<div class="vskop"><span class="lbl vs">Voorstel</span><span class="s">· geen duidelijke regel gevonden</span></div><div class="vs-geen">Kies hieronder zelf uit de TRA, of leg het vast als buiten de TRA.</div>`}
         </div>
-        ${this.oordeelBlok(cur, een ? "bevestig" : vs.bezig ? "bezig" : "wacht", een ? this.regelInfo(vs.ids[0]).ref : "")}
+        ${this.oordeelBlok(cur, een ? "bevestig" : vs.bezig ? "bezig" : "wacht", een ? info0.ref : "")}
         <div class="kzelf">
-          <details class="zelfkies"${!vs.bezig && !vs.ids.length ? " open" : ""}><summary>${een ? "Klopt niet? Zelf kiezen" : "Zelf kiezen uit de TRA"} <span class="n">${regels.length + ows.length}</span></summary>
-            <div class="zlijst"><div class="zkop">Risico's van deze taak</div>${regels.map((r) => zelf(r.id, r.id, r.risico)).join("")}
-            <div class="zkop">Algemene onderwerpen</div>${ows.map((o) => zelf("ALG-" + o.ref, "Algemeen " + o.ref, o.naam)).join("")}</div></details>
-          <button class="linkknop"${act("buitenTRA")}>Staat niet in de TRA</button>
+          <details class="zelfkies"${!vs.bezig && !vs.ids.length ? " open" : ""}><summary>${een ? "Andere regel kiezen" : "Zelf kiezen uit de TRA"} <span class="n">${ook.length + rest.length + owRest.length}</span></summary>
+            <div class="zlijst">${ook.length ? `<div class="zkop">Ook voorgesteld${vs.bron ? " · via " + esc(vs.bron) : ""}</div>${ook.map((id) => { const i = this.regelInfo(id); return zelf(id, i.ref, i.titel); }).join("")}` : ""}
+            ${rest.length ? `<div class="zkop">Risico's van deze taak</div>${rest.map((r) => zelf(r.id, r.id, r.risico)).join("")}` : ""}
+            <div class="zkop">Algemene onderwerpen</div>${owRest.map((o) => zelf("ALG-" + o.ref, "Algemeen " + o.ref, o.naam)).join("")}
+            <div class="zkop">Niets past?</div><button class="zpick zbuiten"${act("buitenTRA")}><span class="vp-ref">—</span><span class="t">Staat niet in de TRA</span></button></div></details>
+          ${een || vs.bezig ? "" : `<button class="linkknop"${act("buitenTRA")}>Staat niet in de TRA</button>`}
         </div></div>`));
+    },
+    // maatregel aantikken op de Voorstel-kaart: alleen dit knopje bijwerken (de uitklaplijst blijft open)
+    togVsMaatregel(i, knop) {
+      const ins = this.state.inspectie, vs = ins && ins.voorstel, cur = ins && ins.cur;
+      if (!cur || !vs || vs.bezig || !vs.ids || !vs.ids.length) return;
+      const id0 = vs.ids[0], m = this.regelInfo(id0).maatregelen[i]; if (!m) return;
+      if (cur.mrVoor !== id0) { cur.mrVoor = id0; cur.maatregelen = []; }
+      const aan = !cur.maatregelen.includes(m);
+      cur.maatregelen = aan ? cur.maatregelen.concat([m]) : cur.maatregelen.filter((x) => x !== m);
+      tril(15); this.bewaarConcept();
+      if (knop && knop.classList) {
+        knop.classList.toggle("on", aan); knop.setAttribute("aria-pressed", String(aan));
+        const d = knop.closest("details"), sm = d && d.querySelector("summary");
+        let n = sm && sm.querySelector(".n");
+        if (sm && cur.maatregelen.length) { if (!n) { n = document.createElement("span"); n.className = "n"; sm.appendChild(n); } n.textContent = cur.maatregelen.length + " gezien"; }
+        else if (n) n.remove();
+      } else this.route();
     },
     // oordeelknoppen C/A/V (+ NVT), groot. modus: "oordeel" (koppeling staat), "bevestig" (één Voorstel: je
     // oordeel bevestigt het), "wacht"/"bezig" (nog geen koppeling: knoppen zichtbaar maar uit). Nooit voorgekozen.
     oordeelBlok(cur, modus, ref) {
       const O = { C: ["Conform", "In orde, zoals het hoort"], A: ["Afwijking", "Niet in orde, moet opgelost"], V: ["Verbeterpunt", "In orde, maar kan beter"] };
       const fn = modus === "bevestig" ? "bevestigOordeel" : "oordeel", uit = modus === "wacht" || modus === "bezig" ? " disabled" : "";
-      const kop = modus === "bevestig" ? `Klopt het? Kies jouw oordeel <span>· dat bevestigt ${ref ? esc(ref) : "het voorstel"}</span>`
+      const kop = modus === "bevestig" ? `Juiste regel? Kies dan je oordeel <span>· dat bevestigt ${ref ? esc(ref) : "het voorstel"}</span>`
         : modus === "bezig" ? `Jouw oordeel <span>· zodra het voorstel er is</span>`
         : modus === "wacht" ? `Jouw oordeel <span>· kies eerst hieronder een regel</span>` : `Jouw oordeel <span>· alleen jij beslist</span>`;
       return `<section class="dock odock vlak${uit ? " uit" : ""}" aria-labelledby="oordeel-lab"><div class="otitel" id="oordeel-lab">${kop}</div>
@@ -425,17 +460,19 @@
       const vs = ins.voorstel; if (!vs || vs.bezig || !Array.isArray(vs.ids) || !vs.ids.length) return;
       const cur = ins.cur, id = vs.ids[0];
       this.logKeuze("TRA-regel", "voorstel gebruikt", id);
-      cur.regel_id = id; cur.buiten = false; cur.vraag = vs.vraag || ""; cur.maatregelen = [];
+      // aangetikte maatregelen (Voorstel-kaart) horen bij deze regel en blijven staan: het actievoorstel gebruikt ze
+      cur.regel_id = id; cur.buiten = false; cur.vraag = vs.vraag || ""; if (cur.mrVoor !== id) cur.maatregelen = []; cur.mrVoor = id;
       this.oordeel(o);
     },
     kiesRegel(id) {
       const ins = this.state.inspectie, cur = ins.cur, vsIds = (ins.voorstel && ins.voorstel.ids) || [];
       this.logKeuze("TRA-regel", vsIds.includes(id) ? "voorstel gebruikt" : "zelf gekozen", id);
-      cur.regel_id = id; cur.buiten = false; cur.vraag = (ins.voorstel && ins.voorstel.vraag) || ""; cur.maatregelen = []; tril(20); this.stap("oordeel");
+      cur.regel_id = id; cur.buiten = false; cur.vraag = (ins.voorstel && ins.voorstel.vraag) || ""; if (cur.mrVoor !== id) cur.maatregelen = []; cur.mrVoor = id; tril(20); this.stap("oordeel");
     },
-    buitenTRA() { this.logKeuze("TRA-regel", "zelf gekozen", "buiten TRA"); const cur = this.state.inspectie.cur; cur.regel_id = null; cur.buiten = true; cur.vraag = ""; cur.maatregelen = []; this.stap("oordeel"); },
+    buitenTRA() { this.logKeuze("TRA-regel", "zelf gekozen", "buiten TRA"); const cur = this.state.inspectie.cur; cur.regel_id = null; cur.buiten = true; cur.vraag = ""; cur.maatregelen = []; cur.mrVoor = null; this.stap("oordeel"); },
     togMaatregel(i) {
       const cur = this.state.inspectie.cur, m = this.regelInfo(cur.regel_id, cur.buiten).maatregelen[i]; if (!m) return;
+      cur.mrVoor = cur.regel_id;
       cur.maatregelen = cur.maatregelen.includes(m) ? cur.maatregelen.filter((x) => x !== m) : cur.maatregelen.concat([m]);
       this.route();
     },
