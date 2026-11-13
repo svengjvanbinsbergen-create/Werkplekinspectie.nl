@@ -4,8 +4,9 @@
 #
 #   tools/periodieke_check.sh                    alles hieronder, zonder netwerk
 #   tools/periodieke_check.sh --url https://werkplekinspectie.nl   ook de gedeployde site (bereikbaarheid + headers)
-#   tools/periodieke_check.sh --db               ook de databasetests (supabase/tests/run.sh; vraagt PGHOST/PGPORT/PGUSER
-#                                                naar een LOKALE test-PostgreSQL, nooit de productiedatabase)
+#   tools/periodieke_check.sh --db               ook de databasetests (supabase/tests/run.sh) tegen een LOKALE
+#                                                test-PostgreSQL, nooit de productiedatabase. Zonder PGHOST/PGUSER als
+#                                                OS-gebruiker postgres (sudo/runuser); anders met jouw PGHOST/PGPORT/PGUSER.
 #   tools/periodieke_check.sh --snel             zonder de (trage) geheimenscan over de git-geschiedenis
 #
 # Wat er gebeurt:
@@ -166,10 +167,14 @@ for m, waar in sorted(mods.items()):
     print(f"    Python-module {m:<12} {v:<18} (gebruikt door {', '.join(sorted(waar))}; alleen voor ontwikkeling, niet in de app)")
 PY
 ONGEBRUIKT=""
+# De rapporten die de uitkomst van DEZE controle overnemen (beveiligingsrapport, periodieke checklist,
+# kwaliteitsrapport) tellen niet als "gebruik": anders schakelt de controle zichzelf uit zodra een rapport de
+# gevonden namen noemt. Alleen code, configuratie en de gewone documentatie (README/CONTEXT) tellen.
 for f in "$ROOT"/tools/*.py "$ROOT"/tools/*.sh; do
   n=$(basename "$f"); s="${n%.*}"
   [ "$n" = "periodieke_check.sh" ] && continue
-  if ! grep -rqs --exclude-dir=.git --exclude-dir=__pycache__ --exclude="$n" -e "$n" -e "tools/$s\b" -e "from $s import" "$ROOT"; then ONGEBRUIKT="$ONGEBRUIKT $n"; fi
+  if ! grep -rqs --exclude-dir=.git --exclude-dir=__pycache__ --exclude="$n" --exclude='beveiliging*.md' --exclude='kwaliteit-rapport.md' \
+       -e "$n" -e "tools/$s\b" -e "from $s import" "$ROOT"; then ONGEBRUIKT="$ONGEBRUIKT $n"; fi
 done
 if [ -n "$ONGEBRUIKT" ]; then letop "scripts in tools/ waar niets naar verwijst (niet gepubliceerd; opruimen of documenteren):$ONGEBRUIKT"; else ok "alle scripts in tools/ worden ergens genoemd"; fi
 echo "    Supabase (server): versie en beveiligingsupdates via Dashboard › Settings › Infrastructure; Security Advisor (Dashboard › Advisors) maandelijks bekijken."
@@ -181,6 +186,14 @@ D=$(grep -nE '\bdebugger\s*;|console\.(log|debug|table|trace)\(|(^|[^.])\bDEBUG\
 if [ -n "$D" ]; then fout "debug-uitvoer of -vlag gevonden:"; echo "$D" | sed 's/^/      /' | cut -c1-180 | head -20; else ok "geen debugger/console.log/debug: true in webapp/js en index.html"; fi
 H=$(grep -noE '\son(click|change|input|submit|keydown|keyup|keypress|load|error|mouse[a-z]+|pointer[a-z]+|focus|blur|toggle|contextmenu)\s*=' "$JS"/*.js "$WEB/index.html" 2>/dev/null | grep -v '^\s*//' || true)
 if [ -n "$H" ]; then fout "inline handler-attributen (verboden onder script-src-attr 'none'):"; echo "$H" | sed 's/^/      /' | head -20; else ok "geen inline handler-attributen in webapp/js en index.html"; fi
+# WPI.esc() (js/kern.js) zet & < > " om, maar NIET de enkele quote: een waarde in een attribuut tussen enkele
+# quotes (x='${...}') zou daar uit kunnen breken (bijv. een extra data-action). Alle attributen moeten dus dubbele quotes hebben.
+Q=$(grep -nE "[a-zA-Z-]+='[^']*\\$\{" "$JS"/*.js 2>/dev/null || true)
+if [ -n "$Q" ]; then fout "attribuut tussen enkele quotes met een \${…}-waarde (esc() beschermt daar niet):"; echo "$Q" | sed 's/^/      /' | cut -c1-180 | head -20; else ok "geen attributen tussen enkele quotes met \${…} in webapp/js (esc() is daar veilig)"; fi
+# dynamische SQL (EXECUTE met een tekst) in de databasefuncties: zou SQL-injectie mogelijk maken; triggers
+# ("execute function …") en rechten ("grant/revoke execute …") en commentaar tellen niet mee
+X=$(grep -inE '\bexecute\b' "$WEB"/supabase/migrations/*.sql 2>/dev/null | grep -viE 'execute (function|procedure)|(grant|revoke)[^;]*execute|:[0-9]+:\s*--' || true)
+if [ -n "$X" ]; then fout "dynamische SQL (EXECUTE) in de migraties; alleen met format(%I/%L) en na review:"; echo "$X" | sed 's/^/      /' | cut -c1-180 | head -20; else ok "geen dynamische SQL (EXECUTE met tekst) in supabase/migrations"; fi
 # inline <script> en de CSP zelf (commentaar in index.html en _headers telt niet mee)
 CSPUIT=$(python3 - "$WEB" <<'PY'
 import re, sys, pathlib
@@ -216,9 +229,17 @@ else letop "node niet gevonden: publicatiecontrole overgeslagen"; fi
 # ---------------------------------------------------------------- 7. database (optioneel)
 if [ "$DB" = 1 ]; then
   kop "7. Databasetests (lokale test-PostgreSQL)"
-  if sh "$WEB/supabase/tests/run.sh" > /tmp/wpi-periodiek-db.$$ 2>&1; then ok "supabase/tests/run.sh: $(grep -c ' OK' /tmp/wpi-periodiek-db.$$) controles OK"
+  # run.sh schrijft schema.sql opnieuw en leest ../js/beheer.js: draai op een kopie in /tmp. Zonder PGUSER/PGHOST
+  # (standaard Debian/Ubuntu: peer-authenticatie, alleen de OS-gebruiker postgres mag als postgres inloggen) draait
+  # het als de OS-gebruiker postgres (runuser als root, anders sudo -u postgres).
+  KOPIE=$(mktemp -d /tmp/wpi-db.XXXXXX); cp -r "$WEB/supabase" "$WEB/js" "$KOPIE/"; chmod -R a+rwX "$KOPIE"; chmod a+rx "$KOPIE"
+  if [ -z "${PGUSER:-}" ] && [ -z "${PGHOST:-}" ] && [ "$(id -un)" != postgres ]; then
+    if [ "$(id -u)" = 0 ]; then ALS="runuser -u postgres --"; else ALS="sudo -u postgres"; fi
+  else ALS=""; fi
+  if (cd /tmp && $ALS sh "$KOPIE/supabase/tests/run.sh") > /tmp/wpi-periodiek-db.$$ 2>&1; then
+    ok "supabase/tests/run.sh: $(grep -E '^ +[0-9]+ \| +[0-9]+ \| +0' /tmp/wpi-periodiek-db.$$ | tail -1 | awk -F'|' '{gsub(/ /,"");print $2" van "$1}') databasecontroles geslaagd, plus races en naamsleutel"
   else fout "supabase/tests/run.sh faalt:"; tail -15 /tmp/wpi-periodiek-db.$$ | sed 's/^/      /'; fi
-  rm -f /tmp/wpi-periodiek-db.$$
+  rm -rf /tmp/wpi-periodiek-db.$$ "$KOPIE"
 fi
 
 kop "Samenvatting"

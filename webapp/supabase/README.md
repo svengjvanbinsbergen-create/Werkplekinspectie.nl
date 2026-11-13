@@ -538,8 +538,13 @@ ruime standaardrechten van Supabase na. De tests wisselen per gebruiker van rol 
 precies zoals PostgREST dat per request doet.
 
 ```sh
-PGHOST=/var/run/postgresql PGPORT=5432 PGUSER=postgres sh supabase/tests/run.sh
+# vanuit webapp/; standaard Debian/Ubuntu-PostgreSQL (peer-authenticatie): als OS-gebruiker postgres, op een kopie
+rm -rf /tmp/wpi-db && mkdir /tmp/wpi-db && cp -r supabase js /tmp/wpi-db/ && chmod -R a+rwX /tmp/wpi-db
+sudo -u postgres sh /tmp/wpi-db/supabase/tests/run.sh        # als root: runuser -u postgres -- sh …
+# of in één keer, vanuit de repo-root: tools/periodieke_check.sh --snel --db
 ```
+(`PGHOST=/var/run/postgresql PGUSER=postgres sh supabase/tests/run.sh` als gewone gebruiker of als root geeft
+"Peer authentication failed": peer-authenticatie laat alleen de OS-gebruiker `postgres` als `postgres` binnen.)
 
 `run.sh` controleert dat `schema.sql` gelijk is aan de migraties, laadt het schema twee keer
 (idempotent), draait `seed.sql` (met de testadressen ingevuld), `testdata.sql` (5 fictieve

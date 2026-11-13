@@ -37,6 +37,9 @@ const PAYLOADS = [
   ["script-tag", (N) => `</textarea><script>window.__xss=${N}</script>`],
   ["details-ontoggle", (N) => `<details open ontoggle=window.__xss=${N}>`],
   ["iframe-srcdoc", (N) => `<iframe srcdoc="<script>parent.__xss=${N}</script>">`],
+  // een eigen klikactie in de pagina krijgen (de CSP houdt dit NIET tegen; alleen escaping, zie js/kern.js esc/roep)
+  ["data-action-element", (N) => `"><b data-action="__xss=${N}" data-args="[1]">b</b>`],
+  ["data-action-enkel-quote", (N) => `x' data-action='__xss=${N}' data-x='`],
 ];
 const VELDEN = {
   1: "pl-project (planning)", 2: "pl-loc (planning)", 3: "pl-toel (planning)", 4: "f-taak", 5: "f-zie", 6: "f-actie",

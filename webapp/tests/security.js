@@ -20,14 +20,19 @@
 //    een verkleinde JPEG. Invoergrenzen: tekstvelden krijgen de maxlength van de server, datumvelden min/max.
 // 5. XSS: in ELK zichtbaar tekstveld van planning, nieuwe actie, actie instellen, zoeken, beheer en de inspectie
 //    een payload typen (met Enter), opslaan waar dat kan en de lijsten/rapporten opnieuw tonen: niets wordt
-//    uitgevoerd (window.__xss blijft leeg) en er komt geen enkel on*-attribuut of <script> in de DOM.
-//    (tests/xss.js doet dit uitgebreider: 10 payloads × 27 bronnen, ook via de server.)
+//    uitgevoerd (window.__xss blijft leeg) en er komt geen enkel on*-attribuut of <script> in de DOM, en ook geen
+//    ingespoten data-action (via " of ' ): die zou de CSP NIET tegenhouden, dus daar is escaping de enige verdediging.
+//    Ook de payload als routeparameter in het adres (#/rapport/<payload> enz., 11 routes): niets uitgevoerd.
+//    (tests/xss.js doet dit uitgebreider: 12 payloads × 27 bronnen, ook via de server.)
 const { chromium } = require('playwright');
 const BASE = (process.env.BASE || 'http://localhost:8560').replace(/\/+$/, '');
 const errs = [];
 const ok = (cond, wat) => { console.log((cond ? 'OK   ' : 'FOUT ') + wat); if (!cond) errs.push(wat); };
 const wacht = (ms) => new Promise((r) => setTimeout(r, ms));
-const PAYLOAD = (n) => `"><img src=x onerror="window.__xss=${n}"><svg onload="window.__xss=${n}"></svg>'-alert(${n})-'</textarea><script>window.__xss=${n}</script>{{${n}*7}}`;
+// vooraan (past ook in korte velden, zoals een monteursnaam van 80 tekens): een poging om via een enkele quote of via
+// "> een eigen data-action-knop in de pagina te krijgen. De CSP houdt die NIET tegen (de klikverwerking in kern.js
+// roept elke App-functie aan die in data-action staat), dus hier is escaping de enige verdediging en die toetsen we.
+const PAYLOAD = (n) => `' data-action='xssActie' '"><b data-action="xssActie" data-args="[${n}]">b</b><img src=x onerror="window.__xss=${n}"><svg onload="window.__xss=${n}"></svg>'-alert(${n})-'</textarea><script>window.__xss=${n}</script>{{${n}*7}}`;
 // 1×1 PNG (geldig), om een gewone foto te kiezen
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64');
 
@@ -59,6 +64,8 @@ async function scan(p, scherm) {
       for (const a of e.attributes) {
         if (/^on/i.test(a.name)) uit.push('on*-attribuut ' + a.name + ' op <' + tag.toLowerCase() + '>: ' + e.outerHTML.slice(0, 120));
         if (/^(href|src|action|formaction|xlink:href)$/i.test(a.name) && /^\s*javascript:/i.test(a.value)) uit.push('javascript:-URL in ' + a.name);
+        // alleen de attributen die de klikverwerking (js/kern.js) leest; data-page e.d. zijn onschuldige tekst
+        if (/^data-(action|change|input|submit|enter|escape|mic|sluit|(\w+-)?args)$/i.test(a.name) && /xssActie/.test(a.value)) uit.push('ingespoten ' + a.name + '="' + a.value + '" op <' + tag.toLowerCase() + '>');
       }
       if (tag === 'SCRIPT' && (!e.src || e.textContent.trim())) uit.push('inline <script>: ' + e.outerHTML.slice(0, 120));
       if (['IFRAME', 'OBJECT', 'EMBED', 'FRAME'].includes(tag)) uit.push('<' + tag.toLowerCase() + '>');
@@ -247,6 +254,14 @@ async function vulAlles(p, n, metEnter = true) {
     await hp.evaluate(() => App.go('vandaag')); await hp.waitForTimeout(300);
     await hp.evaluate(() => App.openAccount()); await hp.waitForTimeout(300);
     await scan(hp, 'computer · account (hoofd)');
+    await hp.evaluate(() => App.closeModal && App.closeModal());
+    // weerspiegelde XSS via het adres: payload als routeparameter van elk scherm (#/rapport/<payload> enz.) en
+    // routenamen die naar iets anders dan een scherm wijzen (constructor, __proto__): niets uitgevoerd of ingevoegd
+    const HP = encodeURIComponent(PAYLOAD(18));
+    for (const r of ['rapport/' + HP, 'acties/' + HP, 'inspecties/' + HP, 'planning/' + HP, 'dashboard/' + HP, 'kwartaal/' + HP, 'beheer/' + HP, 'oefen/' + HP, HP, 'constructor', '__proto__']) {
+      await hp.evaluate((h) => { location.hash = '#/' + h; }, r); await hp.waitForTimeout(300);
+      await scan(hp, 'computer · payload in het adres #/' + r.split('/')[0].slice(0, 12));
+    }
     await hp.context().close();
 
     // ================= 3b. productie: geen voorbeeld-omwegen =================

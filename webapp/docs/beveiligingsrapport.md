@@ -29,28 +29,28 @@ Zolang er geen Supabase-project is ingevuld in `js/config.js`, draait de app in 
 | 4 | HTTPS afdwingen | Geregeld na Supabase-koppeling | Doorsturen naar https plus HSTS in alle drie de hostingconfiguraties. |
 | 5 | Wachtwoorden hashen | Geregeld (door Supabase) | Supabase Auth bewaart wachtwoorden met bcrypt; de app bewaart nooit een wachtwoord. |
 | 6 | Formulieren server-side valideren | Geregeld na Supabase-koppeling | Elk formulier heeft regels in de database; in deze ronde gaten gedicht (datums, vreemde tekens, fotopaden). |
-| 7 | XSS tegenhouden | Geregeld | Escaping + strikte CSP zonder inline scripts; 10 aanvalsteksten in elk veld doen niets. |
-| 8 | Verdachte activiteit loggen en volgen | Geregeld na Supabase-koppeling (alarmering: Open) | Auditlog en beveiligingsmeldingen in de database; maandelijkse controle beschreven. Automatische alarmering is er nog niet. |
+| 7 | XSS tegenhouden | Geregeld (met restrisico) | Escaping + strikte CSP zonder inline scripts; 12 aanvalsteksten in elk veld en in het adres doen niets. Een ingespoten `data-action` houdt de CSP níet tegen; daar is escaping de enige verdediging. |
+| 8 | Verdachte activiteit loggen en volgen | Geregeld na Supabase-koppeling (alarmering: Open) | Auditlog en beveiligingsmeldingen in de database. Wachtwoorden raden zie je alleen in de Auth-logs van Supabase. De database-eigenaar kan de logboeken wél aanpassen. Automatische alarmering is er nog niet. |
 | 9 | Beheerroutes afschermen | Geregeld na Supabase-koppeling | Beheer alleen voor het hoofd, op de server met MFA (aal2) zodra MFA verplicht staat. |
 | 10 | Geparametriseerde queries | Geregeld | Geen zelfgebouwde SQL; PostgREST en de databasefuncties gebruiken parameters. |
 | 11 | Omgevingsvariabelen periodiek controleren | Geregeld | `tools/periodieke_check.sh` + maandchecklist. |
 | 12 | Rate limiting | Geregeld na Supabase-koppeling | Limieten van Supabase Auth + quota in de database (schrijven, meldingen, uploads) + wachttijd na foute logins. |
 | 13 | CORS beperken | Niet van toepassing (deels) | Supabase REST heeft geen origin-lijst; RLS is de grens. De CSP beperkt wél waar de app heen mag praten. |
-| 14 | Security headers | Geregeld | CSP, HSTS, X-Frame-Options, nosniff, Referrer- en Permissions-Policy in alle configuraties. |
-| 15 | Veilige sessiecookies | Niet van toepassing | Er zijn geen cookies; tokens in geheugen/sessionStorage. Afweging en maatregelen staan erbij. |
+| 14 | Security headers | Geregeld | CSP, HSTS, X-Frame-Options, nosniff, Referrer- en Permissions-Policy in alle configuraties; `exposed.js --config` toetst ze per configuratie. |
+| 15 | Veilige sessiecookies | Niet van toepassing (maatregelen: na Supabase-koppeling) | Er zijn geen cookies; tokens in geheugen/sessionStorage. Werkt pas veilig met de sessielimieten in Supabase (7 dagen / 8 uur inactief). |
 | 16 | CSRF-bescherming | Niet van toepassing | Het token gaat in een header die een andere site niet kan meesturen. |
 | 17 | Herstellinks laten verlopen | Geregeld na Supabase-koppeling | Instelling ≤ 1 uur (advies 15 min); de app verwerkt de link en wist hem uit de adresbalk. |
 | 18 | Uploads beperken (type en grootte) | Geregeld (app) / na koppeling (server) | App: alleen foto's, max 20 MB in, max 5 MB uit; server: 5 MB, jpeg/png/webp, max 120 per uur. |
 | 19 | Debugstand uit in productie | Geregeld | `debug: false`; in productie geen voorbeeld-omwegen en geen debuguitvoer (getest). |
 | 20 | Kwetsbare afhankelijkheden bijwerken | Geregeld | De app heeft geen npm-pakketten; versies van de rest staan in de periodieke controle. |
-| 21 | Ongebruikte pakketten verwijderen | Geregeld (3 oude scripts: Open) | Geen pakketten in de app; drie oude hulpscripts in `tools/` nog opruimen. |
+| 21 | Ongebruikte pakketten verwijderen | Geregeld (3 oude scripts: Open) | Geen pakketten in de app; de controle meldt drie oude hulpscripts in `tools/` (nog opruimen). |
 | 22 | Blootgestelde bestanden controleren | Geregeld | Allowlist-publicatie: alleen de app gaat online; test controleert de configuraties. |
 | 23 | Git-geschiedenis scannen op geheimen | Geregeld | Volledige scan: 0 echte geheimen. |
 | 24 | Gelekte sleutels intrekken en vervangen | Geregeld (procedure) | Stappenplan in `beveiliging-periodiek.md` §4; er is niets gelekt. |
 | 25 | Periodieke grondige review | Geregeld (afspraak) | Maand-, kwartaal- en jaarritme beschreven. |
-| 26 | Beschermingen testen en rapporteren | Geregeld | `tests/security.js`, `xss.js`, `exposed.js`, databasetests en dit rapport. |
+| 26 | Beschermingen testen en rapporteren | Geregeld (eigen aanvallen + onafhankelijke review) · aparte aanvallers ronde 3: **Open** | `tests/security.js`, `xss.js`, `exposed.js`, databasetests en dit rapport. De bevindingen van de aparte aanvallers van ronde 3 zijn niet bij ons aangekomen. |
 
-**Testuitslag van deze ronde:** alle app-tests PASS (`tests/run-all.js`, 14 tests, 0 FAIL), databasetests 483 van 483 geslaagd, `exposed.js --config --strict` zonder fouten, `periodieke_check.sh` 0 FOUT.
+**Testuitslag van deze ronde (13 november, na de review):** alle app-tests PASS (`tests/run-all.js -j 3`: __RUNALL__), `xss.js` 12 aanvalsteksten × 27 bronnen zonder treffer, databasetests 483 van 483 geslaagd, `exposed.js --config --strict` zonder fouten (ook de headers), `periodieke_check.sh` **0 FOUT · 5 LET OP** (met `--snel` 6 LET OP: de overgeslagen geschiedenisscan telt mee).
 
 ---
 
@@ -64,12 +64,16 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
    - De **service_role/secret** sleutel, het databasewachtwoord en het SMTP-wachtwoord gaan in een **wachtwoordkluis**, nooit in de code, git of een build-variabele van de website.
    - Vervang `project-ref` door de echte project-ref in de CSP op vier plekken: `index.html`, `_headers`, `netlify.toml` en `vercel.json` (zoek op "project-ref").
 3. **Auth-instellingen in Supabase** (README §2): aanmelden door vreemden **uit** (alleen uitnodigingen), wachtwoord minimaal **12 tekens**, **Prevent use of leaked passwords aan** (vraagt het Pro-abonnement), herstellink maximaal **3600 s** (liever 900 s), refresh-token-rotatie aan, juiste Site URL en Redirect URLs (geen `localhost`).
+   **Verplicht** (vraagt ook het Pro-abonnement): *Authentication › Sessions*: **Time-box user sessions = 7 dagen** en **Inactivity timeout = 8 uur**. Zonder deze twee blijft een gestolen refresh-token (bijv. van een telefoon met "Ingelogd blijven") onbeperkt bruikbaar; de afweging in punt 15 rust erop (`js/auth.js:24-25`, README §2).
 4. **Eigen SMTP instellen** (EU-maildienst met SPF/DKIM) voor uitnodigingen en herstelmails. De standaardmailer van Supabase is alleen voor testen en heeft een zeer lage limiet.
 5. **MFA voor het hoofd aanzetten.** Björn koppelt een authenticator-app bij de eerste login; zet daarna als hoofd de instelling `mfa_verplicht_hoofd` op `true` (README §2). Pas dan zijn de beheerrechten op de server alleen nog bruikbaar met MFA.
 6. **Hosting kiezen en publiceren uit `dist/`** (Netlify, Vercel of Cloudflare Pages; de build staat al in de configuratie). Zet bij Netlify "Force HTTPS" aan, bij Cloudflare "Always Use HTTPS". Draai na de eerste deploy: `node webapp/tests/exposed.js --alles https://<adres> --strict`.
 7. **GitHub**: zet *secret scanning* en *push protection* aan op de repository, en overweeg een pre-commit-hook met `tools/secret_scan.sh --streng`.
-8. **Ritme vastleggen**: maandelijks `tools/periodieke_check.sh --url https://<adres>` en de handmatige punten uit `beveiliging-periodiek.md` §1; elk kwartaal §2. Zet het in de agenda met een vaste eigenaar.
-9. **Optioneel**: Google Fonts zelf hosten (dan gaat het IP-adres van gebruikers niet naar Google; AVG) en de drie oude scripts in `tools/` opruimen (`align10.py`, `p07.py`, `p08.py`).
+8. **Toegang tot de database klein houden.** Het databasewachtwoord en de SQL Editor van Supabase geven eigenaarsrechten: daarmee kan iemand de logboeken aanpassen (punt 8). Alleen Sven en het hoofd, met MFA op hun Supabase-account (*Account › Security*).
+9. **Mislukte logins volgen in de Auth-logs** (*Logs › Auth*), niet alleen in `security_events` (punt 8). Wil je ze in de eigen tabel: een *Password Verification Hook* van Supabase (betaald abonnement) kan elke mislukte poging wegschrijven; dat is nog niet gebouwd.
+10. **Ritme vastleggen**: maandelijks `tools/periodieke_check.sh --url https://<adres>` en de handmatige punten uit `beveiliging-periodiek.md` §1; elk kwartaal §2. Zet het in de agenda met een vaste eigenaar.
+11. **Optioneel**: Google Fonts zelf hosten (dan gaat het IP-adres van gebruikers niet naar Google; AVG) en de oude scripts in `tools/` opruimen die `tools/periodieke_check.sh` meldt ("scripts in tools/ waar niets naar verwijst").
+12. **Separate kleine codefix** (ontwikkelaar van `js/kern.js`): laat `esc()` ook de enkele quote omzetten (`'` → `&#39;`). Nu niet uitbuitbaar (zie punt 7), maar het haalt een valkuil weg.
 
 ---
 
@@ -102,7 +106,7 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Bevinding.** Zonder RLS kan iedereen met de publieke sleutel alles lezen. Ook de rolverdeling (hoofd, coördinator, inspecteur) en de methoderegels (toetser ≠ actiehouder, QHSE-manager nooit actiehouder, oordeel alleen C/A/V/NVT, "Afgerond" alleen na toetsing) moeten in de database vastliggen, niet alleen in de app.
 
-**Fix.** RLS staat op **elke** tabel; rechten per rol; inspecteurs zien alleen hun eigen inspecties; beheer alleen voor het hoofd; de fotomap is privé en per gebruiker; logboeken zijn alleen-toevoegen (ook voor de eigenaar); functies draaien met een vaste `search_path`; nieuwe functies krijgen standaard geen rechten voor anonieme gebruikers.
+**Fix.** RLS staat op **elke** tabel; rechten per rol; inspecteurs zien alleen hun eigen inspecties; beheer alleen voor het hoofd; de fotomap is privé en per gebruiker; logboeken zijn alleen-toevoegen voor de app en voor elke databaserol behalve de eigenaar (zie punt 8: de eigenaar kan ze wél aanpassen); functies draaien met een vaste `search_path`; nieuwe functies krijgen standaard geen rechten voor anonieme gebruikers.
 
 **Bewijs.** `supabase/migrations/0003_rls_rechten.sql`, `0005_storage.sql`, `0006_rpc.sql:171` · databasetests `sh supabase/tests/run.sh`: **483 van 483 geslaagd** (eerste test: "RLS staat aan op ELKE tabel in public"), plus de racetests "laatste hoofd" en "QHSE-rol".
 
@@ -113,16 +117,16 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Fix.** Doorsturen van http naar https (Netlify-regels; Vercel doet het altijd; Cloudflare via "Always Use HTTPS") en **HSTS** van 2 jaar, zodat de browser het daarna nooit meer via http probeert. Supabase zelf werkt alleen via https, en de CSP staat alleen `https://<project>.supabase.co` toe.
 
-**Bewijs.** `_headers` (Strict-Transport-Security), `netlify.toml` (`[[redirects]]` http → https), `vercel.json` (header) · `node tests/exposed.js --config --strict`: headers in orde.
+**Bewijs.** `_headers:49` (Strict-Transport-Security), `netlify.toml` (`[[redirects]]` van `http://` naar `https://` en de HSTS-header), `vercel.json` (route `/(.*)` met HSTS) · `node webapp/tests/exposed.js --config --strict`, blok "Beveiligingsheaders in de hostconfiguraties": per configuratie `ok` voor Strict-Transport-Security (max-age ≥ 180 dagen) en voor "http → https" (Netlify-regel; Vercel altijd; Cloudflare: instelling, staat als `n.v.t.`). Dit blok is in deze ronde toegevoegd; eerder toetste `--config` de headers niet, alleen `--headers`/`--alles` tegen een live adres. Na de deploy: `node webapp/tests/exposed.js --alles https://<adres> --strict` (controleert ook het echte doorsturen).
 
 ### 5. Wachtwoorden hashen
 **Status:** Geregeld (door Supabase Auth)
 
 **Bevinding.** De app bouwt zelf geen wachtwoordopslag, en dat is goed zo.
 
-**Fix.** Supabase Auth (GoTrue) bewaart wachtwoorden als **bcrypt**-hash. De app stuurt het wachtwoord alleen bij het inloggen via https naar Supabase en bewaart het nergens (niet in localStorage, niet in IndexedDB). Aanvullend: minimaal 12 tekens en toetsing tegen gelekte wachtwoorden (HaveIBeenPwned) in de Supabase-instellingen.
+**Fix.** Supabase Auth (GoTrue) bewaart wachtwoorden als **bcrypt**-hash. De app stuurt het wachtwoord alleen bij het inloggen via https naar Supabase en bewaart het nergens: niet in localStorage of sessionStorage, en in geen enkele IndexedDB-store (`inspecties`, `acties`, `planning`, `concept`, `outbox`, `syncmeta`). Aanvullend: minimaal 12 tekens en toetsing tegen gelekte wachtwoorden (HaveIBeenPwned) in de Supabase-instellingen.
 
-**Bewijs.** `supabase/README.md` §2 · `js/auth.js:233` (nieuw wachtwoord minstens 12 tekens) · `tests/sync.js` ("wachtwoord nergens in localStorage/sessionStorage/IndexedDB", nieuw in deze ronde).
+**Bewijs.** `supabase/README.md` §2 · `js/auth.js:233` (nieuw wachtwoord minstens 12 tekens) · `tests/sync.js`: "wachtwoordcheck leest alle IndexedDB-stores (wpi/acties, wpi/concept, wpi/inspecties, wpi/outbox, wpi/planning, wpi/syncmeta)" en "wachtwoord nergens in localStorage/sessionStorage/IndexedDB (alle stores)". De test leest nu elke store van elke IndexedDB-database van de app; de eerste versie keek maar naar 3 van de 6 stores.
 
 ### 6. Formulieren server-side valideren
 **Status:** Geregeld na Supabase-koppeling
@@ -143,9 +147,13 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 
 **Fix.** Twee lagen:
 1. Alle tekst van gebruikers en van de server wordt **geëscaped** voordat hij in de pagina komt (`WPI.esc`).
-2. **Strikte CSP**: alleen scripts van de eigen site, **geen** inline scripts, **geen** `onclick`-achtige attributen (`script-src-attr 'none'`), geen `eval`. De app gebruikt nu één centrale klikverwerking (`data-action`), die alleen echte app-functies aanroept. Zelfs als ergens een escape vergeten wordt, voert de browser een ingespoten script niet uit.
+2. **Strikte CSP**: alleen scripts van de eigen site, **geen** inline scripts, **geen** `onclick`-achtige attributen (`script-src-attr 'none'`), geen `eval`. De app gebruikt nu één centrale klikverwerking (`data-action`), die alleen echte app-functies aanroept. Als ergens een escape vergeten wordt, voert de browser een ingespoten `<script>` of `onerror=…` dus niet uit.
 
-**Bewijs.** `js/kern.js:35-50` en `:372-412` (event-delegatie, alleen eigen App-functies) · CSP in `index.html:13`, `_headers`, `netlify.toml`, `vercel.json` (gelijk; `exposed.js` controleert dat) · `tests/security.js` blok 1, 2 en 5: een ingespoten `onerror` en een ingespoten `<script>` worden door de browser geblokkeerd; in **elk** tekstveld van planning, nieuwe actie, actie instellen, zoeken, beheer en inspectie wordt een aanvalstekst ingevuld en opgeslagen, en daarna voert niets uit en staat er geen enkel `on…`-attribuut in de pagina · `tests/xss.js` (uitgebreid: 10 aanvalsteksten × 27 bronnen, ook via de server).
+**Wat de CSP níet tegenhoudt.** De centrale klikverwerking (`js/kern.js:372-400`) roept elke functie van de app aan die in een `data-action`-attribuut staat, met de argumenten uit `data-args`. Lukt het iemand om HTML in de pagina te krijgen (omdat ergens een escape vergeten is), dan kan hij zo'n knop maken en een app-functie laten uitvoeren zodra iemand erop klikt, bijvoorbeeld uitloggen of iets opslaan, met de rechten van wie er klikt. Er wordt geen vreemde code uitgevoerd en de database laat nog steeds alleen toe wat die gebruiker mag, maar de CSP helpt hier niet: **escaping is hier de enige verdediging.** Daarom toetsen `tests/security.js` en `tests/xss.js` nu ook deze aanval (een eigen `data-action` via `"` en via `'`), in elk tekstveld en in het adres.
+
+**De enkele quote.** `esc()` (`js/kern.js:12`) zet `& < > "` om, maar niet `'`. Dat is veilig zolang elke waarde in een attribuut tussen **dubbele** quotes staat. Dat is nu overal zo; `tools/periodieke_check.sh` (blok 5) faalt zodra iemand een attribuut tussen enkele quotes met een `${…}`-waarde schrijft. Advies aan de ontwikkelaar van `kern.js`: laat `esc()` ook `'` omzetten (zie "Wat moet Sven nog doen", stap 12).
+
+**Bewijs.** `js/kern.js:35-50` en `:372-412` (event-delegatie, alleen eigen App-functies) · CSP in `index.html:13`, `_headers`, `netlify.toml`, `vercel.json` (gelijk; `exposed.js` controleert dat) · `tests/security.js` blok 1, 2 en 5: een ingespoten `onerror` en een ingespoten `<script>` worden door de browser geblokkeerd; in **elk** tekstveld van planning, nieuwe actie, actie instellen, zoeken, beheer en inspectie wordt een aanvalstekst ingevuld en opgeslagen, en daarna voert niets uit en staat er geen enkel `on…`-attribuut en geen ingespoten `data-action` in de pagina; ook niet met de aanvalstekst in het adres (`#/rapport/<aanvalstekst>` en 10 andere routes) · `tests/xss.js` (uitgebreid: 12 aanvalsteksten × 27 bronnen, ook via de server, waarvan 2 met een eigen `data-action`) · `tools/periodieke_check.sh` blok 5 ("geen attributen tussen enkele quotes met ${…}").
 
 **Restpunt (laag).** De stijlregel van de CSP staat nog `'unsafe-inline'` toe voor `style="…"`-attributen. Daarmee kun je geen script uitvoeren, alleen opmaak veranderen. Opruimen kan later (stijlen naar `styles.css`).
 
@@ -155,14 +163,17 @@ Dit kan alleen jij (of iemand met toegang tot de accounts). Zonder deze stappen 
 **Bevinding.** Zonder logboek merk je misbruik van een geldig account (bijv. een gestolen wachtwoord) niet op.
 
 **Fix.**
-- **Auditlog** in de database: elke wijziging en verwijdering, met wie en wanneer (alleen de gewijzigde velden). Alleen-toevoegen: niemand kan het achteraf aanpassen.
-- **Beveiligingsmeldingen** (`security_events`): o.a. herhaald mislukte logins (app meldt na elke 5 mislukte pogingen), mislukte MFA, rolwijzigingen, geraakte limieten.
-- Supabase houdt zelf Auth- en API-logs bij.
+- **Auditlog** in de database: elke wijziging en verwijdering, met wie en wanneer (alleen de gewijzigde velden).
+- **Beveiligingsmeldingen** (`security_events`): mislukte MFA, rolwijzigingen, geraakte limieten, en herhaald mislukte logins (zie hieronder wat dat wel en niet vangt).
+- Supabase houdt zelf **Auth-logs** (elke inlogpoging, ook de mislukte, met IP-adres) en API-logs bij. Voor het raden van wachtwoorden zijn dát de logs om te bekijken.
 - De maandelijkse controle (`beveiliging-periodiek.md` §1) bevat kant-en-klare zoekopdrachten.
 
+**Mislukte logins: wat wel en niet in `security_events` komt.** Na elke 5 mislukte pogingen bewaart de app een melding `login_herhaald_mislukt` **op het toestel zelf**. Die gaat pas naar de database als daarna op **datzelfde toestel** iemand wél inlogt, want alleen een ingelogde gebruiker mag meldingen schrijven (`report_security_event` is alleen voor `authenticated`; `js/auth.js:165-177` en `:196-199`; `tests/sync.js`: "login_herhaald_mislukt verstuurd na login"). Iemand die vanaf zijn eigen apparaat wachtwoorden raadt, logt daarna niet in en levert dus **nooit** een regel in `security_events` op. Dat zie je alleen in de Auth-logs van Supabase (en Supabase remt het af, zie punt 12). Een melding vanaf het toestel van een aanvaller zou je ook niet kunnen vertrouwen. Wil je mislukte logins toch in de eigen tabel, dan kan een *Password Verification Hook* van Supabase dat op de server doen (betaald abonnement; nog niet gebouwd).
+
+**Wie kan de logboeken aanpassen?** De app en elke gewone databaserol (ook `service_role`) kunnen in `audit_log`, `actie_log` en `security_events` alleen regels toevoegen; wijzigen, verwijderen en leegmaken worden geweigerd (databasetests "eigenaar (postgres): auditlog UPDATE geweigerd door trigger" e.d.). Maar de **eigenaar** van de database (`postgres`) kan in onderhoudsstand (`wpi.onderhoud = 'aan'`) regels verwijderen, bedoeld voor de bewaartermijn (`0004_audit.sql:137-147`), en kan als eigenaar de bewaking (de triggers) uitzetten. Iedereen met het databasewachtwoord of toegang tot de SQL Editor van Supabase kan de logboeken dus wél aanpassen. Wat we daartegen doen: die toegang klein houden ("Wat moet Sven nog doen", stap 8) en bij de maandcontrole een export van de uitkomst buiten Supabase bewaren (`beveiliging-periodiek.md` §1.3).
 **Wat open staat.** Er gaat nog geen automatische mail of melding uit bij iets verdachts; iemand moet maandelijks kijken. Bij ~5 gebruikers is dat te doen. Wil je alarmering, dan kan later een kleine Supabase Edge Function of een geplande query een mail sturen.
 
-**Bewijs.** `supabase/migrations/0004_audit.sql`, `0001_tabellen.sql:321-332` (security_events) · `js/auth.js:168-198` (meldingen vanuit de app) · `docs/beveiliging-periodiek.md` §1.3.
+**Bewijs.** `supabase/migrations/0004_audit.sql` (append-only, uitzondering voor de eigenaar op `:137-147`), `0001_tabellen.sql:321-332` (security_events) · `js/auth.js:165-177` (melding bewaren en na een login versturen), `:196-199` (na elke 5 fouten) · `tests/sync.js` · databasetests sectie 7 · `docs/beveiliging-periodiek.md` §1.2-1.3.
 
 ### 9. Beheerroutes afschermen
 **Status:** Geregeld na Supabase-koppeling

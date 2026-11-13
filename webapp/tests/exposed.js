@@ -2,7 +2,8 @@
 //
 //   node tests/exposed.js http://localhost:8418                 bereikbaarheid (lokaal of gedeployd)
 //   node tests/exposed.js --headers https://werkplekinspectie.nl  headers van een gedeployde site
-//   node tests/exposed.js --config                               deploy-config: allowlist-build (echt uitgevoerd), 404-regels, CSP gelijk
+//   node tests/exposed.js --config                               deploy-config: allowlist-build (echt uitgevoerd), 404-regels, CSP gelijk,
+//                                                                beveiligingsheaders + no-cache + http→https in _headers/netlify.toml/vercel.json
 //   node tests/exposed.js --alles https://...                    alle drie
 //   --strict  → exitcode 1 als iets gevoeligs bereikbaar is of een verplichte header ontbreekt
 //
@@ -92,14 +93,12 @@ async function probeExposed(base, opts = {}) {
 }
 
 // ---------- headers van een gedeployde site ----------
-async function checkHeaders(url) {
-  const u = url.replace(/\/+$/, ""), uit = [];
-  const r = await vraag(u + "/", "GET");
-  if (!r.status) return [{ header: "(verbinding)", status: "FOUT", detail: r.fout }];
-  const h = r.headers || {}, get = (k) => h[k.toLowerCase()];
+// Beoordeelt één set response-headers (get(naam) → waarde). Gebruikt door checkHeaders (live site) en
+// headerConfigCheck (wat _headers, netlify.toml en vercel.json voor "/*" instellen), zodat beide dezelfde eisen toetsen.
+function beoordeelHeaders(get, isHttps, uit) {
   const add = (header, status, detail) => uit.push({ header, status, detail });
   const hsts = get("strict-transport-security");
-  if (!hsts) add("Strict-Transport-Security", u.startsWith("https:") ? "ONTBREEKT" : "n.v.t. (http)", "");
+  if (!hsts) add("Strict-Transport-Security", isHttps ? "ONTBREEKT" : "n.v.t. (http)", "");
   else { const m = hsts.match(/max-age=(\d+)/); add("Strict-Transport-Security", m && +m[1] >= 15552000 ? "ok" : "ZWAK", hsts + (m && +m[1] < 15552000 ? " (max-age < 180 dagen)" : "")); }
   const csp = get("content-security-policy");
   if (!csp) add("Content-Security-Policy", "ONTBREEKT", "alleen de meta-CSP in index.html (geen frame-ancestors mogelijk)");
@@ -121,6 +120,15 @@ async function checkHeaders(url) {
   add("Cross-Origin-Resource-Policy", get("cross-origin-resource-policy") ? "ok" : "aanbevolen", get("cross-origin-resource-policy") || "");
   const srv = get("server"), xpb = get("x-powered-by");
   add("Server / X-Powered-By", xpb || (srv && /\d/.test(srv)) ? "AANDACHT" : "ok", [srv, xpb].filter(Boolean).join(" · ") || "geen versie-info");
+  return csp;
+}
+async function checkHeaders(url) {
+  const u = url.replace(/\/+$/, ""), uit = [];
+  const r = await vraag(u + "/", "GET");
+  if (!r.status) return [{ header: "(verbinding)", status: "FOUT", detail: r.fout }];
+  const h = r.headers || {}, get = (k) => h[k.toLowerCase()];
+  const add = (header, status, detail) => uit.push({ header, status, detail });
+  beoordeelHeaders(get, u.startsWith("https:"), uit);
   for (const f of ["index.html", "sw.js"]) {
     const x = await vraag(u + "/" + f, "HEAD"); const cc = x.headers && x.headers["cache-control"];
     add("Cache-Control /" + f, cc && /no-cache|no-store|max-age=0/.test(cc) ? "ok" : "AANDACHT", cc || "(geen; oude app-schil kan blijven hangen)");
@@ -204,6 +212,43 @@ function cspCheck() {
   }
   return uit;
 }
+// 4. De beveiligingsheaders die de drie hostconfiguraties voor "/*" zetten (zelfde eisen als --headers op een
+//    live site: HSTS ≥ 180 dagen, CSP, nosniff, X-Frame-Options/frame-ancestors, Referrer-, Permissions-, COOP/CORP),
+//    plus Cache-Control: no-cache voor index.html en sw.js en het doorsturen van http naar https (Netlify-regel).
+function headerBlokken() {
+  const c = leesConfig(), uit = {};
+  // _headers: het blok onder de regel "/*" (ingesprongen "Naam: waarde"-regels)
+  const blok = (pad) => { const r = c.hdr.split(/\r?\n/), h = {}; let i = r.findIndex((x) => x.trim() === pad && !/^\s/.test(x)); if (i < 0) return null;
+    for (i++; i < r.length && (/^\s+\S/.test(r[i]) || /^\s*#/.test(r[i])); i++) { const m = r[i].match(/^\s+([A-Za-z-]+):\s*(.*)$/); if (m) h[m[1].toLowerCase()] = m[2].trim(); } return h; };
+  uit["_headers"] = { alles: blok("/*"), index: blok("/index.html"), sw: blok("/sw.js") };
+  // netlify.toml: [[headers]] for = "<pad>" met [headers.values]
+  const tom = (pad) => { const m = [...c.toml.matchAll(/\[\[headers\]\]([\s\S]*?)(?=\n\[\[|$)/g)].find((x) => new RegExp('for\\s*=\\s*"' + pad.replace(/[*.]/g, "\\$&") + '"').test(x[1]));
+    if (!m) return null; const h = {}; for (const r of m[1].split(/\n/)) { const k = r.match(/^\s*([A-Za-z-]+)\s*=\s*"(.*)"\s*$/); if (k && k[1] !== "for") h[k[1].toLowerCase()] = k[2]; } return h; };
+  uit["netlify.toml"] = { alles: tom("/*"), index: tom("/index.html"), sw: tom("/sw.js") };
+  // vercel.json: routes met headers; een pad krijgt de headers van elke route met "continue" die erop past
+  const ver = (pad) => { if (!c.vercel) return null; const h = {}; let n = 0;
+    for (const r of c.vercel.routes || []) if (r.headers && r.continue && new RegExp("^" + r.src + "$").test(pad)) { n++; for (const [k, v] of Object.entries(r.headers)) h[k.toLowerCase()] = v; }
+    return n ? h : null; };
+  uit["vercel.json"] = { alles: ver("/"), index: ver("/index.html"), sw: ver("/sw.js") };
+  return { blokken: uit, c };
+}
+function headerConfigCheck() {
+  const { blokken, c } = headerBlokken(), uit = [];
+  for (const [bron, b] of Object.entries(blokken)) {
+    if (!b.alles) { uit.push({ bron, header: '(blok voor "/*")', status: "ONTBREEKT", detail: "" }); continue; }
+    const r = []; beoordeelHeaders((k) => b.alles[k.toLowerCase()], true, r);
+    for (const x of r) if (x.header !== "Server / X-Powered-By") uit.push(Object.assign({ bron }, x));
+    for (const [naam, h] of [["index.html", b.index], ["sw.js", b.sw]]) {
+      const cc = h && h["cache-control"];
+      uit.push({ bron, header: "Cache-Control /" + naam, status: cc && /no-cache|no-store|max-age=0/.test(cc) ? "ok" : "ONTBREEKT", detail: cc || "" });
+    }
+  }
+  const naarHttps = [...c.toml.matchAll(/\[\[redirects\]\]([\s\S]*?)(?=\n\[\[|$)/g)].some((m) => /from\s*=\s*"http:\/\//.test(m[1]) && /to\s*=\s*"https:\/\//.test(m[1]) && /status\s*=\s*30[18]/.test(m[1]));
+  uit.push({ bron: "netlify.toml", header: "http → https", status: naarHttps ? "ok" : "ONTBREEKT", detail: naarHttps ? "301-regel van http:// naar https://" : "" });
+  uit.push({ bron: "vercel.json", header: "http → https", status: "ok", detail: "Vercel stuurt altijd door (niet uit te zetten)" });
+  uit.push({ bron: "_headers", header: "http → https", status: "n.v.t.", detail: 'Cloudflare: "Always Use HTTPS" aanzetten (instelling, geen bestand)' });
+  return uit;
+}
 function configCheck() {
   const paden = ["/docs/x.md", "/docs/", "/docs/beveiliging-checklist-ruw.md", "/tests/e2e.js", "/tests/security.js", "/supabase/seed.sql",
     "/supabase/migrations/0001_tabellen.sql", "/supabase/tests/run.sh", "/README.md", "/docs/sub/diep/x.md", "/js/README.md",
@@ -234,7 +279,7 @@ function configCheck() {
   return Object.assign(uit, { builds, gelijk });
 }
 
-module.exports = { probeExposed, checkHeaders, configCheck, cspCheck, bouwDist, vraag };
+module.exports = { probeExposed, checkHeaders, configCheck, cspCheck, headerConfigCheck, bouwDist, vraag };
 
 if (require.main === module) {
   (async () => {
@@ -269,8 +314,11 @@ if (require.main === module) {
       const csp = cspCheck();
       console.log("\n=== CSP gelijk in alle vier de bronnen ===");
       for (const x of csp) console.log(`${x.oordeel.padEnd(10)} ${x.bron.padEnd(20)} ${x.detail}`);
+      const hc = headerConfigCheck();
+      console.log("\n=== Beveiligingsheaders in de hostconfiguraties (voor alle paden \"/*\") ===");
+      for (const x of hc) console.log(`${x.status.padEnd(13)} ${x.bron.padEnd(14)} ${x.header.padEnd(36)} ${String(x.detail || "").slice(0, 70)}`);
       slecht += c.filter((x) => /BEREIKBAAR|GEEN BUILD/.test(x.vercel + x.netlify + x.cloudflare)).length + c.builds.filter((b) => !b.ok).length + (c.gelijk ? 0 : 1)
-        + csp.filter((x) => x.oordeel !== "ok").length;
+        + csp.filter((x) => x.oordeel !== "ok").length + hc.filter((x) => /ONTBREEKT|ZWAK|FOUT|AANDACHT/.test(x.status)).length;
     }
     console.log(strict && slecht ? `\nSTRICT: ${slecht} problemen` : "");
     process.exit(strict && slecht ? 1 : 0);

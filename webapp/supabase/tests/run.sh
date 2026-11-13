@@ -1,7 +1,11 @@
 #!/bin/sh
 # Draait de database-tests tegen een LOKALE PostgreSQL (16+).
-#   PGHOST/PGPORT/PGUSER naar een lokale testserver (superuser), bv.:
-#   PGHOST=/var/run/postgresql PGPORT=5432 PGUSER=postgres sh supabase/tests/run.sh
+#   PGHOST/PGPORT/PGUSER naar een lokale testserver (superuser). Met een standaard Debian/Ubuntu-PostgreSQL
+#   (peer-authenticatie: alleen de OS-gebruiker postgres mag als postgres inloggen) en schrijfrechten voor
+#   postgres (het script bouwt schema.sql opnieuw en leest ../js/beheer.js), vanuit de map webapp/:
+#     rm -rf /tmp/wpi-db && mkdir /tmp/wpi-db && cp -r supabase js /tmp/wpi-db/ && chmod -R a+rwX /tmp/wpi-db
+#     sudo -u postgres sh /tmp/wpi-db/supabase/tests/run.sh        (als root: runuser -u postgres -- sh …)
+#   Of met een eigen superuser-rol via TCP: PGHOST=localhost PGUSER=<rol> PGPASSWORD=… sh supabase/tests/run.sh
 # Stappen: schema.sql actueel? -> verse database -> Supabase-emulatie ->
 # schema.sql 2x (idempotent) -> rls_test.sql (incl. seed.sql 2x) -> races -> naamsleutel.
 set -eu

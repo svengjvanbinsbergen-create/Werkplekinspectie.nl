@@ -3,7 +3,7 @@
 //
 //   node /home/user/Werkplekinspectie.nl/webapp/tests/run-all.js            (alle scenario's)
 //   node tests/run-all.js e2e kw              (alleen deze)
-//   node tests/run-all.js --extra             (ook xss.js, ±6 min: 10 payloads × alle invoervelden en schermen; FAIL bij elk lek)
+//   node tests/run-all.js --extra             (ook xss.js, ±6 min: 12 payloads × alle invoervelden en schermen; FAIL bij elk lek)
 //   node tests/run-all.js -j 2                (2 tests tegelijk; standaard 1, de tests wachten op tijd)
 //
 // Omgeving: RUNALL_PORT (standaard 8412) voor de statische server, SYNC_PORT (standaard 8414; sync.js
