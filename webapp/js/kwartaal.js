@@ -25,7 +25,8 @@
         klasse, acties, af, optijd, open, over, themas, om, maanden: Object.keys(om).sort(), producten: [...new Set(wpis.map((w) => w.product))] };
     },
     kiesKwartaal(q) { this.kwartaal = q; this.route(); },
-    view_kwartaal() {
+    view_kwartaal() { return this.metCijfers("kwartaal", () => this.tekenKwartaal()); },   // cijfers + skelet: js/dashboard.js
+    tekenKwartaal() {
       const qs = Object.keys(this.KW); if (!this.kwartaal) this.kwartaal = qs[qs.length - 1];
       const K = this.kwCijfers(this.kwartaal), qi = qs.indexOf(this.kwartaal), V = qi > 0 ? this.kwCijfers(qs[qi - 1]) : null, P = this.PAL, v = $("view");
       const delta = (nu, toen, eenheid) => nu == null || toen == null ? "" : nu === toen ? `<span class="delta">= gelijk aan ${V.q}</span>` : `<span class="delta ${nu > toen ? "op" : "neer"}">${nu > toen ? "▲" : "▼"} ${Math.abs(nu - toen)}${eenheid} t.o.v. ${V.q}</span>`;
@@ -70,7 +71,7 @@
             <div class="kwrij"><span class="grow">Afgerond na toetsing</span><b>${K.af.length}</b></div>
             <div class="kwrij"><span class="grow">Daarvan op tijd</span><b>${K.optijd.length}</b></div>
             <div class="kwrij"><span class="grow">Nog open</span><b>${K.open.length}</b></div>
-            <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? P.warmInk || "#8F5409" : "inherit"}">${K.over.length}</b></div></div>
+            <div class="kwrij"><span class="grow">Over termijn</span><b style="color:${K.over.length ? "#8F1D14" : "inherit"}">${K.over.length}</b></div></div>
           <div class="card"><h2 class="kaartkop">5 · Wat gaan we doen <span class="sub">trendacties VCA 7.2</span></h2>
             ${this.data.trendacties.slice(0, 5).map((t) => `<div class="kwrij"><span class="grow">${esc(t.onderwerp)}</span>${stBadge(t.status === "Open" ? "Open" : "Afgerond")}</div>`).join("")}
             <div class="s noprint" style="margin-top:8px"><a href="#/kwartaal" data-geen-default${act("drill", "acties")} style="color:var(--accent);font-weight:800">Alle trendacties ›</a></div></div>

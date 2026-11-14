@@ -1,0 +1,221 @@
+/* Werkplekinspectie — css/laden.css: laadindicatoren (js/laden.js, WPI.laad). Prefix .ld-
+   Rustig (stijl B): alleen transform, opacity, width, stroke-dashoffset en (skelet) achtergrondkleur; geen signaalkleuren (groen/geel/rood).
+   Kleur: --ld = --accent; op het inspectiescherm met de C/A/V-knoppen neutraal (--soft), zodat niets als een groene
+   "C" leest. Minder beweging: eigen varianten onderaan, NA de globale regel in styles.css (die zet oneindige
+   animaties op hun laatste frame; een schuivende balk zou dan onzichtbaar worden). Elke SVG hier heeft een vaste
+   maat: de globale regel svg{display:block;width:100%} geldt voor alle SVG's. */
+:root{
+  /* alle laderkleuren komen van de app-tokens (styles.css): --accent, --soft, --line, --bg, --ink.
+     Hex = dezelfde menging, voor browsers zonder color-mix (een custom property valt niet terug op een 2e waarde) */
+  --ld:var(--accent);
+  --ld-rail:var(--line);
+  --ld-sk:#E6E0D9;        /* skeletvlak: --soft 15% in --bg, duidelijk zichtbaar op --bg (ook op een felle laptop) */
+  --ld-sk-licht:#EFEAE3;  /* de puls gaat naar --soft 8% in --bg */
+  --ld-vlak:#F3EEE7;      /* neutraal vlak achter een bevestiging: --soft 7% in --bg */
+  --ld-sluier:rgba(250,246,239,.74);   /* --bg op 74% */
+}
+body.zon{--ld:var(--ink);--ld-rail:var(--line);--ld-sk:#DCDDDF;--ld-sk-licht:#EDEEEF;--ld-vlak:#fff;--ld-sluier:rgba(255,255,255,.86)}
+@supports (color:color-mix(in srgb,red 50%,blue)){
+  :root{--ld-sk:color-mix(in srgb,var(--soft) 15%,var(--bg));--ld-sk-licht:color-mix(in srgb,var(--soft) 8%,var(--bg));
+    --ld-vlak:color-mix(in srgb,var(--soft) 7%,var(--bg));--ld-sluier:color-mix(in srgb,var(--bg) 74%,transparent)}
+  body.zon{--ld-sk:color-mix(in srgb,var(--ink) 14%,#fff);--ld-sk-licht:color-mix(in srgb,var(--ink) 7%,#fff);--ld-sluier:color-mix(in srgb,#fff 86%,transparent)}
+}
+body:has(#app[data-page="inspectie"]),.ld-neutraal{--ld:var(--soft)}
+
+/* #1 rustig skelet: zachte puls (geen glans), vorm van het scherm staat er meteen. De puls wisselt de
+   achtergrondkleur (geen opacity): dan geen aparte compositorlagen, dus geen tegelnaden op grote vlakken. */
+.ld-sk{background-color:var(--ld-sk);border-radius:10px;animation:ld-puls 1.8s ease-in-out infinite}
+.ld-sk.r{border-radius:22px}
+.ld-sk.pil{height:38px;border-radius:12px;max-width:100%}
+.ld-sk.bol{width:40px;height:40px;border-radius:50%;flex:none}
+@keyframes ld-puls{0%,100%{background-color:var(--ld-sk)}50%{background-color:var(--ld-sk-licht)}}
+.ld-skelet{display:block}
+.ld-sk-dash{display:grid;gap:10px}
+.ld-sk-rij{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px}
+.ld-sk-tegels{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.ld-sk-duo{display:grid;gap:14px;margin-top:4px}
+.ld-sk-lijst{background:#fff;border-radius:var(--r,22px);box-shadow:0 0 0 1px var(--line);padding:4px 18px}
+.ld-sk-lrij{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.ld-sk-lrij:last-child{border-bottom:0}
+@media(min-width:900px){
+  .ld-sk-tegels{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .ld-sk-tegels.vier{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ld-sk-duo{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* skelet van het startscherm (Vandaag): zelfde maten als het echte scherm (js/vandaag.js, styles.css .vkop/.vgrid),
+   gemeten op 390, 1000 en 1920 px (CSS-px, dus ook goed met --zoom): de echte inhoud komt op dezelfde plek */
+.ld-sk-hi{height:14px;width:min(300px,75%);margin-top:10px}
+.ld-sk-h1{height:26px;width:min(320px,80%);margin:7px 0 19px}
+.ld-sk-vgrid{display:grid}
+.ld-sk-held{height:188px}
+.ld-sk-act,.ld-sk-onder{display:flex;flex-direction:column}
+.ld-sk-act{margin-top:4px}
+.ld-sk-tip{height:165px}
+.ld-sk-sectie{height:12px;width:150px;max-width:50%;margin:25px 4px 11px}
+.ld-sk-actlijst,.ld-sk-onderlijst{height:208px}
+.ld-sk-breed{display:none}
+@media(min-width:720px){.ld-sk-tip{height:146px}}
+@media(min-width:1100px){
+  .ld-sk-vgrid{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0 28px}
+  .ld-sk-held{height:394px}
+  .ld-sk-act{margin-top:0;height:394px}
+  .ld-sk-tip{height:160px}
+  .ld-sk-act .ld-sk-sectie{margin-top:3px}
+  .ld-sk-act .ld-sk-actlijst{flex:1;height:auto}
+  .ld-sk-onder .ld-sk-sectie{margin:26px 4px 12px}
+  .ld-sk-onderlijst{height:330px}
+  .ld-sk-breed{display:flex}
+}
+/* 1100–1359 px (nog geen --zoom): de rechterkolom is smal, de oefentip loopt over een regel meer */
+@media(min-width:1100px) and (max-width:1359px){.ld-sk-tip{height:179px}.ld-sk-held,.ld-sk-act{height:413px}}
+
+/* Vandaag (js/vandaag.js) tekent de planningkaart pas na het inlezen van de planning. Tot dan houdt dit vlak zijn
+   plek vast (zelfde maat als het skelet hierboven) en wordt het na ±300 ms een rustig skeletvlak; anders staan
+   "Acties" en "Meer" eerst bovenaan en zakken ze daarna ±190 px (layout shift). Alleen als er niets boven de kaart in .vtop
+   staat (de lege .vpauze-doos telt niet mee; bij een lopende inspectie staat die er al boven en mag .vplan leeg
+   blijven). */
+.vandaaggrid .vtop>.vplan:only-child:empty,.vandaaggrid .vtop>.vpauze:first-child:empty+.vplan:last-child:empty{min-height:188px;border-radius:22px;animation:ld-sk-in .25s .3s both}
+@media(min-width:1100px){.vandaaggrid .vtop>.vplan:only-child:empty,.vandaaggrid .vtop>.vpauze:first-child:empty+.vplan:last-child:empty{min-height:394px}}
+@keyframes ld-sk-in{from{background-color:transparent}to{background-color:var(--ld-sk)}}
+
+/* ---- #6 + #1 bij het openen (statische HTML in index.html; js/laden-start.js zet html[data-ld-start]) ----
+   De app-schil staat er meteen (kopbalk met logo; met sessie ook het zijmenu met logo, naam en een rustig
+   menuskelet). Het inhoudsvlak blijft bij een snelle start leeg; pas na ±300 ms verschijnt daar het opstartscherm
+   (zonder sessie) of het skelet van het startscherm (met sessie). Zodra #view iets toont is de lader weg
+   (js/laden.js haalt hem weg; de :has-regel is het vangnet). De lader staat op de plek van de inhoud: zelfde
+   binnenruimte als .view, zelfde breedte als het scherm dat komt (met sessie naast het menu, zonder sessie
+   gecentreerd zoals het inlogscherm), dus geen verschuiving. */
+.ld-opstart{padding:8px 20px 0;animation:ld-vervaag .25s .3s both}
+@media(min-width:720px){.ld-opstart{padding:8px 24px 0}}
+@media(min-width:900px){.ld-opstart{padding:8px 36px 0}}
+#hoofd:has(>#view:not([data-ld-houd])>*)>.ld-opstart{display:none}
+/* het eerste scherm tekent zijn kaarten nog (js/laden.js opstartHoud): verborgen tot alles er is, de lader blijft */
+#view[data-ld-houd]{display:none}
+html[data-ld-start=sessie] .ld-opstart .ld-splash,html:not([data-ld-start=sessie]) .ld-opstart .ld-opstartskelet{display:none}
+/* zonder sessie: vóór het opstarten al de vorm van het inlogscherm (#app.nonav in styles.css: geen zijmenu, gecentreerd) */
+html[data-ld-start=gast] #app:not(.nonav):not([data-page]) #tabbar{display:none}
+@media(min-width:900px){
+  html[data-ld-start=gast] #app:not(.nonav):not([data-page]){padding-left:0}
+  html[data-ld-start=gast] #app:not(.nonav):not([data-page]) :is(.topbar,.view,.ld-opstart){max-width:860px;margin-left:auto;margin-right:auto;width:100%}
+  html[data-ld-start=gast] #app:not(.nonav):not([data-page]) .topbar .brand{visibility:visible}
+}
+/* het opstartscherm toont het app-icoon groot in het midden: dan niet ook nog het kleine logo in de kopbalk
+   (het logo "verhuist" naar het midden en komt terug als het inlogscherm er staat, js/laden.js .ld-terug) */
+html[data-ld-start=gast] body:has(#ld-opstart) .topbar .brand{animation:ld-weg .25s .3s both}
+.topbar .brand.ld-terug{animation:ld-vervaag .3s ease-out both}
+@keyframes ld-weg{from{opacity:1}to{opacity:0}}
+/* met sessie: menu en kopbalk alvast in hun vorm (de echte knoppen komen met js/kern.js renderTabs/renderAcct) */
+.ld-tabsk{pointer-events:none;animation:ld-vervaag .25s .3s both}
+.ld-tabsk .ic{display:block;border-radius:8px;background:var(--ld-sk)}
+.ld-tabsk-t{display:block;width:40px;max-width:70%;background:linear-gradient(var(--ld-sk),var(--ld-sk)) center/100% 8px no-repeat}
+@media(max-width:899px){.ld-tabsk:nth-of-type(n+5){display:none}}
+@media(min-width:900px){.ld-tabsk-t{width:96px;background-size:100% 11px}}
+html[data-ld-start=sessie] #app:not([data-page]) #acct:empty{width:88px;height:40px;animation:ld-vervaag .25s .3s both;
+  background:radial-gradient(circle at 20px 50%,var(--ld-sk) 19px,transparent 20px),radial-gradient(circle at 68px 50%,var(--ld-sk) 19px,transparent 20px)}
+
+/* #2 dunne balk bovenin (onbepaald, 3 px): handmatig synchroniseren, scherm wacht op de server */
+.ld-balk-top{position:fixed;left:0;right:0;top:0;height:3px;z-index:9000;pointer-events:none}
+.ld-balk-top[hidden]{display:none}
+.ld-balk{position:absolute;inset:0;overflow:hidden}
+.ld-balk::before{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;border-radius:0 3px 3px 0;background:var(--ld);animation:ld-schuif 1.7s cubic-bezier(.45,0,.25,1) infinite}
+@keyframes ld-schuif{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+.ld-balk-top.klaar .ld-balk::before{animation:none;width:100%;transform:none;opacity:0;transition:width .25s ease-out,opacity .3s .25s}
+/* het label ("Synchroniseren…") staat er altijd voor schermlezers (role=status); zichtbaar alleen bij minder beweging */
+.ld-balk-label{display:none}
+
+/* #3 rustige ring: boog van vaste lengte, gelijkmatig draaiend (geen groeien/krimpen, geen kleurwissel) */
+/* svg.ld-ring.ld-ring: sterker dan .btn svg{width:auto} en de globale svg-regel, dus altijd 18 px */
+svg.ld-ring.ld-ring{display:inline-block;width:18px;height:18px;flex:none;vertical-align:-3px;transform-origin:50% 50%;animation:ld-draai 1.2s linear infinite}
+.ld-ring circle{fill:none;stroke-width:2.5}
+.ld-ring .rail{stroke:var(--ld-rail)}
+.ld-ring .boog{stroke:var(--ld);stroke-linecap:round;stroke-dasharray:28 100}
+.ld-ring.op-knop .rail{stroke:rgba(255,255,255,.3)}
+.ld-ring.op-knop .boog{stroke:currentColor}
+@keyframes ld-draai{to{transform:rotate(360deg)}}
+[data-ld-bezig]{cursor:progress}
+/* de knop heeft een vaste maat (js/laden.js); de ring zit in de flex-gap van .btn, of krijgt zelf ruimte */
+.ld-knop-bezig:not(.btn)>.ld-ring{margin-inline-end:.5em}
+.ld-knop-bezig [data-ld-verborgen]{display:none!important}
+.ld-knoptekst{white-space:nowrap}
+.ld-knop-krap{padding-inline:6px!important;gap:6px!important}
+
+/* #4 bepaalde voortgangsbalk (8 px) met percentage en stap */
+.ld-vg{display:grid;gap:8px;padding:4px 0}
+.ld-vg[hidden]{display:none}
+.ld-vg-kop{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-weight:800;font-size:14px;color:var(--ink)}
+.ld-vg-pct{font-variant-numeric:tabular-nums;color:var(--soft)}
+.ld-voortgang{height:8px;border-radius:999px;background:var(--ld-rail);overflow:hidden}
+.ld-voortgang>i{display:block;height:100%;width:0;border-radius:inherit;background:var(--ld);transition:width .35s ease-out}
+.ld-vg-stap{font-size:13px;color:var(--soft);font-weight:600;min-height:1.45em}
+
+/* #5 ring over de fotominiatuur; offline een stille wachtstand (gestippelde rail, tekst, geen beweging) */
+.ld-foto{position:relative;overflow:hidden}
+.ld-fotoring{position:absolute;inset:0;display:grid;place-items:center;align-content:center;gap:2px;padding:4px;background:var(--ld-sluier);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s,visibility 0s .3s}
+.ld-fotoring.zichtbaar{opacity:1;visibility:visible;transition:opacity .3s}
+.ld-fotoring.klaar{opacity:0;visibility:hidden;transition:opacity .3s,visibility 0s .3s}
+.ld-fotoring svg.ld-fr-svg{display:block;width:46px;height:46px;transform:rotate(-90deg)}
+.ld-fotoring circle{fill:none;stroke-width:3.5}
+.ld-fotoring .rail{stroke:var(--ld-rail)}
+.ld-fotoring .vul{stroke:var(--ld);stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transition:stroke-dashoffset .35s ease-out}
+.ld-fr-pct{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);text-align:center;font-size:12px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.ld-fr-tekst{font-size:11.5px;font-weight:800;line-height:1.2;color:var(--ink);text-align:center;max-width:100%}
+.ld-fr-tekst:empty{display:none}
+.ld-fotoring.wacht .rail,.ld-fotoring.fout .rail{stroke:var(--soft);stroke-dasharray:4 4;opacity:.6}
+.ld-fotoring.wacht .vul,.ld-fotoring.fout .vul{opacity:0}
+/* klaar: klein vinkje op een NEUTRAAL rondje (wit, lijnrand), overal; nooit mint/groen, dus nooit een "C" */
+.ld-fr-vink{position:absolute;right:6px;bottom:6px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px var(--line),0 1px 3px rgba(42,38,34,.12);color:var(--ld);display:grid;place-items:center;animation:ld-in .25s .15s ease-out both}
+.ld-fr-vink svg.ld-vink.ld-vink{margin:0}
+
+/* #6 opstartscherm (zonder sessie): het app-icoon (zelfde groene N als het logo en icon-192/512.png, als CSS: niets
+   te downloaden), de naam, een rustige lijn en "Laden…". Midden in het vlak onder de kopbalk.
+   Hoogte gedeeld door --zoom: html{zoom} in styles.css vergroot op grote schermen ook vh. */
+.ld-splash{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:calc(100vh / var(--zoom,1) - var(--tb,60px) - 40px);min-height:calc(100dvh / var(--zoom,1) - var(--tb,60px) - 40px);padding:0 0 32px;pointer-events:none}
+.ld-splash-ico{width:72px;height:72px;border-radius:22px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:32px;line-height:1;animation:ld-in .45s .3s ease-out both}
+.ld-splash-naam{font-weight:800;font-size:16px;color:var(--ink)}
+.ld-splash-lijn{position:relative;width:96px;height:3px;border-radius:3px;background:var(--ld-rail);overflow:hidden}
+.ld-splash-tekst{font-size:13px;font-weight:700;color:var(--soft)}
+@keyframes ld-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes ld-vervaag{from{opacity:0}to{opacity:1}}
+
+/* #7 vinkje in de opslagstatus: tekent zich één keer (350 ms) */
+svg.ld-vink.ld-vink{display:inline-block;width:14px;height:14px;flex:none;vertical-align:-2px;margin-inline-end:4px}
+.ld-vink path{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0}
+.ld-vink-teken path{stroke-dashoffset:1;animation:ld-teken .35s .05s ease-out forwards}
+@keyframes ld-teken{to{stroke-dashoffset:0}}
+/* De opslagstatus ("✓ Veilig op dit toestel") staat op een NEUTRAAL vlak, niet op het mint/groen van .opslag.ok:
+   - overal waar het vinkje staat (WPI.laad.vinkje zet .ld-vinkvlak; js/kern.js toonOpslag roept het aan);
+   - en op het inspectiescherm ALTIJD (ook zonder vinkje, ook de sync-pil): daar staan de C/A/V-knoppen en
+     -chips, en een groene pil naast een groene [C] leest als een oordeel. Ook in de zonmodus (daar is .opslag.ok
+     anders massief groen = de C-kleur). */
+.opslag.ld-vinkvlak,body:has(#app[data-page="inspectie"]) .opslag.ok{background:var(--ld-vlak);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+body.zon .opslag.ld-vinkvlak,body.zon:has(#app[data-page="inspectie"]) .opslag.ok{background:#fff;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.opslag svg.ld-vink{color:var(--ld)}
+
+/* #8 sync-pil: drie punten die alleen in helderheid golven (niet stuiteren). Ze staan ABSOLUUT, gecentreerd
+   onder de pil: de pil wordt niet breder, de kopbalk verschuift niet (geen layout shift bij elke sync). */
+#syncchip{position:relative}
+.ld-punten{position:absolute;left:50%;top:100%;margin-top:3px;transform:translateX(-50%);display:flex;gap:4px;align-items:center;pointer-events:none}
+.ld-punten i{display:block;width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.25;animation:ld-punt 1.4s ease-in-out infinite}
+@keyframes ld-punt{0%,100%{opacity:.25}40%{opacity:1}}
+
+@media print{.ld-balk-top,.ld-opstart,.ld-splash,.ld-skelet,.ld-fotoring{display:none!important}}
+
+/* Minder beweging: NA de globale regel in styles.css (die zet animaties op .01 ms en 1 herhaling = het laatste
+   frame; een schuivende balk zou dan onzichtbaar worden). Eigen varianten met !important (specifieker dan de
+   globale *-regel). Alles staat STIL en blijft volledig zichtbaar (geen ademen: bij een lage dekking zakt het
+   contrast van de ring onder 3:1, WCAG 1.4.11):
+   - skelet en punten: stil; balk: een vaste volle lijn MET een zichtbaar label ("Synchroniseren…"), zodat hij niet
+     als een gewone lijn op de pagina leest; ring: vaste boog, volle dekking (de knop heeft ook aria-busy);
+   - voortgang en fotoring springen zonder overgang; vinkje staat er meteen; opstartscherm zonder schaal. */
+@media (prefers-reduced-motion: reduce){
+  .ld-sk{animation:none!important;background-color:var(--ld-sk)!important}
+  .ld-balk::before{width:100%!important;transform:none!important;animation:none!important;opacity:1!important}
+  .ld-balk-top .ld-balk-label{display:block;position:fixed;top:3px;left:50%;transform:translateX(-50%);padding:3px 12px 4px;border-radius:0 0 10px 10px;
+    background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line),0 2px 6px rgba(42,38,34,.08);font-size:12.5px;font-weight:800;white-space:nowrap}
+  .ld-balk-top.klaar .ld-balk::before,.ld-balk-top.klaar .ld-balk-label{opacity:0!important;transition:none!important}
+  svg.ld-ring.ld-ring{transform:none!important;animation:none!important;opacity:1!important}
+  .ld-punten i{animation:none!important;opacity:.6!important}
+  .ld-vink-teken path,.ld-vink path{animation:none!important;stroke-dashoffset:0!important}
+  .ld-splash-ico,.ld-fr-vink{animation:none!important;opacity:1;transform:none!important;transition:none!important}
+  .ld-voortgang>i,.ld-fotoring,.ld-fotoring .vul{transition:none!important}
+}

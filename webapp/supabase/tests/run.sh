@@ -44,6 +44,8 @@ sed -e 's/bjorn\.sloos@VUL-IN\.invalid/hoofd@test.invalid/' \
 cd "$DIR/tests"
 PGOPTIONS='-c client_min_messages=warning' $P -v seed="$SEED" -f rls_test.sql
 rm -f "$SEED"
+# 4a. aanvullingen op een vastgelegde inspectie (0010; gebruikt de testgebruikers van rls_test.sql)
+PGOPTIONS='-c client_min_messages=warning' $P -f aanvulling_test.sql
 
 # 4b. bijwerken over een gevulde database: schema.sql nogmaals laden mag niets breken
 PGOPTIONS='-c client_min_messages=warning' $P -f "$DIR/schema.sql"

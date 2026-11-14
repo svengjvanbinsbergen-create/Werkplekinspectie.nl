@@ -92,7 +92,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     const ctx = await b.newContext(opt), p = await pagina(ctx, 'insp');
     await p.goto(BASE + '/index.html'); await p.waitForTimeout(900);
     ok(await p.locator('#l-mail').count() === 1, 'echt inlogscherm (e-mail + wachtwoord)');
-    ok(!(await p.locator('#view').innerText()).includes('Kies je account'), 'geen voorbeeld-accountkiezer met backend');
+    ok(!(await p.locator('#view').innerText()).includes('Kies een voorbeeldaccount'), 'geen voorbeeld-accountkiezer met backend');
     ok(await p.locator('#l-onthoud').isChecked() === false, '"Ingelogd blijven" staat standaard uit');
     ok(await p.locator('#l-form[novalidate]').count() === 1, 'inlogformulier: novalidate (eigen Nederlandse meldingen)');
     await p.fill('#l-mail', 'geen-adres'); await p.fill('#l-ww', 'x'); await p.click('#l-knop'); await p.waitForTimeout(200);
@@ -160,8 +160,8 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await p.click('text=Actievoorstel vastleggen'); await p.waitForTimeout(300);
     await p.click('text=Nee, naar het gesprek met de monteurs'); await p.waitForTimeout(300);
     await p.click('text=Naar afronden'); await p.waitForTimeout(300);
-    await p.click('text=Inspectie vastleggen'); await p.waitForTimeout(300);
-    if (await p.locator('button:has-text("Toch vastleggen")').count()) { await p.click('button:has-text("Toch vastleggen")'); await p.waitForTimeout(600); }
+    await p.click('button:has-text("Definitief afronden")'); await p.waitForTimeout(300);
+    await p.click('#mod button:has-text("efinitief afronden")'); await p.waitForSelector('#mod .afr-uitkomst', { timeout: 30000 });
     const mod = await p.locator('#mod').innerText();
     ok(/klaargezet voor de server/.test(mod) && !/cloud-opslag volgt/.test(mod), 'Vastgelegd-venster noemt de wachtrij');
     const rid = await p.evaluate(async () => (await WPI.DB.all()).map((r) => r.id).find((i) => i.startsWith('WPI-')));
@@ -803,17 +803,69 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(await mfaIn('beheer@noardling.test') && await R.evaluate(() => App.user && App.user.role === 'beheerder'), 'beheerder: tweestapsverificatie gevraagd en daarna binnen');
     await R.evaluate(() => App.go('beheer')); await R.waitForTimeout(1200);
     const rolVan = (st, mail) => ((st.users || []).find((u) => u.email === mail) || { profiel: {} }).profiel.role;
-    const tl = await R.locator('#bh-team').innerText().catch(() => '');
-    ok(/Nieuwe Collega/.test(tl) && /Nog geen rol/.test(tl) && /Carla Proef/.test(tl), 'Team en rollen: lijst van de server, ook wie nog geen rol heeft', tl.slice(0, 200));
-    const opties = await R.locator('#bh-team select').first().locator('option').allInnerTexts();
-    ok(opties.length >= 4 && !opties.some((t) => /Inspecteur/i.test(t)) && opties.includes('QHSE-manager') && opties.includes('Beheerder'), 'Team en rollen: rolkeuze zonder "Inspecteur" ' + JSON.stringify(opties));
-    const uitnodig = await R.locator('#bh-team .bhuitnodig').evaluate((e) => e.textContent).catch(() => '');
-    ok(/Invite user/.test(uitnodig) && !/inspecteur/i.test(uitnodig) && /QHSE-manager of beheerder/.test(uitnodig), 'Team en rollen: "Nieuwe collega uitnodigen" noemt de rol inspecteur niet meer', uitnodig);
-    ok(await R.locator('.bhteamrij', { hasText: 'Hanna Hypothese' }).locator('select').count() === 0, 'Team en rollen: je eigen rol kies je niet zelf');
-    await R.locator('.bhteamrij', { hasText: 'Nieuwe Collega' }).locator('select').selectOption('coordinator'); await R.waitForTimeout(1200);
-    ok(rolVan(await state(), 'norol@noardling.test') === 'coordinator' && /Nieuwe Collega is nu Coördinator/.test(await R.locator('#view').innerText()), 'Team en rollen: rol gekozen en op de server opgeslagen');
-    await R.locator('.bhteamrij', { hasText: 'Björn Sloos' }).locator('select').selectOption('coordinator'); await R.waitForTimeout(1200);
-    ok(/minstens één actief hoofd/.test(await R.locator('#bh-team-fout').innerText()) && rolVan(await state(), 'bjorn@noardling.test') === 'hoofd', 'Team en rollen: het laatste hoofd degraderen geweigerd, met de uitleg van de server');
+    const gl = await R.locator('#bh-gebruikers').innerText().catch(() => '');
+    ok(/Nieuwe Collega/.test(gl) && /Nog geen rol/.test(gl) && /Carla Proef/.test(gl) && /Laatst ingelogd/.test(gl), 'Gebruikers: lijst van de server (rpc/gebruikers_overzicht), ook wie nog geen rol heeft, met laatst ingelogd');
+    const userVan = (st, mail) => (st.users || []).find((u) => u.email === mail) || { profiel: {} };
+    await R.locator('.bhgebr', { hasText: 'Nieuwe Collega' }).locator('button').click(); await R.waitForTimeout(400);
+    const opties = await R.locator('#gw-rol option').allInnerTexts();
+    ok(opties.length >= 4 && !opties.some((t) => /Inspecteur/i.test(t)) && opties.includes('QHSE-manager') && opties.includes('Beheerder'), 'Gebruikers: rolkeuze zonder "Inspecteur" ' + JSON.stringify(opties));
+    await R.selectOption('#gw-rol', 'coordinator'); await R.click('#mod button[type=submit]'); await R.waitForTimeout(1500);
+    ok(rolVan(await state(), 'norol@noardling.test') === 'coordinator' && /Nieuwe Collega is nu Coördinator/.test(await R.locator('#view').innerText()), 'Gebruikers: rol gekozen via de functie "gebruikers" en op de server opgeslagen');
+    await R.locator('.bhgebr', { hasText: 'Hanna Hypothese' }).locator('button').click(); await R.waitForTimeout(400);
+    ok(await R.locator('#gw-rol').isDisabled() && await R.locator('#mod button:has-text("Op non-actief")').count() === 0, 'Gebruikers: je eigen rol en toegang kies je niet zelf');
+    await R.evaluate(() => App.closeModal());
+    await R.locator('.bhgebr', { hasText: 'Björn Sloos' }).locator('button').click(); await R.waitForTimeout(400);
+    await R.selectOption('#gw-rol', 'coordinator'); await R.click('#mod button[type=submit]'); await R.waitForTimeout(1500);
+    ok(/minstens één actief hoofd/.test(await R.locator('#gw-fout').innerText()) && rolVan(await state(), 'bjorn@noardling.test') === 'hoofd', 'Gebruikers: het laatste hoofd degraderen geweigerd, met de uitleg van de server');
+    await R.evaluate(() => App.closeModal());
+    // uitnodigen zonder mailserver: de echte functie "uitnodigen" (tools/functies_host.mjs) maakt de link
+    await R.click('#bh-gebruikers button:has-text("Gebruiker uitnodigen")'); await R.waitForTimeout(300);
+    await R.fill('#gu-mail', 'nina@noardling.test'); await R.fill('#gu-naam', 'Nina Nieuw'); await R.selectOption('#gu-rol', 'coordinator'); await R.fill('#gu-functie', 'Montage Coördinator');
+    await R.click('#gu-knop'); await R.waitForTimeout(3000);
+    const ilink = await R.inputValue('#gu-link').catch(() => '');
+    ok(/\/auth\/v1\/verify\?token=.+type=invite/.test(ilink) && !/Demo/.test(await R.locator('#mod').innerText()), 'uitnodigen: persoonlijke link van Supabase Auth (geen demo-melding) ' + ilink.slice(0, 80));
+    let st = await state(), nina = userVan(st, 'nina@noardling.test'), beheerId = userVan(st, 'beheer@noardling.test').id;
+    ok(nina.profiel.role === 'coordinator' && nina.profiel.actief && nina.profiel.functie === 'Montage Coördinator' && nina.profiel.full_name === 'Nina Nieuw', 'uitnodigen: profiel met naam, rol en functie');
+    ok((st.security_events || []).some((e) => e.soort === 'beheer_gebruiker_uitgenodigd' && e.wie === beheerId && e.details.profiel === nina.id), 'uitnodigen: gebeurtenis met de beheerder als wie');
+    await R.screenshot({ path: 'gebruikers-link-echt.png' });
+    await R.evaluate(() => App.closeModal()); await R.waitForTimeout(800);
+    // de link verloopt of raakt kwijt: de lijst toont wie nog niet inlogde, en Wijzig › Nieuwe link maken (echte functie "gebruikers")
+    ok(/Nog niet ingelogd · uitnodiging open/.test(await R.locator('.bhgebr', { hasText: 'Nina Nieuw' }).innerText()), 'Gebruikers: "Nog niet ingelogd · uitnodiging open" bij de nieuwe collega');
+    await R.locator('.bhgebr', { hasText: 'Nina Nieuw' }).locator('button').click(); await R.waitForTimeout(400);
+    await R.click('#mod button:has-text("Nieuwe link maken")'); await R.waitForTimeout(2500);
+    const nlink = await R.inputValue('#gu-link').catch(() => ''), nres = await R.locator('#mod').innerText();
+    ok(/\/auth\/v1\/verify\?token=.+type=invite/.test(nlink) && nlink !== ilink && /Nieuwe link klaar/.test(nres) && /geldig tot \d{2}:\d{2}/.test(nres), 'nieuwe link: andere persoonlijke link met "geldig tot" ' + nlink.slice(0, 80));
+    ok(((await state()).security_events || []).some((e) => e.soort === 'beheer_link_nieuw' && e.wie === beheerId && e.details.profiel === nina.id), 'nieuwe link: gebeurtenis met de beheerder als wie');
+    await R.evaluate(() => App.closeModal()); await R.waitForTimeout(300);
+    // de collega opent de (nieuwe) link, kiest een wachtwoord en logt in
+    const ctxN = await b.newContext(opt), N = await pagina(ctxN, 'nina');
+    await N.goto(nlink); await N.waitForTimeout(1800);
+    ok(/Kies je wachtwoord/.test(await N.locator('#view').innerText()), 'uitnodigingslink: scherm "Kies je wachtwoord"');
+    await N.fill('#n-ww', 'Nina-Wachtwoord-2026'); await N.fill('#n-ww2', 'Nina-Wachtwoord-2026'); await N.click('#view button[type=submit]'); await N.waitForTimeout(1200);
+    await inloggen(N, 'nina@noardling.test', 'Nina-Wachtwoord-2026'); await N.waitForTimeout(1200);
+    ok(await N.evaluate(() => App.user && App.user.full_name === 'Nina Nieuw' && App.user.role === 'coordinator'), 'nieuwe collega is binnen als coördinator');
+    // ingelogd: geen "Nieuwe link maken" meer (ook de functie weigert dat: geen overname van een bestaand account)
+    await R.evaluate(() => { App._team = null; return App.teamLaad(); }); await R.waitForTimeout(800);
+    await R.locator('.bhgebr', { hasText: 'Nina Nieuw' }).locator('button').click(); await R.waitForTimeout(400);
+    ok(await R.locator('#mod button:has-text("Nieuwe link maken")').count() === 0, 'na inloggen: geen "Nieuwe link maken" meer');
+    const nl2 = await R.evaluate(async (id) => { try { await WPI.sb('/functions/v1/gebruikers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ actie: 'nieuwe_link', id }) }); return 'gelukt'; } catch (e) { return e.status; } }, nina.id);
+    ok(nl2 === 409, 'nieuwe link voor wie al inlogde: door de functie geweigerd (409)', nl2);
+    await R.evaluate(() => App.closeModal()); await R.waitForTimeout(200);
+    // op non-actief zetten: profiel inactief én account geblokkeerd (ban_duration); inloggen lukt niet meer
+    await R.locator('.bhgebr', { hasText: 'Nina Nieuw' }).locator('button').click(); await R.waitForTimeout(400);
+    await R.click('#mod button:has-text("Op non-actief")'); await R.waitForTimeout(300); await R.click('#mod button:has-text("Ja, op non-actief")'); await R.waitForTimeout(1800);
+    st = await state(); nina = userVan(st, 'nina@noardling.test');
+    ok(!nina.profiel.actief && nina.banned && /Nina Nieuw staat op non-actief/.test(await R.locator('#view').innerText()), 'op non-actief: profiel inactief en account geblokkeerd');
+    ok((st.security_events || []).some((e) => e.soort === 'beheer_gebruiker_gedeactiveerd' && e.wie === beheerId), 'op non-actief: gebeurtenis met de beheerder als wie');
+    await N.evaluate(() => App.logout()); await N.waitForTimeout(600);
+    await inloggen(N, 'nina@noardling.test', 'Nina-Wachtwoord-2026'); await N.waitForTimeout(1000);
+    ok(await N.evaluate(() => App.user === null), 'geblokkeerd account: inloggen lukt niet meer');
+    await ctxN.close();
+    // rapporten mailen naar (instelling op de server)
+    await R.selectOption('#bh-ontvanger', userVan(st, 'winfred@noardling.test').id); await R.click('#bh-rapport button:has-text("Opslaan")'); await R.waitForTimeout(1200);
+    ok(((await state()).instellingen.rapport_ontvanger || {}).waarde === userVan(st, 'winfred@noardling.test').id && await R.evaluate(() => App.rapportOntvanger().naam) === 'Winfred Loerts', 'Rapporten mailen naar: op de server gezet');
+    await R.selectOption('#bh-ontvanger', ''); await R.click('#bh-rapport button:has-text("Opslaan")'); await R.waitForTimeout(1200);
+    ok(await R.evaluate(() => App.rapportOntvanger().naam) === 'Gijs Gefingeerd', 'Rapporten mailen naar: terug naar de standaard (de QHSE-manager)');
     const voorRol = rolVan(await state(), 'norol@noardling.test');
     const rtok = await R.evaluate(() => App.authToken());
     const pr = await fetch(BASE + '/rest/v1/profiles?id=eq.00000000-0000-4000-8000-000000000008', { method: 'PATCH', headers: { apikey: 'mock-anon-key', Authorization: 'Bearer ' + rtok, 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'inspecteur' }) });
@@ -824,6 +876,37 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     ok(!kh.some((t) => /Gijs Gefingeerd|Hanna Hypothese/.test(t)) && kt.some((t) => /Gijs Gefingeerd/.test(t)) && !kt.some((t) => /Hanna Hypothese/.test(t)),
       'actiehouder: nooit QHSE-manager of beheerder; toetser: wel de QHSE-manager, nooit de beheerder ' + JSON.stringify({ kh, kt }));
     await R.evaluate(() => App.closeModal());
+
+    // ---------- 12a4. rapport bij afronden (0009): in de wachtrij, ook zonder bereik (overleeft herladen) ----------
+    {
+      const ctxP = await b.newContext(opt), P = await pagina(ctxP, 'rapport');
+      await P.goto(BASE + '/index.html'); await P.waitForTimeout(700);
+      await inloggen(P, 'carla@noardling.test', WW, true); await P.waitForTimeout(1500);
+      const maak = (id) => P.evaluate(async (id) => { await WPI.DB.put('inspecties', { id, inspecteur_id: App.user.id, inspecteur: App.user.full_name, titel: 'Rapporttest', code: 'DAM', opgeslagen: new Date().toISOString(), waarnemingen: [{ oordeel: 'C' }] }); }, id);
+      const afronden = (id, tekst) => P.evaluate(async ({ id, tekst }) => App.rapportAfronden({ inspectieId: id, pdf: new Blob([tekst], { type: 'application/pdf' }), bestandsnaam: id + '.pdf' }), { id, tekst });
+      const id1 = 'WPI-' + Date.now() + '-rap1', id2 = 'WPI-' + Date.now() + '-rap2';
+      await maak(id1);
+      const r1 = await afronden(id1, '%PDF-1.4 rapport een');
+      let st2 = await state();
+      ok(r1.status === 'wachtrij' && r1.ontvangerNaam === 'Gijs Gefingeerd' && st2.rapporten.some((x) => x.pad.endsWith('/' + id1 + '.pdf'))
+        && st2.mail_wachtrij.some((x) => x.inspectie_id === id1 && x.status === 'wacht'), 'rapportAfronden (online): inspectie en PDF op de server, in de mail-wachtrij ' + JSON.stringify(r1));
+      ok(await P.evaluate(() => App.rapportOntvanger() && App.rapportOntvanger().naam) === 'Gijs Gefingeerd', 'rapportOntvanger: de QHSE-manager (van de server)');
+      await ctxP.setOffline(true);
+      await maak(id2);
+      const r2 = await afronden(id2, '%PDF-1.4 rapport twee');
+      ok(r2.status === 'offline-wachtrij', 'rapportAfronden (zonder bereik): offline-wachtrij ' + JSON.stringify(r2));
+      ok(await P.evaluate(() => App.syncWachtrij()) >= 2, 'zonder bereik: inspectie en rapport in de wachtrij');
+      await ctxP.setOffline(false);
+      await P.reload(); await P.waitForTimeout(4000);
+      st2 = await state();
+      ok(st2.mail_wachtrij.some((x) => x.inspectie_id === id2) && st2.rapporten.some((x) => x.pad.endsWith('/' + id2 + '.pdf')) && await P.evaluate(() => App.syncWachtrij()) === 0,
+        'na herladen met bereik: het rapport uit de wachtrij is alsnog verstuurd');
+      const terug = await R.evaluate(async (id) => { const b = await App.rapportOphalen(id); return b ? await b.text() : null; }, id2);
+      ok(terug === '%PDF-1.4 rapport twee', 'rapportOphalen: de beheerder opent het opgeslagen rapport in de app');
+      const nogmaals = await afronden(id1, '%PDF-1.4 andere versie');
+      ok(nogmaals.status === 'wachtrij' && (await R.evaluate(async (id) => (await (await App.rapportOphalen(id)).text()), id1)) === '%PDF-1.4 rapport een', 'nogmaals afronden: het eerste rapport blijft (nooit overschreven)');
+      await ctxP.close();
+    }
     await ctxR.close();
 
     // ---------- 12b. opgeslagen XSS via record-jsonb (negatieve test) ----------
@@ -911,7 +994,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     const ctx4 = await b.newContext(opt), d = await pagina(ctx4, 'demo');
     await d.goto(DEMO + '/index.html'); await d.waitForTimeout(800);
     const dl = await d.locator('#view').innerText();
-    ok(/Kies je account/.test(dl) && /Voorbeeld/.test(dl) && await d.locator('#l-mail').count() === 0, 'voorbeeldmodus: accountkiezer met label "Voorbeeld"');
+    ok(/Kies een voorbeeldaccount/.test(dl) && /Voorbeeld/.test(dl) && await d.locator('#l-mail').count() === 0, 'voorbeeldmodus: accountkiezer met label "Voorbeeld"');
     await d.evaluate(() => App.login('u-coord1')); await d.waitForTimeout(500);
     ok(await d.evaluate(() => App.user && App.user.id === 'u-coord1'), 'voorbeeldmodus: demo-login werkt');
     ok(await d.locator('#syncchip').count() === 0, 'voorbeeldmodus: geen synchronisatiechip');

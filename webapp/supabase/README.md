@@ -14,9 +14,13 @@ triggers en rechten. De controles in de app zijn alleen gebruiksgemak.
 | `migrations/0006_rpc.sql` | `report_security_event` (rate-limited), `dashboard_cijfers`, `monteur_aanmelden` |
 | `migrations/0007_invoer_aanvulling.sql` | beveiligingsronde: datumgrenzen (planning/plandatum), geen besturings- of bidi-tekens in vrije tekst (ook in `inspecties.record`), fotopaden in een inspectierecord alleen uit de eigen map, uploadquotum Storage (120/uur, 600/24 uur per gebruiker; geteld in `public.foto_uploads` met een lock per gebruiker, snel ook bij duizenden foto's), indexen op `acties.foto_pad`/`nafoto_pad`. Na de aanvalstest ook: C1-, zero-width- en richtingstekens geweigerd, en elke tekst in het record met dezelfde regel |
 | `migrations/0008_rollen_beheer.sql` | rollen van het echte team: nieuwe rol `beheerder`; QHSE-manager en beheerder zien alles en beheren (team en rollen, instellingen, monteurs, auditlog), inspecteren en plannen niet; QHSE nooit actiehouder (wel toetser), beheerder geen van beide; nieuw profiel = **nog geen rol** (de rol `inspecteur` blijft alleen voor compatibiliteit, niemand krijgt hem nog); niemand wijzigt zijn eigen rol; MFA (aal2) voor alle beheerrollen; monteurslijst door hoofden en coördinatoren, `monteur_aanmelden` alleen voor wie inspecteert (hoofd met MFA); wie geen inspecterende rol krijgt, mag geen open planning meer hebben; dashboard voor iedereen met volledige inzage, doel standaard 85 en "geen doel" als JSON null (ook als PostgREST SQL NULL stuurt); `actie_log.wat` met `tekst_tekens_ok` en de zero-width joiner alleen tussen emoji; bewaartermijn 7 jaar (`bewaartermijn_opschonen()`: alleen afgesloten acties, ook oud verloop van verwijderde acties) |
+| `migrations/0009_gebruikers_rapporten.sql` | FREE-plan en de laatste critic-ronde: tekenregel = de hele Default_Ignorable-set (behalve ZWJ en U+FE00–FE0F); skelet van het verloop met jokers en een automaat (`verloop_begint_als`); bewaartermijn vanaf `acties.afgesloten_op` (alleen de server zet het; een UPDATE zonder wijziging op een afgesloten actie verandert niets); gebruikersbeheer voor de Edge Functions (`mag_gebruikers_beheren` (altijd aal2), `gebruikers_overzicht`, `gebruiker_bestaat` en `beheer_gebeurtenis` alleen voor service_role); rapporten per mail: privébucket `rapporten`, `rpc/rapport_in_wachtrij`, tabel `mail_wachtrij`, instelling `rapport_ontvanger` (standaard de QHSE-manager; kiezen altijd met aal2, ook via PostgREST; ontvanger alleen een actieve collega met een rol van nu, `mag_rapport_ontvangen`; een account dat ooit een rapport kreeg, blijft te verwijderen: §11) |
+| `migrations/0010_aanvullingen.sql` | Aanvullingen op een vastgelegde inspectie ("Na afronden ligt de inspectie vast. Correcties kunnen alleen nog als aanvulling."): tabel `inspectie_aanvullingen`, append-only (geen update/delete, ook niet voor service_role), tijd en auteur door de server, tekst met de tekenregel van het verloop; toevoegen alleen de eigen inspecteur of hoofd/QHSE-manager (met MFA als die verplicht is; `mag_aanvullen`), lezen wie de inspectie ziet; max 20 per inspectie; verdwijnt met de inspectie (bewaartermijn). Tests: `tests/aanvulling_test.sql` (via run.sh) |
+| `migrations/0011_aanvulling_foto.sql` | Een nagekomen foto bij een aanvulling (bijv. de ontbrekende foto bij een afwijking): kolom `foto` (pad in de eigen map van de schrijver in bucket `fotos`, zelfde vorm als de upload-policy), telt als bewijs in `foto_in_gebruik` (niet meer te overschrijven of te verwijderen door de uploader). Tests: `tests/aanvulling_test.sql` |
+| `functions/` | Edge Functions (Deno): `uitnodigen`, `gebruikers`, `mail-versturen`; de logica staat in `functions/_shared/*.ts` (ook in Node te laden: `tests/functies.js`, `tools/functies_host.mjs`). Zie §10 |
 | `schema.sql` | alle migraties samen (gegenereerd met `sh bouw-schema.sh`) |
 | `seed.sql` | rollen voor de vaste gebruikers (op e-mailadres) en de standaardinstellingen (`doel_conform` = 85, `mfa_verplicht_hoofd`); **geen** voorbeelddata |
-| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (676 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh` (QHSE-manager én beheerder, als actiehouder en in de planning), `race_quotum.sh`, `naamsleutel_check.sh`, `tekens_check.sh`, `sleutelcheck.sh`, `run.sh` |
+| `tests/` | lokale Supabase-emulatie, `rls_test.sql` (783 tests), `testdata.sql` (5 fictieve monteurs, alleen lokaal), `race_hoofd.sh`, `race_qhse.sh` (QHSE-manager én beheerder, als actiehouder en in de planning), `race_quotum.sh`, `naamsleutel_check.sh`, `tekens_check.sh`, `sleutelcheck.sh`, `run.sh` |
 
 Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase/bouw-schema.sh`.
 
@@ -39,7 +43,10 @@ Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase
    Begin dan met een **nieuw project**, of zet de database van het gekoppelde project terug met
    de CLI: `supabase db reset --linked` (wist **alle** data en draait de migraties opnieuw; het
    dashboard heeft hier geen knop voor).
-4. **Gebruikers uitnodigen.** Het profiel ontstaat automatisch **zonder rol** (sinds 0008; zonder rol is er
+4. **Gebruikers uitnodigen.** *Sinds 0009 kan dit in de app*: **Beheer › Gebruikers › Gebruiker uitnodigen** (hoofd, QHSE-manager of
+   beheerder, met MFA) roept de Edge Function `uitnodigen` aan (§10). Die maakt een persoonlijke uitnodigingslink, zet naam,
+   rol en functie en geeft de link terug om zelf te delen; er gaat geen mail uit. Alleen voor de allereerste beheerrol is
+   onderstaande route via het dashboard nog nodig. Het profiel ontstaat automatisch **zonder rol** (sinds 0008; zonder rol is er
    nog nergens toegang, de app zegt "Je account heeft nog geen rol") en wordt **actief zodra de uitnodiging is
    verstuurd** (`auth.users.invited_at`; Supabase Auth maakt de gebruiker aan en zet `invited_at` in dezelfde
    transactie). Daarna kiest een hoofd, de QHSE-manager of de beheerder de rol in de app (**Beheer › Team en
@@ -52,7 +59,7 @@ Wijzig nooit `schema.sql` met de hand: pas de migratie aan en draai `sh supabase
      vóór de @ (bv. `bjorn.sloos`). Voor de drie vaste gebruikers zet `seed.sql` (stap 5) de
      volledige naam. Voor latere collega's zet een beheerrol (of SQL als `postgres`) de naam:
      `update public.profiles set full_name = 'Voornaam Achternaam' where id = '<uid>';`
-     (Beheer › Team en rollen wijzigt rol en activering, nog niet de naam).
+     (of in de app: Beheer › Gebruikers wijzigt rol, functie en activering; de naam zet de functie `uitnodigen` al bij het uitnodigen).
    - **Admin API** (alleen server-side, nooit in de app of in git, met de *secret/service_role*
      key uit de wachtwoordkluis), met de naam als metadata:
      ```sh
@@ -156,17 +163,17 @@ De namen van menu's kunnen per dashboardversie iets verschillen; de waarden niet
 | *Allow new users to sign up* | **uit** (alleen uitnodigingen) | geen vreemde accounts met de publieke anon-key. Staat het toch aan, dan zijn nieuwe accounts inactief (zie §1.4) |
 | *Confirm email* | aan | |
 | Minimale wachtwoordlengte | **12** | geen verplichte periodieke wijziging |
-| *Prevent use of leaked passwords* | **aan** (Pro-plan) | toetsing tegen HaveIBeenPwned |
-| E-mail-OTP / magic link / herstel-link geldig | **≤ 3600 s** (advies 900 s) | korte geldigheid van links |
+| *Prevent use of leaked passwords* | **niet beschikbaar** (FREE-plan; besluit producteigenaar: bewust niet) | geaccepteerd restrisico; minimaal 12 tekens en MFA voor de beheerrollen blijven |
+| E-mail-OTP / magic link / herstel-link geldig (*Email OTP Expiration*) | **3600 s** (korter mag) | korte geldigheid van links; zet **hetzelfde getal** als geheim `LINK_GELDIG_SECONDEN` van de functies (§10), zodat de app bij een uitnodiging de juiste "geldig tot HH:MM" toont. Verlopen? Beheer › Gebruikers › Wijzig › *Nieuwe link maken* (alleen voor wie nog nooit inlogde) |
 | MFA › TOTP | **aan** | verplicht voor het hoofd (zie hieronder) |
 | JWT-geldigheid (access token) | **3600 s** | gestolen token verloopt snel; uitloggen geldt pas na expiry |
 | *Refresh token rotation* | **aan**, reuse interval 10 s | hergebruik van een oud refresh token wordt gedetecteerd |
-| Sessies (Pro): time-box / inactivity timeout | 7 dagen / 8 uur | |
+| Sessies: time-box / inactivity timeout | **niet beschikbaar** (FREE-plan) | in plaats daarvan logt de app na 2 uur zonder activiteit uit (`js/auth.js`, `INACTIEF_MS`) |
 | *Rate limits* | inloggen ±30 per 5 min per IP; e-mail ±2 per uur; OTP-verificaties ±30 per 5 min | brute force en mailspam |
 | CAPTCHA (Turnstile/hCaptcha) | optioneel | bij invite-only weinig meerwaarde; MFA is belangrijker |
 | *URL Configuration › Site URL* | de productie-URL, bv. `https://app.<domein>.nl` | |
 | *Redirect URLs* | exact de eigen URL's, bv. `https://app.<domein>.nl/**`; **geen** `localhost` in productie | voorkomt token-lekken via open redirects |
-| *SMTP* | eigen SMTP-dienst (EU) met SPF/DKIM | de standaardmailer is alleen voor testen |
+| *SMTP* | eigen SMTP-dienst (EU) met SPF/DKIM, aanbevolen | de standaardmailer mailt alleen leden van het projectteam. Uitnodigen heeft geen mail nodig (link uit de functie `uitnodigen`, §10); "Wachtwoord vergeten?" wel |
 
 **MFA voor de beheerrollen (hoofden, QHSE-manager, beheerder).** De app vraagt deze drie rollen bij elke login
 een TOTP-code (bij de eerste keer eerst koppelen met een QR-code; `supabase.auth.mfa.enroll/challenge/verify`) en
@@ -214,10 +221,11 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
 - **Hersteltest** elk kwartaal in een apart (test)project: zet een backup terug, draai
   `tests/rls_test.sql`-achtige controles en controleer of foto's te openen zijn.
   Een backup zonder geoefend herstel is geen garantie.
-- **Bewaartermijn: 7 jaar** (besluit producteigenaar; migratie 0008). `public.bewaartermijn_opschonen()` verwijdert
-  in één transactie wat ouder is dan 7 jaar: inspecties (`opgeslagen`), **afgesloten** acties (status Afgerond of
-  Vervallen én laatst gewijzigd, `updated_at`, vóór de grens; een actie die nog loopt wordt dus nooit stil
-  weggehaald, hoe oud ook) en planning (`datum`), met hun verloop (`actie_log`) en hun regels in `audit_log` (anders
+- **Bewaartermijn: 7 jaar** (besluit producteigenaar; migratie 0008, 0009). `public.bewaartermijn_opschonen()` verwijdert
+  in één transactie wat ouder is dan 7 jaar: inspecties (`opgeslagen`; hun mail-wachtrij gaat mee en hun rapport-PDF komt
+  in `public.bewaartermijn_rapporten`), **afgesloten** acties (status Afgerond of Vervallen, gerekend vanaf het vaste
+  moment van afsluiten `afgesloten_op` (0009; oude rijen: `afgerond_server`, dan `updated_at`); een UPDATE zonder wijziging
+  zet die klok niet terug, en een actie die nog loopt wordt nooit stil weggehaald, hoe oud ook) en planning (`datum`), met hun verloop (`actie_log`) en hun regels in `audit_log` (anders
   bleef de inhoud daar staan), het verloop ouder dan 7 jaar van acties die al eerder zijn verwijderd (dat verloop
   blijft bij het verwijderen bewust staan, zie §5), plus alle auditregels ouder dan 7 jaar en
   beveiligingsgebeurtenissen ouder dan 12 maanden. Foto's van die records die geen overblijvend record nog gebruikt,
@@ -238,6 +246,8 @@ RLS is daar de grens, niet CORS. Gebruik je later Edge Functions, zet daar
   ```sql
   delete from public.bewaartermijn_fotos where pad in ('<pad 1>', '<pad 2>');
   ```
+  Rapporten (0009) op dezelfde manier: `select pad from public.bewaartermijn_rapporten;`, verwijderen met
+  `DELETE …/storage/v1/object/rapporten` en daarna `delete from public.bewaartermijn_rapporten where pad in (…);`.
   **Planning (maandelijks).** Met pg_cron (*Database › Extensions › pg_cron* aanzetten), als `postgres` in de SQL
   Editor; de taak draait als `postgres`:
   ```sql
@@ -617,7 +627,7 @@ actiehouder en QHSE-manager of beheerder, in beide volgordes) en `race_quotum.sh
 leest `schoon()`/`sleutel()` letterlijk uit `js/beheer.js` (vraagt `node`) en vergelijkt ze met
 `naam_schoon`/`naam_sleutel` voor **alle** Unicode-codepunten en een reeks echte namen.
 
-Laatste run (PostgreSQL 16, lokaal, 13 november 2026, na migratie 0008): **676 van 676 geslaagd**, het opnieuw laden over de gevulde
+Laatste run (PostgreSQL 16, lokaal, 14 november 2026, na migratie 0009): **830 van 830 geslaagd** (sectie 27: gebruikersbeheer, rapporten en mail-wachtrij, tekenregel, skelet met jokers, bewaartermijn vanaf `afgesloten_op`; 27i: ontvanger kiezen alleen met aal2, geen oude rol "inspecteur" als ontvanger, account van een ontvanger verwijderen), het opnieuw laden over de gevulde
 database, alle racetests (laatste hoofd; QHSE-manager én beheerder als actiehouder en als ingeplande inspecteur, beide
 volgordes; quotum), de tekenvergelijking met `js/sync.js` (511 codepunten, 0 verschillen; en de verloopregel: elk codepunt los en in tekst, het skelet van elk codepunt en
 36 343 randgevallen met ZWJ, variatiekiezers en nagemaakte serverregels, 0 verschillen) en de naamsleutelvergelijking groen (0 verschillen op 138 560
@@ -816,3 +826,44 @@ live gaan.
   anders. Voor echte namen (Latijns, Grieks, Cyrillisch, Arabisch, …) is het resultaat gelijk
   (getoetst voor alle codepunten). Na een grote PostgreSQL/ICU-update bouwt het schema de unieke
   indexen opnieuw op (`reindex` in 0001).
+
+## 10. Edge Functions: gebruikersbeheer en rapporten per mail (0009)
+
+| Functie | Wat | Wie | Sleutels |
+|---|---|---|---|
+| `uitnodigen` | `POST {email, naam, rol, functie}` → uitnodigingslink (`auth.admin.generateLink`, type `invite`, terug naar `SITE_URL`), profiel met naam/rol/functie, `security_event` `beheer_gebruiker_uitgenodigd` | hoofd, QHSE-manager of beheerder, actief, **aal2** (`rpc/mag_gebruikers_beheren` met de JWT van de aanroeper) | service_role alleen voor de Auth-admin-API, `gebruiker_bestaat` en `beheer_gebeurtenis`; het profiel wijzigt met de JWT van de aanroeper |
+| `gebruikers` | `POST {actie: "wijzig", id, rol?, functie?, naam?}` of `{actie: "deactiveer"\|"activeer", id}`; deactiveren = profiel inactief + `ban_duration` 876000h, activeren = `none`. `{actie: "nieuwe_link", id}`: een nieuwe uitnodigingslink (type `invite`, of `recovery` als het adres al bevestigd is) met `geldig_tot`, **alleen** voor een actieve collega met een rol die via een uitnodiging binnenkwam en nog nooit inlogde (`last_sign_in_at` leeg; anders 409: geen overname van een bestaand account); `security_event` `beheer_link_nieuw` | idem; niet jezelf; de database bewaakt het laatste actieve hoofd en de rol "inspecteur" | idem |
+| `mail-versturen` | verstuurt `mail_wachtrij` (status wacht/fout, < 10 pogingen) via Microsoft Graph met de PDF als bijlage (tot 3 MB met `sendMail`, groter tot 20 MB via een concept met een uploadsessie) en zet verstuurd/fout. Alleen een echte PDF (eerste bytes `%PDF-`; de bucket kijkt alleen naar de Content-Type-kop) van hooguit 20 MB; anders fout zonder nieuwe pogingen | pg_cron met de kop `x-wpi-cron: <MAIL_CRON_GEHEIM>` | service_role (lezen wachtrij, PDF, e-mailadres ontvanger); Graph-token alleen naar Graph |
+
+De logica staat in `functions/_shared/gebruikers.ts` en `functions/_shared/mail.ts` (alleen web-standaarden): dezelfde
+bestanden draaien in de Edge Runtime en in Node 22+ (`node webapp/tests/functies.js`: nep-Supabase, en `deno check`/`deno lint`
+als er een deno-binary is: `WPI_DENO=<pad>`). `tools/mock_supabase.py` draait de echte functies via `tools/functies_host.mjs`
+voor de browsertests.
+
+**Deployen** (Supabase CLI, vanuit `webapp/`; het project is gekoppeld met `supabase link --project-ref <ref>`):
+```sh
+supabase functions deploy uitnodigen
+supabase functions deploy gebruikers
+supabase functions deploy mail-versturen --no-verify-jwt     # eigen controle met het cron-geheim
+supabase secrets set SITE_URL=https://app.<domein>.nl/        # precies de app-URL (ook in Auth › Redirect URLs)
+supabase secrets set LINK_GELDIG_SECONDEN=3600                 # = Auth › Email OTP Expiration (§2); alleen voor "geldig tot" in de app
+supabase secrets set MAIL_CRON_GEHEIM=<lange willekeurige tekst uit de wachtwoordkluis>
+```
+Zonder CLI kan het via de Management API (`POST https://api.supabase.com/v1/projects/<ref>/functions/deploy` met een
+persoonlijk toegangstoken, of *Edge Functions › Deploy a new function* in het dashboard) en
+`POST /v1/projects/<ref>/secrets`. **Geheimen van de functies:** `SUPABASE_URL`, `SUPABASE_ANON_KEY` en
+`SUPABASE_SERVICE_ROLE_KEY` zet Supabase zelf (de service_role-sleutel komt dus nooit in de app of in git); zelf zetten:
+`SITE_URL` (verplicht; ook de toegestane CORS-herkomst), `LINK_GELDIG_SECONDEN` (aanbevolen; standaard 3600, gelijk aan
+Auth › Email OTP Expiration), `MAIL_CRON_GEHEIM` (voor `mail-versturen`) en, zodra de mailbox
+er is, `GRAPH_TENANT_ID`, `GRAPH_CLIENT_ID`, `GRAPH_CLIENT_SECRET`, `GRAPH_AFZENDER`.
+
+**Microsoft Graph (later).** App-registratie in Microsoft Entra met applicatierecht *Mail.Send* (beheerderstoestemming) en,
+voor rapporten groter dan 3 MB (concept + uploadsessie), ook *Mail.ReadWrite*; zonder dat recht blijven grote rapporten op
+"fout" (HTTP 403) en zijn ze alleen in de app te openen. Beide rechten beperkt tot de ene afzendermailbox met een *application access policy* (Exchange Online:
+`New-ApplicationAccessPolicy -AccessRight RestrictAccess -PolicyScopeGroupId <afzender> -AppId <client-id>`). Daarna de vier
+geheimen zetten en de pg_cron-taak aanzetten (staat uitgecommentarieerd in migratie 0009, sectie 9; het cron-geheim
+uit Vault, nooit in SQL). Zonder die inrichting logt `mail-versturen` alleen "wacht op mailbox".
+
+**Controle na het deployen** (met een JWT van een beheerrol met aal2): `POST /functions/v1/uitnodigen` zonder token → 401;
+met een coördinator → 403; met de beheerrol → `{ok, link}`; de link opent in de app "Kies je wachtwoord".
+

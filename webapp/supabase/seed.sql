@@ -17,12 +17,12 @@
 --   Douwe de Boer   -> coordinator  (Montage Coördinator)
 --
 -- De overige vaste gebruikers (het tweede hoofd met functie "Manager Projects", de QHSE-manager en de
--- beheerder) nodig je op dezelfde manier uit; hun rol en functie kies je daarna in de app (Beheer › Team
--- en rollen). Zo staan er niet meer echte namen in dit bestand dan nodig.
+-- beheerder) nodig je op dezelfde manier uit; hun rol en functie kies je daarna in de app (Beheer ›
+-- Gebruikers). Zo staan er niet meer echte namen in dit bestand dan nodig.
 --
 -- Het profiel ontstaat automatisch (trigger on_auth_user_created) ZONDER rol (nog geen
 -- toegang; migratie 0008) en wordt actief zodra de uitnodiging is verstuurd. Een hoofd, de
--- QHSE-manager of de beheerder kiest daarna de rol in de app (Beheer › Team en rollen); voor
+-- QHSE-manager of de beheerder kiest daarna de rol in de app (Beheer › Gebruikers); voor
 -- de eerste inrichting doet dit bestand dat voor de vaste gebruikers hieronder. Het dialoogvenster
 -- "Invite user" kent geen user metadata: het profiel heet dan eerst naar het deel
 -- vóór de @ (bv. "bjorn.sloos"). Dit blok zet daarom ook de volledige naam.
@@ -81,4 +81,13 @@ update public.profiles p
 insert into public.instellingen (sleutel, waarde) values
   ('mfa_verplicht_hoofd', 'false'::jsonb),
   ('doel_conform', '85'::jsonb)
+on conflict (sleutel) do nothing;
+
+-- rapport_ontvanger (migratie 0009): wie de rapporten (PDF) per mail krijgt zodra de mailbox is ingericht. Standaard
+-- de QHSE-manager: alleen als er precies één actief profiel met die rol is (draai dit bestand dus opnieuw nadat de
+-- QHSE-manager een rol heeft). Wijzigen in de app: Beheer › "Rapporten mailen naar". Een bestaande keuze blijft staan.
+insert into public.instellingen (sleutel, waarde)
+select 'rapport_ontvanger', to_jsonb(q.id::text)
+  from (select (array_agg(p.id))[1] as id from public.profiles p
+         where p.role::text = 'qhse' and p.actief having count(*) = 1) q
 on conflict (sleutel) do nothing;

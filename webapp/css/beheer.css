@@ -1,13 +1,15 @@
 /* Werkplekinspectie — css/beheer.css
-   Beheer (monteurs, doel % conform, team en rollen), het overzicht op Vandaag voor wie niet inspecteert,
+   Beheer (monteurs, doel % conform, rapporten mailen naar, gebruikers), het overzicht op Vandaag voor wie niet inspecteert,
    programma-voorstel op de Planning en gemiste-inspectie-meldingen.
-   Stijl B: crème achtergrond, witte ronde kaarten, één donkergroen accent; warm oranje alleen voor "te laat". */
+   Stijl B: crème achtergrond, witte ronde kaarten, één donkergroen accent; rood = actie te laat, warm oranje =
+   inspectie niet gedaan (styles.css, "Te laat"). */
 
 /* ---- Beheer ---- */
 .bhgrid{display:grid;gap:14px;grid-template-columns:1fr}
 .bhkol{display:flex;flex-direction:column;gap:14px;min-width:0}
 @media(min-width:900px){
-  /* links monteurs + doel onder elkaar, rechts het team: kolommen even hoog (de laatste kaart links rekt mee) */
+  /* links de gebruikers (de hoofdtaak), rechts monteurs, doel en rapporten onder elkaar: kolommen even hoog (de laatste
+     kaart rechts rekt mee). Op de telefoon staat Gebruikers bovenaan (zelfde volgorde als in de DOM). */
   .bhgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
   .bhkol>.bhkaart:last-child{flex:1}
   .bhgrid>.bhteam{margin-top:0}
@@ -49,19 +51,44 @@
 @media(max-width:440px){
   .bhkaart{padding:16px 14px}
 }
-/* team en rollen (beheerrollen): naam + functie links, rol en activering rechts; op de telefoon eronder */
-.bhteam{margin-top:14px}
-.bhteamrij{flex-wrap:wrap}
-.bhteamrij .bhfunctie{display:block;margin-top:1px}
-.bhrolvak{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto}
-.bhrol.fin{width:auto;min-width:160px;min-height:44px;font-weight:700;padding-right:32px}
-.bhroltekst{font-size:13.5px;font-weight:800;color:var(--accent);background:var(--accent-bg);border-radius:999px;padding:6px 12px}
-@media(max-width:600px){.bhrolvak{flex:1 1 100%;margin-left:50px}}
+/* Gebruikers (beheerrollen): naam, functie, rol, actief en laatst ingelogd; "Wijzig" opent een venster */
+.bhteam{margin-top:0;min-width:0}
+.bhkopregel{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.bhkopregel .bhkop{margin:0}
+.bhkopregel .btn.sm{width:auto;flex:none;min-height:44px;padding:0 16px;display:inline-flex;align-items:center;gap:6px}
+.bhkopregel .btn.sm svg{width:auto;display:inline-block;flex:none}
+@media(max-width:440px){.bhkopregel .btn.sm{flex:1 1 100%;justify-content:center}}
+.bhgebr{align-items:flex-start}
+.bhgebr .pini{margin-top:2px}
+.bhgebr .bhfunctie{display:block;margin-top:1px}
+.bhmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:6px;font-size:12.5px}
+.bhroltekst{font-size:12.5px;font-weight:800;color:var(--accent);background:var(--accent-bg);border-radius:999px;padding:4px 10px}
+.bhstatus{font-weight:800;color:#2F5D50}
+.bhstatus.uit{color:#6E6255}
+.bhlaatst{color:#6E6255}
+/* nog niet ingelogd: uitnodiging staat open (misschien verlopen; via Wijzig een nieuwe link) */
+.bhopen{font-weight:800;color:#8A4F0A;background:var(--warm, #FCEBD3);border-radius:999px;padding:3px 9px}
+.bhlet{margin:10px 0 4px;line-height:1.45}
+.bhlet[hidden]{display:none}
+.bhgebr .bhknop{align-self:center}
 .bhregels{margin:12px 0 0;font-size:13.5px;line-height:1.5;color:#6E6255}
-.bhuitnodig{margin-top:12px;font-size:13.5px}
-.bhuitnodig summary{cursor:pointer;font-weight:800;color:var(--accent);min-height:44px;display:flex;align-items:center}
-.bhuitnodig p{margin:4px 0 0;line-height:1.5}
-#bh-team-fout:not(:empty){margin-bottom:10px}
+#bh-gebr-fout:not(:empty),#bh-ontvanger-fout:not(:empty){margin:6px 0 10px}
+.bhscheid{height:1px;background:var(--line, #F1ECE4);margin:18px 0 14px}
+.bhgebruitleg{margin:8px 0 0;line-height:1.45}
+.bhdemolink{margin:0 0 12px;line-height:1.45}
+.bhlinkveld.fin{font-size:13.5px;font-family:inherit;overflow:hidden;text-overflow:ellipsis}
+.bhlinkknoppen{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.bhlinkknoppen .btn{flex:1 1 160px;width:auto;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+#gu-gekopieerd{margin-top:8px;min-height:1.4em;font-weight:700;color:var(--accent)}
+/* rapporten mailen naar: keuzelijst over de breedte, knop ernaast; op de telefoon de lijst over de hele breedte en de
+   knop eronder (zo past een hele naam met rol) */
+.bhontvanger .fin{flex:1;min-width:0;width:auto;font-weight:700;font-size:15px;text-overflow:ellipsis}
+@media(max-width:600px){
+  .bhontvanger{flex-wrap:wrap}
+  .bhontvanger .fin{flex:1 1 100%}
+  .bhontvanger .btn.sm{flex:1 1 100%}
+}
+.bhontvnu{margin-top:2px}
 /* Vandaag voor QHSE-manager en beheerder: overzicht in plaats van "inspectie starten" */
 .bhoverzicht{margin:-4px 0 14px;line-height:1.45;max-width:640px}
 .bhteamacties svg{width:auto;display:inline-block;flex:none}
@@ -116,7 +143,7 @@
 .mritme{margin-top:14px;font-size:12.5px;line-height:1.45}
 .mblokken{display:flex;flex-direction:column;gap:18px}
 .mblok{--mk:#8F1D14;--mkb:#FDECEA;--mt:#FFF5F4;--mr:#F1B9B2;--mpb:#FBD9D5}
-.mblok.gemist{--mk:#8A4B00;--mkb:#FCEBD3;--mt:#FFF7EE;--mr:#EFC98F;--mpb:var(--warm)}
+.mblok.gemist{--mk:#B93D0A;--mkb:#FFEBDB;--mt:#FFF6EE;--mr:#F5B98F;--mpb:var(--warm)}
 .mblok.week{--mk:#1D4F8F;--mkb:#E3EDF9;--mt:#F4F8FD;--mr:#B7CDEB;--mpb:#DCE8F7}
 .mkop{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:8px 8px 8px 14px;border-radius:14px;background:var(--mkb);color:var(--mk);font-size:15px;font-weight:800}
 .mkop .mkt{flex:1;min-width:0}
@@ -135,7 +162,7 @@
 .mrij .mmeta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-top:4px}
 .mpil{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--mpb,#F4EDE3);color:var(--mk,#6E6255)}
 .mpil.laat{color:var(--mk,#8A4F0A)}
-.mblok.gemist .mpil.laat{background:var(--warm);color:#8A4F0A}   /* warm-ink iets donkerder: leesbaar op 12px (contrast ≥ 4.5) */
+.mblok.gemist .mpil.laat{background:var(--warm);color:var(--warm-ink)}   /* warm-ink iets donkerder: leesbaar op 12px (contrast ≥ 4.5) */
 .mrij .mmeta .s{color:#5E544A}
 @media(min-width:900px){.mrij{padding:14px 16px}}
 body.veld .mrij{min-height:64px;padding:14px 16px}
@@ -155,4 +182,46 @@ body.veld .vskaart .titel,body.veld .vskaart .vsreden{padding-right:58px}
 body.veld .vsvelden .fin,body.veld .bhrij .fin{min-height:52px;font-size:16px}
 body.zon .bhknop,body.zon .vsweg{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
 body.zon .vskaart{background:#fff;box-shadow:0 0 0 2px #141A22}
-body.zon .bhrij.uit .t,body.zon .bhsub,body.zon .bhpct{color:#141A22}
+body.zon .bhrij.uit .t,body.zon .bhsub,body.zon .bhpct,body.zon .bhstatus,body.zon .bhlaatst{color:#141A22}
+body.zon .bhopen{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px #141A22}
+body.zon .bhroltekst{background:#fff;color:#141A22;box-shadow:inset 0 0 0 1.5px #141A22}
+
+/* Beheer voor de coördinator (alleen de monteurslijst): lijst links, "Zo werkt de lijst" rechts, invoerveld niet
+   over de hele breedte (één naam), namen in kolommen. Geen halve lege pagina met één kaart. */
+.bhstappen{list-style:none;padding:0;margin:8px 0 0;counter-reset:bh;display:flex;flex-direction:column;gap:12px}
+.bhstappen li{counter-increment:bh;display:grid;grid-template-columns:30px 1fr;column-gap:12px;row-gap:2px;line-height:1.4}
+.bhstappen li::before{content:counter(bh);grid-row:1/3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--accent-bg);color:var(--accent);font-weight:800;font-size:14px}
+.bhstappen b{font-weight:800}
+.bhstappen span{font-size:14px;color:#5E544A}
+body.zon .bhstappen span{color:#141A22}
+@media(min-width:900px){
+  .bhgrid.enkel .bhtoevoeg{max-width:560px}
+  .bhgrid.enkel .bhlijst{grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+}
+@media(min-width:1100px){
+  .bhgrid.enkel .bhkol{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(280px,1fr);align-items:start}
+  .bhgrid.enkel .bhinfo{position:sticky;top:calc(var(--tb) + 12px)}
+}
+
+/* Beheer voor de coördinator: onder de monteurslijst "Laatst bij inspecties" (de laatste inspecties met hun monteurs),
+   zodat de pagina op een groot scherm gevuld is met iets bruikbaars; "Zo werkt de lijst" staat ernaast. */
+.bhkopregel .bhalle{flex:none;width:auto;min-height:44px;padding:0 4px}
+.bhrecentlijst{list-style:none;margin:0;padding:0}
+.bhrecentrij{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line, #F1ECE4)}
+.bhrecentrij:last-child{border-bottom:0}
+.bhrecentrij .dchip{flex:none;margin-top:1px}
+.bhrecentrij .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.bhrecentrij .t{font-weight:800;line-height:1.3}
+.bhmonteurs{display:flex;flex-wrap:wrap;gap:6px}
+@media(min-width:1100px){
+  .bhgrid.enkel .bhkol{grid-template-columns:minmax(0,1.8fr) minmax(280px,1fr);column-gap:14px;row-gap:14px}
+  .bhgrid.enkel #bh-monteurs{grid-column:1;grid-row:1}
+  /* rij 1: de lijst en "Zo werkt de lijst" even hoog naast elkaar; rij 2: "Laatst bij inspecties" over de volle
+     breedte in kolommen. Geen lege rechterkolom onder de uitleg op een groot scherm. */
+  .bhgrid.enkel .bhkol{align-items:stretch}
+  .bhgrid.enkel .bhinfo{grid-column:2;grid-row:1;align-self:stretch;position:static}
+  .bhgrid.enkel .bhrecent{grid-column:1/-1;grid-row:2}
+  .bhgrid.enkel .bhrecentlijst{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));column-gap:40px}
+  .bhgrid.enkel .bhrecentrij:last-child{border-bottom:1px solid var(--line, #F1ECE4)}
+  .bhgrid.enkel .bhinfo .bhstappen{gap:16px}
+}

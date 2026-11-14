@@ -73,7 +73,7 @@
   const BASIS = String(CFG.supabaseUrl || "").replace(/\/+$/, "");
   const actief = () => !!(BASIS && CFG.supabaseAnonKey);
   const STORES = ["inspecties", "acties", "planning"];          // store-naam = tabelnaam
-  const VOLGORDE = { inspecties: 0, acties: 1, planning: 2 };
+  const VOLGORDE = { inspecties: 0, acties: 1, planning: 2, rapporten: 3, aanvullingen: 4 };   // aanvullingen: op een vastgelegde inspectie (0010)   // rapporten: de PDF bij een afgeronde inspectie (zie onderaan)
   const nu = () => new Date().toISOString();
   const isVoorbeeld = (id) => /(^|-)demo/.test(String(id));    // fictieve voorbeelddata nooit versturen
   const FOTOPAD = /^(fotos\/)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/[A-Za-z0-9._-]{1,200}\.(jpe?g|png|webp)$/i;
@@ -329,9 +329,17 @@
   // Lopende inspectie (store "concept", id "lopend-<uid>"): alleen wegschrijven zolang <uid> de eigenaar van dit
   // toestel is (controle in dezelfde transactie). Zo zet een tabblad van een vorige gebruiker dat net uitlogt (omdat
   // een ander inlogde) zijn concept niet terug nádat de nieuwe gebruiker het al wiste (syncWisAnderen).
-  const CONCEPT_UID = /^lopend-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+  // (ook de gepauzeerde inspecties: "pauze-<uid>-<inspectie-id>", js/inspectie.js; zelfde eigenaarscontrole en wissen)
+  // concepten van een inspectie die al vastligt (bijv. door een oud tabblad nog bewaard) tellen niet als lopend werk
+  async function nietVastgelegd(cs) {
+    const uit = [];
+    for (const c of cs || []) { const id = c && c.ins && c.ins.id; let vast = false; if (typeof id === "string" && id) { try { vast = !!(await g0("inspecties", id)); } catch (e) {} } if (!vast) uit.push(c); }
+    return uit;
+  }
+  const CONCEPT_UID = /^(?:lopend-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})|pauze-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-[A-Za-z0-9][A-Za-z0-9_-]{0,63})$/i;
+  const conceptUid = (id) => { const m = CONCEPT_UID.exec(String(id)); return m ? m[1] || m[2] : null; };
   function conceptAlsEigenaar(obj) {
-    const uid = CONCEPT_UID.exec(obj.id)[1];
+    const uid = conceptUid(obj.id);
     return tx(["concept", "syncmeta"], (t, klaar) => {
       const r = t.objectStore("syncmeta").get("eigenaar");
       r.onsuccess = () => { const e = r.result && r.result.v; if (e && e !== uid) { klaar(false); return; } t.objectStore("concept").put(obj); klaar(true); };
@@ -469,6 +477,9 @@
     const f = await sanerFoto(dataUrl);
     const ext = f.mime === "image/png" ? "png" : f.mime === "image/webp" ? "webp" : "jpg";
     const pad = uid + "/" + sha + "." + ext;
+    // laadindicator (js/laden.js, ring over de miniatuur): document-event "wpi-foto" met detail {src, stand}
+    const meldFoto = (stand) => { try { document.dispatchEvent(new CustomEvent("wpi-foto", { detail: { src: dataUrl, stand } })); } catch (e) {} };
+    meldFoto("bezig");
     try {
       await sb("/storage/v1/object/fotos/" + pad, { method: "POST", headers: { "Content-Type": f.mime, "x-upsert": "true", "cache-control": "3600" }, body: new Blob([f.bytes], { type: f.mime }), timeout: 60000 });
     } catch (e) {
@@ -476,8 +487,9 @@
       // Een foto die al als bewijs gekoppeld is, mag de server niet opnieuw laten uploaden (RLS-fout, 0007). Dat gebeurt
       // als deze zelfde foto (zelfde naam = zelfde inhoud) eerder vanaf een ander toestel of vóór het wissen van de
       // syncmeta al is verstuurd. Staat hij er (eigen map: altijd leesbaar), dan is dat goed; anders de fout doorgeven.
-      if (!dubbel && !((e.status === 400 || e.status === 403) && await bestaatFoto(pad))) throw e;
+      if (!dubbel && !((e.status === 400 || e.status === 403) && await bestaatFoto(pad))) { meldFoto(!navigator.onLine || !e.status ? "wacht" : "fout"); throw e; }
     }
+    meldFoto("klaar");
     await zetMeta("foto:" + sha, pad);
     return pad;
   }
@@ -555,10 +567,12 @@
   // vóór het versturen weghalen, zodat een geplakte tekst (bijv. met een zero-width space uit een mail) niet blijvend
   // wordt geweigerd. Regel-/alineascheider (U+2028/2029) wordt een gewoon regeleinde. Tab en regeleinde blijven;
   // U+200D (zero-width joiner, in emoji) en U+FE00–FE0F (emoji-variatiekiezers) ook. Ook \u0000 weg (kan niet in
-  // Postgres-tekst). Ook buiten de BMP: Unicode-tag-tekens U+E0000–E007F ("ASCII smuggling"), variatiekiezers
-  // U+E0100–E01EF, U+1D173–1D17A; en het zachte afbreekstreepje en opvullers (U+00AD, U+034F, U+3164, …).
+  // Postgres-tekst). Sinds 0009 de hele Unicode-eigenschap Default_Ignorable_Code_Point (behalve U+200D en
+  // U+FE00–FE0F, die in emoji horen): ook buiten de BMP de tag-tekens en het hele gereserveerde blok U+E0000–E0FFF
+  // ("ASCII smuggling"), U+FFF0–FFF8, de Mongoolse kiezers U+180B–180F, U+1D173–1D17A, het zachte afbreekstreepje en
+  // de opvullers (U+00AD, U+034F, U+3164, …), plus U+16FE4 (Khitan-opvuller, 0 px breed).
   // Moet precies gelijk blijven aan tekst_tekens_ok; supabase/tests/tekens_check.sh vergelijkt elk codepunt.
-  const ONZICHTBAAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u0600-\u0605\u06DD\u070F\u0890\u0891\u08E2\u115F\u1160\u17B4\u17B5\u180E\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0\uFFF9-\uFFFB\u{110BD}\u{110CD}\u{13430}-\u{1343F}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}-\u{E007F}\u{E0100}-\u{E01EF}]/gu;
+  const ONZICHTBAAR = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u0600-\u0605\u06DD\u070F\u0890\u0891\u08E2\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B\u200C\u200E\u200F\u202A-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0\uFFF0-\uFFFB\u{110BD}\u{110CD}\u{13430}-\u{1343F}\u{16FE4}\u{1BCA0}-\u{1BCA3}\u{1D173}-\u{1D17A}\u{E0000}-\u{E0FFF}]/gu;
   const schoonTekst = (t) => t.replace(/[\u2028\u2029]/g, "\n").replace(ONZICHTBAAR, "");
   // Verloop (actie_log.wat, iedereen ziet "wie · wat"): strengere regel, gelijk aan public.verloop_tekens_ok en
   // public.verloop_lijkt_serverregel (migratie 0008); supabase/tests/tekens_check.sh vergelijkt elk codepunt.
@@ -566,7 +580,7 @@
   // - variatiekiezers U+FE00–FE0D en U+180B–180F en de braillespatie U+2800 nooit; VS15/VS16 (U+FE0E/FE0F) alleen
   //   direct na een emoji-teken, of VS16 in een toetsdop (1️⃣). Zo kan "Status<VS16>: …" niet meer.
   // - minstens één zichtbaar teken (zichtbaar); anders wordt de regel niet verstuurd.
-  // - een regel waarvan het skelet (NFKD, kleine letters, lookalikes → Latijn, alleen a–z) begint als een
+  // - een regel waarvan het skelet (NFKD, kleine letters, lookalikes → Latijn, elk ander teken een joker; 0009) begint als een
   //   serverregel ("Status:", "Aangemaakt met status", "Actiehouder, toetser of plandatum gewijzigd") weigert de
   //   server; de app begint haar regels altijd met een eigen vast woord, maar zet er in dat geval "Toelichting: " voor.
   const EMOJI_ZWJ = "[\\u00A9\\u00AE\\u203C\\u2049\\u2122\\u2139\\u2194-\\u21AA\\u231A-\\u23FF\\u24C2\\u25AA-\\u25FE\\u2600-\\u27BF\\u2934\\u2935\\u2B05-\\u2B55\\u3030\\u303D\\u3297\\u3299\\u{1F000}-\\u{1FAFF}]";
@@ -591,9 +605,26 @@
   const SKELET_NAAR = "aaeiiosst" + "aaaaaaaaa" + "cccccccc" + "ddddd" + "eeeeeeeee" + "f" + "gggggg" + "hhhhhhhhhh" + "iiiiiiiii" + "jjjjjj"
     + "kkkkkkkk" + "llllll" + "mmmmmmmm" + "nnnnn" + "ooooooooo" + "pppppppp" + "rrrr" + "ssssss" + "tttttttt" + "uuuuuuuuuu" + "wwwwww" + "zzzzzz";
   const SKELET = new Map(Array.from(SKELET_VAN, (c, i) => [c, SKELET_NAAR[i]]));
-  const skelet = (t) => Array.from(t.normalize("NFKD").toLowerCase(), (c) => SKELET.get(c) || c).join("").replace(/[^a-z]/g, "");
-  const SERVERREGEL = /^(status|aangemaaktmetstatus|actiehoudertoetserofplandatumgewijzigd)/;
-  const lijktServerregel = (t) => SERVERREGEL.test(skelet(t));
+  // skelet (0009): lookalikes → Latijn, ASCII-spaties en -leestekens weg, elk ander teken dat geen a–z is wordt een
+  // joker "?"; met (skelet) en zonder (skeletRuw) NFKD, zoals public.verloop_skelet en public.verloop_skelet_ruw
+  const skeletKern = (t) => Array.from(t, (c) => SKELET.get(c) || c).join("").replace(/[\u0009-\u000D\u0020-\u002F\u003A-\u0040\u005B-\u0060\u007B-\u007E]/g, "").replace(/[^a-z]/gu, "?");
+  const skelet = (t) => skeletKern(t.normalize("NFKD").toLowerCase());
+  const skeletRuw = (t) => skeletKern(t.toLowerCase());
+  const SERVERREGELS = ["status", "aangemaaktmetstatus", "actiehoudertoetserofplandatumgewijzigd"];
+  // begint skelet s als woord w? Een letter moet kloppen; een joker vervangt een letter of wordt overgeslagen
+  // (zelfde automaat als public.verloop_begint_als: lineair, geen reguliere expressie die kan ontsporen)
+  function begintAls(s, w) {
+    let p = new Set([0]);
+    for (const c of s) {
+      const q = new Set();
+      for (const i of p) { if (c === "?") { q.add(i); q.add(i + 1); } else if (w[i] === c) q.add(i + 1); }
+      if (q.has(w.length)) return true;
+      if (!q.size) return false;
+      p = q;
+    }
+    return false;
+  }
+  const lijktServerregel = (t) => SERVERREGELS.some((w) => begintAls(skelet(t), w) || begintAls(skeletRuw(t), w));
   // tekst voor één nieuwe regel van het verloop: opgeschoond, nooit gelijkend op een serverregel, ≤ 2000 tekens
   function logTekst(wat) {
     let s = schoonLog(String(wat));
@@ -730,6 +761,8 @@
   }
 
   async function stuur(e, uid) {
+    if (e.store === "rapporten") return stuurRapport(e, uid);
+    if (e.store === "aanvullingen") return stuurAanvulling(e);
     if (e.op === "del") {
       await sb("/rest/v1/" + e.store + "?id=eq." + encodeURIComponent(e.rid), { method: "DELETE", headers: { Prefer: "return=minimal" } });
       await zetMeta("srv:" + e.id, undefined);
@@ -775,6 +808,8 @@
   const wacht = (n) => Math.min(300000, 2000 * 2 ** Math.max(0, n - 1)) * (0.75 + Math.random() * 0.5);
 
   let bezig = null, nogmaals = false, timer = null, laatsteOk = null, laatsteFout = null, cspFout = false;
+  // laadindicator (js/laden.js, sync-pil): document-event "wpi-sync" met detail.bezig = versturen of ophalen loopt
+  const meldLaden = () => { try { document.dispatchEvent(new CustomEvent("wpi-sync", { detail: { bezig: !!(bezig || haalBezig) } })); } catch (e) {} };
   // verhoogd bij elk wissen van de servergegevens op dit toestel (uitloggen, andere gebruiker, geen sessie):
   // een lopende ophaal- of verstuurronde van daarvóór schrijft daarna niets meer op het toestel
   let generatie = 0;
@@ -786,6 +821,7 @@
   // een actie of planning die bij een inspectie hoort die zelf nog in de wachtrij staat (nog niet op de
   // server), wacht daarop: anders weigert de server hem (FK 23503 / 42501 "alleen de inspecteur …")
   async function wachtOpOuder(e, uid) {
+    if (e.store === "rapporten" || e.store === "aanvullingen") { const pi = OB.get("inspecties:" + e.rid); return pi && pi.uid === uid && pi.op === "put" ? pi : null; }
     if (e.op !== "put" || e.store === "inspecties") return null;
     const rec = await g0(e.store, e.rid), iid = rec && rec.inspectie_id;
     if (!iid) return null;
@@ -794,6 +830,9 @@
   }
   // is een weigering waarschijnlijk alleen een kwestie van volgorde (de inspectie staat nog niet op de server)?
   async function ouderOntbreekt(e, err) {
+    // rapport: Storage weigert het uploaden zolang de inspectie zelf nog niet op de server staat (RLS)
+    if (e.store === "rapporten") return !META.has("srv:inspecties:" + e.rid) && !!err && [400, 403].includes(err.status);
+    if (e.store === "aanvullingen") return !META.has("srv:inspecties:" + e.rid) && ["23503", "42501"].includes(pgCode(err));
     if (e.store === "inspecties" || !["23503", "42501"].includes(pgCode(err))) return false;
     const rec = await g0(e.store, e.rid), iid = rec && rec.inspectie_id;
     return !!iid && !META.has("srv:inspecties:" + iid);
@@ -866,6 +905,7 @@
       if (haalNodig) setTimeout(() => syncHaal(), 0);   // conflict: de nieuwere serverstand ophalen
       if (nogmaals) { nogmaals = false; planSync(50); }
     });
+    meldLaden();
     return bezig;
   }
   function volgendeTimer() {
@@ -894,7 +934,7 @@
     status: "status", inspectie_id: "inspectie", tekst: "actietekst", oordeel: "oordeel", ref: "referentie", waarneming: "waarneming", prio: "prioriteit", houder: "actiehouder",
     toetser: "toetser", plandatum: "plandatum", handmatig: "handmatig", foto: "foto", nafoto: "na-foto", titel: "titel", plan_id: "planning", waarnemingen: "waarnemingen",
     gesprek: "gesprek met de monteurs", positief: "positieve punten", handtekening: "handtekening", taken: "taken", keuzes: "keuzes", open_punten: "open punten", taak: "taak" };
-  const SOORT = { inspecties: "Inspectie", acties: "Actie", planning: "Planning" };
+  const SOORT = { inspecties: "Inspectie", acties: "Actie", planning: "Planning", rapporten: "Rapport", aanvullingen: "Aanvulling" };
   const mijnConflicten = () => (META.get("conflicten") || []).filter((c) => c.open && App.user && c.uid === App.user.id);
   // korte melding bovenin (geen venster: niet midden in een inspectie storen)
   function meldConflict() {
@@ -921,6 +961,8 @@
   // leesbare naam van een record (nooit alleen een id als er iets beters is)
   const datumNl = (d) => { const t = Date.parse(d || ""); return isNaN(t) ? "" : new Date(t).toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" }); };
   function leesbaar(store, r, id) {
+    if (store === "rapporten") return "PDF bij inspectie " + String(id || "?").slice(0, 64);
+    if (store === "aanvullingen") return "Aanvulling bij inspectie " + String(id || "?").slice(0, 64);
     r = r || {};
     const delen = store === "planning" ? [r.code ? (App.productNaam ? App.productNaam(r.code) : r.code) : "", datumNl(r.datum), r.locatie]
       : store === "acties" ? [r.tekst ? kort0(String(r.tekst)) : "", r.inspectie_titel]
@@ -1078,6 +1120,7 @@
       if (tijdelijk(e) && App.user) { clearTimeout(haalTimer); haalTimer = setTimeout(() => { haalTimer = null; syncHaal(); }, wacht(++haalPogingen)); }
       return 0;
     }).finally(() => { haalBezig = null; toonStatus(); });
+    meldLaden();
     return haalBezig;
   }
 
@@ -1130,6 +1173,7 @@
   const chipHtml = (s, extra, attr) => `<span class="opslag ${KLASSE[s]}" ${attr || ""}${s === "fout" ? ` role="button" tabindex="0" style="cursor:pointer" data-stop${act("syncOpnieuw")}` : ""}>${esc(TEKST[s] + (extra || ""))}</span>`;
   function toonStatus() {
     if (!actief()) return;
+    meldLaden();
     const c = $("syncchip");
     if (c) {
       const t = totaal(), wachtend = t.mijn.filter((e) => !e.fout && e.pogingen > 0);
@@ -1281,9 +1325,13 @@
       const rec = r || e.basis || {}, opServer = META.has("srv:" + e.id);
       const V = e.store === "planning" ? [["Product", rec.code ? (App.productNaam ? App.productNaam(rec.code) : rec.code) : ""], ["Datum", datumNl(rec.datum)], ["Locatie", rec.locatie], ["Project", rec.project], ["Inspecteur", rec.inspecteur], ["Monteurs", rec.monteurs], ["Toelichting", rec.toelichting], ["Status", rec.status]]
         : e.store === "acties" ? [["Actie", rec.tekst], ["Inspectie", rec.inspectie_titel], ["Status", rec.status], ["Actiehouder", rec.houder], ["Toetser", rec.toetser], ["Plandatum", datumNl(rec.plandatum)], ["Oordeel", rec.oordeel]]
+        : e.store === "rapporten" ? [["Rapport", "PDF bij inspectie " + e.rid], ["Bestand", e.bestandsnaam]]
+        : e.store === "aanvullingen" ? [["Aanvulling bij inspectie", e.rid], ["Over", e.over], ["Tekst", e.tekst]]
         : [["Titel", rec.titel], ["Project", rec.project], ["Vastgelegd", datumNl(rec.opgeslagen)], ["Waarnemingen", Array.isArray(rec.waarnemingen) ? rec.waarnemingen.length : null], ["Inspecteur", rec.inspecteur_id]];
       const velden = V.filter(([, v]) => v != null && v !== "").map(([k, v]) => `<div class="row"><span class="grow"><span class="s">${esc(k)}</span><div class="t">${esc(toonWaarde(v))}</div></span></div>`).join("");
-      const gevolg = e.op === "del" ? "Weggooien = het record niet verwijderen: de stand van de server komt terug op dit toestel."
+      const gevolg = e.op === "rapport" ? "Weggooien = dit rapport wordt niet naar de server gestuurd en dus ook niet gemaild. De inspectie zelf blijft staan."
+        : e.op === "aanvulling" ? "Weggooien = deze aanvulling wordt niet naar de server gestuurd. De inspectie zelf blijft zoals hij is vastgelegd."
+        : e.op === "del" ? "Weggooien = het record niet verwijderen: de stand van de server komt terug op dit toestel."
         : opServer ? "Weggooien = jouw wijziging vervalt; dit record gaat terug naar de laatst bekende stand van de server."
         : "Weggooien = dit record staat nog niet op de server en verdwijnt van dit toestel.";
       this.openModal("Wijziging geweigerd", (SOORT[e.store] || e.store) + " · " + leesbaar(e.store, rec, e.rid),
@@ -1298,6 +1346,12 @@
     async syncWeggooien(id) {
       await laad(true);
       const e = OB.get(id);
+      if (e && (e.store === "rapporten" || e.store === "aanvullingen") && App.user && e.uid === App.user.id) {   // rapport/aanvulling niet versturen: alleen de opdracht weg
+        wijzig++;
+        await tx(["outbox"], (t) => { t.objectStore("outbox").delete(id); }).catch(() => {});
+        OB.delete(id); meldTabbladen(); toonStatus(); this.closeModal();
+        return [...OB.values()].some((x) => x.uid === App.user.id && x.fout) ? this.syncDetails() : this.route();
+      }
       if (!e || !App.user || e.uid !== App.user.id || !STORES.includes(e.store)) return this.syncDetails();
       const opServer = META.has("srv:" + e.id), terug = opServer && e.basis ? e.basis : null;
       wijzig++;
@@ -1330,6 +1384,7 @@
     async syncStart() {
       if (!actief() || !App.user) return;
       await laad(); await syncHaal(); await syncNu({ direct: true });
+      this.rapportOntvangerLaad();   // wie de rapporten krijgt (voor App.rapportOntvanger, zonder netwerk te lezen)
       // oude, nooit verstuurde gegevens op dit toestel: één keer per sessie vragen wat ermee moet
       const o = await oudeRecords(), n = telOud(o), sk = "wpi_oud_gevraagd_" + App.user.id;
       let gevraagd = false; try { gevraagd = !!sessionStorage.getItem(sk); } catch (e) {}
@@ -1360,7 +1415,7 @@
       const namen = new Map();
       for (const e of mijn.slice(0, 20)) { let r = null; try { r = await g0(e.store, e.rid); } catch (x) {} namen.set(e.id, leesbaar(e.store, r || e.basis, e.rid)); }
       const rij = (e) => `<div class="row" data-wachtrij="${esc(e.id)}"><span class="grow"><span class="t">${soort[e.store] || e.store} · ${esc(namen.get(e.id) || e.rid)}</span>
-        <div class="s">${e.op === "del" ? "Verwijderen" : "Bijwerken"} · ${e.fout ? "geweigerd door de server" + (e.melding ? ": " + esc(e.melding) : "") : e.pogingen ? "in de wachtrij — " + esc(e.melding || "geen verbinding met de server") + "; volgt vanzelf" : "wacht op verbinding"}</div>
+        <div class="s">${e.op === "del" ? "Verwijderen" : e.op === "rapport" ? "Versturen" : "Bijwerken"} · ${e.fout ? "geweigerd door de server" + (e.melding ? ": " + esc(e.melding) : "") : e.pogingen ? "in de wachtrij — " + esc(e.melding || "geen verbinding met de server") + "; volgt vanzelf" : "wacht op verbinding"}</div>
         ${e.fout ? `<div style="margin-top:8px"><button class="btn ghost" style="width:auto;padding:8px 14px"${act("syncWijziging", e.id)}>Bekijken en oplossen</button></div>` : ""}</span></div>`;
       this.openModal("Synchronisatie", !navigator.onLine ? "Geen verbinding — wijzigingen blijven veilig op dit toestel staan." : serverBereikt() ? "Verbonden met de server" : uitlegLokaal() + ".",
         `<div style="margin-bottom:12px">${chipHtml(t.s, t.s === "wachtrij" ? " · " + t.n : "")}${laatsteOk ? `<span class="s" style="margin-left:8px">laatst ${tijd(laatsteOk)}</span>` : ""}</div>
@@ -1461,6 +1516,10 @@
       }
       // de verloop-cursors horen bij de gewiste gegevens (van iedereen): volgende keer het hele verloop
       for (const mk of [...META.keys()]) if (/^logcursor:/.test(mk)) await zetMeta(mk, undefined);
+      // rapporten: wat de server over verstuurde rapporten zei, en wie ze krijgt (een naam van een collega)
+      for (const mk of [...META.keys()]) if (/^rapport:/.test(mk) && !OB.has("rapporten:" + mk.slice(8))) await zetMeta(mk, undefined);
+      for (const mk of [...META.keys()]) if (/^aanvul:/.test(mk)) await zetMeta(mk, undefined);   // aanvullingen van de server (namen, tekst)
+      try { localStorage.removeItem(K_ONTVANGER); } catch (e) {}
       laatsteOk = null; laatsteHaal = 0;
       this.acties = null; this.planning = null;
       meldTabbladen();
@@ -1473,16 +1532,16 @@
     async syncEigenWerk(uid) {
       if (!actief() || !uid) return { wachtrij: 0, concept: false };
       await laad(true);
-      let c = null; try { c = await g0("concept", "lopend-" + uid); } catch (e) {}
-      return { wachtrij: [...OB.values()].filter((e) => e.uid === uid).length, concept: !!(c && c.ins) };
+      let cs = []; try { cs = await nietVastgelegd(await ga0("concept")); } catch (e) {}   // lopende én gepauzeerde inspecties
+      return { wachtrij: [...OB.values()].filter((e) => e.uid === uid).length, concept: cs.some((c) => c && c.ins && conceptUid(c.id) === uid) };
     },
     // aantal onderdelen (opdrachten + lopende inspecties) van ANDERE gebruikers dan uid op dit toestel
     async syncAnderWerk(uid) {
       if (!actief()) return 0;
       await laad(true);
-      let cs = []; try { cs = await ga0("concept"); } catch (e) {}
+      let cs = []; try { cs = await nietVastgelegd(await ga0("concept")); } catch (e) {}
       return [...OB.values()].filter((e) => e.uid && e.uid !== uid).length
-        + cs.filter((c) => { const m = CONCEPT_UID.exec(String(c && c.id)); return m && m[1] !== uid && c.ins; }).length;
+        + cs.filter((c) => { const u = conceptUid(c && c.id); return u && u !== uid && c.ins; }).length;
     },
     // wissen: alleen van uid (wie == uid) of van iedereen behalve uid (wie == null, anders = uid)
     async syncWisWerk(uid, anderen) {
@@ -1492,13 +1551,14 @@
       await laad(true);
       const weg = [...OB.values()].filter((e) => van(e.uid));
       for (const e of weg) {
-        try { await tx(["outbox", e.store], (t) => { t.objectStore("outbox").delete(e.id); t.objectStore(e.store).delete(e.rid); }); } catch (x) {}
+        const metRecord = STORES.includes(e.store);   // een rapport-opdracht (PDF) heeft geen eigen store in deze database
+        try { await tx(metRecord ? ["outbox", e.store] : ["outbox"], (t) => { t.objectStore("outbox").delete(e.id); if (metRecord) t.objectStore(e.store).delete(e.rid); }); } catch (x) {}
         OB.delete(e.id);
         await zetMeta("srv:" + e.id, undefined); await zetMeta("fotomist:" + e.id, undefined);
         if (e.store === "acties") await zetMeta("logn:" + e.rid, undefined);
       }
       let cs = []; try { cs = await ga0("concept"); } catch (x) {}
-      for (const c of cs) { const m = CONCEPT_UID.exec(String(c && c.id)); if (m && van(m[1])) { try { await d0("concept", c.id); } catch (x) {} } }
+      for (const c of cs) { const u = conceptUid(c && c.id); if (u && van(u)) { try { await d0("concept", c.id); } catch (x) {} } }
       const l = META.get("conflicten") || [], rest = l.filter((c) => !van(c.uid));
       if (rest.length !== l.length) await zetMeta("conflicten", rest);
       wijzig++; meldTabbladen(); laatsteOk = null;
@@ -1519,6 +1579,232 @@
       this.acties = null; this.planning = null;
     },
   });
+  // ---------------- rapporten: de PDF bij een definitief afgeronde inspectie (migratie 0009) ----------------
+  // Interface voor js/inspectie.js (afronden) en de schermen van de staf:
+  //   App.rapportAfronden({ inspectieId, pdf, bestandsnaam }) → Promise<{ status: "wachtrij"|"demo"|"offline-wachtrij", ontvangerNaam }>
+  //   App.rapportOntvanger()                               → { id, naam } | null   (synchroon)
+  //   App.rapportOphalen(inspectieId)                      → Promise<Blob|null>
+  // Voorbeeldmodus: de PDF blijft op dit toestel (IndexedDB-database "wpi-rapporten", store "rapporten"); status "demo".
+  // Met backend: een opdracht in de bestaande wachtrij (outbox, met de PDF erin; overleeft herladen). Versturen =
+  // eerst de inspectie (zelfde ronde, eerdere volgorde), dan de PDF in de privébucket "rapporten" onder
+  // <eigen uid>/<inspectie-id>.pdf (één keer: nooit overschrijven, de momentopname blijft onveranderlijk) en daarna
+  // rpc/rapport_in_wachtrij (de server zet hem in public.mail_wachtrij; de Edge Function mail-versturen mailt hem zodra
+  // de mailbox is ingericht). Lukt dat meteen: "wachtrij"; anders "offline-wachtrij" (gaat vanzelf mee).
+  const RAPPORT_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;   // = inspecties.id (inspecties_id_vorm)
+  const RAPPORT_MAX = 20 * 1024 * 1024;                     // = bucket "rapporten" (0009)
+  const K_ONTVANGER = "wpi_rapport_ontvanger_srv";          // {id, naam} van de server (gewist bij uitloggen)
+  const K_ONTVANGER_DEMO = "wpi_rapport_ontvanger";         // voorbeeldmodus: gekozen profiel-id
+  const RDB = {
+    _db: null,
+    open() {
+      if (this._db) return Promise.resolve(this._db);
+      return new Promise((res, rej) => {
+        const r = indexedDB.open("wpi-rapporten", 2);   // v2: + aanvullingen (voorbeeldmodus)
+        r.onupgradeneeded = () => { ["rapporten", "aanvullingen"].forEach((n) => { if (!r.result.objectStoreNames.contains(n)) r.result.createObjectStore(n, { keyPath: "id" }); }); };
+        r.onsuccess = () => { this._db = r.result; this._db.onversionchange = () => { try { this._db.close(); } catch (e) {} this._db = null; }; res(this._db); };
+        r.onerror = () => rej(r.error);
+      });
+    },
+    async get(id) { const db = await this.open(); return new Promise((res, rej) => { const q = db.transaction("rapporten").objectStore("rapporten").get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error); }); },
+    async alle(st) { const db = await this.open(); return new Promise((res, rej) => { const q = db.transaction(st).objectStore(st).getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); }); },
+    async voegToe(st, obj) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction(st, "readwrite"); t.objectStore(st).add(obj); t.oncomplete = () => res(true); t.onerror = () => rej(t.error); }); },
+    // alleen als hij er nog niet is (momentopname: het eerste rapport blijft)
+    async zet(obj) {
+      const db = await this.open();
+      return new Promise((res, rej) => {
+        const t = db.transaction("rapporten", "readwrite"), st = t.objectStore("rapporten"), q = st.get(obj.id); let nieuw = false;
+        q.onsuccess = () => { if (!q.result) { st.put(obj); nieuw = true; } };
+        t.oncomplete = () => res(nieuw); t.onerror = () => rej(t.error);
+      });
+    },
+  };
+  async function controleerPdf(o) {
+    const { inspectieId, pdf, bestandsnaam } = o || {};
+    if (typeof inspectieId !== "string" || !RAPPORT_ID.test(inspectieId)) throw new Error("Ongeldige inspectie voor het rapport.");
+    if (!pdf || typeof pdf !== "object" || typeof pdf.size !== "number" || typeof pdf.slice !== "function") throw new Error("Het rapport is geen bestand.");
+    if (pdf.size === 0 || pdf.size > RAPPORT_MAX) throw new Error("Het rapport is leeg of groter dan 20 MB.");
+    let kop = ""; try { kop = new TextDecoder().decode(await pdf.slice(0, 5).arrayBuffer()); } catch (e) {}
+    if (kop !== "%PDF-") throw new Error("Het rapport is geen PDF.");
+    const naam = String(bestandsnaam || inspectieId + ".pdf").replace(/[^\p{L}\p{N} ._()-]+/gu, "").trim().slice(0, 120) || inspectieId + ".pdf";
+    return { inspectieId, pdf: pdf.type === "application/pdf" ? pdf : new Blob([pdf], { type: "application/pdf" }), bestandsnaam: /\.pdf$/i.test(naam) ? naam : naam + ".pdf" };
+  }
+  // één rapport-opdracht versturen (zie stuur()): uploaden (409 = stond er al, van een eerdere poging) en in de wachtrij
+  async function stuurRapport(e, uid) {
+    if (!e.pdf || typeof e.pdf.size !== "number") throw new SbFout(422, null, "Het rapport (PDF) ontbreekt op dit toestel");
+    const pad = uid + "/" + e.rid + ".pdf";
+    try {
+      await sb("/storage/v1/object/rapporten/" + pad, { method: "POST", headers: { "Content-Type": "application/pdf", "x-upsert": "false", "cache-control": "3600" }, body: e.pdf, timeout: 120000 });
+    } catch (err) {
+      if (!(err.status === 409 || (err.body && String(err.body.statusCode) === "409"))) throw err;
+    }
+    const r = await sb("/rest/v1/rpc/rapport_in_wachtrij", { method: "POST", headers: { "Content-Type": "application/json" }, body: json({ p_inspectie_id: e.rid, p_bestand: pad }) });
+    await zetMeta("rapport:" + e.rid, { pad, status: r && typeof r.status === "string" ? r.status.slice(0, 20) : "wacht", ontvanger: r && typeof r.ontvanger_naam === "string" ? r.ontvanger_naam.slice(0, 120) : null, t: nu() });
+    return {};
+  }
+  const leesOntvanger = (k) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v; } catch (e) { return null; } };
+  Object.assign(App, {
+    async rapportAfronden(opt) {
+      const r = await controleerPdf(opt);
+      const ontvanger = () => { const o = App.rapportOntvanger(); return o ? o.naam : null; };
+      if (!actief()) {
+        await RDB.zet({ id: r.inspectieId, pdf: r.pdf, bestandsnaam: r.bestandsnaam, t: nu(), door: App.user ? App.user.id : null, ontvanger: ontvanger() });
+        return { status: "demo", ontvangerNaam: ontvanger() };
+      }
+      const mij = App.user && App.user.id;
+      if (!mij) throw new Error("Niet ingelogd.");
+      await laad();
+      const id = "rapporten:" + r.inspectieId;
+      if (!OB.has(id) && META.has("rapport:" + r.inspectieId)) return { status: "wachtrij", ontvangerNaam: META.get("rapport:" + r.inspectieId).ontvanger || ontvanger() };
+      wijzig++;
+      const e = await tx(["outbox"], (t, klaar) => {
+        const ob = t.objectStore("outbox"), q = ob.get(id);
+        q.onsuccess = () => {
+          if (q.result) { klaar(q.result.uid === mij ? q.result : "ander"); return; }   // er staat al een rapport: dat blijft
+          const n = { id, store: "rapporten", rid: r.inspectieId, op: "rapport", uid: mij, t: nu(), versie: 1, pogingen: 0, fout: false, permanent: false, volgende: 0, melding: "", basis: null, pdf: r.pdf, bestandsnaam: r.bestandsnaam };
+          ob.put(n); klaar(n);
+        };
+      });
+      if (e === "ander") throw new AnderFout("Dit rapport staat nog in de wachtrij van een andere gebruiker op dit toestel.");
+      if (!e) throw new Error("Opslaan op dit toestel is afgebroken");
+      OB.set(id, e); meldTabbladen(); toonStatus();
+      // meteen proberen (eerst de inspectie, dan het rapport); hooguit 20 s wachten, daarna gaat het vanzelf verder
+      if (navigator.onLine) {
+        const poging = (async () => { for (let i = 0; i < 3 && OB.has(id); i++) { await syncNu({ direct: true }); const c = OB.get(id); if (!c || c.fout || c.pogingen) break; } })();
+        await Promise.race([poging, new Promise((ok) => setTimeout(ok, 20000))]);
+      } else planSync();
+      const m = META.get("rapport:" + r.inspectieId);
+      return !OB.has(id) && m ? { status: "wachtrij", ontvangerNaam: m.ontvanger || ontvanger() } : { status: "offline-wachtrij", ontvangerNaam: ontvanger() };
+    },
+    // wie krijgt de rapporten? De gekozen collega (Beheer › "Rapporten mailen naar") als die actief is, anders de
+    // QHSE-manager; zijn er meer, de eerste die in het team kwam (zoals public.rapport_ontvanger_id, migratie 0009).
+    // Voorbeeldmodus: de keuze op dit toestel en de volgorde van de voorbeeldaccounts. Met backend: wat de server
+    // laatst zei (rpc/rapport_ontvanger, bij synchroniseren en na elke wijziging in Beheer opgehaald), anders de eerste
+    // QHSE-manager in de lijst van het team.
+    rapportOntvanger() {
+      const { USERS } = window.WPI;
+      const qhse = USERS.find((u) => u.role === "qhse"), standaard = qhse ? { id: qhse.id, naam: qhse.full_name } : null;
+      if (!actief()) {
+        const id = leesOntvanger(K_ONTVANGER_DEMO), u = id && USERS.find((x) => x.id === id);
+        return u ? { id: u.id, naam: u.full_name } : standaard;
+      }
+      const v = leesOntvanger(K_ONTVANGER);
+      if (v && typeof v === "object" && vUuid(v.id) && typeof v.naam === "string") return { id: v.id, naam: v.naam.slice(0, 120) };
+      return v && v.geen ? null : standaard;
+    },
+    // het in Beheer gekozen profiel-id (ook als die collega intussen niet meer actief is), of null = standaard
+    rapportOntvangerKeuze() {
+      const v = leesOntvanger(actief() ? K_ONTVANGER : K_ONTVANGER_DEMO);
+      if (!actief()) return typeof v === "string" ? v : null;
+      return v && typeof v === "object" && vUuid(v.keuze) ? v.keuze : null;
+    },
+    async rapportOntvangerLaad() {
+      if (!actief() || !App.user) return this.rapportOntvanger();
+      try {
+        const r = await sb("/rest/v1/rpc/rapport_ontvanger", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const keuze = r && vUuid(r.keuze) ? r.keuze : null;
+        localStorage.setItem(K_ONTVANGER, JSON.stringify(r && vUuid(r.id) && typeof r.naam === "string" ? { id: r.id, naam: r.naam.slice(0, 120), keuze } : { geen: true, keuze }));
+      } catch (e) {}
+      return this.rapportOntvanger();
+    },
+    // Beheer › "Rapporten mailen naar": id = profiel-id, of null = standaard (de QHSE-manager). Gooit bij een weigering.
+    async rapportOntvangerZet(id) {
+      if (id != null && !window.WPI.USERS.some((u) => u.id === id)) throw new Error("Kies een collega uit de lijst.");
+      if (!actief()) { try { if (id) localStorage.setItem(K_ONTVANGER_DEMO, JSON.stringify(id)); else localStorage.removeItem(K_ONTVANGER_DEMO); } catch (e) {} return this.rapportOntvanger(); }
+      try {
+        await sb("/rest/v1/instellingen?on_conflict=sleutel", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" }, body: json({ sleutel: "rapport_ontvanger", waarde: id || null }) });
+      } catch (e) { throw new Error(e && e.status === 403 ? "Kiezen wie de rapporten krijgt kan alleen met tweestapsverificatie. Log opnieuw in met je tweede stap." : !e || !e.status ? "Geen verbinding met de server." : nlMelding(e)); }
+      return this.rapportOntvangerLaad();
+    },
+    async rapportOphalen(inspectieId) {
+      if (typeof inspectieId !== "string" || !RAPPORT_ID.test(inspectieId)) return null;
+      if (!actief()) { try { const r = await RDB.get(inspectieId); return r && r.pdf ? r.pdf : null; } catch (e) { return null; } }
+      if (!App.user) return null;
+      await laad();
+      const eigen = OB.get("rapporten:" + inspectieId);
+      if (eigen && eigen.uid === App.user.id && eigen.pdf) return eigen.pdf;   // nog niet verstuurd: de PDF op dit toestel
+      let pad = (META.get("rapport:" + inspectieId) || {}).pad;
+      if (!pad) { let ins = null; try { ins = await g0("inspecties", inspectieId); } catch (e) {} if (ins && vUuid(ins.inspecteur_id)) pad = ins.inspecteur_id + "/" + inspectieId + ".pdf"; }
+      if (!pad) {   // nog niet op dit toestel: de server vragen wie de inspecteur is (RLS: alleen wat jij mag zien)
+        try { const r = await sb("/rest/v1/inspecties?select=inspecteur_id&id=eq." + encodeURIComponent(inspectieId)); if (Array.isArray(r) && r[0] && vUuid(r[0].inspecteur_id)) pad = r[0].inspecteur_id + "/" + inspectieId + ".pdf"; } catch (e) {}
+      }
+      if (!pad || !/^[0-9a-f-]{36}\/[A-Za-z0-9][A-Za-z0-9_-]{0,63}\.pdf$/.test(pad)) return null;
+      try {
+        const r = await sb("/storage/v1/object/authenticated/rapporten/" + pad, { raw: true, timeout: 60000 });
+        const b = await r.blob();
+        if (!b.size || new TextDecoder().decode(await b.slice(0, 5).arrayBuffer()) !== "%PDF-") return null;
+        return new Blob([b], { type: "application/pdf" });
+      } catch (e) { return null; }
+    },
+  });
+
+  // ---------------- aanvullingen op een vastgelegde inspectie (migratie 0010) ----------------
+  // De momentopname zelf verandert nooit; een correctie komt ernaast, append-only, met wie en wanneer.
+  //   App.aanvullingToevoegen({ inspectieId, over, tekst, foto? }) → Promise<{ status: "opgeslagen"|"wachtrij"|"geweigerd"|"demo", melding? }>
+  //   App.aanvullingenVan(inspectieId)                    → Promise<[{ id, t, wie, over, tekst, wacht, fout }]> (oudste eerst)
+  // Voorbeeldmodus: op dit toestel (database "wpi-rapporten", store "aanvullingen"). Met backend: een opdracht in de
+  // wachtrij (na de inspectie zelf), daarna POST /rest/v1/inspectie_aanvullingen (tijd en auteur zet de server).
+  async function stuurAanvulling(e) {
+    await sb("/rest/v1/inspectie_aanvullingen", { method: "POST", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      // nagekomen foto (0011): eerst naar Storage (eigen map), daarna alleen het pad bij de aanvulling
+      body: json(Object.assign({ inspectie_id: e.rid, over: e.over, tekst: e.tekst, t_client: e.t }, e.foto ? { foto: await naarPad(e.foto, e.uid) } : {})) });
+    return {};
+  }
+  function schoonAanvulling(o) {
+    const id = o && o.inspectieId;
+    if (typeof id !== "string" || !RAPPORT_ID.test(id)) throw new Error("Ongeldige inspectie voor de aanvulling.");
+    const tekst = schoonLog(String((o && o.tekst) || "")).trim();
+    const over = schoonTekst(String((o && o.over) || "")).replace(/\s+/g, " ").trim().slice(0, 120) || "Algemeen";
+    if (!tekst || !zichtbaar(tekst)) throw new Error("Schrijf eerst wat je wilt aanvullen.");
+    if (Array.from(tekst).length > 2000) throw new Error("Een aanvulling is hooguit 2000 tekens.");
+    const foto = o && typeof o.foto === "string" && DATAIMG.test(o.foto) ? o.foto : null;   // optioneel: één nagekomen foto
+    return { id, tekst, over, foto };
+  }
+  Object.assign(App, {
+    async aanvullingToevoegen(o) {
+      const a = schoonAanvulling(o), u = App.user;
+      if (!u) throw new Error("Niet ingelogd.");
+      if (!actief()) {
+        await RDB.voegToe("aanvullingen", { id: a.id + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), inspectieId: a.id, t: nu(), wieId: u.id, wie: u.full_name, over: a.over, tekst: a.tekst, foto: a.foto });
+        return { status: "demo" };
+      }
+      await laad();
+      const id = "aanvullingen:" + a.id + ":" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const n = { id, store: "aanvullingen", rid: a.id, op: "aanvulling", uid: u.id, t: nu(), versie: 1, pogingen: 0, fout: false, permanent: false, volgende: 0, melding: "", basis: null, over: a.over, tekst: a.tekst, foto: a.foto };
+      wijzig++;
+      const ok = await tx(["outbox"], (t, klaar) => { t.objectStore("outbox").put(n); klaar(true); });
+      if (!ok) throw new Error("Opslaan op dit toestel is afgebroken");
+      OB.set(id, n); meldTabbladen(); toonStatus();
+      if (navigator.onLine) await Promise.race([syncNu({ direct: true }), new Promise((r) => setTimeout(r, 15000))]);
+      else planSync();
+      const c = OB.get(id);
+      return !c ? { status: "opgeslagen" } : c.fout ? { status: "geweigerd", melding: c.melding || "" } : { status: "wachtrij" };
+    },
+    async aanvullingenVan(inspectieId) {
+      if (typeof inspectieId !== "string" || !RAPPORT_ID.test(inspectieId)) return [];
+      const naam = (x) => (x ? window.WPI.naam(x) : "–");
+      if (!actief()) {
+        let l = []; try { l = await RDB.alle("aanvullingen"); } catch (e) {}
+        return l.filter((x) => x && x.inspectieId === inspectieId).sort((a, b) => String(a.t).localeCompare(String(b.t)))
+          .map((x) => ({ id: x.id, t: x.t, wie: x.wie || naam(x.wieId), over: x.over, tekst: x.tekst, foto: x.foto || null, wacht: false, fout: "" }));
+      }
+      if (!App.user) return [];
+      await laad();
+      let srv = META.get("aanvul:" + inspectieId) || [];
+      if (navigator.onLine) {
+        try {
+          const r = await sb("/rest/v1/inspectie_aanvullingen?select=id,t,wie,over,tekst,foto&inspectie_id=eq." + encodeURIComponent(inspectieId) + "&order=id.asc");
+          if (Array.isArray(r)) {
+            srv = r.filter((x) => x && typeof x.tekst === "string").map((x) => ({ id: x.id, t: x.t, wieId: vUuid(x.wie) ? x.wie : null, over: String(x.over || "Algemeen").slice(0, 120), tekst: x.tekst.slice(0, 2000), foto: typeof x.foto === "string" && FOTOPAD.test(x.foto) ? x.foto : null }));
+            await zetMeta("aanvul:" + inspectieId, srv);
+          }
+        } catch (e) {}
+      }
+      const wacht = [...OB.values()].filter((e) => e.store === "aanvullingen" && e.rid === inspectieId && e.uid === App.user.id)
+        .map((e) => ({ id: e.id, t: e.t, wie: App.user.full_name, over: e.over, tekst: e.tekst, foto: e.foto || null, wacht: true, fout: e.fout ? e.melding || "geweigerd" : "" }));
+      return srv.map((x) => ({ id: x.id, t: x.t, wie: naam(x.wieId), over: x.over, tekst: x.tekst, foto: x.foto || null, wacht: false, fout: "" })).concat(wacht);
+    },
+  });
+
   // voor elke <img src> in de schermen: alleen een eigen foto (data:image/jpeg|png|webp;base64) of een
   // storagepad dat nog wordt opgehaald; al het andere (ook in voorbeeldmodus) wordt een lege src
   const fotoSrc = (v) => (typeof v === "string" && (DATAIMG.test(v) || FOTOPAD.test(v)) ? v : "");

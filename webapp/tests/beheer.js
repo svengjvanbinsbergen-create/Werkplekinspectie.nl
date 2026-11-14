@@ -26,8 +26,10 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     await p.evaluate(() => App.openAccount()); await wacht(p, 150);
     check(/Monteurs/.test(await p.locator('#mod button:has-text("Beheer")').innerText().catch(() => '')), 'coördinator: Beheer (Monteurs) in het accountmenu');
     await p.evaluate(() => { App.closeModal(); location.hash = '#/beheer'; }); await wacht(p, 500);
-    check(await p.evaluate(() => location.hash) === '#/beheer' && await p.locator('#bh-monteurs').count() === 1 && !(await p.locator('#bh-doel').count()) && !(await p.locator('#bh-team').count()),
-      'coördinator: monteurslijst, geen doel en geen team en rollen');
+    check(await p.evaluate(() => location.hash) === '#/beheer' && await p.locator('#bh-monteurs').count() === 1 && !(await p.locator('#bh-doel').count()) && !(await p.locator('#bh-gebruikers').count()) && !(await p.locator('#bh-rapport').count()),
+      'coördinator: monteurslijst, geen doel, geen Gebruikers en geen "Rapporten mailen naar"');
+    await p.evaluate(() => { App.gebrUitnodigen(); App.gebrWijzig('u-hoofd'); }); await wacht(p, 150);
+    check(!(await p.evaluate(() => document.getElementById('ov').classList.contains('on'))), 'coördinator: uitnodigen en wijzigen via de console doen niets');
     // ook de acties zelf zijn afgeschermd (niet alleen het scherm): het doel wijzigt een coördinator niet
     await p.evaluate(() => { localStorage.setItem('wpi_doel_conform', '85'); document.body.insertAdjacentHTML('beforeend', '<input id="bh-doel-x" value="">');
       const i = document.getElementById('bh-doel-in'); if (i) i.value = ''; App.beheerDoel(); document.getElementById('bh-doel-x').remove(); });
@@ -45,11 +47,12 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
       await p.evaluate((u) => App.login(u), u); await wacht(p, 700);
       check(/Overzicht van het team/.test(await p.locator('#view h1').innerText()) && !(await p.locator('.heroknop, button:has-text("Inspectie starten"), button:has-text("Inspectie inplannen")').count()),
         u + ': Vandaag = overzicht van het team, geen inspectie starten of inplannen');
+      check(/Gebruikers, monteurs, doel en rapporten/.test(await p.locator('.vknop:has-text("Beheer")').innerText()), u + ': Overzicht › Beheer met dezelfde naam als in het accountmenu');
       await p.evaluate(() => App.go('beheer')); await wacht(p, 500);
-      const team = await p.locator('#bh-team').innerText().catch(() => '');
-      check(await p.locator('#bh-doel').count() === 1 && /Team en rollen/.test(team) && (await p.locator('#bh-team .bhteamrij').count()) === 6, u + ': Beheer met doel en team en rollen (6 personen)', team.slice(0, 120));
+      const team = await p.locator('#bh-gebruikers').innerText().catch(() => '');
+      check(await p.locator('#bh-doel').count() === 1 && await p.locator('#bh-rapport').count() === 1 && /Gebruikers/.test(team) && (await p.locator('#bh-gebruikers .bhgebr').count()) === 6, u + ': Beheer met doel, "Rapporten mailen naar" en Gebruikers (6 personen)', team.slice(0, 120));
       check(/Femke Fictief[\s\S]*Manager Projects/.test(team) && /QHSE-manager/.test(team) && /Beheerder/.test(team) && !/Inspecteur\b/.test(team), u + ': twee hoofden, QHSE-manager en beheerder; nergens de rol Inspecteur', team);
-      check(await p.locator('#bh-team select').count() === 0 && /voorbeeldmodus/.test(await p.locator('#bh-team .bhuitnodig').evaluate((e) => e.textContent)), u + ': voorbeeldmodus: rollen alleen bekijken (uitleg bij uitnodigen)');
+      check(await p.locator('#bh-gebruikers button:has-text("Gebruiker uitnodigen")').count() === 1 && /Voorbeeldmodus/.test(await p.locator('#bh-gebruikers .bhdemo').innerText()), u + ': voorbeeldmodus: uitnodigen kan, met de uitleg dat er niets wordt verstuurd');
       await p.evaluate(() => App.go('inspectie')); await wacht(p, 400);
       check(await p.evaluate(() => location.hash) !== '#/inspectie', u + ': #/inspectie stuurt terug (inspecteert niet)');
       await p.evaluate(() => App.startInspectie('DAM', 'x', 't', true)); await wacht(p, 200);
@@ -58,7 +61,9 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
 
     await p.evaluate(() => App.login('u-hoofd')); await wacht(p, 700);
     await p.evaluate(() => App.openAccount()); await wacht(p, 150);
+    check(/Gebruikers, monteurs, doel en rapporten/.test(await p.locator('#mod button:has-text("Beheer")').innerText()), 'accountmenu: Beheer heet overal hetzelfde (Gebruikers, monteurs, doel en rapporten)');
     await p.click('#mod button:has-text("Beheer")'); await wacht(p, 500);
+    check(/Gebruikers, monteurs, doel en rapporten/.test(await p.locator('#view .hi').first().innerText()), 'Beheer: dezelfde ondertitel als in het accountmenu');
     check(await p.evaluate(() => location.hash) === '#/beheer' && await p.locator('h1:has-text("Beheer")').count() === 1, 'hoofd: Beheer via accountmenu');
     check(!/Alleen voor/.test(await p.locator('#view .hi').first().innerText()), 'vriendelijke kicker (geen "Alleen voor …")');
     const uitleg = await p.locator('.bhuitleg').allInnerTexts();
@@ -219,6 +224,138 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     check(breed, 'telefoon: namen op één regel');
     await p.screenshot({ path: 'bh-telefoon2.png', fullPage: true });
     await ctx.close();
+  }
+
+  // ===== 1b. Gebruikers en rapporten in de voorbeeldmodus (0009) =====
+  {
+    const { ctx, p } = await nieuw({ width: 390, height: 844 });
+    await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+    await p.evaluate(() => App.login('u-beheer')); await wacht(p, 600);
+    await p.evaluate(() => App.go('beheer')); await wacht(p, 600);
+    // uitnodigen: controles, de rol "inspecteur" bestaat niet, nep-link duidelijk gemarkeerd
+    await p.click('#bh-gebruikers button:has-text("Gebruiker uitnodigen")'); await wacht(p, 300);
+    const rollen = await p.locator('#gu-rol option').allInnerTexts();
+    check(JSON.stringify(rollen) === JSON.stringify(['Kies…', 'Hoofd', 'Coördinator', 'QHSE-manager', 'Beheerder']), 'uitnodigen: rollen hoofd, coördinator, QHSE-manager, beheerder (nooit inspecteur)', rollen);
+    await p.click('#gu-knop'); await wacht(p, 200);
+    check(/geldig e-mailadres/.test(await p.locator('#gu-fout').innerText()) && await p.evaluate(() => document.activeElement && document.activeElement.id) === 'gu-mail', 'uitnodigen: zonder e-mailadres een melding en focus op het veld');
+    await p.fill('#gu-mail', 'nieuw.lid@voorbeeld.test'); await p.fill('#gu-naam', 'carla  PROEF'); await p.selectOption('#gu-rol', 'coordinator'); await p.click('#gu-knop'); await wacht(p, 200);
+    check(/dezelfde naam/.test(await p.locator('#gu-fout').innerText()), 'uitnodigen: dubbele naam (andere schrijfwijze) geweigerd');
+    await p.fill('#gu-naam', 'Nina Nieuw'); await p.fill('#gu-functie', 'Montage Coördinator'); await p.click('#gu-knop'); await wacht(p, 500);
+    const res = await p.locator('#mod').innerText();
+    check(/Uitnodiging klaar/.test(res) && /Demo — er wordt niets verstuurd/.test(res) && /Persoonlijke link, geldig tot \d{2}:\d{2}/.test(res) && /Nieuwe link maken/.test(res) && !/Supabase|Outlook/.test(res),
+      'uitnodigen: link met "Demo — er wordt niets verstuurd", geldig tot HH:MM, wat te doen als hij verloopt; geen jargon', res);
+    const link = await p.inputValue('#gu-link'), mailto = await p.locator('#mod a:has-text("Mail de link")').getAttribute('href');
+    check(/^https:\/\/werkplekinspectie\.voorbeeld\/#demo-uitnodiging-/.test(link), 'uitnodigen: de nep-link is herkenbaar als demo', link);
+    const mt = new URL(mailto);
+    check(mt.protocol === 'mailto:' && decodeURIComponent(mt.pathname) === 'nieuw.lid@voorbeeld.test' && mt.searchParams.get('subject') === 'Uitnodiging Werkplekinspectie' && mt.searchParams.get('body').includes(link)
+      && !/Nina|Hanna/.test(mt.searchParams.get('body')) && /werkt tot \d{2}:\d{2}/.test(mt.searchParams.get('body')), 'Mail de link: mailto met onderwerp, de link en tot hoe laat hij werkt, zonder namen in de tekst', mailto);
+    await p.click('#gu-kopieer'); await wacht(p, 300);
+    check(await p.evaluate(() => navigator.clipboard.readText()) === link && /gekopieerd/.test(await p.locator('#gu-gekopieerd').innerText()), 'Kopieer link: de link staat op het klembord');
+    await p.screenshot({ path: 'gebruikers-link-telefoon.png' });
+    await p.evaluate(() => App.closeModal()); await wacht(p, 400);
+    check(await p.locator('.bhgebr', { hasText: 'Nina Nieuw' }).count() === 1 && await p.evaluate(() => WPI.kandidaten('houder').some((u) => u.full_name === 'Nina Nieuw')), 'nieuwe collega staat in de lijst en is te kiezen als actiehouder');
+    // wie nog nooit inlogde, is te zien; voor hen (en alleen hen) een nieuwe link als de uitnodiging verliep
+    check(/Nog niet ingelogd · uitnodiging open/.test(await p.locator('.bhgebr', { hasText: 'Nina Nieuw' }).innerText()) && /Laatst ingelogd/.test(await p.locator('.bhgebr', { hasText: 'Carla Proef' }).innerText()),
+      'lijst: "Nog niet ingelogd · uitnodiging open" voor de nieuwe collega, "Laatst ingelogd" voor de anderen (ook in de voorbeeldmodus)');
+    await wijzig(p, 'Carla Proef'); await wacht(p, 300);
+    check(await p.locator('#mod button:has-text("Nieuwe link maken")').count() === 0, 'wie al inlogde: geen "Nieuwe link maken"');
+    await p.evaluate(() => App.closeModal());
+    await wijzig(p, 'Nina Nieuw'); await wacht(p, 300);
+    await p.click('#mod button:has-text("Nieuwe link maken")'); await wacht(p, 400);
+    const res2 = await p.locator('#mod').innerText(), link2 = await p.inputValue('#gu-link');
+    check(/Nieuwe link klaar/.test(res2) && /geldig tot \d{2}:\d{2}/.test(res2) && link2 !== link && /^https:\/\/werkplekinspectie\.voorbeeld\/#demo-uitnodiging-/.test(link2) && /Demo — er wordt niets verstuurd/.test(res2),
+      'verlopen uitnodiging: Wijzig › Nieuwe link maken geeft een nieuwe (demo-)link met geldig tot', res2);
+    await p.evaluate(() => App.closeModal()); await wacht(p, 300);
+    // rol en functie wijzigen; jezelf niet; laatste hoofd niet; non-actief en weer actief
+    await p.locator('.bhgebr', { hasText: 'Nina Nieuw' }).locator('button').click(); await wacht(p, 300);
+    await p.selectOption('#gw-rol', 'hoofd'); await p.fill('#gw-functie', 'Manager Projects'); await p.click('#mod button[type=submit]'); await wacht(p, 500);
+    check(/Nina Nieuw is nu Hoofd/.test(await p.locator('#view').innerText()) && await p.evaluate(() => WPI.USERS.find((u) => u.full_name === 'Nina Nieuw').role === 'hoofd'), 'rol gewijzigd (ook in de keuzelijsten van de app)');
+    await p.locator('.bhgebr', { hasText: 'Hanna Hypothese' }).locator('button').click(); await wacht(p, 300);
+    check(await p.locator('#gw-rol').isDisabled() && await p.locator('#mod button:has-text("Op non-actief")').count() === 0, 'jezelf: rol niet te kiezen en niet op non-actief te zetten');
+    check((await p.locator('#gw-zelf').innerText()) === 'Je eigen rol of toegang kun je niet zelf wijzigen; vraag een andere beheerder (hoofd, QHSE-manager of beheerder).', 'jezelf: duidelijke tekst (niet "vraag de QHSE-manager" aan de QHSE-manager)');
+    await p.evaluate(() => App.gebrActief('u-beheer', false)); await wacht(p, 200);
+    check(await p.evaluate(() => App._team.find((x) => x.id === 'u-beheer').actief), 'jezelf op non-actief via de console: geweigerd');
+    await p.evaluate(() => App.closeModal());
+    for (const h of ['Femke Fictief', 'Nina Nieuw']) {
+      await p.locator('.bhgebr', { hasText: h }).locator('button').click(); await wacht(p, 300);
+      await p.click('#mod button:has-text("Op non-actief")'); await wacht(p, 200); await p.click('#mod button:has-text("Ja, op non-actief")'); await wacht(p, 500);
+    }
+    check(await p.locator('.bhgebr.uit').count() === 2 && !(await p.evaluate(() => WPI.USERS.some((u) => u.full_name === 'Femke Fictief'))), 'twee hoofden op non-actief (niet meer te kiezen in de app)');
+    await p.locator('.bhgebr', { hasText: 'Bram Voorbeeld' }).locator('button').click(); await wacht(p, 300);
+    await p.click('#mod button:has-text("Op non-actief")'); await wacht(p, 200);
+    check(/minstens één actief hoofd/.test(await p.locator('#mod').innerText()) && await p.locator('#mod button:has-text("Ja, op non-actief")').count() === 0, 'het laatste actieve hoofd: niet op non-actief');
+    await p.evaluate(() => App.gebrWijzig('u-hoofd')); await wacht(p, 300);
+    await p.selectOption('#gw-rol', 'coordinator'); await p.click('#mod button[type=submit]'); await wacht(p, 300);
+    check(/minstens één actief hoofd/.test(await p.locator('#gw-fout').innerText()), 'het laatste actieve hoofd: niet degraderen');
+    await p.evaluate(() => App.closeModal());
+    await p.locator('.bhgebr', { hasText: 'Femke Fictief' }).locator('button').click(); await wacht(p, 300);
+    await p.click('#mod button:has-text("Weer actief maken")'); await wacht(p, 500);
+    check(await p.evaluate(() => WPI.USERS.some((u) => u.full_name === 'Femke Fictief')) && await p.locator('.bhgebr.uit').count() === 1, 'weer actief: weer te kiezen in de app');
+    // rapporten mailen naar
+    check(await p.evaluate(() => JSON.stringify(App.rapportOntvanger())) === JSON.stringify({ id: 'u-qhse', naam: 'Gijs Gefingeerd' }), 'rapporten: standaard naar de QHSE-manager');
+    await p.selectOption('#bh-ontvanger', 'u-coord1'); await p.click('#bh-rapport button:has-text("Opslaan")'); await wacht(p, 400);
+    check(await p.evaluate(() => App.rapportOntvanger().naam) === 'Carla Proef' && /Nu: Carla Proef/.test(await p.locator('#bh-rapport').innerText()), 'rapporten: ontvanger gekozen in Beheer');
+    await p.screenshot({ path: 'gebruikers-telefoon.png', fullPage: true });
+    // rapport bij afronden (voorbeeldmodus): in IndexedDB, één keer, alleen PDF
+    const r1 = await p.evaluate(async () => App.rapportAfronden({ inspectieId: 'WPI-demo-rapport1', pdf: new Blob(['%PDF-1.4 eerste versie'], { type: 'application/pdf' }), bestandsnaam: 'rapport.pdf' }));
+    check(JSON.stringify(r1) === JSON.stringify({ status: 'demo', ontvangerNaam: 'Carla Proef' }), 'rapportAfronden (demo): status demo, ontvanger', r1);
+    await p.evaluate(async () => App.rapportAfronden({ inspectieId: 'WPI-demo-rapport1', pdf: new Blob(['%PDF-1.4 tweede versie'], { type: 'application/pdf' }) }));
+    const terug = await p.evaluate(async () => { const b = await App.rapportOphalen('WPI-demo-rapport1'); return b ? await b.text() : null; });
+    check(terug === '%PDF-1.4 eerste versie', 'rapportOphalen (demo): het eerste rapport, nooit overschreven', terug);
+    const fout = await p.evaluate(async () => { try { await App.rapportAfronden({ inspectieId: 'WPI-x', pdf: new Blob(['<html>'], { type: 'application/pdf' }) }); return 'geen fout'; } catch (e) { return e.message; } });
+    check(/geen PDF/.test(fout), 'rapportAfronden: geen PDF geweigerd', fout);
+    check(await p.evaluate(async () => (await App.rapportOphalen('WPI-bestaat-niet')) === null), 'rapportOphalen: onbekend → null');
+    // ---- wie krijgt de rapporten na een wijziging in Gebruikers? Nooit stilletjes anders ----
+    const kaart = () => p.locator('#bh-rapport').innerText();
+    const toast = async () => (await p.locator('#view .toast').first().innerText().catch(() => ''));
+    // rol wijzigen: eerste keer Opslaan toont de waarschuwing (knop "Ja, opslaan"), tweede keer gaat door
+    const rolNaar = async (naam, rol) => {
+      await wijzig(p, naam); await wacht(p, 300); await p.selectOption('#gw-rol', rol); await p.click('#gw-knop'); await wacht(p, 300);
+      const l = (await p.locator('#gw-let').isVisible()) ? await p.locator('#gw-let').innerText() : '';
+      const knop = await p.locator('#gw-knop').innerText();
+      if (l) { await p.click('#gw-knop'); await wacht(p, 500); }
+      return { l, knop };
+    };
+    await p.selectOption('#bh-ontvanger', 'u-coord2'); await p.click('#bh-rapport button:has-text("Opslaan")'); await wacht(p, 400);
+    check(/Rapporten gaan naar Dirk Demo/.test(await toast()), 'ontvanger: Dirk Demo gekozen');
+    await wijzig(p, 'Dirk Demo'); await wacht(p, 300); await p.click('#mod button:has-text("Op non-actief")'); await wacht(p, 300);
+    const vraag = await p.locator('#mod').innerText();
+    check(/Let op: Dirk Demo krijgt nu de rapporten/.test(vraag) && /Daarna gaan ze naar Gijs Gefingeerd/.test(vraag), 'non-actief zetten van de ontvanger: de vraag waarschuwt en zegt wie ze daarna krijgt', vraag);
+    await p.click('#mod button:has-text("Ja, op non-actief")'); await wacht(p, 500);
+    check(/Dirk Demo staat op non-actief\. Rapporten gaan nu naar Gijs Gefingeerd/.test(await toast()) && /Nu: Gijs Gefingeerd/.test(await kaart()), 'na non-actief: de melding noemt de nieuwe ontvanger', await toast());
+    await wijzig(p, 'Dirk Demo'); await wacht(p, 300); await p.click('#mod button:has-text("Weer actief maken")'); await wacht(p, 500);
+    check(/Rapporten gaan nu naar Dirk Demo/.test(await toast()), 'weer actief: de gekozen ontvanger krijgt ze weer, en dat staat in de melding', await toast());
+    await p.selectOption('#bh-ontvanger', ''); await p.click('#bh-rapport button:has-text("Opslaan")'); await wacht(p, 400);
+    // een tweede QHSE-manager: nooit "niemand", en de rapporten gaan niet ongemerkt naar de nieuwe (de huidige wordt vastgelegd)
+    let r = await rolNaar('Carla Proef', 'qhse');
+    check(/Er zijn dan 2 QHSE-managers/.test(r.l) && /blijven naar Gijs Gefingeerd gaan/.test(r.l) && r.knop === 'Ja, opslaan', 'tweede QHSE-manager: eerst een melding (de rapporten blijven naar Gijs gaan)', r);
+    check(/Carla Proef is nu QHSE-manager/.test(await toast()) && !/Rapporten gaan nu/.test(await toast()), 'tweede QHSE-manager: opgeslagen, ontvanger niet veranderd', await toast());
+    const k2 = await kaart();
+    check(/Nu: Gijs Gefingeerd/.test(k2) && !/niemand/i.test(k2) && await p.evaluate(() => App.rapportOntvanger().id) === 'u-qhse',
+      'twee QHSE-managers: de kaart noemt de ontvanger (niet "nog niemand")', k2);
+    const opt = await p.locator('#bh-ontvanger option').allInnerTexts();
+    check(opt.filter((t) => /Gijs/.test(t)).length === 1 && opt.filter((t) => /Carla/.test(t)).length === 1 && await p.locator('#bh-ontvanger').inputValue() === 'u-qhse',
+      'keuzelijst: iedereen één keer; de vastgelegde ontvanger (Gijs) is gekozen', opt);
+    r = await rolNaar('Gijs Gefingeerd', 'coordinator');
+    check(/Gijs Gefingeerd blijft de rapporten/.test(r.l), 'de gekozen ontvanger wordt coördinator: melding dat hij ze blijft krijgen', r);
+    await p.selectOption('#bh-ontvanger', ''); await p.click('#bh-rapport button:has-text("Opslaan")'); await wacht(p, 400);
+    check(/Rapporten gaan naar Carla Proef/.test(await toast()), 'standaard gekozen: nu de (enige) QHSE-manager Carla', await toast());
+    r = await rolNaar('Carla Proef', 'coordinator');
+    check(/niemand meer/.test(r.l) && /Rapporten mailen naar/.test(r.l), 'de enige QHSE-manager wordt coördinator: waarschuwing dat niemand de rapporten meer krijgt', r);
+    check(/Niemand krijgt nu de rapporten/.test(await toast()) && /Nu: niemand/.test(await kaart()) && /Niemand \(geen QHSE-manager\)/.test(await p.locator('#bh-ontvanger option').first().innerText()), 'zonder QHSE-manager: melding en kaart zeggen "niemand"', await kaart());
+    await rolNaar('Gijs Gefingeerd', 'qhse');
+    check(await p.evaluate(() => App.rapportOntvanger().id) === 'u-qhse', 'terugzetten: weer de QHSE-manager');
+    // telefoon: Gebruikers is de eerste kaart; de keuzelijst "Rapporten mailen naar" over de hele breedte
+    const vlg = await p.evaluate(() => { const g = document.getElementById('bh-gebruikers'), m = document.getElementById('bh-monteurs'), s = document.getElementById('bh-ontvanger');
+      return { eerst: !!(g.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING), boven: g.getBoundingClientRect().top < m.getBoundingClientRect().top, sel: s.getBoundingClientRect().width }; });
+    check(vlg.eerst && vlg.boven && vlg.sel >= 300, 'telefoon: Gebruikers bovenaan (DOM en scherm), keuzelijst ontvanger over de hele breedte', vlg);
+    await ctx.close();
+    const w = await nieuw({ width: 1920, height: 1080 });
+    await w.p.evaluate(() => App.login('u-hoofd')); await wacht(w.p, 600);
+    await w.p.evaluate(() => App.go('beheer')); await wacht(w.p, 700);
+    await w.p.screenshot({ path: 'gebruikers-web.png', fullPage: true });
+    check(await w.p.locator('#bh-gebruikers .bhgebr').count() === 6, 'computer: Gebruikers met 6 personen (hoofd)');
+    await w.ctx.close();
   }
 
   // ===== 2. Doellijn in dashboard en kwartaalrapportage (web) =====
@@ -575,7 +712,7 @@ const check = (ok, wat, extra) => { console.log((ok ? 'OK   ' : 'FOUT ') + wat +
     await p.evaluate(() => App.closeModal()); await wacht(p, 200);
     await p.evaluate(() => App.go('vandaag')); await wacht(p, 700);
     check(new RegExp('^' + M.length + '\\s*Inspecties nog niet gedaan').test((await p.locator('#mijnact .vgemist').innerText()).trim()), 'hoofd Vandaag: tegel met ' + M.length + ' gemiste inspecties', await p.locator('#mijnact').innerText());
-    check(await p.evaluate(() => { const t = document.querySelector('#mijnact .vgemist'), v = t.previousElementSibling; return !v || v.classList.contains('warm'); }), 'tegel staat direct na "Actie te laat"');
+    check(await p.evaluate(() => { const t = document.querySelector('#mijnact .vgemist'), v = t.previousElementSibling; return !v || v.classList.contains('laat'); }), 'tegel staat direct na "Actie te laat"');
     await p.locator('#mijnact .vgemist').click(); await wacht(p, 500);
     check(await p.evaluate(() => location.hash) === '#/planning', 'tegel opent de Planning');
     await p.evaluate(() => App.login('u-coord2')); await wacht(p, 600);

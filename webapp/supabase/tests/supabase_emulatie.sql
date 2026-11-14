@@ -98,3 +98,7 @@ grant execute on function storage.foldername(text), storage.extension(text) to a
 alter default privileges in schema public grant all on tables    to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+
+-- 0009: kolommen van auth.users die gebruikers_overzicht() leest (laatst ingelogd, geblokkeerd)
+alter table auth.users add column if not exists last_sign_in_at timestamptz;
+alter table auth.users add column if not exists banned_until timestamptz;

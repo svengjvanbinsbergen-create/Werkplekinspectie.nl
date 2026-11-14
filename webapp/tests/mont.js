@@ -8,7 +8,7 @@ await p.fill('#nieuwe-monteur','Bert Jansen');await p.click('button:has-text("To
 await p.screenshot({path:'m1.png'});
 const mons=await p.evaluate(()=>App.state.inspectie.monteurs);console.log('monteurs',mons);if(JSON.stringify(mons)!==JSON.stringify(['Henk Voorbeeld','Kees Demo','Bert Jansen']))errs.push('monteurs niet gekoppeld: '+JSON.stringify(mons));
 await p.evaluate(()=>{App.state.inspectie.stap='klaar';App.route()});await p.waitForTimeout(300);
-await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(600);
+await p.click('button:has-text("Definitief afronden")');await p.waitForTimeout(300);await p.click('button:has-text("Toch definitief afronden")');await p.waitForSelector('#mod .afr-uitkomst',{timeout:20000});
 await p.evaluate(()=>{App.closeModal();App.go('inspecties')});await p.waitForTimeout(600);await p.screenshot({path:'m2.png'});
 // geen filter per monteur meer (alleen per inspecteur); de monteurs blijven aan de inspectie gekoppeld en staan op de kaart
 const nsel=await p.locator('select.filtersel').count();console.log('filters',nsel);if(nsel!==1)errs.push('er hoort alleen een filter per inspecteur te zijn, gevonden: '+nsel);

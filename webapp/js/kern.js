@@ -173,20 +173,20 @@
   // ---- persoonslabel: elke persoon een eigen, VASTE kleur (per profiel-id, niet per plek in een lijst) ----
   // Eén helper voor alle plekken waar een persoon staat: inspecteur (inspecties, planning, dashboard, rapport),
   // actiehouder en toetser (acties, actievenster) en het team (Beheer). Eén beeldtaal voor mensen.
-  // Kleuren bewust ver van ALLE kleuren die in de app al iets betekenen: geen groen/geel/rood (C/A/V), geen
-  // rood/oranje/blauw (meldingen), geen lila (het AI-"Voorstel": .lbl.vs, .b-vs, .pick) en geen groen/petrol van
-  // de hoofdkleur (--accent: datumblokjes, actief menu, Demo-chip). Wat overblijft: indigo, roze/pruim, bruin en
-  // grijs/antraciet. Daarmee drie vormen (css: .ilabel.ik0 … .ik12, AA-contrast, ook in zonmodus):
-  //   ik0–ik7   teamleden (iemand met een profiel in WPI.USERS): gevulde labels, vol (witte naam op de kleur) of licht
-  //   ik8–ik12  namen ZONDER profiel (de fictieve voorbeeld-inspecties met een rolnaam, oud-collega's): wit label
-  //             met een gestippelde rand. Zo lijkt een voorbeeldnaam nooit op een echt teamlid.
-  // Bekende demo-id's en de drie fictieve rolnamen een vaste plek: alle negen namen in de demo hebben elk een eigen
-  // label. Elk ander id: een vaste startplek via een hash (FNV-1a) binnen zijn eigen groep; valt die samen met iemand
-  // anders in het team, dan de eerstvolgende vrije plek. Een team tot 8 mensen heeft dus altijd 8 verschillende
-  // labels. Volgorde van de toewijzing: op id, dus niet afhankelijk van een lijst op het scherm.
+  // Kleuren bewust ver van ALLE kleuren die in de app al iets betekenen: geen groen (C, hoofdkleur), geel (V),
+  // rood (A, te laat), oranje (inspectie niet gedaan), blauw (binnenkort), lila (het AI-"Voorstel"), en ook geen
+  // petrol/cyaan (lijkt op de hoofdkleur) of framboos (leest klein als rood). Wat overblijft: indigo, orchidee,
+  // leisteen, antraciet en lichtgrijs. Daarmee drie vormen (css: .ilabel.ik0 … .ik12, AA-contrast, ook in zonmodus):
+  //   ik0–ik6   teamleden (iemand met een profiel in WPI.USERS): gevulde labels, vol (witte naam op de kleur) of licht
+  //   ik7–ik12  namen ZONDER profiel (de fictieve voorbeeld-inspecties met een rolnaam, oud-collega's): geen pil en
+  //             geen kleur, alleen de naam in warm grijs. Zo lijkt een voorbeeldnaam nooit op een echt teamlid.
+  // Bekende demo-id's een vaste plek, de fictieve rolnamen een plek zonder profiel. Elk ander id: een vaste startplek
+  // via een hash (FNV-1a) binnen zijn eigen groep; valt die samen met iemand anders in het team, dan de eerstvolgende
+  // vrije plek. Een team tot 7 mensen heeft dus altijd 7 verschillende labels (het echte team is 6). Volgorde van de
+  // toewijzing: op id, dus niet afhankelijk van een lijst op het scherm.
   const INSP_KLEUR = Object.freeze({ "u-hoofd": 0, "u-hoofd2": 1, "u-coord1": 2, "u-coord2": 3, "u-qhse": 4, "u-beheer": 5,
     "Coördinator 2 (fictief)": 8, "Coördinator 1 (fictief)": 9, "Directielid (fictief)": 10 });
-  const N_TEAM = 8, N_LOS = 5;   // gevulde plekken (team) en gestippelde plekken (namen zonder profiel)
+  const N_TEAM = 7, N_LOS = 6;   // gevulde plekken (team) en plekken voor namen zonder profiel (geen pil)
   const hashNr = (s, n) => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % n; };
   let kleurCache = { sleutel: null, kaart: null };
   const teamKaart = () => {   // id → kleurnummer voor het hele team, opnieuw berekend zodra het team verandert
@@ -206,7 +206,7 @@
     sleutel = String(sleutel || "");
     const kaart = teamKaart(); if (kaart[sleutel] !== undefined) return kaart[sleutel];
     if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, sleutel) && INSP_KLEUR[sleutel] >= N_TEAM) return INSP_KLEUR[sleutel];
-    return N_TEAM + hashNr(sleutel, N_LOS);   // geen profiel: altijd een gestippeld label
+    return N_TEAM + hashNr(sleutel, N_LOS);   // geen profiel: altijd een los naamlabel (geen pil)
   };
   const persSleutel = (id, tekst) => {
     let u = id ? USERS.find((x) => x.id === id) : null;
@@ -269,7 +269,7 @@
   const dagenTot = (iso) => Math.round((new Date(iso + "T00:00") - dag0()) / 864e5);
   const PRIO = { direct: { lab: "Direct", d: 0 }, kort: { lab: "Kort · ±2 weken", d: 14 }, planmatig: { lab: "Planmatig · ±8 weken", d: 56 } };
   // actie-statusmodel: Voorstel (uit inspectie) → Open → In uitvoering → Klaar voor toetsing → Afgerond (alleen door toetser)
-  const ST_CLS = { "Voorstel": "b-vs", "Open": "b-todo", "In uitvoering": "b-uitv", "Klaar voor toetsing": "b-toets", "Afgerond": "b-done", "Vervallen": "b-N" };
+  const ST_CLS = { "Voorstel": "b-vs", "Open": "b-open", "In uitvoering": "b-uitv", "Klaar voor toetsing": "b-toets", "Afgerond": "b-done", "Vervallen": "b-N" };
   const stBadge = (s) => `<span class="badge ${ST_CLS[s] || "b-N"}">${esc(s || "–")}</span>`;
   const tril = (p) => { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} };
   // welke woorden van de gebruiker een voorstel onderbouwen ("waarom")
@@ -318,6 +318,7 @@
       if (this.authActief && this.authActief()) await this.authHerstel();   // echte login (js/auth.js) zodra Supabase is ingesteld
       else try { const u = JSON.parse(localStorage.getItem("wpi_user") || "null"); if (u) this.user = USERS.find((x) => x.id === u.id) || null; } catch (e) {}
       this.laadPref();
+      if (WPI.laad) WPI.laad.opstartFase(!!this.user);   // js/laden.js: na het opstartscherm het skelet van het startscherm
       if (this.user) await this.herstelConcept();
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible" && location.hash === "#/inspectie") this.wakeLock(true);
@@ -346,7 +347,7 @@
       this.user = profiel || USERS.find((u) => u.id === id); try { if (!profiel) localStorage.setItem("wpi_user", JSON.stringify({ id })); } catch (e) {} this.state.inspectie = null; this.acties = null; this.planning = null; this.actFilter = null; await this.herstelConcept(); this.go("vandaag"); this.route(); },
     logout() {
       // lopende inspectie eerst veiligstellen (een wachtende bewaar-timer mag het concept niet meer wissen)
-      clearTimeout(this._cTimer); if (this.user && this.state.inspectie) DB.put("concept", { id: "lopend-" + this.user.id, ins: this.state.inspectie, t: new Date().toISOString() }).catch(() => {});
+      clearTimeout(this._cTimer); if (this.user && this.state.inspectie) this._conceptBijUitloggen(this.user, this.state.inspectie, this._conceptT || 0, this._conceptOp || 0);
       if (this.authLogout) this.authLogout(); this.stopMic(); this.user = null; this.state.inspectie = null; this.acties = null; this.actFilter = null; try { localStorage.removeItem("wpi_user"); } catch (e) {} this.route(); },
 
     // ---- weergave: veldmodus (grote knoppen) en zonmodus (hoog contrast) ----
@@ -369,19 +370,53 @@
     },
 
     // ---- lopende inspectie direct op het toestel bewaren (overleeft sluiten van de app) ----
-    _opslag: null,
+    // _conceptT: moment van de laatste wijziging die DIT tabblad kent (bewaard of geladen). Bij uitloggen (ook na 2 uur
+    // inactiviteit, in alle tabbladen tegelijk) schrijft een tabblad zijn kopie alleen als er op het toestel niets
+    // nieuwers staat: een ouder tabblad zet nooit een oude kopie over nieuwer werk van een ander tabblad heen.
+    // _conceptOp: het moment dat dit tabblad het laatst op het toestel zag staan (geladen of zelf bewaard).
+    _opslag: null, _conceptT: 0, _conceptOp: 0,
     async herstelConcept() {
       if (!this.user || this.state.inspectie) return;
-      try { const c = await DB.get("concept", "lopend-" + this.user.id); if (c && c.ins) { this.state.inspectie = c.ins; this._opslag = { s: "ok", t: new Date(c.t) }; } } catch (e) {}
+      this._conceptT = this._conceptOp = 0;
+      try {
+        const c = await DB.get("concept", "lopend-" + this.user.id);
+        // al definitief afgerond (bijv. een oud tabblad bewaarde zijn kopie nog na het afronden): niet terugzetten, weg
+        if (c && c.ins && await this.alVastgelegd(c.ins)) { await DB.del("concept", "lopend-" + this.user.id); return; }
+        if (c && c.ins) { this.state.inspectie = c.ins; this._opslag = { s: "ok", t: new Date(c.t) }; this._conceptT = this._conceptOp = Date.parse(c.t) || 1; }
+      } catch (e) {}
+    },
+    // ligt deze inspectie al vast (staat hij in "inspecties")? Dan is een concept ervan nooit meer lopend werk.
+    async alVastgelegd(ins) {
+      if (!ins || typeof ins.id !== "string" || !ins.id) return false;
+      try { return !!(await DB.get("inspecties", ins.id)); } catch (e) { return false; }
+    },
+    async _conceptBijUitloggen(user, ins, mijnT, opT) {
+      const id = "lopend-" + user.id;
+      if (await this.alVastgelegd(ins)) return;   // al afgerond: geen concept meer
+      try {
+        const c = await DB.get("concept", id), hunT = c && c.ins ? Date.parse(c.t) || 0 : 0;
+        if (hunT > mijnT) return;                    // een ander tabblad bewaarde later: dat blijft
+        if (!hunT && opT && mijnT <= opT) return;    // stond er al zonder latere wijziging hier, nu weg: elders afgerond of gewist
+      } catch (e) {}
+      DB.put("concept", { id, ins, t: new Date(mijnT || Date.now()).toISOString() }).catch(() => {});
     },
     bewaarConcept(direct) {
       clearTimeout(this._cTimer);
       const user = this.user; if (!user) return;
+      const stip = this._conceptT = Math.max(Date.now(), (this._conceptT || 0) + 1);   // moment van deze wijziging
       this._cTimer = setTimeout(async () => {
         if (this.user !== user) return;   // intussen uitgelogd: logout() heeft het concept al bewaard
         const ins = this.state.inspectie;
         try {
-          if (ins) await DB.put("concept", { id: "lopend-" + user.id, ins, t: new Date().toISOString() });
+          // al definitief afgerond (in een ander tabblad of op een ander moment): nooit meer als lopend bewaren.
+          // Het concept van DEZE inspectie gaat weg en dit tabblad toont "Al definitief afgerond" (js/inspectie.js).
+          if (ins && await this.alVastgelegd(ins)) {
+            const c = await DB.get("concept", "lopend-" + user.id).catch(() => null);
+            if (c && c.ins && c.ins.id === ins.id) await DB.del("concept", "lopend-" + user.id);
+            if (this.state.inspectie === ins && this.alAfgerond && !this._afronden) this.alAfgerond(ins, { id: ins.id }, location.hash !== "#/inspectie");
+            return;
+          }
+          if (ins) { await DB.put("concept", { id: "lopend-" + user.id, ins, t: new Date(stip).toISOString() }); this._conceptOp = Math.max(this._conceptOp || 0, stip); }
           else await DB.del("concept", "lopend-" + user.id);
           this._opslag = { s: "ok", t: new Date() };
         } catch (e) { this._opslag = { s: "fout" }; }
@@ -392,8 +427,9 @@
       const c = $("opslag"); if (!c) return; const o = this._opslag || {};
       c.className = "opslag " + (o.s || "");
       const h = o.s === "fout" ? `Niet opgeslagen · <button type="button" class="opnieuwlink"${act("bewaarConcept")}>opnieuw</button>`
-        : o.t ? `✓ Veilig op dit toestel · ${o.t.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}` : "Wordt op dit toestel bewaard";
-      if (c.innerHTML !== h) c.innerHTML = h;
+        : o.t ? `✓ Veilig op dit toestel<span class="op-tijd"> · ${o.t.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}</span>` : "Wordt op dit toestel bewaard";
+      if (c.dataset.h !== h) { c.dataset.h = h; c.innerHTML = h; if (o.t && o.s !== "fout" && WPI.laad) WPI.laad.vinkje(c); }   // #7: het ✓ tekent zich één keer, op een neutraal vlak (js/laden.js)
+      else if (c.querySelector("svg.ld-vink")) c.classList.add("ld-vinkvlak");   // className is hierboven opnieuw gezet
     },
     renderAcct() {
       if (!this.user) { $("acct").innerHTML = `<span class="chip">Voorbeeld · fictief</span>`; return; }
@@ -404,12 +440,12 @@
     openAccount() {
       const u = this.user, r = (ic, t, s, on) => `<button class="row prefrow"${on}><span class="cirkel">${svg(ic, 18)}</span><span class="grow"><span class="t">${t}</span>${s ? `<div class="s">${s}</div>` : ""}</span><span class="s">${svg("chev", 16)}</span></button>`;
       this.openModal(u.full_name, u.functie + " · " + ROL[u.role],
-        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${mag("monteurs", u) ? r("tand", "Beheer", mag("beheer", u) ? "Team en rollen, monteurs en doel % conform" : "Monteurs", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
+        `<div class="listcard">${r("list", "Zoeken", "Producten, trendacties en inspecties", actSluit("openSearch"))}${r("sun", "Weergave", "Veldmodus en zonmodus", act("openWeergave"))}${mag("monteurs", u) ? r("tand", "Beheer", mag("beheer", u) ? "Gebruikers, monteurs, doel en rapporten" : "Monteurs", actSluit("go", "beheer")) : ""}${r("back", "Uitloggen", "", actSluit("logout"))}</div>`);
     },
     async openSearch() {
       let saved = []; try { saved = await DB.all(); } catch (e) {}
       this._search = { prod: Object.values(this.data.kennisbank).map((p) => p.naam), trend: this.data.trendacties, saved };
-      this.openModal("Zoeken", "Producten, trendacties en je inspecties.",
+      this.openModal("Zoeken", "Producten, trendacties en inspecties (ook op rapportnummer).",
         `<input id="zq" type="search" aria-label="Zoeken" placeholder="Typ om te zoeken…" autocomplete="off"${op("input", "doSearch", WAARDE)} style="width:100%;height:46px;border-radius:14px;border:0;box-shadow:inset 0 0 0 1px var(--line);padding:0 16px;font-size:15px;margin-bottom:10px">
          <div id="zr"></div>`);
       const i = $("zq"); if (i) i.focus();
@@ -421,7 +457,9 @@
       const s = this._search, hit = [];
       s.prod.filter((p) => p.toLowerCase().includes(q)).slice(0, 5).forEach((p) => hit.push(["Product", p, ""]));
       (isWeb() ? s.trend : []).filter((t) => (t.nr + " " + t.onderwerp).toLowerCase().includes(q)).slice(0, 5).forEach((t) => hit.push(["Trendactie", t.nr + " · " + t.onderwerp, ""]));
-      s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie", r.titel + " · " + r.taak, "#/rapport/" + r.id]));
+      // ook op rapportnummer (WPI-20261114-DAM-FF-0758 of een deel ervan, bijv. "0758"): wat een auditor voorleest
+      const nrVan = (r) => (this.rapportNummer ? this.rapportNummer(r) : r.nummer || "");
+      s.saved.filter((r) => (r.titel + " " + r.taak + " " + r.inspecteur + " " + nrVan(r)).toLowerCase().includes(q)).slice(0, 5).forEach((r) => hit.push(["Inspectie · " + nrVan(r), r.titel + " · " + r.taak, "#/rapport/" + r.id]));
       zeg(hit.length ? hit.length + " resultaat" + (hit.length === 1 ? "" : "en") : "Niets gevonden");
       out.innerHTML = hit.length ? `<div class="listcard">${hit.map(([k, lab, href]) =>
         `<div class="row"${href ? ` style="cursor:pointer"${actSluit("go", href.replace(/^#\//, ""))}` : ""}><span class="grow"><span class="t">${esc(lab)}</span><div class="s">${k}</div></span>${href ? svg("chev", 16) : ""}</div>`).join("")}</div>`
@@ -447,8 +485,11 @@
       if (SCHERM_RECHT[page] && !mag(SCHERM_RECHT[page])) { return this.go("vandaag"); }   // bijv. inspectie: alleen wie inspecteert
       if (tab && tab.web && !isWeb()) page = "alleenweb";
       this.renderTabs(page);
-      $("tabbar").classList.toggle("hidden", page === "inspectie");   // focus tijdens de inspectie
-      $("app").classList.toggle("nonav", page === "inspectie"); $("view").dataset.page = page; $("app").dataset.page = page;
+      // telefoon: focus tijdens de inspectie (geen tabbalk). Computer: het zijmenu blijft staan, de inspectie krijgt
+      // twee panelen (stap links, overzicht rechts; js/inspectie.js insOverzicht). Weglopen kan: hij blijft lopend.
+      const focusIns = page === "inspectie" && !isWeb();
+      $("tabbar").classList.toggle("hidden", focusIns);
+      $("app").classList.toggle("nonav", focusIns); $("view").dataset.page = page; $("app").dataset.page = page;
       this.wakeLock(page === "inspectie");
       this._page = page; this.checkMeldingen();
       const fn = this["view_" + page];
@@ -480,7 +521,7 @@
     view_login() {
       const v = $("view");
       v.appendChild(el(`<div style="padding:30px 0 10px"><div class="kicker">Werkplekinspectie · Noardling</div><h1>Inloggen</h1>
-        <div class="muted" style="margin-top:-8px;margin-bottom:8px">Kies je account. (Voorbeeld-login; later Supabase Auth.)</div></div>`));
+        <div class="muted" style="margin-top:-8px;margin-bottom:8px">Kies een voorbeeldaccount.</div></div>`));
       v.appendChild(el(`<div class="listcard">${USERS.map((u) =>
         `<div class="row" style="cursor:pointer"${act("login", u.id)}>
           <span aria-hidden="true" style="width:40px;height:40px;border-radius:50%;background:var(--mist);display:grid;place-items:center;font-weight:700">${esc(u.full_name[0])}</span>
@@ -504,9 +545,9 @@
       if (!open) this._modTerug = a && a !== document.body ? a : null;
       // vaste kopregel (blijft staan als de inhoud scrolt): links "‹ <scherm waar je vandaan kwam>", de titel, rechts ×.
       // Beide sluiten het venster. De kop is het EERSTE kind van #mod (.modkop); de titel heeft id modtitel.
-      const terugNm = this.terugNaam();
+      const terugNm = this.terugNaam(), dubbel = !!terugNm && terugNm === String(title);   // "‹ Inspectie" naast de titel "Inspectie": alleen ×
       mod.innerHTML = `<div class="modkop">
-        <button type="button" class="modterug"${act("closeModal")}><span class="pijl" aria-hidden="true">‹</span>${terugNm ? `<span class="sr-only">Terug naar </span><span class="tn">${esc(terugNm)}</span>` : `<span class="tn">Terug</span>`}</button>
+        <button type="button" class="modterug"${dubbel ? " hidden" : ""}${act("closeModal")}><span class="pijl" aria-hidden="true">‹</span>${terugNm ? `<span class="sr-only">Terug naar </span><span class="tn">${esc(terugNm)}</span>` : `<span class="tn">Terug</span>`}</button>
         <div id="modtitel" role="heading" aria-level="2">${esc(title)}</div>
         <button type="button" class="modsluit"${act("closeModal")} aria-label="Sluiten">×</button></div>
         ${sub ? `<div class="muted modsub">${esc(sub)}</div>` : '<div style="height:10px"></div>'}${body}`;
@@ -605,9 +646,16 @@
       if (x.hasAttribute("data-zelf") && e.target !== x) continue;
       if (e.type === "click" && x.disabled === true) continue;   // uitgeschakelde knop: nooit een actie
       if (voor) voor(x);
-      roep(x, x.getAttribute(attr), x.getAttribute(argsAttr), e);
+      laadKnop(x, e, roep(x, x.getAttribute(attr), x.getAttribute(argsAttr), e));
       if (x.hasAttribute("data-stop")) { e.stopPropagation(); break; }
     }
+  }
+  // #3 (js/laden.js): geeft de actie van een formulier (data-submit) of van een knop met data-laad een Promise, dan
+  // krijgt de knop een rustige ring zolang die loopt (pas na ±300 ms, geen dubbele tik). data-geen-laad: niet.
+  function laadKnop(x, e, r) {
+    if (!r || typeof r.then !== "function" || !WPI.laad) return;
+    const k = e.type === "submit" ? (e.submitter || x.querySelector('[type="submit"]')) : x.hasAttribute("data-laad") ? x : null;
+    if (k && !k.hasAttribute("data-geen-laad")) WPI.laad.knopTijdens(k, r, { tekst: k.getAttribute("data-laad") || undefined }).catch(() => {});
   }
   const mic = (e) => (e.target && e.target.closest ? e.target.closest("[data-mic]") : null);
   document.addEventListener("click", (e) => {

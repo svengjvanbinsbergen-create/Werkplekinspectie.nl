@@ -21,6 +21,9 @@
 <link rel="stylesheet" href="css/beheer.css">
 <link rel="stylesheet" href="css/oefen.css">
 <link rel="stylesheet" href="css/koppel.css">
+<link rel="stylesheet" href="css/laden.css">
+<!-- vóór de eerste schermopbouw: sessie ja/nee, zoom en weergave (js/laden-start.js); de rest van de scripts staat onderaan -->
+<script src="js/laden-start.js"></script>
 </head>
 <body>
 <a class="skiplink" href="#view" data-action="naarInhoud" data-geen-default>Naar de inhoud</a>
@@ -31,13 +34,21 @@
   </header>
   <main id="hoofd">
     <button type="button" id="alert" class="alertbar hidden" data-action="alertKlik"></button>
+    <!-- opstartlader (css/laden.css, js/laden.js): niets bij een snelle start; pas na ±300 ms het opstartscherm (#6,
+         zonder sessie) of het skelet van het startscherm (#1, met sessie); weg zodra #view iets toont -->
+    <div class="ld-opstart" id="ld-opstart">
+      <p class="sr-only" role="status" id="ld-opstart-status"></p>
+      <div class="ld-splash" id="ld-splash" aria-hidden="true"><div class="ld-splash-ico">N</div><div class="ld-splash-naam">Werkplekinspectie</div><div class="ld-splash-lijn"><div class="ld-balk"></div></div><div class="ld-splash-tekst">Laden…</div></div>
+      <div class="ld-skelet ld-opstartskelet" id="ld-opstartskelet" data-vorm="start" aria-hidden="true"><div class="ld-sk-start"><div class="ld-sk-kop"><div class="ld-sk ld-sk-hi"></div><div class="ld-sk ld-sk-h1"></div></div><div class="ld-sk-vgrid"><div class="ld-sk r ld-sk-held"></div><div class="ld-sk-act"><div class="ld-sk r ld-sk-tip"></div><div class="ld-sk ld-sk-sectie"></div><div class="ld-sk r ld-sk-actlijst"></div></div><div class="ld-sk-onder"><div class="ld-sk ld-sk-sectie"></div><div class="ld-sk r ld-sk-onderlijst"></div></div><div class="ld-sk-onder ld-sk-breed"><div class="ld-sk ld-sk-sectie"></div><div class="ld-sk r ld-sk-onderlijst"></div></div></div></div></div>
+    </div>
     <div class="view" id="view" tabindex="-1"></div>
   </main>
-  <nav class="tabbar" id="tabbar" aria-label="Hoofdmenu"></nav>
+  <nav class="tabbar" id="tabbar" aria-label="Hoofdmenu"><div class="sidebrand" aria-hidden="true"><span class="logo">N</span><span>Werkplekinspectie<small>Noardling</small></span></div><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a><a class="ld-tabsk" aria-hidden="true"><span class="ic"></span><span class="ld-tabsk-t">&nbsp;</span></a></nav>
 </div>
 <div id="meldtekst" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 <div id="ov" data-action="closeModal" data-zelf><div id="mod" role="dialog" aria-modal="true" aria-labelledby="modtitel" tabindex="-1"></div></div>
 <script src="js/kern.js"></script>
+<script src="js/laden.js"></script>
 <script src="js/config.js"></script>
 <script src="js/sync.js"></script>
 <script src="js/vandaag.js"></script>

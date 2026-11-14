@@ -26,6 +26,7 @@ h2{font-size:17px;font-weight:650;margin:22px 0 10px}
   <span><span class="t imp">BELANGRIJK</span></span>
   <span><span class="t later">LATER</span></span>
 </div>
+<div class="note"><b>Stand november 2026.</b> Dit is het oorspronkelijke onderzoek. Wat er echt gebouwd is (Supabase FREE-plan zonder controle op gelekte wachtwoorden en zonder sessielimieten op de server, met uitloggen na 2 uur inactiviteit in de app; uitnodigen met een persoonlijke link via een Edge Function; rapporten per mail via een wachtrij) staat in <code>docs/beveiligingsrapport.md</code>.</div>
 <div class="note"><b>Let op — Supabase &amp; tokens.</b> De Supabase-client bewaart de sessie standaard in localStorage, terwijl de veiligste aanpak HttpOnly-cookies is. Keuze bij het live gaan: standaard gebruiken (met korte JWT-expiry + RLS, acceptabel) óf cookie-gebaseerde opslag instellen. Nu bewaart de demo alleen een rol-id, geen token.</div>
 
 <h2>Database &amp; back-up</h2>

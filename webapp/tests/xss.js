@@ -172,8 +172,8 @@ async function scenario(b, [pnaam, pf]) {
     await route("vandaag"); await scan("vandaag (lopende inspectie)");
     await ev((id) => App.startGepland(id), planId); await wacht(300); await scan("modal 'Er loopt nog een inspectie'");
     await ev(() => { App.closeModal(); App.goIns(); }); await wacht(400);
-    await klik("text=Inspectie vastleggen"); await scan("controle-modal");
-    await klik('button:has-text("Toch vastleggen")'); await wacht(500); await scan("modal 'Vastgelegd'");
+    await klik('button:has-text("Definitief afronden")'); await scan("controle-modal");
+    await klik('#mod button:has-text("efinitief afronden")'); await p.waitForSelector("#mod .afr-uitkomst", { timeout: 20000 }); await scan("modal 'Definitief afgerond'");
   });
 
   // ===== 3. acties =====

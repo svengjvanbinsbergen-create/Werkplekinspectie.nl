@@ -6,6 +6,18 @@
   const { $, el, esc, svg, DB, fotoDataURL, toks, OW_KEYS, splitMaatregelen, kort, isoDag, tril, eigenWoorden, act, actSluit, op, WAARDE, ELEMENT } = window.WPI;
   // oordeel uit het (lokale) concept alleen als C/A/V/NVT in de HTML (anders leeg): nooit ruwe tekst in class of tekst
   const ov = (o) => ({ C: "C", A: "A", V: "V", NVT: "NVT" }[o] === o ? o : "");
+  // het oordeel als ronde chip (overal hetzelfde: overzicht, Vastgelegd, algemene onderwerpen, melding na vastleggen).
+  // De letter staat in css (data-o, zonder voorleestekst); de schermlezer hoort het hele woord.
+  const OV_NAAM = { C: "Conform", A: "Afwijking", V: "Verbeterpunt", NVT: "Niet van toepassing" };
+  // geen oordeel (hoort niet voor te komen: alleen de inspecteur kiest C/A/V/NVT): een lege, omlijnde chip met "?"
+  const geenChip = () => `<span class="izo izo-geen" data-o="?" title="Nog geen oordeel"><span class="sr-only">Nog geen oordeel</span></span>`;
+  const oChip = (o) => { o = ov(o); return o ? `<span class="izo izo-${o === "NVT" ? "N" : o}" data-o="${o === "NVT" ? "nvt" : o}"><span class="sr-only">${OV_NAAM[o]}</span></span>` : ""; };
+  WPI.IC.pauze = WPI.IC.pauze || '<rect x="6.5" y="5" width="4" height="14" rx="1.4"/><rect x="13.5" y="5" width="4" height="14" rx="1.4"/>';
+  // gepauzeerde inspecties: store "concept", één record per inspectie, alleen van en voor deze gebruiker op dit toestel
+  // (id "pauze-<uid>-<inspectie-id>"; de lopende inspectie blijft "lopend-<uid>", js/kern.js). Nooit naar de server.
+  const PAUZE = "pauze-", pauzeId = (uid, id) => PAUZE + uid + "-" + id;
+  const nieuwId = () => "WPI-" + Date.now();
+  const heeftInhoud = (i) => !!(i && ((i.waarnemingen || []).length || (i.taken || []).length || i.cur && (i.cur.tekst || i.cur.foto)));
   Object.assign(window.App, {
     // ---------------- INSPECTIE: begeleid gesprek ----------------
     // De app stelt de vragen; de inspecteur spreekt in of typt en maakt foto's.
@@ -18,10 +30,11 @@
         this._nieuweStart = [code, project, titel, planId || null];
         return this.openModal("Er loopt nog een inspectie", lo.titel + " · " + lo.waarnemingen.length + (lo.waarnemingen.length === 1 ? " waarneming" : " waarnemingen"),
           `<button class="btn primary"${actSluit("goIns")}>Verder met de lopende inspectie</button>
+           <button class="btn ghost" style="margin-top:10px;width:100%"${act("pauzeerEnNieuw")} data-laad>Lopende pauzeren en nieuw starten</button>
            <button class="btn danger" style="margin-top:10px;width:100%"${actSluit("nieuwToch")}>Lopende weggooien en nieuw starten</button>`);
       }
       this.stopMic();
-      this.state.inspectie = { code, project, titel, taak: null, taken: [], stap: "taak", taakTekst: "",
+      this.state.inspectie = { id: nieuwId(), code, project, titel, taak: null, taken: [], stap: "taak", taakTekst: "",
         waarnemingen: [], cur: null, voorstel: null, laatste: null, gesprek: "", positief: "", handtekening: null,
         keuzes: [], plan_id: planId || null, start: new Date().toISOString() };
       this._opslag = null;
@@ -29,6 +42,111 @@
     },
     // "Lopende weggooien en nieuw starten": de bewaarde keuze uit startInspectie
     nieuwToch() { const a = this._nieuweStart || []; this._nieuweStart = null; if (a.length) this.startInspectie(a[0], a[1], a[2], true, a[3]); },
+    // "Lopende pauzeren en nieuw starten": de lopende gaat naar de gepauzeerde (Vandaag), daarna de nieuwe
+    async pauzeerEnNieuw() {
+      const a = this._nieuweStart || [];
+      if (!(await this.pauzeerInspectie({ blijf: true }))) return;
+      this._nieuweStart = null; this.closeModal();
+      if (a.length) this.startInspectie(a[0], a[1], a[2], true, a[3]);
+    },
+
+    // ---------------- PAUZEREN EN HERVATTEN ----------------
+    // Pauzeren: de inspectie blijft als concept op DIT toestel (geen reden nodig), je verlaat de inspectie en op Vandaag
+    // staat bovenaan "Gepauzeerd · Hervatten". Alleen de eigen inspecteur ziet en hervat hem (record per gebruiker;
+    // een ander toestel of een andere gebruiker ziet hem nooit). Meerdere tegelijk kan: elk een eigen record.
+    // {blijf: true}: niet naar Vandaag (bij wisselen). Geeft true als het gelukt is.
+    async pauzeerInspectie(o) {
+      const ins = this.state.inspectie, user = this.user; if (!ins || !user) return false;
+      this.stopMic(); clearTimeout(this._cTimer);
+      if (!ins.id) ins.id = nieuwId();
+      let al = null; try { al = await DB.get("inspecties", ins.id); } catch (e) {}
+      if (al) return this.alAfgerond(ins, al), false;
+      const t = new Date().toISOString(); ins.gepauzeerd = t;
+      try { await DB.put("concept", { id: pauzeId(user.id, ins.id), uid: user.id, ins, t }); }
+      catch (e) {
+        delete ins.gepauzeerd;
+        this.openModal("Pauzeren lukte niet", "Het toestel kon de inspectie niet apart zetten. Hij loopt gewoon door en staat veilig als lopende inspectie.", `<button class="btn primary"${act("closeModal")}>Terug naar de inspectie</button>`);
+        return false;
+      }
+      if (this.user !== user || this.state.inspectie !== ins) return true;   // intussen uitgelogd of gewisseld
+      this.state.inspectie = null; this._opslag = null; this.bewaarConcept(true);   // lopend-concept weg (staat nu apart)
+      this._pauzeMelding = { titel: ins.titel || "Inspectie" };
+      tril([20, 30, 20]);
+      if (!(o && o.blijf)) { this.closeModal(); this.go("vandaag"); }
+      return true;
+    },
+    // alle gepauzeerde inspecties van de ingelogde gebruiker op dit toestel, laatst gepauzeerd eerst
+    async gepauzeerdeInspecties() {
+      const u = this.user; if (!u) return [];
+      let cs = []; try { cs = await DB.getAll("concept"); } catch (e) {}
+      const pre = PAUZE + u.id + "-", uit = [];
+      for (const c of cs) {
+        if (!(c && typeof c.id === "string" && c.id.startsWith(pre) && c.uid === u.id && c.ins && typeof c.ins === "object" && Array.isArray(c.ins.waarnemingen))) continue;
+        if (await this.alVastgelegd(c.ins)) { DB.del("concept", c.id).catch(() => {}); continue; }   // intussen afgerond: geen pauze meer
+        uit.push(c);
+      }
+      return uit.sort((a, b) => String(b.t || "").localeCompare(String(a.t || "")));
+    },
+    // één tik: precies terug waar je was (zelfde stap, zelfde waarneming). Loopt er al een andere, dan wordt die gepauzeerd.
+    async hervatInspectie(insId) {
+      const user = this.user; if (!user || !WPI.mag("inspecteert") || typeof insId !== "string") return;
+      const id = pauzeId(user.id, insId);
+      let c = null; try { c = await DB.get("concept", id); } catch (e) {}
+      if (!c || !c.ins || c.uid !== user.id) { this.route(); return; }
+      let al = null; try { al = await DB.get("inspecties", insId); } catch (e) {}
+      if (al) { try { await DB.del("concept", id); } catch (e) {} return this.alAfgerond(c.ins, al); }
+      const lo = this.state.inspectie;
+      if (lo && lo.id !== insId) {
+        if (heeftInhoud(lo)) { if (!(await this.pauzeerInspectie({ blijf: true }))) return; }
+        else { this.state.inspectie = null; }
+      }
+      const ins = c.ins; delete ins.gepauzeerd; if (!ins.id) ins.id = insId;
+      // eerst als lopende inspectie bewaren, dan pas het gepauzeerde record weg (nooit allebei kwijt)
+      const t = Date.now();
+      try { await DB.put("concept", { id: "lopend-" + user.id, ins, t: new Date(t).toISOString() }); } catch (e) {}
+      try { await DB.del("concept", id); } catch (e) {}
+      if (this.user !== user) return;
+      this.stopMic(); this.state.inspectie = ins; this._conceptT = this._conceptOp = t; this._opslag = { s: "ok", t: new Date(t) };
+      this._pauzeMelding = null; tril(20); this.closeModal(); this.bewaarConcept(true);
+      this.goIns();
+    },
+    // de inspectie bleek al definitief afgerond (ander tabblad of eerder): niet meer bewerken, naar het rapport.
+    // stil = dit tabblad staat niet op het inspectiescherm: alleen opruimen (geen venster, geen sprong)
+    alAfgerond(ins, rec, stil) {
+      this.ruimAfgerondOp(ins);
+      this.stopMic();
+      if (stil) { if (/^#\/(vandaag)?$/.test(location.hash || "#/")) this.route(); return; }
+      location.replace("#/rapport/" + rec.id);
+      this.openModal("Al definitief afgerond", "Deze inspectie ligt vast en kan niet meer worden gewijzigd.",
+        `<div class="s" style="margin-bottom:12px;line-height:1.45">Correcties kunnen alleen nog als aanvulling, onderaan het rapport (‘Aanvulling toevoegen’).</div><button class="btn primary"${act("closeModal")}>Naar het rapport</button>`);
+    },
+    // een vastgelegde inspectie is nooit meer lopend werk: uit het geheugen van dit tabblad en het lopende concept
+    // op dit toestel weg, maar alleen als dat concept DEZE inspectie is (een ander tabblad kan intussen een nieuwe hebben)
+    ruimAfgerondOp(ins) {
+      if (this.state.inspectie === ins) { this.state.inspectie = null; this._opslag = null; clearTimeout(this._cTimer); }
+      const u = this.user; if (!u || !ins || !ins.id) return;
+      DB.get("concept", "lopend-" + u.id).then((c) => (c && c.ins && c.ins.id === ins.id ? DB.del("concept", "lopend-" + u.id) : null)).catch(() => {});
+      DB.del("concept", pauzeId(u.id, ins.id)).catch(() => {});
+    },
+    // controle bij Vandaag, terugkomen in de app en een bericht van een ander tabblad: ligt de inspectie van dit
+    // tabblad intussen vast? Dan meteen "Al definitief afgerond" (op het inspectiescherm) of stil opruimen (elders).
+    async controleerAfgerond() {
+      const ins = this.state.inspectie; if (!ins || !ins.id || !this.alVastgelegd) return false;
+      if (!(await this.alVastgelegd(ins)) || this.state.inspectie !== ins) return false;
+      this.alAfgerond(ins, { id: ins.id }, location.hash !== "#/inspectie");
+      return true;
+    },
+    // knop in de kop van elke stap: de twee keuzes (pauzeren, definitief afronden); de weergave (zon) houdt een eigen knop
+    inspectieMenu() {
+      const ins = this.state.inspectie; if (!ins) return;
+      const n = ins.waarnemingen.length, klaar = ins.stap === "klaar";
+      this.openModal("Pauzeren of afronden", ins.titel + " · " + n + (n === 1 ? " waarneming" : " waarnemingen"),
+        `<div class="afr-keuzes">
+          <button class="afr-keuze"${act("pauzeerInspectie")} data-laad><span class="cirkel">${svg("pauze", 22)}</span><span class="grow"><span class="t">Pauzeren</span><span class="s">Blijft op dit toestel. Op Vandaag hervat je met één tik, precies waar je was.</span></span>${svg("chev", 18)}</button>
+          <button class="afr-keuze"${klaar ? act("bewaarInspectie") : actSluit("stap", "klaar")}><span class="cirkel groen">${svg("check", 22)}</span><span class="grow"><span class="t">Definitief afronden</span><span class="s">Nalopen, ondertekenen en vastleggen. Daarna ligt de inspectie vast.</span></span>${svg("chev", 18)}</button>
+        </div>
+        <button class="btn ghost" style="margin-top:12px;width:100%"${act("closeModal")}>Doorgaan met de inspectie</button>`);
+    },
     // vastleggen wat de inspecteur met elk voorstel deed (bewijs: de mens beslist)
     logKeuze(soort, uitkomst, wat) { const ins = this.state.inspectie; if (!ins) return; (ins.keuzes = ins.keuzes || []).push({ soort, uitkomst, wat: String(wat || "").slice(0, 120), t: new Date().toISOString() }); },
     goIns() { if (location.hash === "#/inspectie") this.route(); else this.go("inspectie"); },
@@ -191,15 +309,28 @@
       inp.onchange = async () => {
         const files = [...(inp.files || [])]; if (!files.length) return;
         const ins = this.state.inspectie; if (!ins || !ins.cur) return;
-        const cur = ins.cur, lijst = this.fotoLijst(cur);
-        for (const f of files.slice(0, Math.max(0, this.MAX_FOTOS - lijst.length))) {
-          const d = await fotoDataURL(f);   // verkleind (max 1000 px, JPEG): opslag blijft klein
-          if (d) lijst.push(d);
+        const cur = ins.cur, lijst = this.fotoLijst(cur), mee = files.slice(0, Math.max(0, this.MAX_FOTOS - lijst.length));
+        // #5 (js/laden.js): een plaatsje per nieuwe foto met een ring zolang hij wordt verkleind (pas na ±300 ms zichtbaar)
+        const ringen = this.fotoPlaatsjes(mee.length, lijst.length);
+        for (let k = 0; k < mee.length; k++) {
+          if (ringen[k]) ringen[k].zet(30);
+          const d = await fotoDataURL(mee[k]);   // verkleind (max 1000 px, JPEG): opslag blijft klein
+          if (d) { lijst.push(d); if (ringen[k]) ringen[k].klaar(); } else if (ringen[k]) ringen[k].fout("Geen foto");
         }
         if (this.state.inspectie !== ins || ins.cur !== cur) return;
         this._fotoUndo = null; this.zetFotos(cur, lijst); tril(15); this.route();
       };
       inp.click();
+    },
+    // tijdelijke plaatsjes in het fotoblok tijdens het verwerken van nieuwe foto's; geeft per foto een fotoRing
+    fotoPlaatsjes(n, al) {
+      const L = WPI.laad, kaart = document.querySelector(".ziekaart"); if (!L || !kaart || !n) return [];
+      let rijEl = kaart.querySelector(".fb-rij");
+      if (!rijEl) { const b = el(`<div class="fotoblok multi fb-tijdelijk"><div class="fb-rij"></div></div>`); const p = kaart.querySelector(".partial"); (p ? p.after(b) : kaart.appendChild(b)); rijEl = b.firstElementChild; }
+      return Array.from({ length: n }, (_, k) => {
+        const it = el(`<div class="fb-item fb-bezig"><div class="fb-beeld"><span class="fb-leeg">foto</span></div></div>`); rijEl.appendChild(it);
+        return L.fotoRing(it.firstElementChild, { naam: "Foto " + (al + k + 1) });
+      });
     },
     // verwijderen met één tik, maar altijd terug te halen ("Foto verwijderd · Ongedaan maken"): met handschoenen
     // tik je makkelijk mis, en de enige detailfoto mag niet zomaar verdwijnen
@@ -291,7 +422,29 @@
       const ins = this.state.inspectie;
       if (!ins) return this.go("vandaag");
       const v = $("view"), f = this["ins_" + ins.stap];
+      if (!ins.id) ins.id = nieuwId();   // oud concept (van vóór pauzeren/afronden): vaste sleutel
       if (f) f.call(this, ins, v);
+      // computer (≥ 900 px, zijmenu blijft staan): de stap links, een rustig overzicht rechts (≥ 1100 px zichtbaar,
+      // css). Telefoon: niets verandert, het overzicht wordt daar niet eens getekend.
+      // De kopstrook (terug · inspectie + opslag · voortgang · Pauze of afronden · Weergave) staat dan boven beide
+      // panelen en blijft bovenin staan bij het scrollen (css .insbalk); de algemene kopbalk schuift weg.
+      if (WPI.isWeb()) {
+        const stap = document.createElement("div"); stap.className = "insstap";
+        while (v.firstChild) stap.appendChild(v.firstChild);
+        const rij = stap.querySelector(".inshead .ih-rij"), balk = document.createElement("div");
+        balk.className = "inshead insbalk";
+        if (rij) { const m = rij.querySelector(".ih-menu"); if (m) m.insertAdjacentElement("beforebegin", el(this.insFase(ins))); balk.appendChild(rij); v.appendChild(balk); }
+        const grid = document.createElement("div"); grid.className = "insgrid";
+        grid.appendChild(stap); grid.appendChild(el(this.insOverzicht(ins))); v.appendChild(grid);
+        // werkelijke hoogte van de strook (css-pixels, vóór zoom) voor de plek van het overzicht eronder
+        // (de opslagstatus komt pas na het tekenen: meten bij elke verandering van de strook)
+        const meet = () => { if (!balk.isConnected) return; const z = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--zoom")) || 1, hb = balk.getBoundingClientRect().height / z;
+          if (hb > 0) $("app").style.setProperty("--ihb", Math.ceil(hb) + "px"); };
+        meet(); if (window.ResizeObserver) new ResizeObserver(meet).observe(balk);
+        this.zijScroll();
+      }
+      // definitief afgerond (bijv. in een ander tabblad)? Dan ligt hij vast: niet meer bewerken
+      DB.get("inspecties", ins.id).then((r) => { if (r && this.state.inspectie === ins) this.alAfgerond(ins, r); }).catch(() => {});
       this.syncKnoppen();
       if (ins.stap === "klaar") this.setupSignature();
       this.toonOpslag(); this.bewaarConcept(true);
@@ -304,9 +457,70 @@
         <div class="ih-meta"><div class="ih-titel">${esc(ins.titel)}</div>
           <div class="ih-sub">${n} waarneming${n === 1 ? "" : "en"}${a ? " · " + a + " actievoorstel" + (a === 1 ? "" : "len") : ""}</div>
           <span id="opslag" class="opslag" role="status"></span></div>
-        <button class="ih-rond"${act("openWeergave")} aria-label="Weergave: veldmodus en zonmodus" title="Weergave">${svg("sun", 22)}</button></div>
+        <button class="ih-rond ih-menu"${act("inspectieMenu")} title="Pauzeren of definitief afronden">${svg("pauze", 22)}<span class="ih-lab">Pauze of afronden</span></button>
+        <button class="ih-rond ih-weergave"${act("openWeergave")} aria-label="Weergave: veldmodus en zonmodus" title="Weergave">${svg("sun", 22)}<span class="ih-lab" aria-hidden="true">Weergave</span></button></div>
         <div class="kicker" style="margin-top:14px">${esc(kicker)}</div>
         <div class="ih-vraag"><h1>${esc(titel)}</h1>${rechts || ""}</div></div>`;
+    },
+    // dezelfde twee knoppen als rechtsboven, ook onderin binnen bereik van de duim (één hand, handschoenen)
+    duimRij(midden) {
+      // de zichtbare tekst is ook de naam (WCAG 2.5.3); de uitleg staat in title en in het venster zelf
+      return `<div class="duimrij"><button class="duimknop"${act("inspectieMenu")} title="Pauzeren of definitief afronden">${svg("pauze", 18)}<span>Pauze of afronden</span></button>
+        <span class="duimmidden">${midden || ""}</span>
+        <button class="duimknop"${act("openWeergave")} title="Weergave: veldmodus en zonmodus">${svg("sun", 18)}<span>Weergave</span></button></div>`;
+    },
+    // ---- overzicht naast de stap (alleen computer): waar sta je, wat is er al vastgelegd ----
+    // Alleen-lezen: het gesprek blijft de leidraad (de knoppen staan in de stap zelf). Het oordeel staat er zoals de
+    // inspecteur het koos; actievoorstellen blijven voorstellen tot iemand ze instelt (Acties).
+    insFaseNr(ins) { return { algemeen: 1, monteurs: 2, klaar: 3 }[ins.stap] || 0; },
+    // voortgang in de kopstrook (computer): de vier onderdelen van de momentopname
+    insFase(ins) {
+      const fase = this.insFaseNr(ins), F = ["Taken en waarnemingen", "Algemene onderwerpen", "Gesprek met de monteurs", "Afronden"], K = ["Taken", "Algemeen", "Gesprek", "Afronden"];
+      return `<ol class="ih-fase" aria-label="Voortgang: onderdeel ${fase + 1} van 4">${F.map((n, i) => { const st = i < fase ? "klaar" : i === fase ? "nu" : "";
+        return `<li class="${st}"${st === "nu" ? ' aria-current="step"' : ""} title="${n}"><span class="bol" aria-hidden="true">${st === "klaar" ? svg("check", 12, 3) : i + 1}</span><span class="fk">${K[i]}</span><span class="sr-only">${n}${st === "klaar" ? " (gedaan)" : ""}</span></li>`; }).join("")}</ol>`;
+    },
+    // overzichtpaneel past niet in het scherm (laag scherm): het lijstdeel scrollt binnen het paneel en is dan met het
+    // toetsenbord te bereiken (tabindex); de kop met de tellers blijft staan
+    zijScroll() {
+      const b = document.querySelector(".inszij .iz-body"); if (!b) return;
+      const zet = () => { const te = b.scrollHeight > b.clientHeight + 2; if (te) { b.tabIndex = 0; b.setAttribute("aria-label", "Overzicht, verder scrollen"); } else { b.removeAttribute("tabindex"); b.removeAttribute("aria-label"); } };
+      requestAnimationFrame(zet);
+      if (!this._zijRs) { this._zijRs = true; window.addEventListener("resize", () => { const x = document.querySelector(".inszij .iz-body"); if (x) this.zijScroll(); }); }
+    },
+    insOverzicht(ins) {
+      const ws = ins.waarnemingen || [], kb = this.data.kennisbank[ins.code] || { regels: [] };
+      const taken = [...new Set(kb.regels.map((r) => r.taak))], ows = this.onderwerpen();
+      const cnt = { C: 0, A: 0, V: 0, NVT: 0 }; ws.forEach((w) => { if (cnt[ov(w.oordeel)] !== undefined) cnt[ov(w.oordeel)]++; });
+      const fase = this.insFaseNr(ins);
+      const algW = ws.filter((w) => /^ALG-/.test(w.regel_id || "")), algN = new Set(algW.map((w) => w.regel_id)).size;
+      const mont = ins.monteurs || [];
+      const chip = oChip;
+      const taakRij = (t) => {
+        const tw = ws.filter((w) => w.taak === t && !/^ALG-/.test(w.regel_id || "")), nu = fase === 0 && ins.taak === t, gedaan = ins.taken.includes(t);
+        return `<li class="${nu ? "nu" : gedaan ? "klaar" : ""}"><span class="iz-tn">${esc(kort(t, 52))}</span>${nu ? `<span class="iz-nu">nu</span>` : ""}<span class="iz-ch">${tw.map((w) => chip(ov(w.oordeel)) || geenChip()).join("")}</span></li>`;
+      };
+      const getoetst = taken.filter((t) => ins.taken.includes(t)).length;
+      const lijst = ws.slice(-5), eerder = ws.length - lijst.length;
+      const wRij = (w) => { const i = this.regelInfo(w.regel_id, w.buiten);
+        return `<li>${chip(ov(w.oordeel)) || geenChip()}<span class="grow"><b>${esc(i.ref)}</b> · ${esc(kort(i.titel, 54))}</span></li>`; };
+      const bezig = ins.cur && fase === 0 && ["zie", "koppel", "oordeel", "actie"].includes(ins.stap)
+        ? `<li class="iz-bezig">${ov(ins.cur.oordeel) ? chip(ov(ins.cur.oordeel)) : `<span class="izo izo-leeg" aria-hidden="true"></span>`}<span class="grow"><b>Nu</b> · ${ins.cur.tekst.trim() ? "“" + esc(kort(ins.cur.tekst.trim(), 60)) + "”" : "deze waarneming"}</span></li>` : "";
+      const acties = ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && w.actie && w.actie.tekst && w.actie.tekst.trim());
+      const PR = { direct: "Direct", kort: "Kort", planmatig: "Planmatig" };
+      const aRij = (w) => { const a = w.actie, ok = a.status === "Afgerond";
+        return `<li><span class="iz-prio${a.prio === "direct" && !ok ? " direct" : ""}">${ok ? "Verholpen" : esc(PR[a.prio] || "–")}</span><span class="grow">${esc(kort(a.tekst.trim(), 70))}</span></li>`; };
+      return `<section class="inszij" aria-labelledby="iz-t"><div class="iz-kaart">
+        <div class="iz-boven"><div class="iz-kop"><h2 id="iz-t">Overzicht</h2><span class="iz-tra">TRA · ${esc(kb.naam || ins.code)}</span></div>
+        <div class="iz-tel" role="group" aria-label="Oordelen tot nu toe"><span class="t-C"><b>${cnt.C}</b> Conform</span><span class="t-A"><b>${cnt.A}</b> Afwijking</span><span class="t-V"><b>${cnt.V}</b> Verbeterpunt</span></div></div>
+        <div class="iz-body"><h3 class="iz-h">Taken uit de TRA <span class="iz-aantal">${getoetst} van ${taken.length} getoetst</span></h3>
+        <ul class="iz-taken">${(fase ? taken.filter((t) => ins.taken.includes(t)) : taken).map(taakRij).join("")}${fase && taken.length > getoetst ? `<li class="iz-rest">+ ${taken.length - getoetst} niet getoetst</li>` : ""}</ul>
+        <h3 class="iz-h">Waarnemingen <span class="iz-aantal">${ws.length}</span></h3>
+        ${ws.length || bezig ? `<ul class="iz-lijst">${eerder ? `<li class="iz-eerder">+ ${eerder} eerder</li>` : ""}${lijst.map(wRij).join("")}${bezig}</ul>` : `<p class="iz-leeg">Nog niets vastgelegd. Alleen wat je ziet telt.</p>`}
+        <h3 class="iz-h">Actievoorstellen <span class="iz-aantal">${acties.length}</span></h3>
+        ${acties.length ? `<ul class="iz-lijst iz-acties">${acties.length > 4 ? `<li class="iz-eerder">+ ${acties.length - 4} eerder</li>` : ""}${acties.slice(-4).map(aRij).join("")}</ul><p class="iz-voet">Na het afronden stelt het team ze in bij Acties: actiehouder, toetser en plandatum.</p>` : `<p class="iz-leeg">Nog geen. Bij een afwijking of verbeterpunt leg je er meteen een vast.</p>`}
+        <h3 class="iz-h">Monteurs <span class="iz-aantal">${mont.length}</span></h3>
+        ${mont.length ? `<p class="iz-mont">${mont.map(esc).join(" · ")}</p>` : `<p class="iz-leeg">Nog niet vastgelegd. Dat doe je bij het gesprek met de monteurs.</p>`}
+      </div></div></section>`;
     },
     citaat(cur) {
       return `<div style="display:flex;gap:10px;align-items:flex-start"><span class="lbl jij">Jij</span>
@@ -316,7 +530,7 @@
     toastLaatste(ins) {
       const w = ins.waarnemingen.find((x) => x.id === ins.laatste); if (!w) return "";
       const info = this.regelInfo(w.regel_id, w.buiten);
-      return `<div class="toast"><span>✓ Vastgelegd: ${esc(info.ref)} · [${ov(w.oordeel)}]${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
+      return `<div class="toast"><span class="toast-t">✓ Vastgelegd: <span class="toast-ref">${esc(info.ref)} ${oChip(w.oordeel)}</span>${w.oordeel === "A" || w.oordeel === "V" ? " · actievoorstel genoteerd" : ""}</span>
         <button class="btn ghost sm"${act("ongedaan")}>Ongedaan maken</button></div>`;
     },
 
@@ -359,7 +573,7 @@
             <button class="fotogroot"${act("addFoto")} aria-label="${nf ? "Extra foto maken" : "Foto maken"}"${vol ? " disabled" : ""}>${svg("cam", 28)}<span>${nf ? "Extra" : "Foto"}</span></button>
           </div>
           <button class="btn primary volgknop" data-need="zie,foto"${act("koppel")}>${ow ? "Volgende: beoordelen" : "Volgende: koppel aan de TRA"}</button>
-          ${ins.waarnemingen.length && !ow ? `<button class="linkknop"${act("terug")}>Niets meer gezien bij deze taak</button>` : ""}
+          ${this.duimRij(ins.waarnemingen.length && !ow ? `<button class="linkknop"${act("terug")}>Niets meer gezien bij deze taak</button>` : "")}
         </div></div>`));
     },
     gevaarStilgelegd() { this.state.inspectie.cur.direct = true; this.route(); },   // na "Werk is stilgelegd" (modal is al dicht)
@@ -584,7 +798,9 @@
     },
     wijzigKoppeling() { const ins = this.state.inspectie; if (ins && ins.voorstel && !ins.voorstel.bezig) this.stap("koppel"); else this.koppel(); },
     oordeel(o) {
-      const ins = this.state.inspectie, cur = ins.cur; cur.oordeel = o; tril(o === "C" ? 25 : [25, 60, 25]);
+      // alleen de inspecteur kiest, en alleen een geldig oordeel: nooit een waarneming zonder C/A/V/NVT
+      const ins = this.state.inspectie, cur = ins && ins.cur; if (!cur || !ov(o)) return;
+      cur.oordeel = o; tril(o === "C" ? 25 : [25, 60, 25]);
       if (o === "A" || o === "V") {
         const a = cur.actie, gv = o === "A" ? this.gevaarVan(cur) : "";
         a.gevaar = gv;
@@ -613,7 +829,7 @@
       return K.directGevaar(r || "", cur.tekst || "") || (cur.direct ? "door jou gemeld" : "");
     },
     bewaarWaarneming() {
-      const ins = this.state.inspectie, cur = ins.cur; if (!cur) return;
+      const ins = this.state.inspectie, cur = ins.cur; if (!cur || !ov(cur.oordeel)) return;
       const i = ins.waarnemingen.findIndex((w) => w.id === cur.id);
       if (i >= 0) ins.waarnemingen[i] = cur; else ins.waarnemingen.push(cur);
       if (cur.taak && !ins.taken.includes(cur.taak)) ins.taken.push(cur.taak);
@@ -661,7 +877,7 @@
             ? this.actieStappen({ status: "Afgerond" }, { gecorr: true }) + `<div class="aw-regel">Jij zag het herstel: jij bent de toetser. Geen verdere instelling nodig.</div>`
             : this.actieStappen({ status: "Voorstel" }) + `<div class="aw-regel">Iedereen in het team kan het voorstel instellen (Acties › In te stellen): actiehouder, toetser en plandatum kiezen. <b>Afgerond pas na toetsing</b>; de toetser is nooit de actiehouder.</div>`}</div>
         </div>
-        <div class="dock adock"><button class="btn primary volgknop" data-need="actie"${act("bevestigActie")}>${svg("check", 20)} Actievoorstel vastleggen</button></div></div>`));
+        <div class="dock adock"><button class="btn primary volgknop" data-need="actie"${act("bevestigActie")}>${svg("check", 20)} Actievoorstel vastleggen</button>${this.duimRij("")}</div></div>`));
     },
     // statusverloop van een actie: Instellen → Uitvoeren → Toetsen → Afgerond (wie bij elke stap)
     actieStappen(a, o) {
@@ -720,7 +936,10 @@
       if (ins.stap === "actie") this.route();
     },
     bevestigActie() {
-      const ins = this.state.inspectie, cur = ins.cur, a = cur.actie;
+      const ins = this.state.inspectie, cur = ins && ins.cur;
+      // alleen vanuit "Wat moet er gebeuren?" na een A of V: nooit een waarneming zonder oordeel vastleggen
+      if (!cur || ins.stap !== "actie" || !(cur.oordeel === "A" || cur.oordeel === "V") || !cur.actie) return;
+      const a = cur.actie;
       this.logKeuze("actietekst", a.vsTekst ? (a.tekst.trim() === a.vsTekst.trim() ? "voorstel gebruikt" : "voorstel aangepast") : "zelf geschreven", a.tekst);
       if (a.prioVoorstel) this.logKeuze("prioriteit", a.prio === a.prioVoorstel ? "voorstel gebruikt" : "voorstel aangepast", a.prio);
       // direct gevaar: "Wat heb je ter plaatse gedaan?" is verplicht. Niet beantwoord = niet vastleggen; "Nog niets"
@@ -756,7 +975,7 @@
           const ws = ins.waarnemingen.filter((x) => x.regel_id === "ALG-" + o.ref);
           return `<button class="pick" style="background:#fff;box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:12px"${act("waarnemingOver", o.ref)}>
             <span style="width:30px;height:30px;border-radius:8px;background:var(--mist);display:grid;place-items:center;font-weight:700;flex:none">${o.ref}</span>
-            <span style="flex:1" class="t">${esc(o.naam)}</span>${ws.map((x) => `<span class="badge b-${ov(x.oordeel) === "NVT" ? "N" : ov(x.oordeel)}">[${ov(x.oordeel)}]</span>`).join(" ")}</button>`;
+            <span style="flex:1" class="t">${esc(o.naam)}</span>${ws.length ? `<span class="iz-ch">${ws.map((x) => oChip(x.oordeel)).join("")}</span>` : ""}</button>`;
         }).join("")}
         <button class="btn primary" style="margin-top:14px"${act("stap", "meer")}>Klaar met de onderwerpen</button></div>`));
     },
@@ -792,13 +1011,14 @@
         return `<div class="row"><span class="grow"><span class="t">${esc(i.ref)} · ${esc(kort(i.titel, 60))}</span>
           <div class="s">${w.tekst.trim() ? "“" + esc(kort(w.tekst.trim(), 90)) + "”" : this.fotoLijst(w).length > 1 ? "foto's" : "foto"}${w.actie && w.actie.tekst ? " · actie: " + esc(kort(w.actie.tekst, 60)) : ""}</div></span>
           ${this.fotoDuimen(w, 1, 36)}
-          <span class="badge b-${ov(w.oordeel) === "NVT" ? "N" : ov(w.oordeel)}">[${ov(w.oordeel)}]</span></div>`;
+          ${oChip(w.oordeel) || geenChip()}</div>`;
       }).join("")}</div></div>`;
     },
     // controle vóór ondertekenen: alleen herinneringen, je kunt altijd vastleggen
     controlePunten(ins) {
       const ws = ins.waarnemingen, p = [];
       if (!ws.length) p.push("Er is nog geen waarneming vastgelegd.");
+      ws.filter((w) => !ov(w.oordeel)).forEach((w) => p.push("Bij " + this.regelInfo(w.regel_id, w.buiten).ref + " ontbreekt je oordeel (C, A, V of NVT)."));
       ws.filter((w) => w.oordeel === "A" && !this.fotoLijst(w).length).forEach((w) => p.push("Afwijking bij " + this.regelInfo(w.regel_id, w.buiten).ref + " heeft geen foto."));
       ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && !(w.actie && w.actie.tekst.trim())).forEach((w) => p.push("Bij " + this.regelInfo(w.regel_id, w.buiten).ref + " ontbreekt een actievoorstel."));
       if (!ws.some((w) => w.oordeel === "C") && !ins.positief.trim()) p.push("Nog geen positieve bevinding: leg een Conform vast of vul ‘Wat ging opvallend goed’ in.");
@@ -807,17 +1027,32 @@
       if (!ins.handtekening) p.push("Je hebt nog niet ondertekend.");
       return p;
     },
+    // "Nog even nalopen": rustig en neutraal (geen geel: dat is V; geen oranje: dat is "niet gedaan")
+    nalopenHtml(p, uitleg) {
+      return `<section class="nalopen" aria-labelledby="nl-t"><div class="nl-kop"><span class="nl-ic" aria-hidden="true">${svg("list", 18)}</span><h2 class="nl-t" id="nl-t">Nog even nalopen <span class="nl-n">${p.length}</span></h2></div>
+        ${uitleg ? `<p class="nl-uitleg">${esc(uitleg)}</p>` : ""}<ul class="nl-lijst">${p.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>`;
+    },
+    // welke taken uit de TRA getoetst zijn, elk met de oordelen die erbij horen (zoals in het overzicht)
+    getoetstHtml(ins) {
+      const kb = this.data.kennisbank[ins.code] || { regels: [] }, alle = [...new Set(kb.regels.map((r) => r.taak))], ws = ins.waarnemingen || [];
+      const rij = (t) => { const tw = ws.filter((w) => w.taak === t && !/^ALG-/.test(w.regel_id || ""));
+        return `<li><span class="gt-t">${esc(t)}</span><span class="iz-ch">${tw.map((w) => oChip(w.oordeel) || geenChip()).join("")}</span></li>`; };
+      const alg = ws.filter((w) => /^ALG-/.test(w.regel_id || ""));
+      return `<section class="card getoetst" aria-labelledby="gt-k"><div class="gt-kop"><h2 class="gt-k" id="gt-k">Getoetst tijdens bezoek</h2>
+        <span class="gt-n">${ins.taken.length} van ${alle.length} taken uit de TRA</span></div>
+        ${ins.taken.length ? `<ul class="gt-lijst">${ins.taken.map(rij).join("")}${alg.length ? `<li class="gt-alg"><span class="gt-t">Algemene onderwerpen</span><span class="iz-ch">${alg.map((w) => oChip(w.oordeel) || geenChip()).join("")}</span></li>` : ""}</ul>`
+          : `<p class="s">Nog geen taak getoetst.</p>`}</section>`;
+    },
     ins_klaar(ins, v) {
       const ws = ins.waarnemingen, cnt = { C: 0, A: 0, V: 0, NVT: 0 };
       ws.forEach((w) => { cnt[w.oordeel] = (cnt[w.oordeel] || 0) + 1; });
       v.appendChild(el(this.insHead(ins, "Afronden", "Klopt dit?")));
-      v.appendChild(el(`<div class="grid kpis">${this.tile("sage", cnt.C, "Conform", "gezien")}${this.tile("blush", cnt.A, "Afwijking", cnt.A ? "met actievoorstel" : "geen")}${this.tile("butter", cnt.V, "Verbeterpunt", cnt.V ? "met actievoorstel" : "geen")}</div>`));
+      // drie tellers altijd naast elkaar (ook op de telefoon: geen losse derde tegel op een eigen regel)
+      v.appendChild(el(`<div class="grid kpis afr-tel">${this.tile("sage", cnt.C, "Conform", "gezien")}${this.tile("blush", cnt.A, "Afwijking", cnt.A ? "met actievoorstel" : "geen")}${this.tile("butter", cnt.V, "Verbeterpunt", cnt.V ? "met actievoorstel" : "geen")}</div>`));
       const p = this.controlePunten(ins).filter((x) => !/ondertekend/.test(x));
-      v.appendChild(el(p.length ? `<div class="card" style="margin-top:14px;background:var(--butter);box-shadow:none">
-          <div style="font-weight:700;color:#5E4500">Nog even nalopen</div><div class="s" style="margin-bottom:6px;color:#7A5A00">Herinnering — je kunt de inspectie ook gewoon vastleggen.</div>
-          ${p.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:3px 0">• ${esc(x)}</div>`).join("")}</div>`
+      v.appendChild(el(p.length ? this.nalopenHtml(p, "Herinnering: je kunt de inspectie ook gewoon definitief afronden.")
         : `<div class="toast" style="margin-top:14px">✓ Alles compleet: foto’s, actievoorstellen, positieve bevinding en gesprek.</div>`));
-      v.appendChild(el(`<div class="card" style="margin-top:14px"><div class="t">Getoetst tijdens bezoek</div><div class="s">${ins.taken.map(esc).join(" · ") || "—"}</div></div>`));
+      v.appendChild(el(this.getoetstHtml(ins)));
       if (ws.length) v.appendChild(el(this.vastgelegdLijst(ins)));
       v.appendChild(el(`<h2>Handtekening inspecteur</h2>`));
       v.appendChild(el(`<div class="card">
@@ -825,8 +1060,11 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
           <span class="s" id="sigstat" role="status">${ins.handtekening ? "Ondertekend ✓" : "Teken in het vak"}</span>
           <span style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm"${act("sigNaam")}>Onderteken met je naam</button><button class="btn ghost sm"${act("clearSig")}>Wissen</button></span></div></div>`));
-      v.appendChild(el(`<button class="btn primary" style="margin-top:16px"${act("bewaarInspectie")}>Inspectie vastleggen</button>`));
-      v.appendChild(el(`<button class="btn ghost" style="margin-top:10px;width:100%"${act("go", "vandaag")}>Later afmaken (blijft bewaard)</button>`));
+      // de twee keuzes onderaan (duimzone): definitief afronden (ligt daarna vast) of pauzeren (blijft op dit toestel)
+      v.appendChild(el(`<div class="dock afr-dock">
+        <button class="btn primary"${act("bewaarInspectie")}>${svg("check", 20)} Definitief afronden</button>
+        <button class="btn ghost afr-pauze"${act("pauzeerInspectie")} data-laad>${svg("pauze", 18)} Pauzeren</button>
+        <div class="s afr-uitleg">Pauzeren houdt de inspectie op dit toestel; op Vandaag hervat je met één tik.</div></div>`));
     },
     setupSignature() {
       const cv = $("sig"); if (!cv) return;
@@ -851,45 +1089,103 @@
       const st = $("sigstat"); if (st) st.textContent = "Ondertekend ✓ (met je naam) · " + new Date().toLocaleString("nl-NL");
     },
     clearSig() { const cv = $("sig"); if (cv) cv.getContext("2d").clearRect(0, 0, cv.width, cv.height); if (this.state.inspectie) this.state.inspectie.handtekening = null; const s = $("sigstat"); if (s) s.textContent = "Teken in het vak"; },
+    // "Definitief afronden" (vroeger "Inspectie vastleggen"): de herinneringen ("Nog even nalopen") en één rustige
+    // bevestiging; daarna ligt de inspectie vast (de server weigert elke wijziging van een vastgelegde inspectie, en de
+    // app biedt geen bewerken meer aan: alleen een aanvulling in het verloop van een actie). Dan het rapport als PDF
+    // (js/rapport.js), naar de wachtrij (App.rapportAfronden, js/sync.js). toch = de bevestiging is al gegeven.
     async bewaarInspectie(toch) {
       this.stopMic();
-      const ins = this.state.inspectie; if (!ins) return;
+      const ins = this.state.inspectie; if (!ins || this._afronden) return;
       const p = this.controlePunten(ins);
-      if (p.length && !toch) {
-        return this.openModal("Nog " + p.length + " punt" + (p.length === 1 ? "" : "en") + " open", "Herinnering: je kunt aanvullen of toch vastleggen.",
-          `<div class="card" style="background:var(--butter);box-shadow:none">${p.map((x) => `<div style="color:#7A4300;font-weight:600;font-size:14px;margin:3px 0">• ${esc(x)}</div>`).join("")}</div>
-           <button class="btn ghost" style="margin-top:14px;width:100%"${act("closeModal")}>Terug om aan te vullen</button>
-           <button class="btn primary" style="margin-top:10px"${actSluit("bewaarInspectie", true)}>Toch vastleggen</button>`);
+      if (!toch) {
+        const vast = `<div class="afr-vast" role="note">${svg("doc", 20)}<span>Na afronden ligt de inspectie vast. Correcties kunnen alleen nog als aanvulling.</span></div>`
+          + (ins.handtekening ? "" : `<div class="afr-vast afr-zonder" role="note"><span><b>Nog niet ondertekend.</b> Rond je toch af, dan staat bovenaan het rapport groot “Niet ondertekend”.</span></div>`);
+        return this.openModal(p.length ? "Nog " + p.length + " punt" + (p.length === 1 ? "" : "en") + " open" : "Definitief afronden?",
+          p.length ? "Herinnering: je kunt aanvullen of toch definitief afronden." : "Alles is ingevuld en ondertekend.",
+          `${p.length ? this.nalopenHtml(p) : ""}
+           ${vast}
+           <button class="btn ghost" style="margin-top:14px;width:100%"${act("closeModal")}>${p.length ? "Terug om aan te vullen" : "Nog niet"}</button>
+           <button class="btn primary" style="margin-top:10px"${actSluit("bewaarInspectie", true)}>${p.length ? "Toch definitief afronden" : "Definitief afronden"}</button>`);
       }
-      const rec = { id: "WPI-" + Date.now(), versie: 3, titel: ins.titel, code: ins.code, project: ins.project,
-        taken: ins.taken.slice(), taak: ins.taken[0] || ins.taak || "", waarnemingen: ins.waarnemingen,
-        gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening, keuzes: ins.keuzes || [], monteurs: (ins.monteurs || []).slice(),
-        open_punten: p, inspecteur: this.user.full_name, inspecteur_id: this.user.id, start: ins.start, opgeslagen: new Date().toISOString() };
-      // elk A/V-oordeel wordt een actievoorstel; instellen (houder, toetser, plandatum) gebeurt daarna handmatig
-      const nu = new Date().toISOString(), nieuw = [];
-      rec.waarnemingen.forEach((w, n) => {
-        if (!((w.oordeel === "A" || w.oordeel === "V") && w.actie)) return;
-        const gecorr = w.actie.terPlaatse === "gecorrigeerd", id = "ACT-" + Date.now() + "-" + n;
-        w.actie.actie_id = id;
-        nieuw.push({ id, inspectie_id: rec.id, inspectie_titel: rec.titel, inspecteur: rec.inspecteur, ref: this.infoVoor(rec.code, w.regel_id, w.buiten).ref,
-          waarneming: (w.tekst || "").trim(), foto: w.foto || null, extraFotos: this.fotoLijst(w).slice(1).map((foto) => ({ foto })), oordeel: w.oordeel, tekst: w.actie.tekst, prio: w.actie.prio, terPlaatse: w.actie.terPlaatse,
-          status: gecorr ? "Afgerond" : "Voorstel", houder: null, toetser: gecorr ? this.user.id : null, plandatum: gecorr ? isoDag(new Date()) : null,
-          log: [{ t: nu, wie: rec.inspecteur, wat: gecorr ? "Ter plaatse gecorrigeerd en door de inspecteur gezien" : (w.actie.stilgelegd ? "Werk ter plaatse stilgelegd; actievoorstel uit de inspectie" : "Actievoorstel uit de inspectie") + (w.actie.herkomst === "Voorstel" ? " (tekst voorgesteld door de app)" : "") }] });
-      });
-      let ok = true;
-      try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }
-      if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary"${actSluit("bewaarInspectie", true)}>Opnieuw proberen</button>`);
-      this.acties = null;
-      if (ins.plan_id) { await this.laadPlanning(); const pl = this.planning.find((x) => x.id === ins.plan_id); if (pl) { pl.status = "uitgevoerd"; pl.inspectie_id = rec.id; try { await DB.put("planning", pl); } catch (e) {} } }
-      this.state.inspectie = null; this.bewaarConcept(true); tril([30, 50, 30]);
-      // direct weg van de afgeronde stap: ook als het venster met × sluit, staat het rapport in beeld
-      // (replace: 'terug' leidt niet naar de verouderde 'Klopt dit?'-pagina)
-      location.replace("#/rapport/" + rec.id);
-      const nv = nieuw.filter((a) => a.status === "Voorstel").length;
-      this.openModal("Vastgelegd", this.vastgelegdTekst(),   // tekst per modus: js/sync.js
-        `${nv ? `<div class="hint" style="margin-bottom:12px">${nv} actievoorstel${nv === 1 ? "" : "len"} klaargezet. Jij of een collega stelt ze in onder <b>Acties › In te stellen</b>.</div>` : ""}
-         <button class="btn primary"${actSluit("go", "rapport/" + rec.id)}>Bekijk rapport</button>
+      this._afronden = true;
+      try {
+        if (!ins.id) ins.id = nieuwId();
+        let al = null; try { al = await DB.get("inspecties", ins.id); } catch (e) {}
+        if (al) return this.alAfgerond(ins, al);   // al afgerond (bijv. in een ander tabblad): nooit een tweede keer
+        const rec = { id: ins.id, versie: 3, titel: ins.titel, code: ins.code, project: ins.project,
+          taken: ins.taken.slice(), taak: ins.taken[0] || ins.taak || "", waarnemingen: ins.waarnemingen,
+          gesprek: ins.gesprek, positief: ins.positief, handtekening: ins.handtekening, keuzes: ins.keuzes || [], monteurs: (ins.monteurs || []).slice(),
+          open_punten: p, inspecteur: this.user.full_name, inspecteur_id: this.user.id, inspecteur_functie: this.user.functie || "", start: ins.start, opgeslagen: new Date().toISOString() };
+        rec.nummer = this.rapportNummer(rec);   // te noemen en terug te vinden (WPI-JJJJMMDD-CODE-XX-UUMM), ligt vast met de rest
+        // elk A/V-oordeel wordt een actievoorstel; instellen (houder, toetser, plandatum) gebeurt daarna handmatig
+        const nu = new Date().toISOString(), nieuw = [];
+        rec.waarnemingen.forEach((w, n) => {
+          if (!((w.oordeel === "A" || w.oordeel === "V") && w.actie)) return;
+          const gecorr = w.actie.terPlaatse === "gecorrigeerd", id = "ACT-" + Date.now() + "-" + n;
+          w.actie.actie_id = id;
+          nieuw.push({ id, inspectie_id: rec.id, inspectie_titel: rec.titel, inspecteur: rec.inspecteur, ref: this.infoVoor(rec.code, w.regel_id, w.buiten).ref,
+            waarneming: (w.tekst || "").trim(), foto: w.foto || null, extraFotos: this.fotoLijst(w).slice(1).map((foto) => ({ foto })), oordeel: w.oordeel, tekst: w.actie.tekst, prio: w.actie.prio, terPlaatse: w.actie.terPlaatse,
+            status: gecorr ? "Afgerond" : "Voorstel", houder: null, toetser: gecorr ? this.user.id : null, plandatum: gecorr ? isoDag(new Date()) : null,
+            log: [{ t: nu, wie: rec.inspecteur, wat: gecorr ? "Ter plaatse gecorrigeerd en door de inspecteur gezien" : (w.actie.stilgelegd ? "Werk ter plaatse stilgelegd; actievoorstel uit de inspectie" : "Actievoorstel uit de inspectie") + (w.actie.herkomst === "Voorstel" ? " (tekst voorgesteld door de app)" : "") }] });
+        });
+        let ok = true;
+        try { await DB.save(rec); for (const a of nieuw) await DB.put("acties", a); } catch (e) { ok = false; }
+        if (!ok) return this.openModal("Niet opgeslagen", "Het toestel kon de inspectie niet bewaren. Je gegevens staan nog in de lopende inspectie.", `<button class="btn primary"${actSluit("bewaarInspectie", true)}>Opnieuw proberen</button>`);
+        this.acties = null;
+        if (ins.plan_id) { await this.laadPlanning(); const pl = this.planning.find((x) => x.id === ins.plan_id); if (pl) { pl.status = "uitgevoerd"; pl.inspectie_id = rec.id; try { await DB.put("planning", pl); } catch (e) {} } }
+        if (this.state.inspectie === ins) { this.state.inspectie = null; this.bewaarConcept(true); }
+        try { await DB.del("concept", pauzeId(this.user.id, rec.id)); } catch (e) {}   // stond hij ooit op pauze: weg
+        if (this.meldAfgerond) this.meldAfgerond(rec.id);   // andere tabbladen: deze inspectie ligt nu vast
+        tril([30, 50, 30]);
+        // direct weg van de afgeronde stap (replace: 'terug' leidt niet naar de verouderde 'Klopt dit?'-pagina)
+        location.replace("#/rapport/" + rec.id);
+        await this.rapportNaAfronden(rec, { voorstel: nieuw.filter((a) => a.status === "Voorstel").length, terPlaatse: nieuw.filter((a) => a.status === "Afgerond").length });
+      } finally { this._afronden = false; }
+    },
+    // na het vastleggen: het rapport als PDF maken en in de wachtrij zetten, met een voortgangsbalk in stappen
+    async rapportNaAfronden(rec, nv) {
+      this.openModal("Definitief afronden", "De inspectie is vastgelegd. Nu het rapport.", `<div id="afr-vg" class="afr-vg ld-neutraal"></div>`);
+      const doos = $("afr-vg"), L = WPI.laad, vg = L && doos ? L.voortgang(doos, { titel: "Rapport maken", stap: "Foto's verkleinen…", pct: 4 }) : null;
+      const stap = (t, pct) => { if (vg) vg.zet({ stap: t, pct }); };
+      let uit = null, fout = null;
+      try {
+        // de momentopname zoals hij nu vastligt, met de actievoorstellen van dit moment (stand "afronden")
+        const pdf = await this.maakRapportPdf(rec, stap, "afronden");
+        stap("In de wachtrij zetten…", 90);
+        uit = await this.rapportAfronden({ inspectieId: rec.id, pdf, bestandsnaam: this.rapportBestandsnaam(rec, "afronden") });
+        if (vg) vg.klaar("Rapport klaar");
+      } catch (e) { fout = e; }
+      this._laatsteAfronding = { id: rec.id, uitkomst: uit, fout: fout ? String(fout.message || fout) : null };
+      if (vg && vg.el && !vg.el.hidden) await new Promise((r) => setTimeout(r, 450));   // de volle balk even laten zien
+      this.toonAfrondUitkomst(rec, nv, uit, fout);
+    },
+    toonAfrondUitkomst(rec, nv, uit, fout) {
+      const naamO = uit && uit.ontvangerNaam ? esc(uit.ontvangerNaam) : "";
+      const regel = fout ? `<b>Het rapport (PDF) is nog niet gemaakt.</b> De inspectie zelf is wel vastgelegd. Probeer het opnieuw, of deel het later vanuit het rapport met “Deel als PDF”.<span class="s afr-fout">${esc(fout.message || fout)}</span>`
+        : uit.status === "wachtrij" ? (naamO ? `Rapport gaat naar <b>${naamO}</b> zodra de mailbox klaar is. Je vindt het ook in de app.` : `Rapport staat klaar om te mailen zodra in Beheer is gekozen wie de rapporten krijgt. Je vindt het ook in de app.`)
+        : uit.status === "offline-wachtrij" ? `Wordt verstuurd zodra je weer verbinding hebt.${naamO ? ` Het rapport gaat dan naar <b>${naamO}</b>.` : ""} Je vindt het ook in de app.`
+        : `Dit is een demo: het rapport (PDF) is gemaakt en staat alleen op dit toestel. Er wordt niets gemaild${naamO ? ` (in het echt gaat het naar <b>${naamO}</b>)` : ""}. Je vindt het ook in de app.`;
+      this.openModal("Definitief afgerond", this.vastgelegdTekst(),   // tekst per modus: js/sync.js
+        `<div class="afr-uitkomst${fout ? " fout" : ""}" role="status"><div class="afr-status" id="afr-status">✓ Vastgelegd · ligt vast</div><div class="afr-regel">${regel}</div></div>
+         ${this.actieUitkomst(nv)}
+         ${fout ? `<button class="btn primary" style="margin-top:12px"${act("rapportOpnieuw", rec.id)} data-laad="Rapport maken…">Rapport opnieuw maken</button>` : ""}
+         <button class="btn ${fout ? "ghost" : "primary"}" style="margin-top:12px;width:100%"${actSluit("go", "rapport/" + rec.id)}>Bekijk rapport</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${actSluit("go", "inspecties")}>Naar inspecties</button>`);
+      const st = $("afr-status"); if (st && WPI.laad) WPI.laad.vinkje(st, { opnieuw: true });   // #7: het ✓ tekent zich één keer
+    },
+    // de acties na afronden, met dezelfde telling als de kop van de inspectie ("3 actievoorstellen"): wat klaarstaat om
+    // in te stellen én wat ter plaatse al is hersteld en door de inspecteur getoetst (afgerond)
+    actieUitkomst(n) {
+      const v = (n && n.voorstel) || 0, tp = (n && n.terPlaatse) || 0, tot = v + tp; if (!tot) return "";
+      const delen = [v ? `<b>${v}</b> klaargezet om in te stellen (wie, toetser en wanneer: <b>Acties › In te stellen</b>)` : "",
+        tp ? `<b>${tp}</b> ter plaatse hersteld en door jou getoetst: afgerond` : ""].filter(Boolean);
+      return `<div class="hint afr-acties" style="margin:12px 0">${tot} actievoorstel${tot === 1 ? "" : "len"}: ${delen.join("; ")}.</div>`;
+    },
+    // "Rapport opnieuw maken" (na een fout): zelfde record, zelfde stappen
+    async rapportOpnieuw(id) {
+      let rec = null; try { rec = await DB.get("inspecties", id); } catch (e) {}
+      if (!rec) return this.closeModal();
+      await this.rapportNaAfronden(rec, null);
     },
     // Actievenster (Acties › openActie): na het tekenen rustiger ordenen. Alleen opmaak en volgorde;
     // knoppen, velden en hun acties (data-action) blijven dezelfde elementen. Lukt iets niet, dan blijft het venster zoals het was.
@@ -913,7 +1209,7 @@
       let wanneer = `<span class="leegw">nog niet gekozen</span>`;
       if (a.plandatum) {
         const d = dagenTot(a.plandatum);
-        const tag = !loopt ? "" : d < 0 ? `<span class="dchip warm">${-d} dag${d === -1 ? "" : "en"} te laat</span>` : d === 0 ? `<span class="dchip warm">vandaag</span>`
+        const tag = !loopt ? "" : d < 0 ? `<span class="dchip laat">${-d} dag${d === -1 ? "" : "en"} te laat</span>` : d === 0 ? `<span class="dchip binnen">vandaag</span>`
           : `<span class="dchip">nog ${d} dag${d === 1 ? "" : "en"}</span>`;
         wanneer = `<span>${esc(dagLabel(a.plandatum))}</span>${tag}`;
       }
@@ -955,4 +1251,35 @@
     A.openActie._verrijkt = true;
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", koppelActieVenster); else setTimeout(koppelActieVenster, 0);
+  // Telefoon: toetsenbordfocus nooit (half) achter de plakkende knoppenbalk onderin (.dock met de duimrij; WCAG 2.4.11).
+  // Chrome scrolt bij focus alleen tot de cursorregel van een tekstvak in beeld is; dan valt het vak zelf en de knop
+  // "Inspreken" erin nog grotendeels achter de balk. Na de focus: zo nodig verder scrollen tot het hele element boven
+  // de balk staat (maar nooit met de bovenkant onder de kopbalk).
+  document.addEventListener("focusin", (e) => {
+    const t = e.target, view = $("view"), dock = view && view.querySelector(".dock:not(.odock)");
+    if (WPI.isWeb() || !dock || !t || !t.getBoundingClientRect || dock.contains(t) || !view.contains(t) || t === view) return;
+    requestAnimationFrame(() => {
+      if (getComputedStyle(dock).position !== "sticky" || !t.isConnected) return;
+      const d = dock.getBoundingClientRect(), r = t.getBoundingClientRect(), kop = document.querySelector(".topbar");
+      const boven = (kop ? kop.getBoundingClientRect().bottom : 0) + 8;
+      if (r.bottom <= d.top - 4) return;
+      const dy = Math.min(r.bottom - (d.top - 12), r.top - boven);
+      if (dy > 0) window.scrollBy(0, dy);
+    });
+  });
+  // Andere tabbladen meteen laten weten dat een inspectie definitief is afgerond: een oud tabblad met dezelfde
+  // inspectie toont dan direct "Al definitief afgerond" (geen bewerkbaar scherm meer) en bewaart geen concept meer.
+  // Terugval zonder BroadcastChannel: de controle bij terugkomen in de app (focus/zichtbaar) en bij elke opslag (js/kern.js).
+  let kanaal = null;
+  try { kanaal = window.BroadcastChannel ? new BroadcastChannel("wpi-inspectie") : null; } catch (e) {}
+  const A = window.App;
+  A.meldAfgerond = (id) => { try { if (kanaal) kanaal.postMessage({ soort: "afgerond", id: String(id) }); } catch (e) {} };
+  if (kanaal) kanaal.onmessage = (e) => {
+    const d = e && e.data; if (!d || d.soort !== "afgerond" || typeof d.id !== "string" || !A.user || A._afronden) return;
+    if (A.state.inspectie && A.state.inspectie.id === d.id) A.controleerAfgerond();
+    else if (/^#\/(vandaag)?$/.test(location.hash || "#/")) A.route();   // een gepauzeerde kaart kan weg
+  };
+  const kijk = () => { if (A.user && A.state && A.state.inspectie && !A._afronden && document.visibilityState !== "hidden") A.controleerAfgerond(); };
+  window.addEventListener("focus", kijk);
+  document.addEventListener("visibilitychange", kijk);
 })();

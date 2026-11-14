@@ -22,7 +22,7 @@ SQL
 degradeer() {   # $1 = wie (uid-suffix), $2 = wie wordt gedegradeerd
   psql -X -q -d "$DB" -v ON_ERROR_STOP=1 2>&1 <<SQL
 begin;
-select set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-a000-0000000000$1","role":"authenticated"}', true) is null;
+select set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-a000-0000000000$1","role":"authenticated","aal":"aal2"}', true) is null;
 set local role authenticated;
 update public.profiles set role = 'coordinator' where id = 'b0000000-0000-4000-a000-0000000000$2';
 select pg_sleep(2);

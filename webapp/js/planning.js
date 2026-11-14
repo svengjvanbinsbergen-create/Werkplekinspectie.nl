@@ -314,7 +314,7 @@
     planKaart(p, vandaag) {
       const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum);
       const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
-      return `<div class="pkaart${this._focusPlan === p.id ? " uitgelicht" : ""}" data-plan="${esc(p.id)}"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
+      return `<div class="pkaart${this._focusPlan === p.id ? " uitgelicht" : ""}" data-plan="${esc(p.id)}"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">${svg("cal", 14)}${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
           ${p.status === "gepland" && mag("plant") ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzig planning: ${esc(this.productNaam(p.code))} · ${esc(dl)}">Wijzig</button>` : ""}</div>
         <div class="titel">${esc(this.productNaam(p.code))}</div>
         <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + esc(p.monteurs) + " monteurs" : ""}</div>

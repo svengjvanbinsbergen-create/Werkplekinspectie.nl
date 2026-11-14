@@ -84,6 +84,7 @@
 .oef-fb>p{margin-top:8px;font-size:15.5px;line-height:1.5}
 .oef-beter{display:block;margin-top:6px;font-weight:700}
 .oef-corr{margin:10px 0 0;padding:10px 12px 10px 30px;border-radius:16px;background:#F3EFFA;color:#3F2F78;font-size:14.5px;font-weight:600;line-height:1.45;display:flex;flex-direction:column;gap:6px}
+.oef-ook{margin-top:12px;font-size:15px}
 .oef-knoppen{display:flex;flex-direction:column;gap:2px}
 .oef-regel{margin-top:10px;padding:10px 12px;border-radius:16px;background:#F2F7F4;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:1.4}
 .oef-regel b{font-weight:800;color:#24493F}

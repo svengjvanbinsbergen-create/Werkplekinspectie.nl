@@ -372,7 +372,8 @@ select tests.faalt('instellingen: onbekende sleutel geweigerd (ook voor hoofd)',
   $q$insert into public.instellingen (sleutel, waarde) values ('doel_programma', '90')$q$, '%waarde_geldig%');
 select tests.faalt('instellingen: mfa_verplicht_hoofd alleen true/false',
   $q$update public.instellingen set waarde = '"ja"' where sleutel = 'mfa_verplicht_hoofd'$q$, '%waarde_geldig%');
-select tests.lukt('hoofd: naam van een ander wijzigen mag (beheer)',
+:H2
+select tests.lukt('hoofd (aal2): naam van een ander wijzigen mag (beheer)',
   $q$update public.profiles set full_name = 'Inspecteur  Eén' where id = 'a0000000-0000-4000-a000-000000000011'$q$);
 select tests.klopt('profiel: naam genormaliseerd (dubbele spatie weg)',
   (select full_name from public.profiles where id = 'a0000000-0000-4000-a000-000000000011') = 'Inspecteur Eén');
@@ -385,9 +386,10 @@ select tests.faalt('hoofd: de oude rol inspecteur weer toekennen geweigerd (0008
 :PG
 -- (terug naar de oude rol kan alleen als eigenaar: I2 test verder de regels voor een lid zonder staf-rechten)
 update public.profiles set role = 'inspecteur' where id = 'a0000000-0000-4000-a000-000000000012';
-:H
+:H2
 select tests.faalt('hoofd: laatste actieve hoofd kan zichzelf niet degraderen',
   $q$update public.profiles set role = 'coordinator' where id = auth.uid()$q$, '%minstens één actief hoofd%');
+:H
 -- MFA afdwingen voor beheerroutes
 select tests.lukt('hoofd: MFA verplicht zetten', $q$update public.instellingen set waarde = 'true' where sleutel = 'mfa_verplicht_hoofd'$q$);
 select tests.faalt('hoofd zonder MFA (aal1): monteur toevoegen geweigerd zodra MFA verplicht is',
@@ -1223,7 +1225,7 @@ select tests.klopt('naam: sleutel als beheer.js (ß, ø, ł, þ, đ, accenten; s
   and public.naam_sleutel('  Hénk   VOORBEELD ') = 'henkvoorbeeld' and public.naam_sleutel('Œdipe') = 'oedipe'
   and public.naam_sleutel('Henk-Voorbeeld') = 'henkvoorbeeld' and public.naam_sleutel('Henk Voorbeeld.') = 'henkvoorbeeld'
   and public.naam_sleutel('ОЛЬГА') = 'ольга' and public.naam_sleutel('Kees ²') = 'kees²');
-:H
+:H2
 select tests.faalt('naam: profielnaam met zero-width-teken geweigerd',
   format('update public.profiles set full_name = %L where id = %L', E'Inspecteur​ Twee', 'a0000000-0000-4000-a000-000000000012'),
   '%naam_tekens%');
@@ -2045,6 +2047,7 @@ select tests.lukt('beheerder: monteur toevoegen', $q$insert into public.monteurs
 select tests.lukt('beheerder: doel_conform wijzigen (80) en terug (85)',
   $q$update public.instellingen set waarde = '80' where sleutel = 'doel_conform';
      update public.instellingen set waarde = '85' where sleutel = 'doel_conform'$q$);
+:B2
 select tests.lukt('beheerder: een uitgenodigd profiel een rol geven (coördinator)',
   $q$update public.profiles set role = 'coordinator', functie = 'Montage Coördinator' where id = 'f0000000-0000-4000-a000-000000000047'$q$);
 select tests.faalt('beheerder: de oude rol inspecteur toekennen geweigerd',
@@ -2053,12 +2056,14 @@ select tests.faalt('beheerder: eigen rol naar hoofd zetten geweigerd (geen zelfp
   $q$update public.profiles set role = 'hoofd' where id = auth.uid()$q$, '%eigen rol%');
 select tests.faalt('beheerder: zichzelf deactiveren geweigerd',
   $q$update public.profiles set actief = false where id = auth.uid()$q$, '%eigen rol%');
+:B
 select tests.faalt('beheerder: inspectie aanmaken geweigerd (inspecteert niet)',
   $q$insert into public.inspecties (id, titel, record) values ('WPI-b1', 'x', '{}')$q$, '%row-level security%');
 select tests.faalt('beheerder: planning maken geweigerd (leest alleen)',
   $q$insert into public.planning (id, datum, code, inspecteur) values ('PL-b1', current_date + 1, 'DAM', 'c0000000-0000-4000-a000-000000000002')$q$, '%row-level security%');
 select tests.raakt('beheerder: planning wijzigen raakt niets', $q$update public.planning set locatie = 'x'$q$, 0);
 -- de laatste-hoofd-bescherming geldt ook voor de beheerder
+:B2
 select tests.lukt('beheerder: tweede hoofd (Manager Projects) tijdelijk coördinator maken',
   $q$update public.profiles set role = 'coordinator' where id = 'b0000000-0000-4000-a000-000000000002'$q$);
 select tests.faalt('beheerder: het laatste actieve hoofd degraderen geweigerd',
@@ -2078,8 +2083,10 @@ select tests.faalt('tweede hoofd: zichzelf degraderen geweigerd (eigen rol)',
 select tests.klopt('qhse: mag alles lezen en beheren, is geen staf en inspecteert niet',
   public.mag_alles_lezen() and public.is_beheer_admin() and not public.is_staf() and not public.mag_inspecteren());
 select tests.lukt('qhse: monteur toevoegen (beheer)', $q$insert into public.monteurs (naam) values ('Quirine Qlijst')$q$);
-select tests.lukt('qhse: functie van een collega wijzigen (beheer)',
+:Q2
+select tests.lukt('qhse (aal2): functie van een collega wijzigen (beheer)',
   $q$update public.profiles set functie = 'Montage Coördinator' where id = 'f0000000-0000-4000-a000-000000000047'$q$);
+:Q
 select tests.faalt('qhse: eigen rol naar coördinator zetten geweigerd (dan zou ze actiehouder kunnen worden)',
   $q$update public.profiles set role = 'coordinator' where id = auth.uid()$q$, '%eigen rol%');
 select tests.faalt('qhse: inspectie aanmaken geweigerd',
@@ -2298,11 +2305,11 @@ select tests.faalt('verloop-tekens: de CHECK weigert een losse ZWJ ook bij behee
   $q$insert into public.actie_log (actie_id, wat, bron) values ('ACT-11', 'Status' || U&'\200D' || ': Open', 'server')$q$, '%actie_log_wat_tekens%');
 select tests.klopt('verloop-tekens: CHECK actie_log_wat_tekens bestaat (ook voor beheer via SQL)',
   exists (select 1 from pg_constraint where conrelid = 'public.actie_log'::regclass and conname = 'actie_log_wat_tekens'));
-select tests.klopt('verloop-tekens: regel van de app = tekst_tekens_ok voor elk codepunt U+0001–U+FFFF en U+E0000–U+E01EF',
-  not exists (select 1 from generate_series(1, 917999) cp
-              where (cp < 65536 or cp >= 917504) and cp not between 55296 and 57343
+select tests.klopt('verloop-tekens: regel van de app = tekst_tekens_ok voor elk codepunt U+0001–U+FFFF, U+16FE4 en U+E0000–U+E0FFF (0009: de hele Default_Ignorable-set)',
+  not exists (select 1 from generate_series(1, 921599) cp
+              where (cp < 65536 or cp >= 917504 or cp = 94180) and cp not between 55296 and 57343
                 and public.tekst_tekens_ok('a' || chr(cp)) is distinct from
-                    (('a' || chr(cp)) !~ '[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F­͏؜؀-؅۝܏࢐࢑࣢ᅟᅠ឴឵᠎​‌‎‏ -‮⁠-⁯ㅤ﻿ﾠ￹-￻\U000E0000-\U000E007F\U000E0100-\U000E01EF]')));
+                    (('a' || chr(cp)) !~ '[\u0001-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u00AD\u034F\u061C\u0600-\u0605\u06DD\u070F\u0890\u0891\u08E2\u115F\u1160\u17B4\u17B5\u180B-\u180F\u200B\u200C\u200E\u200F\u2028-\u202E\u2060-\u206F\u3164\uFEFF\uFFA0\uFFF0-\uFFFB\U00016FE4\U000E0000-\U000E0FFF]')));
 
 -- 26f. bewaartermijn 7 jaar: inspecties, acties, planning, verloop, auditregels en foto's
 :PG
@@ -2393,6 +2400,452 @@ select tests.raakt('laatste hoofd: een inactief hoofd zonder gegevens verwijdere
   $q$delete from auth.users where id = 'b0000000-0000-4000-a000-000000000099'$q$, 1);
 select tests.klopt('laatste hoofd: trigger profiles_laatste_hoofd bestaat (BEFORE DELETE)',
   exists (select 1 from pg_trigger where tgrelid = 'public.profiles'::regclass and tgname = 'profiles_laatste_hoofd' and not tgisinternal));
+
+-- =====================================================================
+-- 27. Gebruikersbeheer, rapporten per mail (wachtrij), tekenregels en bewaartermijn (migratie 0009)
+-- =====================================================================
+:PG
+update public.instellingen set waarde = 'true' where sleutel = 'mfa_verplicht_hoofd';
+-- een nieuw uitgenodigde collega zonder rol (NR uit sectie 26 kreeg intussen een rol)
+insert into tests.gebruiker values ('NR27', 'f0000000-0000-4000-a000-000000000048');
+begin;
+insert into auth.users (id, email, raw_user_meta_data) values ('f0000000-0000-4000-a000-000000000048', 'norol27@test.invalid', '{"full_name":"Nog Geen Rol Zeven"}');
+update auth.users set invited_at = now() where id = 'f0000000-0000-4000-a000-000000000048';
+commit;
+\set NR27 'reset role; select tests.als(''NR27''); set role authenticated;'
+
+-- 27a. tekenregel: de hele Default_Ignorable_Code_Point-set (aanvalsronde: 3737 onzichtbare codepunten kwamen door)
+:W
+select tests.faalt('tekens 0009: verloop met alleen U+E0080 (gereserveerd, onzichtbaar) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\+0E0080')$q$, '%onzichtbare%');
+select tests.faalt('tekens 0009: verloop met alleen U+FFF0–FFF2 geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\FFF0\FFF1\FFF2')$q$, '%onzichtbare%');
+select tests.faalt('tekens 0009: verloop met alleen U+16FE4 (Khitan-opvuller, 0 px) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\+016FE4')$q$, '%onzichtbare%');
+select tests.faalt('tekens 0009: verborgen lading in gewone tekst ("ok" + U+E00C1…E00C4) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'ok\+0E00C1\+0E00C2\+0E00C3\+0E00C4')$q$, '%onzichtbare%');
+select tests.faalt('tekens 0009: U+E0FFF (einde van het gereserveerde blok) in een actietekst geweigerd',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig) values ('ACT-27t1', U&'Lek\+0E0FFF', '–', true)$q$, '%tekens%');
+select tests.faalt('tekens 0009: Mongoolse variatiekiezer U+180B nu ook in gewone vrije tekst (planning) geweigerd',
+  $q$insert into public.planning (id, datum, code, inspecteur, toelichting) values ('PL-27t', current_date + 3, 'DAM', 'c0000000-0000-4000-a000-000000000002', U&'a\180Bb')$q$, '%tekens%');
+:PG
+select tests.klopt('tekens 0009: geen enkel Default_Ignorable-codepunt komt nog door (behalve U+200D en U+FE00–FE0F)',
+  not exists (select 1 from (select unnest(array[173, 847, 1564, 4447, 4448, 6068, 6069, 6155, 6156, 6157, 6158, 6159, 8203, 8204, 8206, 8207,
+                                                   8234, 8238, 8288, 8293, 8303, 12644, 65279, 65440, 65520, 65528, 113824, 119155, 917504, 917631,
+                                                   917632, 917759, 917760, 917999, 918000, 921599]) cp) x
+              where public.tekst_tekens_ok('a' || chr(cp) || 'b') or public.verloop_tekens_ok('a' || chr(cp) || 'b'))
+  and public.tekst_tekens_ok('Gedaan ' || chr(128119) || chr(8205) || chr(9792) || chr(65039)));
+select tests.klopt('tekens 0009: record_tekens_ok volgt dezelfde regel (U+E0080, U+FFF0, U+16FE4 in het record geweigerd)',
+  not public.record_tekens_ok(jsonb_build_object('t', 'a' || chr(917632)))
+  and not public.record_tekens_ok(jsonb_build_object('t', 'a' || chr(65520)))
+  and not public.record_tekens_ok(jsonb_build_object('t', 'a' || chr(94180)))
+  and public.record_tekens_ok(jsonb_build_object('t', 'Gewone tekst ' || chr(128119) || chr(8205) || chr(9792) || chr(65039))));
+
+-- 27b. nagemaakte serverregels: lookalikes die niet in de lijst staan worden jokers (aanvalsronde: Տ, ∪, ⊤, ᗅ)
+:W
+select tests.faalt('skelet 0009: "Տtatus: …" (Armeense Տ U+054F) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\054Ftatus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('skelet 0009: "Stat∪s: …" (U+222A) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'Stat\222As: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('skelet 0009: "S⊤atus: …" (U+22A4) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'S\22A4atus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('skelet 0009: "Stᗅtus: …" (U+15C5) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'St\15C5tus: Klaar voor toetsing \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('skelet 0009: vervangen én invoegen samen ("Տt∶atus: …") geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'\054Ft\2236atus: Open \2192 Afgerond')$q$, '%alleen de server%');
+select tests.faalt('skelet 0009: "Aаngemᴀakt met Տtatus Open" (gemengd) geweigerd',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'A\0430ngem\1D00akt met \054Ftatus Open')$q$, '%alleen de server%');
+select tests.lukt('skelet 0009: met "Toelichting: " ervoor (zoals de app doet) mag het wel',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', U&'Toelichting: \054Ftatus: Klaar voor toetsing \2192 Afgerond')$q$);
+select tests.lukt('skelet 0009: gewone regels van de app blijven werken',
+  $q$insert into public.actie_log (actie_id, wat) values ('ACT-11', 'Niet akkoord na toetsing: status is nog niet goed'),
+                                                        ('ACT-11', 'Gedaan ' || chr(128119) || chr(8205) || chr(9792) || chr(65039)),
+                                                        ('ACT-11', 'Ingesteld: actiehouder en toetser gekozen')$q$);
+:PG
+select tests.klopt('skelet 0009: de automaat is lineair (een lange rij jokers zonder treffer is snel geweigerd of geaccepteerd)',
+  public.verloop_begint_als(repeat('?', 1999) || 'x', 'actiehoudertoetserofplandatumgewijzigd')
+  and not public.verloop_begint_als('?' || repeat('x', 1999), 'status')
+  and not public.verloop_begint_als('stat' || repeat('x', 1990), 'status'));
+
+-- 27c. bewaartermijn op een vast moment: een UPDATE zonder wijziging zet de klok van een afgesloten actie niet terug
+:PG
+set session_replication_role = replica;
+insert into public.acties (id, tekst, status, houder, toetser, plandatum, afgerond_server, afgerond_op, created_at, updated_at, uitvoerders) values
+  ('ACT-old1', 'a', 'Afgerond', 'a0000000-0000-4000-a000-000000000011', 'c0000000-0000-4000-a000-000000000003', '2018-01-01',
+   now() - interval '8 years', now() - interval '8 years', now() - interval '8 years 1 month', now() - interval '8 years', '{a0000000-0000-4000-a000-000000000011}'),
+  ('ACT-old2', 'a', 'Afgerond', 'a0000000-0000-4000-a000-000000000011', 'c0000000-0000-4000-a000-000000000003', '2018-01-01',
+   now() - interval '8 years', now() - interval '8 years', now() - interval '8 years 1 month', now() - interval '8 years', '{a0000000-0000-4000-a000-000000000011}');
+set session_replication_role = origin;
+create temp table bt27 as select updated_at from public.acties where id = 'ACT-old2';
+grant select on bt27 to authenticated;
+:I1
+select tests.raakt('bewaartermijn 0009: houder doet een UPDATE zonder wijziging op een afgeronde actie (mag, verandert niets)',
+  $q$update public.acties set tekst = tekst where id = 'ACT-old2'$q$, 1);
+select tests.faalt('bewaartermijn 0009: een echte wijziging aan een afgeronde actie blijft geweigerd',
+  $q$update public.acties set tekst = 'anders' where id = 'ACT-old2'$q$, '%ligt vast%');
+:PG
+select tests.klopt('bewaartermijn 0009: updated_at van de afgeronde actie is NIET op nu gezet',
+  (select updated_at from public.acties where id = 'ACT-old2') = (select updated_at from bt27));
+select tests.klopt('bewaartermijn 0009: proefrun telt beide oude afgeronde acties (de klok liep vanaf het afronden)',
+  (select (public.bewaartermijn_opschonen(p_proef => true) ->> 'acties')::int) = 2,
+  public.bewaartermijn_opschonen(p_proef => true)::text);
+create temp table bt27r as select public.bewaartermijn_opschonen() as r;
+select tests.klopt('bewaartermijn 0009: opschonen verwijdert ACT-old1 én ACT-old2',
+  (select (r ->> 'acties')::int from bt27r) = 2 and not exists (select 1 from public.acties where id in ('ACT-old1', 'ACT-old2')),
+  (select r::text from bt27r));
+:W
+select tests.lukt('afgesloten_op 0009: coördinator maakt een handmatige actie',
+  $q$insert into public.acties (id, tekst, oordeel, handmatig, status) values ('ACT-27v', 'Vervalt zo', '–', true, 'Voorstel')$q$);
+select tests.raakt('afgesloten_op 0009: zelf afgesloten_op zetten op een lopende actie heeft geen effect',
+  $q$update public.acties set afgesloten_op = '2001-01-01' where id = 'ACT-27v'$q$, 1);
+select tests.klopt('afgesloten_op 0009: blijft leeg zolang de actie loopt',
+  (select afgesloten_op is null from public.acties where id = 'ACT-27v'));
+select tests.raakt('afgesloten_op 0009: voorstel laten vervallen', $q$update public.acties set status = 'Vervallen' where id = 'ACT-27v'$q$, 1);
+select tests.klopt('afgesloten_op 0009: de server zet het moment van afsluiten (nu)',
+  (select afgesloten_op between now() - interval '1 minute' and now() from public.acties where id = 'ACT-27v'));
+:PG
+create temp table bt27b as select afgesloten_op, updated_at from public.acties where id = 'ACT-27v';
+grant select on bt27b to authenticated;
+:W
+select tests.raakt('afgesloten_op 0009: afgesloten_op later op 2001 zetten …',
+  $q$update public.acties set afgesloten_op = '2001-01-01' where id = 'ACT-27v'$q$, 1);
+select tests.klopt('afgesloten_op 0009: … verandert niets (ook updated_at niet)',
+  (select (a.afgesloten_op, a.updated_at) = (b.afgesloten_op, b.updated_at) from public.acties a, bt27b b where a.id = 'ACT-27v'));
+:PG
+select tests.klopt('afgesloten_op 0009: elke afgesloten actie (via de triggers) heeft een moment van afsluiten',
+  not exists (select 1 from public.acties where status in ('Afgerond', 'Vervallen') and afgesloten_op is null));
+select tests.klopt('afgesloten_op 0009: trigger zz_acties_afgesloten loopt NA acties_valideer en zet_updated_at',
+  (select array_agg(tgname::text order by tgname) from pg_trigger where tgrelid = 'public.acties'::regclass and not tgisinternal
+     and tgname in ('acties_valideer', 'zet_updated_at', 'zz_acties_afgesloten')) = array['acties_valideer', 'zet_updated_at', 'zz_acties_afgesloten']);
+
+-- 27d. instelling rapport_ontvanger (standaard de QHSE-manager; Beheer › "Rapporten mailen naar")
+:PG
+delete from public.instellingen where sleutel = 'rapport_ontvanger';
+\i :seed
+select tests.klopt('rapport_ontvanger: seed.sql kiest de enige actieve QHSE-manager',
+  (select waarde #>> '{}' from public.instellingen where sleutel = 'rapport_ontvanger') = 'd0000000-0000-4000-a000-000000000021');
+:W
+select tests.klopt('rapport_ontvanger: iedereen in het team ziet wie de rapporten krijgt',
+  (select public.rapport_ontvanger() ->> 'naam') = (select full_name from public.profiles where id = 'd0000000-0000-4000-a000-000000000021'));
+select tests.faalt('rapport_ontvanger: een coördinator wijzigt de ontvanger niet',
+  $q$insert into public.instellingen (sleutel, waarde) values ('rapport_ontvanger', '"c0000000-0000-4000-a000-000000000002"')
+     on conflict (sleutel) do update set waarde = excluded.waarde$q$, '%tweestapsverificatie%');
+:NR27
+select tests.faalt('rapport_ontvanger: zonder rol geen antwoord', $q$select public.rapport_ontvanger()$q$, '%Niet ingelogd%');
+:B2
+select tests.raakt('rapport_ontvanger: beheerder (aal2) kiest een coördinator',
+  $q$update public.instellingen set waarde = '"c0000000-0000-4000-a000-000000000002"' where sleutel = 'rapport_ontvanger'$q$, 1);
+select tests.faalt('rapport_ontvanger: een inactief account geweigerd',
+  $q$update public.instellingen set waarde = '"e0000000-0000-4000-a000-000000000031"' where sleutel = 'rapport_ontvanger'$q$, '%actieve collega%');
+select tests.faalt('rapport_ontvanger: iemand zonder rol geweigerd',
+  $q$update public.instellingen set waarde = '"f0000000-0000-4000-a000-000000000048"' where sleutel = 'rapport_ontvanger'$q$, '%actieve collega%');
+select tests.faalt('rapport_ontvanger: geen uuid geweigerd',
+  $q$update public.instellingen set waarde = '"iedereen@bedrijf.nl"' where sleutel = 'rapport_ontvanger'$q$, '%instellingen_waarde_geldig%');
+select tests.raakt('rapport_ontvanger: JSON null (via PostgREST SQL NULL) = terug naar de standaard',
+  $q$update public.instellingen set waarde = null where sleutel = 'rapport_ontvanger'$q$, 1);
+select tests.klopt('rapport_ontvanger: standaard is dan de enige actieve QHSE-manager',
+  (select public.rapport_ontvanger() ->> 'id') = 'd0000000-0000-4000-a000-000000000021');
+:B
+select tests.raakt('rapport_ontvanger: beheerder ZONDER MFA (aal1) wijzigt niets',
+  $q$update public.instellingen set waarde = '"c0000000-0000-4000-a000-000000000003"' where sleutel = 'rapport_ontvanger'$q$, 0);
+:PG
+\i :seed
+select tests.klopt('rapport_ontvanger: seed.sql opnieuw draaien laat een gemaakte keuze staan',
+  (select jsonb_typeof(waarde) from public.instellingen where sleutel = 'rapport_ontvanger') = 'null');
+
+-- 27e. rapport (PDF) in de bucket "rapporten" en de mail-wachtrij
+:W
+select tests.lukt('rapport: coördinator legt een inspectie vast',
+  $q$insert into public.inspecties (id, titel, code, record) values ('WPI-27r', 'Rapporttest', 'DAM', '{"waarnemingen":[{"oordeel":"C"}]}'),
+                                                                   ('WPI-27s', 'Rapporttest 2', 'DAM', '{"waarnemingen":[{"oordeel":"C"}]}')$q$);
+select tests.faalt('rapport: in de wachtrij zonder upload geweigerd',
+  $q$select public.rapport_in_wachtrij('WPI-27r', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf')$q$, '%nog niet geüpload%');
+select tests.lukt('rapport: eigen PDF uploaden (eigen map, <inspectie>.pdf)',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf', auth.uid())$q$);
+select tests.faalt('rapport: nogmaals uploaden (overschrijven) geweigerd',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf', auth.uid())$q$, '%duplicate key%');
+select tests.faalt('rapport: upsert (x-upsert: true) op een bestaand rapport geweigerd',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf', auth.uid())
+     on conflict (bucket_id, name) do update set metadata = '{"x":1}'$q$, '%row-level security%');
+select tests.raakt('rapport: een bestaand rapport bijwerken raakt niets', $q$update storage.objects set metadata = '{}' where bucket_id = 'rapporten'$q$, 0);
+select tests.raakt('rapport: een rapport verwijderen raakt niets', $q$delete from storage.objects where bucket_id = 'rapporten'$q$, 0);
+select tests.faalt('rapport: in de map van een ander geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000003/WPI-27s.pdf')$q$, '%row-level security%');
+select tests.faalt('rapport: voor de inspectie van een ander geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-1.pdf')$q$, '%row-level security%');
+select tests.faalt('rapport: voor een inspectie die (nog) niet op de server staat geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-bestaatniet.pdf')$q$, '%row-level security%');
+select tests.faalt('rapport: geen .pdf (bijv. .html) geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-27s.html')$q$, '%row-level security%');
+select tests.faalt('rapport: submap of ".." geweigerd',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/../WPI-27s.pdf')$q$, '%row-level security%');
+select tests.faalt('rapport: in de wachtrij met een ander pad geweigerd',
+  $q$select public.rapport_in_wachtrij('WPI-27r', 'c0000000-0000-4000-a000-000000000003/WPI-27r.pdf')$q$, '%eigen map%');
+select tests.klopt('rapport: in de wachtrij (status wacht, ontvanger de QHSE-manager)',
+  (select r ->> 'status' = 'wacht' and r ->> 'ontvanger' = 'd0000000-0000-4000-a000-000000000021' and r ->> 'ontvanger_naam' is not null
+     from (select public.rapport_in_wachtrij('WPI-27r', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf') r) x));
+select tests.klopt('rapport: nogmaals (antwoord kwijt) geeft dezelfde rij, geen tweede',
+  (select (public.rapport_in_wachtrij('WPI-27r', 'c0000000-0000-4000-a000-000000000002/WPI-27r.pdf') ->> 'status') = 'wacht')
+  and (select count(*) from public.mail_wachtrij where inspectie_id = 'WPI-27r') = 1);
+select tests.faalt('wachtrij: zelf een rij toevoegen geweigerd',
+  $q$insert into public.mail_wachtrij (inspectie_id, bestand) values ('WPI-27s', 'c0000000-0000-4000-a000-000000000002/WPI-27s.pdf')$q$, '%permission denied%');
+select tests.faalt('wachtrij: zelf de status wijzigen geweigerd',
+  $q$update public.mail_wachtrij set status = 'verstuurd'$q$, '%permission denied%');
+select tests.faalt('wachtrij: zelf een rij verwijderen geweigerd', $q$delete from public.mail_wachtrij$q$, '%permission denied%');
+select tests.telt('wachtrij: een coördinator ziet de wachtrij', $q$select * from public.mail_wachtrij$q$, 1);
+:D
+select tests.faalt('rapport: een ander zet het rapport van W niet in de wachtrij',
+  $q$select public.rapport_in_wachtrij('WPI-27r', 'c0000000-0000-4000-a000-000000000003/WPI-27r.pdf')$q$, '%Alleen de inspecteur%');
+select tests.faalt('rapport: zelfde melding voor een inspectie die niet bestaat (geen bestaanstest)',
+  $q$select public.rapport_in_wachtrij('WPI-bestaatniet', 'c0000000-0000-4000-a000-000000000003/WPI-bestaatniet.pdf')$q$, '%Alleen de inspecteur%');
+select tests.telt('rapport: een andere coördinator mag het rapport lezen (alles-lezen)',
+  $q$select * from storage.objects where bucket_id = 'rapporten'$q$, 1);
+:I1
+select tests.telt('rapport: de oude rol inspecteur ziet het rapport van een ander niet', $q$select * from storage.objects where bucket_id = 'rapporten'$q$, 0);
+select tests.telt('wachtrij: de oude rol inspecteur ziet de wachtrij niet', $q$select * from public.mail_wachtrij$q$, 0);
+:Q
+select tests.telt('wachtrij: QHSE-manager zonder MFA (aal1) ziet niets', $q$select * from public.mail_wachtrij$q$, 0);
+select tests.faalt('rapport: de QHSE-manager inspecteert niet en uploadt geen rapport',
+  $q$insert into storage.objects (bucket_id, name) values ('rapporten', 'd0000000-0000-4000-a000-000000000021/WPI-27s.pdf')$q$, '%row-level security%');
+:Q2
+select tests.telt('wachtrij: QHSE-manager met MFA ziet de wachtrij', $q$select * from public.mail_wachtrij$q$, 1);
+select tests.telt('rapport: QHSE-manager met MFA leest het rapport', $q$select * from storage.objects where bucket_id = 'rapporten'$q$, 1);
+:SR
+select tests.raakt('wachtrij: service_role (functie mail-versturen) zet een poging en een fout',
+  $q$update public.mail_wachtrij set status = 'fout', pogingen = pogingen + 1, laatste_fout = 'Graph: 503' where inspectie_id = 'WPI-27r'$q$, 1);
+select tests.raakt('wachtrij: service_role zet verstuurd', $q$update public.mail_wachtrij set status = 'verstuurd', pogingen = pogingen + 1 where inspectie_id = 'WPI-27r'$q$, 1);
+select tests.klopt('wachtrij: verstuurd_op zet de server', (select verstuurd_op is not null from public.mail_wachtrij where inspectie_id = 'WPI-27r'));
+select tests.faalt('wachtrij: verstuurd blijft verstuurd', $q$update public.mail_wachtrij set status = 'wacht' where inspectie_id = 'WPI-27r'$q$, '%blijft verstuurd%');
+select tests.faalt('wachtrij: ook service_role wijzigt het bestand niet', $q$update public.mail_wachtrij set bestand = 'c0000000-0000-4000-a000-000000000002/WPI-27s.pdf'$q$, '%permission denied%');
+select tests.faalt('wachtrij: service_role voegt geen rijen toe',
+  $q$insert into public.mail_wachtrij (inspectie_id, bestand) values ('WPI-27s', 'c0000000-0000-4000-a000-000000000002/WPI-27s.pdf')$q$, '%permission denied%');
+select tests.faalt('wachtrij: service_role verwijdert geen rijen', $q$delete from public.mail_wachtrij$q$, '%permission denied%');
+:PG
+select tests.faalt('wachtrij: pogingen lopen alleen op (ook als eigenaar)', $q$update public.mail_wachtrij set pogingen = 0 where inspectie_id = 'WPI-27r'$q$, '%loopt alleen op%');
+select tests.klopt('wachtrij: bucket rapporten is privé, alleen PDF, max 20 MB',
+  (select not public and allowed_mime_types = array['application/pdf'] and file_size_limit = 20971520 from storage.buckets where id = 'rapporten'));
+-- oude inspectie met rapport: de bewaartermijn zet het rapport klaar voor de Storage-API, de wachtrij gaat mee
+set session_replication_role = replica;
+insert into public.inspecties (id, inspecteur_id, titel, opgeslagen, record, created_at, updated_at) values
+  ('WPI-oudr', 'c0000000-0000-4000-a000-000000000002', 'Oude inspectie met rapport', now() - interval '8 years', '{}', now() - interval '8 years', now() - interval '8 years');
+insert into storage.objects (bucket_id, name) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-oudr.pdf');
+insert into public.mail_wachtrij (inspectie_id, bestand, status, aangemaakt) values
+  ('WPI-oudr', 'c0000000-0000-4000-a000-000000000002/WPI-oudr.pdf', 'verstuurd', now() - interval '8 years');
+set session_replication_role = origin;
+select tests.klopt('bewaartermijn 0009: proefrun noemt het rapport van de oude inspectie',
+  (select public.bewaartermijn_opschonen(p_proef => true) -> 'rapporten') = '["c0000000-0000-4000-a000-000000000002/WPI-oudr.pdf"]'::jsonb);
+create temp table bt27s as select public.bewaartermijn_opschonen() as r;
+select tests.klopt('bewaartermijn 0009: opschonen: inspectie en wachtrij weg, rapport klaar voor de Storage-API',
+  (select (r ->> 'inspecties')::int from bt27s) = 1
+  and not exists (select 1 from public.mail_wachtrij where inspectie_id = 'WPI-oudr')
+  and exists (select 1 from public.bewaartermijn_rapporten where pad = 'c0000000-0000-4000-a000-000000000002/WPI-oudr.pdf'));
+select tests.klopt('wachtrij en bewaartermijn_rapporten: RLS aan; bewaartermijn_rapporten voor niemand anders dan de eigenaar',
+  (select relrowsecurity from pg_class where oid = 'public.mail_wachtrij'::regclass)
+  and not has_table_privilege('authenticated', 'public.bewaartermijn_rapporten', 'select')
+  and not has_table_privilege('service_role', 'public.bewaartermijn_rapporten', 'select'));
+
+-- 27f. gebruikersbeheer (Edge Functions uitnodigen en gebruikers): de controles die in de database staan
+:H
+select tests.klopt('gebruikers: hoofd ZONDER aal2 mag geen gebruikers beheren', not public.mag_gebruikers_beheren());
+select tests.faalt('gebruikers: hoofd zonder aal2 krijgt het overzicht niet', $q$select * from public.gebruikers_overzicht()$q$, '%tweestapsverificatie%');
+:H2
+select tests.klopt('gebruikers: hoofd met aal2 mag gebruikers beheren', public.mag_gebruikers_beheren());
+select tests.klopt('gebruikers: het overzicht toont iedereen, met laatst ingelogd en geblokkeerd',
+  (select count(*) from public.gebruikers_overzicht()) = (select count(*) from public.profiles)
+  and exists (select 1 from public.gebruikers_overzicht() g where g.id = 'f0000000-0000-4000-a000-000000000048' and g.role is null));
+select tests.faalt('gebruikers: bestaat-dit-adres is alleen voor de functie (service_role)',
+  $q$select public.gebruiker_bestaat('hoofd@test.invalid')$q$, '%permission denied%');
+select tests.faalt('gebruikers: een beheer-gebeurtenis schrijft alleen de functie',
+  $q$select public.beheer_gebeurtenis(auth.uid(), 'beheer_gebruiker_uitgenodigd', auth.uid(), '{}')$q$, '%permission denied%');
+select tests.faalt('gebruikers: een client kan geen "beheer_"-gebeurtenis nabootsen via report_security_event',
+  $q$select public.report_security_event('beheer_gebruiker_uitgenodigd', '{}')$q$, '%Ongeldige soort%');
+:Q2
+select tests.klopt('gebruikers: QHSE-manager met aal2 mag gebruikers beheren', public.mag_gebruikers_beheren());
+:B2
+select tests.klopt('gebruikers: beheerder met aal2 mag gebruikers beheren', public.mag_gebruikers_beheren());
+:W
+select tests.klopt('gebruikers: een coördinator mag geen gebruikers beheren', not public.mag_gebruikers_beheren());
+\set W2 'reset role; select tests.als(''W'', ''aal2''); set role authenticated;'
+:W2
+select tests.klopt('gebruikers: een coördinator ook niet met aal2', not public.mag_gebruikers_beheren());
+select tests.faalt('gebruikers: een coördinator krijgt het overzicht niet', $q$select * from public.gebruikers_overzicht()$q$, '%tweestapsverificatie%');
+:SR
+select tests.klopt('gebruikers: bestaat-dit-adres (hoofdletters en spaties maken niet uit)',
+  public.gebruiker_bestaat('  HOOFD@test.invalid ') and not public.gebruiker_bestaat('nieuw.adres@test.invalid'));
+select tests.lukt('gebruikers: de functie legt een uitnodiging vast met de aanroeper als "wie"',
+  $q$select public.beheer_gebeurtenis('d0000000-0000-4000-a000-000000000022', 'beheer_gebruiker_uitgenodigd', 'f0000000-0000-4000-a000-000000000048', '{"rol":"coordinator"}')$q$);
+select tests.faalt('gebruikers: alleen soorten "beheer_…"',
+  $q$select public.beheer_gebeurtenis('d0000000-0000-4000-a000-000000000022', 'rol_gewijzigd', null, '{}')$q$, '%Ongeldige soort%');
+:PG
+select tests.klopt('gebruikers: de gebeurtenis staat in security_events met de beheerder als wie',
+  exists (select 1 from public.security_events where soort = 'beheer_gebruiker_uitgenodigd'
+           and wie = 'd0000000-0000-4000-a000-000000000022' and details ->> 'profiel' = 'f0000000-0000-4000-a000-000000000048'));
+-- wijzigen via de functie = PATCH met de JWT van de aanroeper: dezelfde regels als de app altijd had
+:B2
+select tests.raakt('gebruikers: beheerder (aal2) zet het tweede hoofd op non-actief',
+  $q$update public.profiles set actief = false where id = 'b0000000-0000-4000-a000-000000000002'$q$, 1);
+select tests.faalt('gebruikers: het laatste actieve hoofd op non-actief geweigerd',
+  $q$update public.profiles set actief = false where id = 'b0000000-0000-4000-a000-000000000001'$q$, '%minstens één actief hoofd%');
+select tests.faalt('gebruikers: het laatste actieve hoofd degraderen geweigerd',
+  $q$update public.profiles set role = 'coordinator' where id = 'b0000000-0000-4000-a000-000000000001'$q$, '%minstens één actief hoofd%');
+select tests.faalt('gebruikers: jezelf op non-actief geweigerd',
+  $q$update public.profiles set actief = false where id = 'd0000000-0000-4000-a000-000000000022'$q$, '%eigen rol of activering%');
+select tests.faalt('gebruikers: de rol inspecteur geven geweigerd',
+  $q$update public.profiles set role = 'inspecteur' where id = 'f0000000-0000-4000-a000-000000000048'$q$, '%niet meer toegekend%');
+select tests.raakt('gebruikers: rol en functie van een nieuw uitgenodigde collega kiezen',
+  $q$update public.profiles set role = 'coordinator', functie = 'Montage Coördinator' where id = 'f0000000-0000-4000-a000-000000000048'$q$, 1);
+select tests.raakt('gebruikers: het tweede hoofd weer actief', $q$update public.profiles set actief = true where id = 'b0000000-0000-4000-a000-000000000002'$q$, 1);
+:PG
+select tests.klopt('gebruikers: elke wijziging staat in de auditlog met de beheerder als wie',
+  (select count(*) from public.audit_log where tabel = 'profiles' and wie = 'd0000000-0000-4000-a000-000000000022'
+     and record_id in ('b0000000-0000-4000-a000-000000000002', 'f0000000-0000-4000-a000-000000000048') and t > now() - interval '1 hour') >= 3);
+update public.profiles set role = null, functie = null where id = 'f0000000-0000-4000-a000-000000000048';
+
+-- 27g. kritiekronde: gebruikersbeheer ALTIJD met aal2, ook rechtstreeks via PostgREST (zoals de seed: MFA-plicht uit)
+:PG
+update public.instellingen set waarde = 'false' where sleutel = 'mfa_verplicht_hoofd';
+:H
+select tests.klopt('aal2-gat: uitgangssituatie (MFA-plicht uit): hoofd op aal1 is beheer-admin, maar mag geen gebruikers beheren',
+  public.is_beheer_admin() and not public.mag_gebruikers_beheren());
+select tests.faalt('aal2-gat: hoofd (aal1, alleen wachtwoord) maakt via PostgREST een coördinator hoofd: geweigerd',
+  $q$update public.profiles set role = 'hoofd' where id = 'c0000000-0000-4000-a000-000000000003' returning role$q$, '%tweestapsverificatie%');
+select tests.faalt('aal2-gat: hoofd (aal1) zet de QHSE-manager op non-actief: geweigerd',
+  $q$update public.profiles set actief = false where id = 'd0000000-0000-4000-a000-000000000021'$q$, '%tweestapsverificatie%');
+select tests.faalt('aal2-gat: hoofd (aal1) wijzigt een naam: geweigerd',
+  $q$update public.profiles set full_name = 'Iemand Anders' where id = 'c0000000-0000-4000-a000-000000000003'$q$, '%tweestapsverificatie%');
+select tests.faalt('aal2-gat: hoofd (aal1) wijzigt een functie: geweigerd',
+  $q$update public.profiles set functie = 'Directeur' where id = 'c0000000-0000-4000-a000-000000000003'$q$, '%tweestapsverificatie%');
+:B
+select tests.faalt('aal2-gat: beheerder (aal1) zet een hoofd op non-actief: geweigerd',
+  $q$update public.profiles set actief = false where id = 'b0000000-0000-4000-a000-000000000002'$q$, '%tweestapsverificatie%');
+:Q
+select tests.faalt('aal2-gat: QHSE-manager (aal1) maakt een coördinator hoofd: geweigerd',
+  $q$update public.profiles set role = 'hoofd' where id = 'c0000000-0000-4000-a000-000000000003'$q$, '%tweestapsverificatie%');
+:PG
+select tests.klopt('aal2-gat: er is niets gewijzigd',
+  (select role::text = 'coordinator' from public.profiles where id = 'c0000000-0000-4000-a000-000000000003')
+  and (select actief from public.profiles where id = 'd0000000-0000-4000-a000-000000000021')
+  and (select actief from public.profiles where id = 'b0000000-0000-4000-a000-000000000002'));
+:H2
+select tests.raakt('aal2-gat: met aal2 (het pad van de Edge Function) mag het wel: functie wijzigen en terug',
+  $q$update public.profiles set functie = 'Tijdelijk' where id = 'c0000000-0000-4000-a000-000000000003';
+     update public.profiles set functie = null where id = 'c0000000-0000-4000-a000-000000000003'$q$, 1);
+
+-- 27h. wachtende rapporten volgen de huidige ontvanger (nooit naar een oud-collega); verstuurd blijft vast
+:W
+select tests.lukt('ontvanger volgt: coördinator uploadt het rapport van WPI-27s',
+  $q$insert into storage.objects (bucket_id, name, owner) values ('rapporten', 'c0000000-0000-4000-a000-000000000002/WPI-27s.pdf', auth.uid())$q$);
+select tests.klopt('ontvanger volgt: in de wachtrij met de QHSE-manager als ontvanger',
+  (select public.rapport_in_wachtrij('WPI-27s', 'c0000000-0000-4000-a000-000000000002/WPI-27s.pdf') ->> 'ontvanger') = 'd0000000-0000-4000-a000-000000000021');
+:H2
+select tests.raakt('ontvanger volgt: hoofd (aal2) zet de QHSE-manager op non-actief',
+  $q$update public.profiles set actief = false where id = 'd0000000-0000-4000-a000-000000000021'$q$, 1);
+:PG
+select tests.klopt('ontvanger volgt: het wachtende rapport gaat NIET meer naar de oud-collega (geen QHSE-manager meer: nog niemand)',
+  (select ontvanger is null and status = 'wacht' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+select tests.klopt('ontvanger volgt: een verstuurd rapport blijft zoals het was',
+  (select ontvanger = 'd0000000-0000-4000-a000-000000000021' from public.mail_wachtrij where inspectie_id = 'WPI-27r'));
+:B2
+select tests.raakt('ontvanger volgt: beheerder kiest het hoofd als ontvanger',
+  $q$update public.instellingen set waarde = '"b0000000-0000-4000-a000-000000000001"' where sleutel = 'rapport_ontvanger'$q$, 1);
+:PG
+select tests.klopt('ontvanger volgt: het wachtende rapport gaat nu naar het hoofd',
+  (select ontvanger = 'b0000000-0000-4000-a000-000000000001' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+:SR
+select tests.raakt('ontvanger volgt: service_role mag een wachtend rapport naar een actieve collega sturen',
+  $q$update public.mail_wachtrij set ontvanger = 'c0000000-0000-4000-a000-000000000002' where inspectie_id = 'WPI-27s'$q$, 1);
+select tests.faalt('ontvanger volgt: maar nooit naar een non-actief account',
+  $q$update public.mail_wachtrij set ontvanger = 'd0000000-0000-4000-a000-000000000021' where inspectie_id = 'WPI-27s'$q$, '%actieve collega%');
+select tests.faalt('ontvanger volgt: de ontvanger van een verstuurd rapport ligt vast',
+  $q$update public.mail_wachtrij set ontvanger = 'b0000000-0000-4000-a000-000000000001' where inspectie_id = 'WPI-27r'$q$, '%ligt vast%');
+:B2
+select tests.raakt('ontvanger volgt: de QHSE-manager weer actief', $q$update public.profiles set actief = true where id = 'd0000000-0000-4000-a000-000000000021'$q$, 1);
+select tests.raakt('ontvanger volgt: terug naar de standaard', $q$update public.instellingen set waarde = null where sleutel = 'rapport_ontvanger'$q$, 1);
+:PG
+select tests.klopt('ontvanger volgt: standaard = de QHSE-manager, ook voor het wachtende rapport',
+  (select ontvanger = 'd0000000-0000-4000-a000-000000000021' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+-- twee QHSE-managers: nooit "niemand", maar de eerste die in het team kwam
+:H2
+select tests.raakt('twee QHSE-managers: een coördinator wordt (ook) QHSE-manager',
+  $q$update public.profiles set role = 'qhse' where id = 'c0000000-0000-4000-a000-000000000004'$q$, 1);
+:W
+select tests.klopt('twee QHSE-managers: de rapporten blijven naar de eerste gaan (niet naar niemand, niet ongemerkt naar de nieuwe)',
+  (select public.rapport_ontvanger() ->> 'id') = 'd0000000-0000-4000-a000-000000000021');
+select tests.klopt('twee QHSE-managers: de server legde de huidige ontvanger vast als keuze (zichtbaar in Beheer)',
+  (select public.rapport_ontvanger() ->> 'keuze') = 'd0000000-0000-4000-a000-000000000021');
+:PG
+select tests.klopt('twee QHSE-managers: het wachtende rapport ook',
+  (select ontvanger = 'd0000000-0000-4000-a000-000000000021' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+:H2
+select tests.raakt('twee QHSE-managers: de eerste op non-actief → de tweede krijgt ze',
+  $q$update public.profiles set actief = false where id = 'd0000000-0000-4000-a000-000000000021'$q$, 1);
+:PG
+select tests.klopt('twee QHSE-managers: het wachtende rapport gaat naar de tweede',
+  (select ontvanger = 'c0000000-0000-4000-a000-000000000004' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+:H2
+select tests.raakt('twee QHSE-managers: terugzetten', $q$update public.profiles set actief = true where id = 'd0000000-0000-4000-a000-000000000021';
+  update public.profiles set role = 'coordinator' where id = 'c0000000-0000-4000-a000-000000000004'$q$, 1);
+:PG
+select tests.klopt('ontvanger volgt: na terugzetten weer de QHSE-manager',
+  (select ontvanger = 'd0000000-0000-4000-a000-000000000021' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+
+-- 27i. tweede kritiekronde: de ontvanger kiezen ALTIJD met aal2 (MFA-plicht uit, zoals de seed), geen oude rol
+--      "inspecteur" als ontvanger, en een account dat ooit een rapport kreeg, kan weer weg
+:PG
+select tests.klopt('ontvanger-aal2: uitgangssituatie: MFA-plicht uit, gekozen: de QHSE-manager (vastgelegd in 27h)',
+  (select waarde = 'false'::jsonb from public.instellingen where sleutel = 'mfa_verplicht_hoofd')
+  and (select waarde #>> '{}' = 'd0000000-0000-4000-a000-000000000021' from public.instellingen where sleutel = 'rapport_ontvanger'));
+:H
+select tests.faalt('ontvanger-aal2: hoofd (aal1) kiest via PostgREST een coördinator: geweigerd',
+  $q$update public.instellingen set waarde = '"c0000000-0000-4000-a000-000000000002"' where sleutel = 'rapport_ontvanger'$q$, '%tweestapsverificatie%');
+select tests.faalt('ontvanger-aal2: hoofd (aal1) via insert … on conflict (zoals de app): geweigerd',
+  $q$insert into public.instellingen (sleutel, waarde) values ('rapport_ontvanger', '"c0000000-0000-4000-a000-000000000002"')
+     on conflict (sleutel) do update set waarde = excluded.waarde$q$, '%tweestapsverificatie%');
+select tests.faalt('ontvanger-aal2: hoofd (aal1) wist de instelling: geweigerd',
+  $q$delete from public.instellingen where sleutel = 'rapport_ontvanger'$q$, '%tweestapsverificatie%');
+select tests.lukt('ontvanger-aal2: hoofd (aal1) mag wel het doel % conform wijzigen (regel van 0008 blijft)',
+  $q$update public.instellingen set waarde = waarde where sleutel = 'doel_conform'$q$);
+:Q
+select tests.faalt('ontvanger-aal2: QHSE-manager (aal1): geweigerd',
+  $q$update public.instellingen set waarde = '"c0000000-0000-4000-a000-000000000002"' where sleutel = 'rapport_ontvanger'$q$, '%tweestapsverificatie%');
+:B
+select tests.faalt('ontvanger-aal2: beheerder (aal1): geweigerd',
+  $q$delete from public.instellingen where sleutel = 'rapport_ontvanger'$q$, '%tweestapsverificatie%');
+:PG
+select tests.klopt('ontvanger-aal2: er is niets gewijzigd, het wachtende rapport gaat nog naar de QHSE-manager',
+  (select waarde #>> '{}' = 'd0000000-0000-4000-a000-000000000021' from public.instellingen where sleutel = 'rapport_ontvanger')
+  and (select ontvanger = 'd0000000-0000-4000-a000-000000000021' from public.mail_wachtrij where inspectie_id = 'WPI-27s'));
+:H2
+select tests.faalt('ontvanger-rol: de oude rol "inspecteur" (actief) is geen ontvanger',
+  $q$update public.instellingen set waarde = '"a0000000-0000-4000-a000-000000000011"' where sleutel = 'rapport_ontvanger'$q$, '%actieve collega%');
+select tests.raakt('ontvanger-aal2: hoofd met aal2 kiest wel (en terug naar de standaard)',
+  $q$update public.instellingen set waarde = '"c0000000-0000-4000-a000-000000000002"' where sleutel = 'rapport_ontvanger';
+     update public.instellingen set waarde = null where sleutel = 'rapport_ontvanger'$q$, 1);
+:SR
+select tests.faalt('ontvanger-rol: ook service_role zet een wachtend rapport niet op de oude rol "inspecteur"',
+  $q$update public.mail_wachtrij set ontvanger = 'a0000000-0000-4000-a000-000000000011' where inspectie_id = 'WPI-27s'$q$, '%actieve collega%');
+select tests.klopt('ontvanger-rol: mag_rapport_ontvangen: QHSE ja, oude rol inspecteur nee',
+  public.mag_rapport_ontvangen('d0000000-0000-4000-a000-000000000021') and not public.mag_rapport_ontvangen('a0000000-0000-4000-a000-000000000011'));
+:W
+select tests.faalt('ontvanger-rol: mag_rapport_ontvangen is niet voor de app',
+  $q$select public.mag_rapport_ontvangen('d0000000-0000-4000-a000-000000000021')$q$, '%permission denied%');
+:PG
+-- een account dat een verstuurd rapport kreeg, verwijderen (dashboard of AVG-verzoek): ontvanger wordt null
+insert into auth.users (id, email, invited_at) values ('99999999-0000-4000-a000-000000000001', 'weg27@test.invalid', now());
+update public.profiles set role = 'qhse', actief = true where id = '99999999-0000-4000-a000-000000000001';
+insert into public.mail_wachtrij (inspectie_id, ontvanger, bestand, status, aangemaakt_door)
+  values ('WPI-m', '99999999-0000-4000-a000-000000000001', 'c0000000-0000-4000-a000-000000000002/WPI-m.pdf', 'verstuurd', 'c0000000-0000-4000-a000-000000000002');
+select tests.lukt('account weg: een account dat ooit een verstuurd rapport kreeg, kan worden verwijderd',
+  $q$delete from auth.users where id = '99999999-0000-4000-a000-000000000001'$q$);
+select tests.klopt('account weg: de rij blijft (verstuurd), zonder ontvanger',
+  (select ontvanger is null and status = 'verstuurd' and verstuurd_op is not null from public.mail_wachtrij where inspectie_id = 'WPI-m'));
+:SR
+select tests.faalt('account weg: een verstuurde rij krijgt daarna geen andere ontvanger',
+  $q$update public.mail_wachtrij set ontvanger = 'd0000000-0000-4000-a000-000000000021' where inspectie_id = 'WPI-m'$q$, '%ligt vast%');
+select tests.faalt('account weg: en een bestaande ontvanger van een verstuurde rij wordt niet zomaar leeg',
+  $q$update public.mail_wachtrij set ontvanger = null where inspectie_id = 'WPI-27r'$q$, '%ligt vast%');
+:PG
+delete from public.mail_wachtrij where inspectie_id = 'WPI-m';
 
 -- =====================================================================
 -- Resultaat

@@ -50,7 +50,28 @@
       return d.length ? "Selectie: " + d.join(" · ") + "." : "";
     },
     setFilter(k, val) { this.dashFilter[k] = this.dashFilter[k] === val ? "" : val; this.route(); },
-    view_dashboard() {
+    // ---- cijfers voor het dashboard en de rapportage, met een rustig skelet (#1, js/laden.js) ----
+    // Normaal zijn de cijfers er al (geladen bij het opstarten): dan meteen tekenen, zonder lader. Ontbreken ze nog,
+    // dan eerst laden; duurt dat langer dan ±1 s, dan een skelet in de vorm van het scherm (WPI.laad.skelet).
+    // (Ontbreken = undefined; null = bewust leeg, zoals op de echte omgeving zonder voorbeelddata: js/auth.js.)
+    DASH_DATA: ["cijfers", "voorbeelddata", "trendacties"],
+    dashDataKlaar() { return this.DASH_DATA.every((n) => this.data[n] !== undefined); },
+    dashDataLaden() {
+      return Promise.all(this.DASH_DATA.filter((n) => this.data[n] === undefined).map((n) => fetch("data/" + n + ".json")
+        .then((r) => { if (!r.ok) throw new Error(n + ": " + r.status); return r.json(); }).then((j) => { this.data[n] = j; })));
+    },
+    metCijfers(vorm, teken) {
+      if (this.dashDataKlaar()) return teken();
+      const v = $("view"), nr = this._routeNr, laden = this.dashDataLaden();
+      return (WPI.laad ? WPI.laad.skelet(v, vorm, laden, { na: 1000 }) : laden).then(() => { if (nr === this._routeNr && this._page === vorm) return teken(); }, () => {
+        if (nr !== this._routeNr) return;
+        v.appendChild(el(`<div class="leeg" style="margin-top:40px"><h1 style="margin:14px 0 6px">${vorm === "kwartaal" ? "Rapportage" : "Dashboard"}</h1>
+          <div class="s" role="alert" style="max-width:340px;margin:0 auto">De cijfers konden niet worden geladen. Controleer de verbinding en probeer het opnieuw.</div>
+          <button class="btn primary" style="margin-top:20px;max-width:260px"${act("route")}>Opnieuw proberen</button></div>`));
+      });
+    },
+    view_dashboard() { return this.metCijfers("dashboard", () => this.tekenDashboard()); },
+    tekenDashboard() {
       const c = this.data.cijfers, D = this.computeDash(), f = this.dashFilter;
       const w = D.waarn, beo = D.oordeel.Conform + D.oordeel.Afwijking + D.oordeel.Verbeterpunt, pct = beo ? Math.round(100 * D.oordeel.Conform / beo) : 0;
       const progPct = Math.round(100 * c.vp_x / c.vp_y), progDoel = 90, doelC = this.doelConform();
@@ -82,7 +103,7 @@
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Oordelen per maand</h2>${this.chartOordeel(D.maanden, D.om)}
         ${leg([[PAL.C, "Conform"], [PAL.V, "Verbeterpunt"], [PAL.A, "Afwijking"]])}</div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Inspectieprogramma <span class="sub">verplichte WPI’s per maand</span></h2>${this.chartProg()}
-        ${leg([[PAL.C, "Uitgevoerd"], [PAL.A, "Gemist"], ["#E6DCCD", "Loopt nog"]])}</div>`));
+        ${leg([[PAL.C, "Uitgevoerd"], [PAL.gemist, "Gemist"], ["#E6DCCD", "Loopt nog"]])}</div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Verdeling oordelen</h2>${this.chartDonut(D.oordeel)}</div>`));
       chartCard.appendChild(el(`<div class="card grafiek"><h2 class="kaartkop">Waar zitten de aandachtspunten? <span class="sub">per klasse</span></h2>${this.klasseBars(D.klasse)}
         ${leg([[PAL.A, "Afwijking"], [PAL.V, "Verbeterpunt"]])}</div>`));
@@ -99,8 +120,9 @@
       const n = String(v).trim() === "" ? NaN : Math.round(+v);
       return n >= 1 && n <= 100 ? n : null;
     },
-    // zachte, warme kleuren die bij de app passen
-    PAL: { C: "#6FAF92", V: "#F2BE6B", A: "#EC8C74", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#72665A", doel: "#2F5D50" },
+    // zachte, warme kleuren die bij de app passen; dezelfde betekenis als in de rest van de app:
+    // V geel, A rood, gemiste inspectie oranje
+    PAL: { C: "#6FAF92", V: "#EEC643", A: "#EC8C74", gemist: "#F0954E", N: "#D8CDBE", track: "#F6F0E7", ink: "#2A2622", soft: "#72665A", doel: "#2F5D50" },
     // %-conform per maand als zachte lijn met vlak eronder
     chartTrend(mnd, om) {
       const doel = this.doelConform(), P = this.PAL, W = 1100, H = 230, L = 44, R = doel != null ? 92 : 24, T = 30, Bm = 30, iw = W - L - R, ih = H - T - Bm;
@@ -158,7 +180,7 @@
     },
     chartProg() {
       const P = this.PAL, c = this.data.cijfers, mnd = c.maanden, vm = c.vp_maand;
-      const kol = mnd.map((m) => { const d = vm[m] || {}; return [[d.ok || 0, P.C], [(d.y || 0) - (d.ok || 0), P.A], [d.lopend || 0, "#EFE6D8", true]]; });
+      const kol = mnd.map((m) => { const d = vm[m] || {}; return [[d.ok || 0, P.C], [(d.y || 0) - (d.ok || 0), P.gemist], [d.lopend || 0, "#EFE6D8", true]]; });
       const max = Math.max(...mnd.map((m) => ((vm[m] || {}).y || 0) + ((vm[m] || {}).lopend || 0)), 1);
       return this.staven(kol, max, mnd.map((m) => { const d = vm[m] || {};
         return [(d.ok || 0) + "/" + (d.y || 0), mlabel(m), `${d.ok || 0} van ${d.y || 0} verplichte inspecties uitgevoerd${d.lopend ? `, ${d.lopend} nog lopend` : ""}`]; }), (i) => act("drill", "programma", mnd[i]));

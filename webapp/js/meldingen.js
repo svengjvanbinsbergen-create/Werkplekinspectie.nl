@@ -45,7 +45,11 @@
       if (al) {
         al.classList.toggle("hidden", !(laat.length || gemist.length) || this._page === "inspectie" || this._page === "vandaag" || !location.hash || location.hash === "#/");
         const nA = laat.length + " actie" + (laat.length === 1 ? "" : "s"), nI = gemist.length + " inspectie" + (gemist.length === 1 ? "" : "s");
-        const tekst = (laat.length && gemist.length ? nA + " en " + nI : laat.length ? nA : nI) + " over datum";
+        // elk deel in zijn eigen kleur (zoals in Meldingen, Vandaag en Acties): acties te laat rood, inspecties niet
+        // gedaan oranje; de rest van de zin rustig. Eén zin, nooit één kleur voor twee betekenissen.
+        const dA = `<span class="al-laat">${nA}</span>`, dI = `<span class="al-gemist">${nI}</span>`;
+        const tekst = (laat.length && gemist.length ? dA + " en " + dI : laat.length ? dA : dI) + " over datum";
+        al.classList.toggle("rood", !!laat.length); al.classList.toggle("warm", !laat.length && !!gemist.length);
         al.innerHTML = laat.length || gemist.length ? `${svg("warn", 16)}<span class="al-t">${tekst}</span><b>Bekijk ›</b>` : "";
         // de balk opent wat hij noemt: alleen acties → de acties die te laat zijn (zoals altijd); alleen inspecties → de
         // Planning; allebei → de meldingenlijst, waar beide staan en elke regel naar de juiste plek leidt
@@ -119,7 +123,7 @@
       const sub = n === 1 ? "Gepland " + dagLabel(p.datum) + " · " + this.productNaam(p.code) + " · " + naam(p.inspecteur) : kort(G.map((x) => this.productNaam(x.code)).join(" · "), 60);
       const b = document.createElement("div");
       b.innerHTML = `<button class="vknop warm vgemist"${WPI.act("go", "planning")}><span class="nr">${n}</span><span class="grow"><span class="t">${n === 1 ? "Inspectie" : "Inspecties"} nog niet gedaan</span><span class="s">${esc(sub)}</span></span>${svg("chev", 18)}</button>`;
-      const laat = lc.querySelector(".vknop.warm");
+      const laat = lc.querySelector(".vknop.laat");
       lc.insertBefore(b.firstElementChild, laat ? laat.nextSibling : lc.firstChild);
       const kop = act.querySelector(".vsectie"); if (kop && kop.textContent === "Acties") kop.textContent = "Acties en inspecties";
     },

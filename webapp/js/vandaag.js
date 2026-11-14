@@ -21,6 +21,8 @@
       const groet = u < 12 ? "Goedemorgen" : u < 18 ? "Goedemiddag" : "Goedenavond";
       const datum = new Date().toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" });
       const lo = this.state.inspectie;
+      // intussen definitief afgerond (bijv. in een ander tabblad)? Dan is hij geen lopend werk meer: opruimen en opnieuw tekenen
+      if (lo && this.controleerAfgerond) this.controleerAfgerond().catch(() => {});   // tekent zelf opnieuw (alAfgerond, stil)
       const kop = el(`<div class="vkop"><div class="hi">${groet} ${esc(vn)} · ${esc(datum)}</div><h1 class="groot">${lo ? "Je inspectie loopt nog" : "&nbsp;"}</h1></div>`); v.appendChild(kop);
       if (this._spontaan) { this._spontaan = false; setTimeout(() => this.kiesProduct(), 0); }   // oude link-route blijft werken
 
@@ -36,6 +38,14 @@
           `<span class="s">${esc(delen.slice(1).join(" · "))}${lo.taak ? (delen.length > 1 ? " · " : "") + esc(lo.taak) : ""}</span>`, "Verder met de inspectie", "play")));
       }
 
+      // ---- gepauzeerde inspecties (alleen de eigen, op dit toestel): bovenaan, één tik = hervatten ----
+      const pauzeDoos = el(`<div class="vpauze"></div>`);
+      if (lo) top.appendChild(pauzeDoos); else top.insertBefore(pauzeDoos, top.firstChild);
+      const melding = this._pauzeMelding; this._pauzeMelding = null;
+      // net gepauzeerd: de kaart bovenaan zegt het al (geen tweede melding in beeld); wel voorlezen
+      if (melding) WPI.zeg("Gepauzeerd: " + kort(melding.titel, 60) + ". Hervat met één tik op de kaart bovenaan.");
+      const pauzes = mag("inspecteert") ? this.gepauzeerdeInspecties() : Promise.resolve([]);
+
       // ---- planning: eerstvolgende groot, de rest als rustige rijen ----
       const plan = el(`<div class="vplan"></div>`); top.appendChild(plan);
       const actKaart = el(`<div id="mijnact"></div>`); vact.appendChild(actKaart);
@@ -44,38 +54,47 @@
       // de laatste inspecties, rustig als rijen. Telefoon: niet getekend (zelfde scherm als altijd).
       const breed = window.matchMedia("(min-width: 1100px)").matches;
       const binnen = breed ? el(`<div class="vbinnen alleenbreed"></div>`) : null, laatst = breed ? el(`<div class="vlaatst alleenbreed"></div>`) : null;
-      if (breed) { links.appendChild(binnen); rechts.insertBefore(laatst, ander); this.vandaagLaatste(laatst); }   // rechts tussen Acties en Meer: kolommen even lang
-      this.laadPlanning().then(() => {
+      const pLaatst = breed ? (links.appendChild(binnen), rechts.insertBefore(laatst, ander), this.vandaagLaatste(laatst)) : null;   // rechts tussen Acties en Meer: kolommen even lang
+      const pPlan = Promise.all([this.laadPlanning(), pauzes.catch(() => [])]).then(([, pz]) => {
         if (!document.body.contains(plan)) return;
+        if (pz.length) pauzeDoos.innerHTML = this.pauzeKaarten(pz, !!lo);
         const vandaag = isoDag(new Date()), mijn = this.planning.filter((p) => p.inspecteur === this.user.id && p.status === "gepland" && p.datum <= vandaag).sort((a, b) => a.datum.localeCompare(b.datum));
-        if (!lo) kop.querySelector("h1").innerHTML = mijn.length === 1 ? "Eén inspectie te doen" : mijn.length ? mijn.length + " inspecties te doen" : "Niets gepland vandaag";
+        if (!lo && pz.length) kop.querySelector("h1").innerHTML = pz.length === 1 ? "Je inspectie staat op pauze" : pz.length + " inspecties op pauze";
+        else if (!lo) kop.querySelector("h1").innerHTML = mijn.length === 1 ? "Eén inspectie te doen" : mijn.length ? mijn.length + " inspecties te doen" : "Niets gepland vandaag";
         const wanneer = (p) => p.datum < vandaag ? `<span class="nogte">Nog te doen · gepland ${esc(dagLabel(p.datum))}</span>` : "Vandaag";
         const waar = (p) => [p.locatie ? `<span>${svg("pin", 15)}${esc(p.locatie)}</span>` : "", p.monteurs ? `<span>${svg("mens", 15)}${meer(p.monteurs, "monteur", "monteurs")}</span>` : ""].join("");
         const rij = (p) => `<div class="vrij"><span class="grow"><span class="k">${wanneer(p)}${p.project ? " · " + esc(p.project) : ""}</span>
             <span class="t">${esc(this.productNaam(p.code))}</span><span class="meta">${waar(p)}</span></span>
             <button class="startpil"${act("startVandaag", p.id)} aria-label="Start inspectie ${esc(this.productNaam(p.code))}">${svg("play", 18)}Start</button></div>`;
         let html = "";
-        const rest = lo ? mijn.filter((p) => p.id !== lo.plan_id) : mijn.slice(1);   // de lopende inspectie staat al bovenaan
+        // de lopende en de gepauzeerde inspecties staan al bovenaan (niet nog eens als gepland)
+        const bezig = new Set([lo && lo.plan_id].concat(pz.map((c) => c.ins.plan_id)).filter(Boolean));
+        const druk = !!(lo || pz.length), rest = druk ? mijn.filter((p) => !bezig.has(p.id)) : mijn.slice(1);
         // de kaart zelf is de knop: één doel, één tik
-        if (!lo && mijn.length) {
+        if (!druk && mijn.length) {
           const p = mijn[0];
           html += this.heroKnop("hero", act("startVandaag", p.id), `${wanneer(p)}${p.project ? " · " + esc(p.project) : ""}`, esc(this.productNaam(p.code)),
             `<span class="meta">${waar(p)}</span>`, "Start inspectie", "play");
         }
-        if (!lo && !mijn.length) html += this.heroKnop("hero rustig", act("kiesProduct"), "Vandaag", "Geen inspectie gepland",
-          `<span class="s">Start er spontaan een, of plan er een in.</span>`, "Inspectie starten", "plus");
-        if (rest.length) html += `<h2 class="vsectie">${lo ? "Daarna" : "Ook te doen"}</h2><div class="listcard vlijst">${rest.map(rij).join("")}</div>`;
+        // groot scherm: onderin de kaart jouw eerstvolgende geplande inspectie (geen lege vlakte tussen tekst en knop)
+        const volgend = this.planning.filter((p) => p.inspecteur === this.user.id && p.status === "gepland" && p.datum > vandaag).sort((a, b) => a.datum.localeCompare(b.datum))[0];
+        const volgHtml = binnen ? `<span class="hk-volgend">${volgend
+          ? `<span class="hv-dat" aria-hidden="true"><span class="w">${esc(new Date(volgend.datum + "T00:00").toLocaleDateString("nl-NL", { weekday: "short" }).replace(".", ""))}</span><span class="d">${new Date(volgend.datum + "T00:00").getDate()}</span></span><span class="hv-t"><span class="hv-k">Jouw eerstvolgende inspectie</span><span class="hv-n">${esc(this.productNaam(volgend.code))} · ${esc(dagenTot(volgend.datum) === 1 ? "morgen" : dagLabel(volgend.datum))}${volgend.locatie ? " · " + esc(volgend.locatie) : ""}</span></span>`
+          : `<span class="hv-t"><span class="hv-k">Jouw eerstvolgende inspectie</span><span class="hv-n">Nog niets op jouw naam ingepland</span></span>`}</span>` : "";
+        if (!druk && !mijn.length) html += this.heroKnop("hero rustig", act("kiesProduct"), "Vandaag", "Geen inspectie gepland",
+          `<span class="s">Start er spontaan een, of plan er een in.</span>${volgHtml}`, "Inspectie starten", "plus");
+        if (rest.length) html += `<h2 class="vsectie">${druk ? "Daarna" : "Ook te doen"}</h2><div class="listcard vlijst">${rest.map(rij).join("")}</div>`;
         plan.innerHTML = html;
         if (binnen) this.vandaagBinnenkort(binnen, vandaag);
         // overige keuzes: rustig onderaan
-        const spontaan = lo || mijn.length;
+        const spontaan = druk || mijn.length;
         ander.innerHTML = `<h2 class="vsectie">Meer</h2><div class="listcard vlijst">
             <button class="vknop"${act("planForm")}><span class="cirkel">${svg("cal", 20)}</span><span class="grow"><span class="t">Inspectie inplannen</span></span>${svg("chev", 18)}</button>
             ${spontaan ? `<button class="vknop"${act("kiesProduct")}><span class="cirkel">${svg("plus", 20)}</span><span class="grow"><span class="t">Andere inspectie starten</span></span>${svg("chev", 18)}</button>` : ""}</div>`;
       });
 
       // ---- acties: één rustige kaart, getal vooraan ----
-      this.laadActies().then(() => {
+      const pAct = this.laadActies().then(() => {
         if (!document.body.contains(actKaart)) return;
         const B = this.bakjes(), voorJou = B.instellen.length + B.toetsen.length + B.gepland.length;
         const laat = this.meldingen().filter((m) => m.soort === "laat");
@@ -83,23 +102,38 @@
         const uitleg = [B.instellen.length ? B.instellen.length + " in te stellen" : "", B.toetsen.length ? B.toetsen.length + " te toetsen" : "", B.gepland.length ? B.gepland.length + " lopend" : ""].filter(Boolean).join(" · ");
         const laatTekst = laat.length === 1 ? meer(-laat[0].d, "dag", "dagen") + " over de plandatum · " + esc(kort(laat[0].titel.replace(/^Te laat: /, ""), 40)) : "Over de plandatum · hele team";
         actKaart.innerHTML = `<h2 class="vsectie">Acties</h2><div class="listcard vlijst">
-            ${nLaat ? `<button class="vknop warm"${act("naarActies", "telaat")}><span class="nr">${nLaat}</span><span class="grow"><span class="t">${nLaat === 1 ? "Actie" : "Acties"} te laat</span><span class="s">${laatTekst}</span></span>${svg("chev", 18)}</button>` : ""}
+            ${nLaat ? `<button class="vknop laat"${act("naarActies", "telaat")}><span class="nr">${nLaat}</span><span class="grow"><span class="t">${nLaat === 1 ? "Actie" : "Acties"} te laat</span><span class="s">${laatTekst}</span></span>${svg("chev", 18)}</button>` : ""}
             <button class="vknop"${act("naarActies", null)}><span class="nr${voorJou ? "" : " nul"}">${voorJou ? voorJou : svg("check", 18, 2.6)}</span><span class="grow"><span class="t">${voorJou ? (voorJou === 1 ? "Actie" : "Acties") + " voor jou" : "Geen acties voor jou"}</span><span class="s">${voorJou ? uitleg : "Alles ligt op schema"}</span></span>${svg("chev", 18)}</button></div>`;
       });
+      // bij het openen van de app: de lader (js/laden.js) blijft staan tot planning, acties en (groot scherm) de
+      // laatste inspecties getekend zijn; dan staat het scherm er in één keer (geen verspringende kaarten op een traag toestel)
+      if (window.WPI.laad && window.WPI.laad.opstartHoud) window.WPI.laad.opstartHoud([pPlan, pAct, pLaatst]);
     },
     // groot scherm: binnenkort gepland (team voor wie alles ziet, anders alleen de eigen inspecties), komende 14 dagen
     vandaagBinnenkort(doos, vandaag) {
       const team = mag("zietAlles"), me = this.user.id;
-      const lijst = (this.planning || []).filter((p) => p.status === "gepland" && p.datum > vandaag && dagenTot(p.datum) <= 14 && (team || p.inspecteur === me))
+      // de komende 14 dagen; staan daar minder dan vier, dan ook de eerstvolgende daarna (tot vier), zodat de kaart
+      // even veel rijen heeft als "Laatste inspecties" ernaast en niet met een lege strook boven de voetregel staat
+      const alle = (this.planning || []).filter((p) => p.status === "gepland" && p.datum > vandaag && (team || p.inspecteur === me))
         .sort((a, b) => a.datum.localeCompare(b.datum));
+      const binnen14 = alle.filter((p) => dagenTot(p.datum) <= 14), lijst = binnen14.length >= 4 ? binnen14 : alle.slice(0, Math.max(4, binnen14.length));
       const dag = (iso) => { const d = new Date(iso + "T00:00"); return `<span class="vdat" aria-hidden="true"><span class="w">${esc(d.toLocaleDateString("nl-NL", { weekday: "short" }).replace(".", ""))}</span><span class="d">${d.getDate()}</span></span>`; };
       const rij = (p) => `<button class="vknop vkbreed"${act("go", "planning")}>${dag(p.datum)}<span class="grow"><span class="t">${esc(this.productNaam(p.code))}</span>
           <span class="s">${esc(dagenTot(p.datum) === 1 ? "Morgen" : dagLabel(p.datum))}${p.project ? " · " + esc(p.project) : ""}${p.locatie ? " · " + esc(p.locatie) : ""}</span></span>
           ${team ? `<span class="vkwie"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(p.inspecteur)}</span>` : ""}${svg("chev", 18)}</button>`;
       doos.innerHTML = `<h2 class="vsectie">Binnenkort gepland${lijst.length ? ` <span class="vtel">${lijst.length}</span>` : ""}</h2><div class="listcard vlijst">${lijst.length
-        ? lijst.slice(0, 5).map(rij).join("")
+        ? lijst.slice(0, 4).map(rij).join("")
         : `<div class="vrij"><span class="grow"><span class="t">Niets gepland de komende twee weken</span><span class="meta">${mag("plant") ? "Plan een inspectie in via “Inspectie inplannen”." : "De hoofden en coördinatoren plannen de inspecties."}</span></span></div>`}
-        <button class="vknop vkvoet"${act("go", "planning")}><span class="grow"><span class="t">${lijst.length > 5 ? `Nog ${lijst.length - 5} in de planning` : "Hele planning bekijken"}</span></span>${svg("chev", 18)}</button></div>`;
+        <button class="vknop vkvoet"${act("go", "planning")}><span class="grow"><span class="t">${lijst.length > 4 ? `Nog ${lijst.length - 4} in de planning` : "Hele planning bekijken"}</span></span>${svg("chev", 18)}</button></div>`;
+      this._vGelijk();
+    },
+    // groot scherm: "Binnenkort gepland" en "Laatste inspecties" staan naast elkaar in een rij van gelijke hoogte.
+    // Laatste inspecties toont niet meer rijen dan Binnenkort (minimaal drie), zodat er geen lege strook in de
+    // kortste kaart valt. Beide laden los van elkaar: wie het laatst klaar is, gelijkt ze.
+    _vGelijk() {
+      const b = document.querySelector("#view .vbinnen .listcard"), l = document.querySelector("#view .vlaatst .listcard"); if (!b || !l) return;
+      const nb = b.querySelectorAll(".vknop.vkbreed").length;
+      [...l.querySelectorAll(".vknop.vkbreed")].slice(Math.max(nb, 3)).forEach((r) => r.remove());
     },
     // groot scherm: de laatste inspecties (eigen op dit toestel + voorbeelden, zoals op Inspecties)
     async vandaagLaatste(doos) {
@@ -114,6 +148,7 @@
           <span class="cirkel">${svg("list", 20)}</span><span class="grow"><span class="t">${esc(kort(String(r.titel || "").split(" · ")[0], 40))}</span><span class="s">${esc([dagLabel(r.datum)].concat(String(r.titel || "").split(" · ").slice(1)).join(" · "))}${r.eigen ? " · op dit toestel" : " · voorbeeld"}</span></span>
           <span class="vkwie"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</span>${svg("chev", 18)}</button>`).join("")}
           <button class="vknop vkvoet"${act("go", "inspecties")}><span class="grow"><span class="t">Alle inspecties bekijken</span></span>${svg("chev", 18)}</button></div>`;
+      this._vGelijk();
     },
     // grote kaart = startknop. Alleen <span>'s (geldige inhoud van een <button>); de groene balk onderin
     // maakt duidelijk dat de hele kaart tikbaar is. kop/titel/inhoud zijn al ge-escapete HTML.
@@ -122,6 +157,26 @@
         <span class="hk-balk"><span class="ic">${svg(ic, 22)}</span><span class="hk-t">${esc(knop)}</span>${svg("chev", 22, 2.6)}</span></button>`;
     },
     startVandaag(id) { tril(20); this.startGepland(id); },
+    // "Gepauzeerd · Hervatten": de eerste als grote kaart (de kaart is de knop), de overige als rijen met een Hervatten-pil.
+    // Met een lopende inspectie erboven: alle als rijen (die lopende gaat voor). Tijd = wanneer gepauzeerd.
+    pauzeKaarten(pz, lopend) {
+      const wanneer = (t) => { const d = new Date(t); if (isNaN(d)) return ""; const dag = isoDag(d) === isoDag(new Date()) ? "vandaag" : dagLabel(isoDag(d)); return dag + " " + d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" }); };
+      const info = (c) => {
+        const i = c.ins, delen = String(i.titel || "Inspectie").split(" · "), n = (i.waarnemingen || []).length;
+        return { id: String(i.id || ""), obj: delen[0], waar: delen.slice(1).join(" · "), n, tijd: wanneer(c.t), stap: ({ taak: "bij de taakkeuze", zie: "bij een waarneming", koppel: "bij de TRA-koppeling", oordeel: "bij het oordeel", actie: "bij het actievoorstel", meer: "na een waarneming", algemeen: "bij de algemene onderwerpen", monteurs: "bij het gesprek", klaar: "bij afronden" })[i.stap] || "" };
+      };
+      const meta = (x) => [x.waar ? `<span>${svg("pin", 15)}${esc(x.waar)}</span>` : "", `<span>${svg("klok", 15)}Gepauzeerd ${esc(x.tijd)}</span>`].join("");
+      const sub = (x) => esc(meer(x.n, "waarneming", "waarnemingen") + (x.stap ? " · " + x.stap : ""));
+      const lijst = pz.map(info).filter((x) => /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(x.id));
+      if (!lijst.length) return "";
+      const rij = (x) => `<div class="vrij pauzerij"><span class="grow"><span class="k">Gepauzeerd · ${esc(meer(x.n, "waarneming", "waarnemingen"))}</span>
+          <span class="t">${esc(x.obj)}</span><span class="meta">${meta(x)}</span></span>
+          <button class="startpil"${act("hervatInspectie", x.id)} data-laad aria-label="Hervatten: ${esc(x.obj)}">${svg("play", 18)}Hervatten</button></div>`;
+      if (lopend) return `<h2 class="vsectie">Gepauzeerd</h2><div class="listcard vlijst">${lijst.map(rij).join("")}</div>`;
+      const [eerste, ...rest] = lijst;
+      return this.heroKnop("hero pauze", act("hervatInspectie", eerste.id) + " data-laad", `Gepauzeerd · ${sub(eerste)}`, esc(eerste.obj), `<span class="meta">${meta(eerste)}</span>`, "Hervatten", "play")
+        + (rest.length ? `<h2 class="vsectie">Ook gepauzeerd</h2><div class="listcard vlijst">${rest.map(rij).join("")}</div>` : "");
+    },
     kiesProduct() {
       tril(12);
       this.openModal("Andere inspectie starten", "Kies wat je gaat bekijken. Je start meteen.",

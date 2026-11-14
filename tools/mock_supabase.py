@@ -7,7 +7,14 @@ Serveert op één poort (zelfde origin, dus de CSP connect-src 'self' volstaat):
   - /__mock/herstellink?email=…[&soort=recovery|invite]  de link uit de herstel-/uitnodigingsmail
   - /rest/v1     profiles, inspecties, acties, planning, actie_log, monteurs, instellingen
                  (+ rpc/report_security_event, rpc/monteur_aanmelden)
-  - /storage/v1  object/fotos/<pad> (upload) en object/authenticated/fotos/<pad> (download)
+  - /storage/v1  object/fotos/<pad> (upload) en object/authenticated/fotos/<pad> (download);
+                 object/rapporten/<uid>/<inspectie>.pdf (0009: één keer uploaden, eigen inspectie) en de download
+  - /functions/v1 uitnodigen en gebruikers: de ECHTE Edge Functions (supabase/functions/_shared/gebruikers.ts), via
+                 tools/functies_host.mjs (Node 22+), met deze mock als Supabase (service_role-sleutel: SERVICE hieronder)
+  - /auth/v1/admin/generate_link, /auth/v1/admin/users/<id> (GET/PUT ban_duration/DELETE; alleen met SERVICE) en
+    /auth/v1/verify (de uitnodigingslink: maakt een sessie en stuurt door naar redirect_to#access_token=…&type=invite)
+  - /rest/v1 0009: rpc/mag_gebruikers_beheren, rpc/gebruikers_overzicht, rpc/gebruiker_bestaat, rpc/beheer_gebeurtenis,
+    rpc/rapport_in_wachtrij, rpc/rapport_ontvanger(_id), mail_wachtrij (lezen), instelling rapport_ontvanger
   - /__mock/...  testhulp: verberg?tabel=…&id=…&uid=… (die gebruiker krijgt die rij niet, zoals RLS; sinds 0008 ziet
                  iedereen in het team alles, dus zo bootsen de tests "de server geeft jou dit niet" na),
                  state (alles bekijken), fail (volgende verzoeken laten mislukken; optioneel alleen
@@ -45,6 +52,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
 ANON = "mock-anon-key"
+SERVICE = "mock-service-role-key"   # alleen voor de functies-host (tools/functies_host.mjs); nooit naar de app
 SECRET = b"mock-jwt-secret-alleen-voor-tests"
 WACHTWOORD = "Veilig-Wachtwoord-2026"
 LOCK = threading.RLock()
@@ -102,7 +110,8 @@ def nieuwe_state():
              u(8, "norol@noardling.test", "Nieuwe Collega", None, "")]
     return {"users": {x["email"]: x for x in users}, "sessions": {}, "refresh": {}, "challenges": {},
             "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "monteurs": {}, "instellingen": {}, "security_events": [],
-            "fotos": {}, "recover": [], "pkce": {}, "logins": [], "verborgen": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
+            "fotos": {}, "recover": [], "pkce": {}, "logins": [], "verborgen": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000,
+            "rapporten": {}, "mail_wachtrij": [], "invites": {}}
 
 
 STATE = nieuwe_state()
@@ -130,11 +139,14 @@ def user_by_id(uid):
 
 def profiel_rij(x):
     p = x["profiel"]
-    return {"id": x["id"], "full_name": p["full_name"], "functie": p["functie"], "role": p["role"], "actief": p["actief"]}
+    return {"id": x["id"], "full_name": p["full_name"], "functie": p["functie"], "role": p["role"], "actief": p["actief"],
+            "uitgenodigd": bool(x.get("uitgenodigd"))}
 
 
 def user_json(x):
     return {"id": x["id"], "aud": "authenticated", "role": "authenticated", "email": x["email"],
+            "last_sign_in_at": x.get("laatst"), "email_confirmed_at": x.get("bevestigd") or (x.get("laatst") if x.get("password") else None),
+            "banned_until": "2999-12-31T00:00:00Z" if x.get("banned") else None,
             "factors": [{"id": f["id"], "factor_type": "totp", "status": f["status"], "friendly_name": f["name"]} for f in x["factors"]]}
 
 
@@ -211,11 +223,19 @@ class Handler(SimpleHTTPRequestHandler):
         self.filters = [(k, w) for k, v in alle.items() for w in v]   # meerdere filters op één kolom (id=gt.&id=in.)
         if p.startswith("/__mock/"):
             return self.mock(p, q)
+        if p == "/auth/v1/verify" and self.command == "GET":   # de link uit de uitnodiging (zonder apikey, zoals GoTrue)
+            return self.verify(q)
+        if p.startswith("/functions/v1/"):   # buiten de LOCK: de functie roept deze mock zelf weer aan
+            if self.headers.get("apikey") != ANON:
+                return self.stuur(401, {"message": "No API key found in request"})
+            return self.functie(p[len("/functions/v1/"):])
         if p.startswith(("/auth/v1/", "/rest/v1/", "/storage/v1/")):
             with LOCK:
                 STATE["requests"].append({"t": nu_iso(), "m": self.command, "p": p, "q": u.query})
-                if self.headers.get("apikey") != ANON:
+                if self.headers.get("apikey") not in (ANON, SERVICE):
                     return self.stuur(401, {"message": "No API key found in request"})
+                if self.dienst():
+                    return self.service(p, q)
                 F = STATE["fail"]
                 if F["n"] > 0 and not p.startswith("/auth/") and (not F.get("pad") or p == F["pad"]) and (not F.get("methode") or self.command == F["methode"]):
                     F["n"] -= 1
@@ -242,10 +262,11 @@ class Handler(SimpleHTTPRequestHandler):
         global STATE
         with LOCK:
             if p == "/__mock/state":
-                s = {k: v for k, v in STATE.items() if k not in ("fotos", "users", "refresh")}
+                s = {k: v for k, v in STATE.items() if k not in ("fotos", "users", "refresh", "rapporten", "invites")}
+                s["rapporten"] = [{"pad": k, "grootte": len(v["data"]), "door": v["door"]} for k, v in STATE["rapporten"].items()]
                 s["fotos"] = [{"pad": k, "mime": v["mime"], "grootte": len(v["data"]), "exif": b"Exif" in v["data"][:4096],
                                "door": v["door"]} for k, v in STATE["fotos"].items()]
-                s["users"] = [{"email": x["email"], "id": x["id"], "factors": x["factors"], "profiel": x["profiel"]} for x in STATE["users"].values()]
+                s["users"] = [{"email": x["email"], "id": x["id"], "factors": x["factors"], "profiel": x["profiel"], "banned": bool(x.get("banned"))} for x in STATE["users"].values()]
                 return self.stuur(200, s)
             if p == "/__mock/fail":
                 STATE["fail"] = {"n": int(q.get("n", "1")), "status": int(q.get("status", "503")), "pad": q.get("pad", ""), "methode": q.get("methode", ""), "code": q.get("code", "")}
@@ -289,10 +310,13 @@ class Handler(SimpleHTTPRequestHandler):
                 if len(recent) >= 30:
                     return self.stuur(429, {"code": "over_request_rate_limit", "msg": "Request rate limit reached"})
                 x = STATE["users"].get(mail)
-                ok = bool(x and hmac.compare_digest(x["password"], str(b.get("password", ""))))
+                ok = bool(x and x.get("password") and hmac.compare_digest(x["password"], str(b.get("password", ""))))
                 STATE["logins"].append({"email": mail, "ok": ok, "t": time.time()})
                 if not ok:
                     return self.stuur(400, {"code": "invalid_credentials", "error_code": "invalid_credentials", "msg": "Invalid login credentials"})
+                if x.get("banned"):   # 0009: op non-actief gezet via de functie "gebruikers" (ban_duration)
+                    return self.stuur(400, {"code": "user_banned", "error_code": "user_banned", "msg": "User is banned"})
+                x["laatst"] = nu_iso()
                 return self.stuur(200, sessie_uitgeven(x))
             if q.get("grant_type") == "refresh_token":
                 r = STATE["refresh"].get(str(b.get("refresh_token", "")))
@@ -303,6 +327,8 @@ class Handler(SimpleHTTPRequestHandler):
                     s["revoked"] = True
                     return self.stuur(400, {"code": "refresh_token_already_used", "msg": "Invalid Refresh Token: Already Used"})
                 r["used"] = True
+                if (user_by_id(s["uid"]) or {}).get("banned"):
+                    return self.stuur(400, {"code": "user_banned", "msg": "User is banned"})
                 return self.stuur(200, sessie_uitgeven(user_by_id(s["uid"]), s["aal"], r["sid"]))
             if q.get("grant_type") == "pkce":   # PKCE: code uit de herstellink + code_verifier van DEZE browser
                 f = STATE["pkce"].pop(str(b.get("auth_code", "")), None)
@@ -366,6 +392,127 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.stuur(200, sessie_uitgeven(x, "aal2", c.get("session_id")))
         return self.stuur(404, {"msg": "Not found"})
 
+    # ---------- 0009: service_role (alleen de functies-host), uitnodigingslink, Edge Functions ----------
+    def dienst(self):
+        return self.headers.get("apikey") == SERVICE and self.headers.get("Authorization", "") == "Bearer " + SERVICE
+
+    def service(self, p, q):
+        """Wat de Edge Functions met de service_role-sleutel doen: Auth-admin-API en twee RPC's (zoals 0009)."""
+        m, b = self.command, None
+        if m in ("POST", "PUT", "PATCH"):
+            b = self.jbody()
+        if p == "/auth/v1/admin/generate_link" and m == "POST":
+            b = b or {}
+            mail = str(b.get("email", "")).strip().lower()
+            if b.get("type") not in ("invite", "recovery") or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", mail):
+                return self.stuur(422, {"code": "validation_failed", "msg": "invalid"})
+            bestaand = STATE["users"].get(mail)
+            # zoals GoTrue: recovery voor een bestaand account; invite opnieuw voor een bestaand maar nog NIET bevestigd account
+            if bestaand and (b.get("type") == "recovery" or not user_json(bestaand)["email_confirmed_at"]):
+                tok = b64u(os.urandom(18))
+                STATE["invites"][tok] = {"uid": bestaand["id"], "redirect_to": b.get("redirect_to") or "/", "t": time.time(), "type": b["type"]}
+                link = "http://%s/auth/v1/verify?token=%s&type=%s&redirect_to=%s" % (self.headers.get("Host"), tok, b["type"], b.get("redirect_to") or "/")
+                return self.stuur(200, dict(user_json(bestaand), action_link=link, verification_type=b["type"], redirect_to=b.get("redirect_to")))
+            if b.get("type") == "recovery":
+                return self.stuur(404, {"code": "user_not_found", "msg": "User not found"})
+            if mail in STATE["users"]:
+                return self.stuur(422, {"code": "email_exists", "msg": "A user with this email address has already been registered"})
+            uid = str(uuid.uuid4())
+            naam = naam_schoon((b.get("data") or {}).get("full_name") or mail.split("@")[0])[:110] or "Nieuwe gebruiker"
+            while any(naam_sleutel(u["profiel"]["full_name"]) == naam_sleutel(naam) for u in STATE["users"].values()):
+                naam += " (2)"   # zoals profiel_beginnaam (0002): een bestaande naam krijgt een volgnummer
+            STATE["users"][mail] = {"id": uid, "email": mail, "password": None, "factors": [], "uitgenodigd": nu_iso(), "sinds": nu_iso(),
+                                    "profiel": {"full_name": naam, "role": None, "functie": "", "actief": True}}
+            tok = b64u(os.urandom(18))
+            STATE["invites"][tok] = {"uid": uid, "redirect_to": b.get("redirect_to") or "/", "t": time.time()}
+            link = "http://%s/auth/v1/verify?token=%s&type=invite&redirect_to=%s" % (self.headers.get("Host"), tok, b.get("redirect_to") or "/")
+            return self.stuur(200, dict(user_json(STATE["users"][mail]), action_link=link, verification_type="invite", redirect_to=b.get("redirect_to")))
+        mt = re.match(r"^/auth/v1/admin/users/([0-9a-f-]{36})$", p)
+        if mt:
+            x = user_by_id(mt.group(1))
+            if not x:
+                return self.stuur(404, {"code": "user_not_found", "msg": "User not found"})
+            if m == "GET":
+                return self.stuur(200, user_json(x))
+            if m == "PUT":
+                if "ban_duration" in (b or {}):
+                    x["banned"] = (b or {}).get("ban_duration") not in ("none", "", None)
+                    if x["banned"]:   # zoals GoTrue: lopende sessies kunnen niet meer vernieuwen
+                        for s_ in STATE["sessions"].values():
+                            if s_["uid"] == x["id"]:
+                                s_["revoked"] = True
+                return self.stuur(200, user_json(x))
+            if m == "DELETE":
+                del STATE["users"][x["email"]]
+                return self.stuur(200, {})
+        if p == "/rest/v1/rpc/gebruiker_bestaat" and m == "POST":
+            return self.stuur(200, str((b or {}).get("p_email", "")).strip().lower() in STATE["users"])
+        if p == "/rest/v1/rpc/beheer_gebeurtenis" and m == "POST":
+            b = b or {}
+            if not re.match(r"^beheer_[a-z_]{3,40}$", str(b.get("p_soort", ""))):
+                return self.fout(400, "22023", "Ongeldige soort")
+            STATE["security_events"].append({"id": len(STATE["security_events"]) + 1, "t": nu_iso(), "wie": b.get("p_wie"),
+                                             "soort": b.get("p_soort"), "details": dict(b.get("p_details") or {}, profiel=b.get("p_profiel"))})
+            return self.stuur(204)
+        if p == "/rest/v1/rpc/rapport_ontvanger_id" and m == "POST":
+            return self.stuur(200, self.ontvanger_id())
+        return self.fout(403, "42501", "permission denied (mock: service_role alleen voor de Auth-admin-API en de 0009-RPC's)")
+
+    def verify(self, q):
+        with LOCK:
+            f = STATE["invites"].pop(q.get("token", ""), None)
+            x = f and user_by_id(f["uid"])
+            if not f or not x or f["t"] < time.time() - 3600:
+                return self.stuur(303, None, extra={"Location": (q.get("redirect_to") or "/") + "#error=access_denied&error_code=otp_expired"})
+            x["bevestigd"] = x.get("bevestigd") or nu_iso()
+            x["laatst"] = nu_iso()   # zoals GoTrue: de link openen is inloggen
+            d = sessie_uitgeven(x)
+            return self.stuur(303, None, extra={"Location": f["redirect_to"] + "#access_token=%s&expires_at=%d&expires_in=3600&refresh_token=%s&token_type=bearer&type=%s"
+                                                % (d["access_token"], d["expires_at"], d["refresh_token"], f.get("type", "invite"))})
+
+    _host = None
+    _host_lock = threading.Lock()
+
+    def functie(self, naam):
+        """/functions/v1/<naam>: doorgeven aan de echte TypeScript-functie (tools/functies_host.mjs, gestart bij het
+        eerste verzoek). Zo toetsen de tests de functie zelf, met deze mock als Supabase."""
+        import http.client
+        import subprocess
+        if naam not in ("uitnodigen", "gebruikers"):
+            return self.stuur(404, {"message": "Function not found"})
+        with Handler._host_lock:
+            if Handler._host is None or Handler._host[0].poll() is not None:
+                basis = "http://%s" % self.headers.get("Host")
+                host = os.path.join(os.path.dirname(os.path.abspath(__file__)), "functies_host.mjs")
+                pr = subprocess.Popen(["node", host, basis, basis + "/"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)   # stdin dicht (mock weg) = host stopt
+                regel = pr.stdout.readline().strip()
+                if not regel.startswith("poort "):
+                    return self.stuur(501, {"message": "functies-host start niet (Node 22+ nodig)"})
+                Handler._host = (pr, int(regel.split()[1]))
+            poort = Handler._host[1]
+        body = self.body()
+        koppen = {k: v for k, v in self.headers.items() if k.lower() in ("authorization", "apikey", "content-type", "origin")}
+        c = http.client.HTTPConnection("127.0.0.1", poort, timeout=30)
+        c.request(self.command, "/" + naam, body=body or None, headers=koppen)
+        r = c.getresponse()
+        data = r.read()
+        extra = {k: v for k, v in r.getheaders() if k.lower().startswith("access-control-")}
+        return self.stuur(r.status, data if data else None, r.getheader("Content-Type") or "application/json", extra)
+
+    def ontvanger_id(self):   # rapport_ontvanger_id (0009): instelling, anders de (eerste) actieve QHSE-manager
+        w = (STATE["instellingen"].get("rapport_ontvanger") or {}).get("waarde")
+        x = user_by_id(w) if isinstance(w, str) else None
+        if x and x["profiel"]["actief"] and x["profiel"]["role"]:
+            return x["id"]
+        q = [u for u in STATE["users"].values() if u["profiel"]["role"] == "qhse" and u["profiel"]["actief"]]
+        return q[0]["id"] if q else None
+
+    def wachtrij_volg(self):   # mail_wachtrij_volg (0009 §10b): wachtende rapporten volgen de huidige ontvanger
+        o = self.ontvanger_id()
+        for r in STATE["mail_wachtrij"]:
+            if r["status"] in ("wacht", "fout"):
+                r["ontvanger"] = o
+
     # ---------- /rest/v1 ----------
     def fout(self, status, code, msg):
         return self.stuur(status, {"code": code, "details": None, "hint": None, "message": msg})
@@ -385,6 +532,41 @@ class Handler(SimpleHTTPRequestHandler):
             STATE["security_events"].append({"id": len(STATE["security_events"]) + 1, "t": nu_iso(), "wie": x["id"],
                                              "soort": b.get("p_soort"), "details": b.get("p_details") or {}})
             return self.stuur(200, True)
+        beheer2 = prof["role"] in ("hoofd", "qhse", "beheerder") and c.get("aal") == "aal2"
+        if tabel == "rpc/mag_gebruikers_beheren" and m == "POST":   # 0009: beheerrol, actief, altijd aal2
+            return self.stuur(200, beheer2)
+        if tabel == "rpc/gebruikers_overzicht" and m == "POST":
+            if not beheer2:
+                return self.fout(403, "42501", "Alleen een hoofd, de QHSE-manager of de beheerder, ingelogd met tweestapsverificatie")
+            return self.stuur(200, sorted([dict(profiel_rij(u), uitgenodigd=bool(u.get("uitgenodigd")), laatst_ingelogd=u.get("laatst"), geblokkeerd=bool(u.get("banned")), aangemaakt=u.get("sinds") or "2026-01-01T00:00:%02dZ" % (list(STATE["users"]).index(u["email"]) % 60))
+                                           for u in STATE["users"].values()], key=lambda r: r["full_name"]))
+        if tabel == "rpc/rapport_ontvanger" and m == "POST":
+            i = self.ontvanger_id()
+            u = user_by_id(i) if i else None
+            w = (STATE["instellingen"].get("rapport_ontvanger") or {}).get("waarde")
+            return self.stuur(200, {"id": u["id"] if u else None, "naam": u["profiel"]["full_name"] if u else None, "keuze": w if isinstance(w, str) else None})
+        if tabel == "rpc/rapport_in_wachtrij" and m == "POST":   # 0009: alleen de eigen inspecteur, na het uploaden
+            b = self.jbody() or {}
+            iid, pad = str(b.get("p_inspectie_id", "")), str(b.get("p_bestand", ""))
+            ins = STATE["tables"]["inspecties"].get(iid)
+            if not ins or ins.get("inspecteur_id") != x["id"]:
+                return self.fout(403, "42501", "Alleen de inspecteur van deze inspectie zet het rapport klaar")
+            if pad != x["id"] + "/" + iid + ".pdf":
+                return self.fout(400, "22023", "Het rapport hoort in de eigen map als <inspectie>.pdf")
+            if pad not in STATE["rapporten"]:
+                return self.fout(400, "22023", "Het rapport is nog niet geüpload")
+            rij = next((r for r in STATE["mail_wachtrij"] if r["inspectie_id"] == iid), None)
+            if not rij:
+                rij = {"id": len(STATE["mail_wachtrij"]) + 1, "soort": "rapport", "inspectie_id": iid, "ontvanger": self.ontvanger_id(), "bestand": pad,
+                       "status": "wacht", "pogingen": 0, "laatste_fout": None, "aangemaakt": nu_iso(), "verstuurd_op": None, "aangemaakt_door": x["id"]}
+                STATE["mail_wachtrij"].append(rij)
+            o = user_by_id(rij["ontvanger"]) if rij["ontvanger"] else None
+            return self.stuur(200, {"id": rij["id"], "status": rij["status"], "ontvanger": rij["ontvanger"], "ontvanger_naam": o["profiel"]["full_name"] if o else None})
+        if tabel == "mail_wachtrij":
+            if m != "GET":
+                return self.fout(403, "42501", "permission denied for table mail_wachtrij")
+            alles = prof["role"] == "coordinator" or beheer2   # mag_alles_lezen (MFA verplicht in de mock)
+            return self.stuur(200, [dict(r) for r in STATE["mail_wachtrij"]] if alles else [])
         filt = [(k, v) for k, v in self.filters if k not in ("select", "order", "on_conflict", "limit", "offset", "columns")]
 
         def waarde(w, val):   # vergelijk als getal als de kolom een getal is, anders als tekst
@@ -454,10 +636,18 @@ class Handler(SimpleHTTPRequestHandler):
             b = self.jbody()
             if not isinstance(b, dict) or set(b) - {"role", "actief", "functie", "full_name"}:
                 return self.fout(400, "PGRST204", "Could not find the column in the schema cache")
+            rep = "return=representation" in self.headers.get("Prefer", "")
             if prof["role"] not in ("hoofd", "qhse", "beheerder") or c.get("aal") != "aal2":
-                return self.stuur(204)
+                return self.stuur(200, []) if rep else self.stuur(204)
+            uit = []
             for u in [u for u in STATE["users"].values() if past(profiel_rij(u))]:
                 nieuw = dict(u["profiel"], **b)
+                if "full_name" in b:
+                    nieuw["full_name"] = naam_schoon(str(b["full_name"] or ""))
+                    if not 1 <= len(nieuw["full_name"]) <= 120:
+                        return self.fout(400, "23514", "new row for relation \"profiles\" violates check constraint \"profiles_naam_lengte\"")
+                    if any(v is not u and naam_sleutel(v["profiel"]["full_name"]) == naam_sleutel(nieuw["full_name"]) for v in STATE["users"].values()):
+                        return self.fout(409, "23505", "duplicate key value violates unique constraint \"profiles_naam_uniek\"")
                 if "role" in b and b["role"] not in ("hoofd", "coordinator", "qhse", "beheerder"):
                     return self.fout(400, "23514", "De rol inspecteur wordt niet meer toegekend; kies hoofd, coördinator, QHSE-manager of beheerder"
                                      if b["role"] == "inspecteur" else "invalid input value for enum user_role")
@@ -466,8 +656,17 @@ class Handler(SimpleHTTPRequestHandler):
                 if u["profiel"]["role"] == "hoofd" and u["profiel"]["actief"] and (nieuw["role"] != "hoofd" or not nieuw["actief"]) \
                         and not any(v is not u and v["profiel"]["role"] == "hoofd" and v["profiel"]["actief"] for v in STATE["users"].values()):
                     return self.fout(400, "23514", "Er moet altijd minstens één actief hoofd zijn")
-                u["profiel"].update(b)
-            return self.stuur(204)
+                was_q = u["profiel"]["role"] == "qhse" and u["profiel"]["actief"]
+                u["profiel"].update(nieuw)
+                uit.append(profiel_rij(u))
+                # rapport_ontvanger_vastleggen (0009 §10c): een tweede QHSE-manager verandert niet wie de rapporten krijgt
+                w = (STATE["instellingen"].get("rapport_ontvanger") or {}).get("waarde")
+                if nieuw["role"] == "qhse" and nieuw["actief"] and not was_q and not isinstance(w, str):
+                    ander = next((v for v in STATE["users"].values() if v is not u and v["profiel"]["role"] == "qhse" and v["profiel"]["actief"]), None)
+                    if ander:
+                        STATE["instellingen"]["rapport_ontvanger"] = {"sleutel": "rapport_ontvanger", "waarde": ander["id"], "updated_at": nu_iso()}
+            self.wachtrij_volg()
+            return self.stuur(200, uit) if rep else self.stuur(204)
         if tabel in ("monteurs", "instellingen", "rpc/monteur_aanmelden"):
             return self.beheer_tabel(tabel, q, x, c, past, resultaat)
         if tabel == "actie_log":
@@ -481,6 +680,28 @@ class Handler(SimpleHTTPRequestHandler):
                         return self.fout(403, "42501", "new row violates row-level security policy for table \"actie_log\"")
                     STATE["actie_log"].append({"id": len(STATE["actie_log"]) + 1, "actie_id": r["actie_id"], "t": nu_iso(), "wie": x["id"], "wat": str(r.get("wat", ""))[:2000], "bron": "client"})
                 return self.stuur(201)
+        if tabel == "inspectie_aanvullingen":   # 0010: append-only; lezen wie de inspectie ziet, toevoegen de eigen inspecteur (of hoofd/QHSE)
+            lijst = STATE.setdefault("aanvullingen", [])
+            if m == "GET":
+                zicht = set(self.zichtbaar("inspecties", x))
+                return self.stuur(200, resultaat([r for r in lijst if r["inspectie_id"] in zicht and past(r)]))
+            if m == "POST":
+                b = self.jbody()
+                for r in (b if isinstance(b, list) else [b]):
+                    ins = STATE["tables"]["inspecties"].get(r.get("inspectie_id"))
+                    if not ins or not (ins.get("inspecteur_id") == x["id"] or prof["role"] in ("hoofd", "qhse")):
+                        return self.fout(403, "42501", "new row violates row-level security policy for table \"inspectie_aanvullingen\"")
+                    tekst = str(r.get("tekst", "")).strip()
+                    if not tekst or len(tekst) > 2000:
+                        return self.fout(400, "23514", "new row violates check constraint \"aanvulling_tekst_lengte\"")
+                    foto = r.get("foto")   # 0011: nagekomen foto, alleen een pad in de eigen map
+                    if foto is not None:
+                        foto = re.sub(r"^fotos/", "", str(foto))
+                        if not re.match(r"^[0-9a-f-]{36}/[A-Za-z0-9_-][A-Za-z0-9._-]{0,199}\.(jpg|jpeg|png|webp)$", foto, re.I) or foto.split("/")[0] != x["id"]:
+                            return self.fout(400, "23514", "new row violates check constraint \"aanvulling_foto_vorm\"")
+                    lijst.append({"id": len(lijst) + 1, "inspectie_id": r["inspectie_id"], "t": nu_iso(), "wie": x["id"], "over": str(r.get("over") or "Algemeen")[:120], "tekst": tekst, "foto": foto})
+                return self.stuur(201)
+            return self.fout(403, "42501", "permission denied for table inspectie_aanvullingen")
         if tabel not in STATE["tables"]:
             return self.fout(404, "42P01", "relation \"public.%s\" does not exist" % tabel)
         T = STATE["tables"][tabel]
@@ -624,11 +845,18 @@ class Handler(SimpleHTTPRequestHandler):
                     ok = v is None or (isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 100)
                 elif k == "mfa_verplicht_hoofd":
                     ok = isinstance(v, bool)
+                elif k == "rapport_ontvanger":   # 0009: profiel-id van een actieve collega met een rol, of null (= de QHSE-manager)
+                    o = user_by_id(v) if isinstance(v, str) else None
+                    if isinstance(v, str) and not (o and o["profiel"]["actief"] and o["profiel"]["role"]):
+                        return self.fout(409, "23503", "Kies een actieve collega als ontvanger van de rapporten")
+                    ok = v is None or bool(o)
                 else:
                     ok = False
                 if not ok:
                     return self.fout(400, "23514", "new row for relation \"instellingen\" violates check constraint \"instellingen_waarde_geldig\"")
                 T[k] = {"sleutel": k, "waarde": v, "updated_at": nu_iso()}
+                if k == "rapport_ontvanger":
+                    self.wachtrij_volg()
             return self.stuur(201)
         if m == "DELETE":
             for k in ([k for k, r in T.items() if past(r)] if beheer else []):
@@ -727,6 +955,25 @@ class Handler(SimpleHTTPRequestHandler):
         if not x:
             return self.stuur(400, {"statusCode": "403", "error": "Unauthorized", "message": "invalid jwt"})
         m = self.command
+        if pad.startswith("object/rapporten/") and m in ("POST", "PUT"):   # 0009: één keer, eigen map, eigen inspectie
+            naam = pad[len("object/rapporten/"):]
+            data, mime = self.body(), self.headers.get("Content-Type", "")
+            mt = re.match(r"^([0-9a-f-]{36})/([A-Za-z0-9][A-Za-z0-9_-]{0,63})\.pdf$", naam)
+            ins = mt and STATE["tables"]["inspecties"].get(mt.group(2))
+            if not mt or mt.group(1) != x["id"] or not ins or ins.get("inspecteur_id") != x["id"] or x["profiel"]["role"] not in ("hoofd", "coordinator"):
+                return self.stuur(400, {"statusCode": "403", "error": "Unauthorized", "message": "new row violates row-level security policy"})
+            if mime != "application/pdf" or len(data) > 20 * 1024 * 1024 or not data.startswith(b"%PDF-"):
+                return self.stuur(400, {"statusCode": "415", "error": "invalid_mime_type", "message": "mime type not supported"})
+            if naam in STATE["rapporten"]:   # nooit overschrijven (geen update-policy), ook niet met x-upsert
+                return self.stuur(400, {"statusCode": "409", "error": "Duplicate", "message": "The resource already exists"})
+            STATE["rapporten"][naam] = {"data": data, "door": x["id"]}
+            return self.stuur(200, {"Key": "rapporten/" + naam, "Id": str(uuid.uuid4())})
+        if pad.startswith("object/authenticated/rapporten/") and m == "GET":
+            naam = pad[len("object/authenticated/rapporten/"):]
+            f = STATE["rapporten"].get(naam)
+            if not f or not (naam.startswith(x["id"] + "/") or x["profiel"]["role"] in ("hoofd", "coordinator", "qhse", "beheerder")):
+                return self.stuur(400, {"statusCode": "404", "error": "not_found", "message": "Object not found"})
+            return self.stuur(200, f["data"], "application/pdf")
         if pad.startswith("object/authenticated/fotos/") and m == "GET":
             naam = pad[len("object/authenticated/fotos/"):]
             f = STATE["fotos"].get(naam)

@@ -39,10 +39,10 @@ if [ "$VERSCHIL" != "0" ]; then
 fi
 echo "tekens: OK (gelijk aan js/sync.js)"
 
-# Verloop (actie_log.wat): public.verloop_tekens_ok en public.verloop_lijkt_serverregel (0008) = js/sync.js
-# (schoonLog, zichtbaar, skelet, logTekst). Getoetst:
+# Verloop (actie_log.wat): public.verloop_tekens_ok en public.verloop_lijkt_serverregel (0008/0009) = js/sync.js
+# (schoonLog, zichtbaar, skelet, skeletRuw, begintAls, logTekst). Getoetst:
 #   1. elk codepunt als 'a'+cp+'b' en los (ook "minstens één zichtbaar teken");
-#   2. het skelet van elk codepunt (NFKD, kleine letters, lookalikes, alleen a–z);
+#   2. het skelet van elk codepunt, met en zonder NFKD (kleine letters, lookalikes, a–z of joker "?");
 #   3. de context-regels (ZWJ tussen emoji, VS15/VS16 na een emoji of in een toetsdop) op alle combinaties van
 #      grens-codepunten van de emoji-tekenklasse, met en zonder VS16/VS15/VS1/U+20E3;
 #   4. nagemaakte serverregels (o.a. VS16, VS1, Mongoolse kiezers, braillespatie, ∶, ꞉, Cyrillische S, spaties
@@ -53,22 +53,25 @@ const src = fs.readFileSync(bron, "utf8");
 const regel = (naam) => { const m = src.match(new RegExp("^\\s*const " + naam + " = [\\s\\S]*?;$", "m")); if (!m) throw new Error("niet gevonden in sync.js: " + naam); return m[0]; };
 const fn = (naam) => { const m = src.match(new RegExp("^  function " + naam + "\\([\\s\\S]*?\\n  }$", "m")); if (!m) throw new Error("niet gevonden in sync.js: " + naam); return m[0]; };
 const V = new Function([regel("ONZICHTBAAR"), regel("schoonTekst"), regel("EMOJI_ZWJ"), regel("LOSSE_ZWJ"), regel("VS_NOOIT"), regel("LOSSE_VS"),
-  regel("schoonLog"), regel("ZICHTBAAR"), regel("zichtbaar"), regel("SKELET_VAN"), regel("SKELET_NAAR"), regel("SKELET"), regel("skelet"),
-  regel("SERVERREGEL"), regel("lijktServerregel"), fn("logTekst"),
-  "return { schoonLog, zichtbaar, skelet, lijktServerregel, logTekst };"].join("\n"))();
+  regel("schoonLog"), regel("ZICHTBAAR"), regel("zichtbaar"), regel("SKELET_VAN"), regel("SKELET_NAAR"), regel("SKELET"), regel("skeletKern"),
+  regel("skelet"), regel("skeletRuw"), regel("SERVERREGELS"), fn("begintAls"), regel("lijktServerregel"), fn("logTekst"),
+  "return { schoonLog, zichtbaar, skelet, skeletRuw, lijktServerregel, logTekst };"].join("\n"))();
 const ok = (t) => (V.schoonLog(t) === t && V.zichtbaar(t) ? 1 : 0);
 // 1 en 2: per codepunt
-const r1 = [], r2 = [], r3 = [];
+const r1 = [], r2 = [], r3 = [], r3r = [];
 for (let cp = 1; cp <= 0x10FFFF; cp++) {
   if (cp >= 0xD800 && cp <= 0xDFFF) continue;
   const c = String.fromCodePoint(cp);
   if (!ok("a" + c + "b")) r1.push(cp);
   if (!ok(c)) r2.push(cp);
-  const k = V.skelet(c); if (k) r3.push(cp + " " + k);
+  // skelet per codepunt: alleen wat iets anders is dan leeg of één joker ("?", het gewone geval)
+  const k = V.skelet(c); if (k && k !== "?") r3.push(cp + " " + k);
+  const kr = V.skeletRuw(c); if (kr && kr !== "?") r3r.push(cp + " " + kr);
 }
 fs.writeFileSync(tmp + "/v1-app.txt", r1.join("\n") + "\n");
 fs.writeFileSync(tmp + "/v2-app.txt", r2.join("\n") + "\n");
 fs.writeFileSync(tmp + "/v3-app.txt", r3.join("\n") + "\n");
+fs.writeFileSync(tmp + "/v3r-app.txt", r3r.join("\n") + "\n");
 // 3 en 4: gevallen
 const cps = [0x41, 0x31, 0x23, 0x2A, 0x3A, 0x20, 0xA8, 0xA9, 0xAA, 0xAE, 0xAF, 0x203B, 0x203C, 0x203D, 0x2048, 0x2049, 0x204A, 0x2121, 0x2122, 0x2123,
   0x2138, 0x2139, 0x213A, 0x2193, 0x2194, 0x21AA, 0x21AB, 0x2319, 0x231A, 0x23FF, 0x2400, 0x24C1, 0x24C2, 0x24C3, 0x25A9, 0x25AA, 0x25FE,
@@ -85,7 +88,11 @@ const spoof = ["Status️: Klaar voor toetsing → Afgerond", "Sta️tus: Open",
   "Status⠀: Open", "Status∶ Open", "Status꞉ Open", "Ѕtatus: Open", "Aangemaakt️ met status Open",
   "Actiehouder️, toetser of plandatum gewijzigd", "Status: Open → Afgerond", "- Status : Open", "S t a t u s: Open", "Ｓtatus: Open",
   "Stätus: Open", "Ѕтатуѕ: Open", "Status" + Z + ": Open", "𝐒tatus: Open", "aangemaakt met status Afgerond",
-  "ho" + V16 + "i", V1, "᠏", "⠀", "　", "   ", " ", Z, "Status․ Open", "5tatus: Open", "STATUS: OPEN"];
+  "ho" + V16 + "i", V1, "᠏", "⠀", "　", "   ", " ", Z, "Status․ Open", "5tatus: Open", "STATUS: OPEN",
+  // 0009: lookalikes die niet in de lijst staan (Armeense Տ, ∪, ⊤, ᗅ), ook gecombineerd met ingevoegde tekens
+  "\u054Ftatus: Klaar voor toetsing \u2192 Afgerond", "Stat\u222As: Klaar voor toetsing \u2192 Afgerond", "S\u22A4atus: Klaar voor toetsing",
+  "St\u15C5tus: Klaar voor toetsing", "\u054Ft\u2236atus: Open", "\u054Ft\u0301atus: Open", "A\u0430ngem\u1D00akt met \u054Ftatus Open",
+  "\u{1F44D}\u{1F44D}\u{1F44D}\u{1F44D}\u{1F44D}\u{1F44D}", "\u4F60\u597D\u4F60\u597D\u4F60\u597D"];
 const gewoon = ["Ingesteld: actiehouder Bram Voorbeeld, toetser Carla Proef, plandatum 3 dec", "Getoetst en akkoord · afgerond",
   "Niet akkoord na toetsing: status is nog niet goed", "Voorstel vervallen: al opgelost", "Klaar voor toetsing gemeld, met na-foto",
   "Gedaan 👷‍♀️ ❤️‍🔥 1️⃣", "Besproken met de ploeg.\nVolgt morgen.", "Café naïef ↔︎"];
@@ -110,17 +117,32 @@ psql -X -q -At -d "$DB" -c "
   where cp not between 55296 and 57343 and not public.verloop_tekens_ok(chr(cp)) order by cp" > "$TMP/v2-db.txt"
 psql -X -q -At -d "$DB" -c "
   select cp || ' ' || public.verloop_skelet(chr(cp)) from generate_series(1, 1114111) cp
-  where cp not between 55296 and 57343 and public.verloop_skelet(chr(cp)) <> '' order by cp" > "$TMP/v3-db.txt"
+  where cp not between 55296 and 57343 and public.verloop_skelet(chr(cp)) not in ('', '?') order by cp" > "$TMP/v3-db.txt"
+psql -X -q -At -d "$DB" -c "
+  select cp || ' ' || public.verloop_skelet_ruw(chr(cp)) from generate_series(1, 1114111) cp
+  where cp not between 55296 and 57343 and public.verloop_skelet_ruw(chr(cp)) not in ('', '?') order by cp" > "$TMP/v3r-db.txt"
 psql -X -q -At -d "$DB" -f "$TMP/v4.sql" > "$TMP/v4-db.txt"
 # Deel 3: Node kan een nieuwere Unicode-versie hebben dan PostgreSQL (nieuwe tekens, bijv. U+1CCD6 "omlijnde
 # letters" uit Unicode 16, die NFKD in Node wel naar a–z brengt). Alleen díe richting mag verschillen: de app is dan
 # strenger (zet er "Toelichting: " voor), nooit soepeler. Elk skelet dat de database kent, moet de app gelijk kennen.
+# (0009: een teken dat geen a–z wordt is een joker "?"; per codepunt staan hier alleen de skeletten die iets anders
+# zijn dan leeg of één joker. Een joker in de database waar de app een letter heeft, is veilig: de app toetst ook het
+# skelet zonder NFKD (skeletRuw), waarin zo'n teken net zo goed een joker is.)
 EXTRA=$(diff "$TMP/v3-app.txt" "$TMP/v3-db.txt" | grep -c '^<' || true)
-if diff "$TMP/v3-app.txt" "$TMP/v3-db.txt" | grep -q '^>'; then
-  echo "tekens (verloop, deel 3): FOUT (skelet in de database anders dan in js/sync.js)"
-  diff "$TMP/v3-app.txt" "$TMP/v3-db.txt" | grep '^>' | head -10
-  fout=1
-fi
+# Toegestaan is ook dat de app achter dezelfde letters nog jokers heeft (bijv. U+0130 İ: JavaScript maakt er "i" plus
+# een combinerende punt van, PostgreSQL alleen "i"): een joker extra maakt de app alleen strenger.
+for d in v3 v3r; do
+  ANDERS=$(node -e '
+    const fs = require("fs"), lees = (f) => new Map(fs.readFileSync(f, "utf8").split("\n").filter(Boolean).map((l) => { const i = l.indexOf(" "); return [l.slice(0, i), l.slice(i + 1)]; }));
+    const app = lees(process.argv[1]), db = lees(process.argv[2]), uit = [];
+    for (const [cp, k] of db) { const a = app.get(cp); if (!(a === k || (a && a.startsWith(k) && /^\?+$/.test(a.slice(k.length))))) uit.push(cp + " db=" + k + " app=" + a); }
+    console.log(uit.slice(0, 10).join("\n"));' "$TMP/$d-app.txt" "$TMP/$d-db.txt")
+  if [ -n "$ANDERS" ]; then
+    echo "tekens (verloop, deel 3, $d): FOUT (skelet in de database anders dan in js/sync.js)"
+    echo "$ANDERS"
+    fout=1
+  fi
+done
 for n in 1 2 4; do
   if ! cmp -s "$TMP/v$n-app.txt" "$TMP/v$n-db.txt"; then
     echo "tekens (verloop, deel $n): FOUT (js/sync.js en de database lopen uit elkaar)"

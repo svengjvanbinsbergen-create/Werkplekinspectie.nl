@@ -27,8 +27,8 @@
      - de beheerrollen (MFA, beheerrechten) krijgen NOOIT een bewaard refresh-token, ook niet met het vinkje;
      - het token wordt pas bewaard na een volledige login (profiel + rol + zo nodig MFA);
      - korte JWT (Supabase: 1 uur), refresh-token-rotatie met hergebruikdetectie, "Overal uitloggen";
-     - VERPLICHT in Supabase (Auth → Sessions): "Time-box user sessions" (bijv. 7 dagen) en een
-       inactiviteits-timeout, zodat ook een gestolen token vanzelf verloopt.
+     - uitloggen na 2 uur zonder activiteit (onderaan, INACTIEF_MS), in beide modi: het Supabase FREE-plan heeft
+       geen sessie-time-box of inactiviteits-timeout op de server (dat is Pro); dit is de vervangende maatregel.
      Een HttpOnly-cookie vraagt een eigen server/Edge Function (volgende stap nu script-src strak is).
    - "Ingelogd blijven" staat standaard uit (gedeelde toestellen). Een inspecteur die voor het eerst op een
      toestel inlogt met het vinkje uit krijgt daarna één keer de vraag "Is dit je eigen telefoon?", zodat
@@ -271,7 +271,7 @@
         <button class="btn primary" id="l-knop" type="submit" style="margin-top:8px">Inloggen</button>
       </form>
       <button class="linkknop" type="button"${act("authScherm", "vergeten")}>Wachtwoord vergeten?</button>
-      <div class="muted" style="font-size:12px;margin-top:6px">Geen account? Het Hoofd Service &amp; Montage nodigt je uit.</div></div>`));
+      <div class="muted" style="font-size:12px;margin-top:6px">Geen account? Een hoofd, de QHSE-manager of de beheerder nodigt je uit.</div></div>`));
     toonSlot();
   }
   function scherm_vergeten(v) {
@@ -391,6 +391,7 @@
       if (n) { S.wacht = p; S.anderN = n; S.scherm = "anderwerk"; S.melding = ""; App.route(); return; }
     }
     S.anderOk = false; S.wacht = null;
+    if (!herstel) nuActief();   // nieuwe login: de klok voor uitloggen na inactiviteit begint opnieuw
     const prof = profielVoorApp(p);
     // pas nu (profiel, rol en zo nodig MFA in orde) het refresh-token bewaren; de beheerrollen nooit blijvend
     if (MFA_ROLLEN.includes(p.role)) S.onthoud = false;
@@ -426,7 +427,7 @@
   // Een link verandert nooit iets aan wat er al is: geen wisSessie/wisOpslag, geen syncWisLokaal. Bij een ongeldige
   // link, of een link van een ander account dan wie hier bewaard ingelogd is, gaat de app gewoon verder met de
   // bewaarde sessie (met een melding). Pas na het opslaan van een nieuw wachtwoord (overal uitgelogd) gaat die weg.
-  const LINK_VERLOPEN = "De link is verlopen, al gebruikt of ongeldig. Vraag hieronder een nieuwe aan.";
+  const LINK_VERLOPEN = "De link is verlopen, al gebruikt of ongeldig. Was het een uitnodiging? Vraag degene die je uitnodigde om een nieuwe link (Beheer › Gebruikers). Wachtwoord vergeten? Vraag hieronder een herstelmail aan.";
   async function verwerkLink() {
     const h = new URLSearchParams(location.hash.replace(/^#\/?/, ""));
     const q = new URLSearchParams(location.search);
@@ -688,7 +689,8 @@
       if (!actief()) {
         login0.call(this);
         const v = $("view"), h = v && v.firstElementChild;
-        if (h) h.insertAdjacentHTML("afterend", `<div class="hint" style="margin-bottom:12px"><b>Voorbeeld</b> · fictieve accounts en voorbeelddata. Er is geen server gekoppeld; alles blijft op dit toestel.</div>`);
+        if (h) h.insertAdjacentHTML("afterend", `<div class="hint" style="margin-bottom:12px"><b>Voorbeeld</b> · fictieve accounts en voorbeelddata. Er is geen server gekoppeld; alles blijft op dit toestel.</div>`
+          + (inactiefMelding ? `<div class="hint" role="status" style="margin-bottom:12px">${esc(inactiefTekst())}</div>` : ""));
         return;
       }
       const v = $("view"), s = S.scherm || "login";
@@ -791,4 +793,77 @@
     // zodat verwerkLink() hem net zo behandelt als bij openen (controleren, niets wissen, token uit het adres)
     window.addEventListener("hashchange", () => { if (/(^|[#&/])(access_token|error_code|error)=/.test(location.hash)) location.reload(); });
   }
+
+  // ---------------- uitloggen na inactiviteit (vervangt de "time-box" van het Pro-plan) ----------------
+  // Na INACTIEF_MS zonder interactie (aanwijzen/tikken, toetsen, zichtbaar scrollen) logt de app uit, op de telefoon én
+  // op de computer, in beide modi. Het laatste moment staat in localStorage (gedeeld door alle tabbladen: werk je in het
+  // ene tabblad, dan blijft het andere ook ingelogd). Controle elke minuut en direct bij terugkomen (zichtbaar worden,
+  // focus, pageshow) en bij elk scherm (App.route): wie na meer dan 2 uur terugkomt, is meteen uitgelogd.
+  // Vóór het uitloggen wordt een lopende inspectie als concept bewaard (App.logout → concept "lopend-<uid>"); de
+  // wachtrij (outbox) blijft staan en gaat mee bij de volgende login. Daarna het inlogscherm met een rustige melding
+  // (met "je inspectie is bewaard" als er een open stond, en zonder bereik: pas weer inloggen met verbinding).
+  // Klok: een laatste activiteit die meer dan KLOK_MARGE_MS in de TOEKOMST ligt (de klok liep vóór en is teruggezet:
+  // NTP of handmatig), wordt bij de eerstvolgende controle (elke minuut, en bij elk scherm, zichtbaar worden, focus en
+  // interactie) teruggezet op NU. Zo blijft de sessie na een klokcorrectie hooguit 2 uur open (niet "voorsprong + 2 uur"),
+  // en wordt wie gewoon doorwerkt met een klok die 10 minuten voorliep, niet midden in het werk uitgelogd.
+  // Restrisico (veld): wie zonder bereik wordt uitgelogd (telefoon op slot in de pauze op een afgelegen locatie), kan
+  // pas weer inloggen met verbinding (wachtwoord, en voor de beheerrollen MFA). Het werk blijft op het toestel; zie
+  // docs/beveiligingsrapport.md (bewust zo: een onbeheerd toestel moet na 2 uur dicht, ook zonder bereik).
+  const INACTIEF_MS = 2 * 60 * 60 * 1000;   // de enige plek voor deze duur
+  const KLOK_MARGE_MS = 5 * 60 * 1000;
+  const INACTIEF_TEKST = "Je bent na 2 uur zonder activiteit uitgelogd.";
+  const K_ACTIEF = "wpi_laatste_activiteit";
+  // Het moment staat OOK in het geheugen van dit tabblad (geheugen): lukt lezen of schrijven van localStorage niet
+  // (privévenster, opslag vol of geblokkeerd), dan telt de klok gewoon door (nooit "nooit uitloggen", en nooit
+  // uitloggen midden in het werk omdat een oude waarde niet overschreven kon worden). Geldt: de LAATSTE van beide.
+  let inactiefMelding = false, inactiefConcept = false, laatstGeschreven = 0, geheugen = 0, vastInOpslag = 0;
+  function inactiefTekst() {
+    return INACTIEF_TEKST + (inactiefConcept ? " Je lopende inspectie is bewaard; log opnieuw in om verder te gaan." : "")
+      + (actief() && navigator.onLine === false ? " Zonder internet kun je pas weer inloggen als je bereik hebt; je werk blijft op dit toestel." : "");
+  }
+  function leesOpslag() { try { const v = +localStorage.getItem(K_ACTIEF); return v > 0 ? v : 0; } catch (e) { return 0; } }
+  // vastInOpslag: een waarde in de TOEKOMST die niet te overschrijven bleek (klok teruggezet en opslag vol): negeren
+  function leesActief() { const v = leesOpslag(); return Math.max(v === vastInOpslag ? 0 : v, geheugen); }
+  function nuActief() {
+    geheugen = laatstGeschreven = Date.now(); inactiefMelding = false; inactiefConcept = false;
+    try { localStorage.setItem(K_ACTIEF, String(laatstGeschreven)); } catch (e) {}
+    const v = leesOpslag(); vastInOpslag = v > geheugen + KLOK_MARGE_MS ? v : 0;
+  }
+  function klokTerug() { if (leesActief() > Date.now() + KLOK_MARGE_MS) nuActief(); }
+  const verlopen = () => { const t = leesActief(); return !!t && Date.now() - t > INACTIEF_MS; };
+  function activiteit(e) {
+    if (!App.user || document.visibilityState !== "visible") return;
+    if (e && e.type === "scroll" && e.isTrusted === false) return;
+    klokTerug();
+    if (verlopen()) return controleerActief();   // te laat: niet stilletjes verlengen
+    if (Date.now() - laatstGeschreven > 15000) nuActief();   // hooguit elke 15 s schrijven
+  }
+  function controleerActief() {
+    if (!App.user) return false;
+    if (!leesActief()) { nuActief(); return false; }   // nog nooit gezet (eerste keer met deze versie)
+    klokTerug();
+    if (!verlopen()) return false;
+    inactiefMelding = true;
+    inactiefConcept = !!(App.state && App.state.inspectie);   // App.logout bewaart die als concept
+    if (actief()) S.melding = inactiefTekst();
+    try { App.closeModal(); } catch (e) {}
+    App.logout();   // bewaart een lopende inspectie als concept; wachtrij blijft (zie kern.js logout, authLogout)
+    return true;
+  }
+  ["pointerdown", "keydown", "touchstart", "wheel"].forEach((t) => document.addEventListener(t, activiteit, { capture: true, passive: true }));
+  window.addEventListener("scroll", activiteit, { capture: true, passive: true });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") controleerActief(); });
+  window.addEventListener("focus", () => controleerActief());
+  window.addEventListener("pageshow", () => controleerActief());
+  setInterval(() => controleerActief(), 60000);
+  {
+    // bij elk scherm (ook het eerste na het opstarten met een bewaarde sessie of voorbeeld-login)
+    const route0 = App.route;
+    App.route = function () { if (App.user && controleerActief()) return; return route0.apply(this, arguments); };
+    if (!actief()) {
+      const login1 = App.login;   // voorbeeld-login: de klok begint opnieuw
+      App.login = function () { nuActief(); return login1.apply(this, arguments); };
+    }
+  }
+  App.INACTIEF_MS = INACTIEF_MS;   // voor tests en uitleg (alleen lezen)
 })();

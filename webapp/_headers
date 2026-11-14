@@ -30,14 +30,14 @@
 #       dist/            het enige dat online gaat; wordt bij elke deploy opnieuw gebouwd (staat niet in git)
 #     tools/  handoff/  wpi/   buiten webapp/, dus nooit in een publicatie
 # De build kopieert alleen index.html, styles.css, sw.js, manifest.json, de iconen, _headers, css/, js/, data/, fonts/ en
-# .well-known/ (assetlinks.json voor de Android-app) naar dist/ en houdt daarvan alleen html/css/js/json/png/woff2 over
+# .well-known/ (assetlinks.json voor de Android-app) naar dist/ en houdt daarvan alleen html/css/js/json/png/woff2/ttf over
 # (en alleen index.html als pagina; geen dotfiles, wel de map .well-known). Zo staan
 # docs/, tests/, supabase/, tools/, *.md, *.sql, *.py, *.sh, .env, .git en interne pagina's (beveiliging.html,
 # onderzoek.html, gauntlet.html, verbeter.html, design-vandaag.html) nooit online, ook niet als ze later bijkomen.
 #   Netlify: netlify.toml (publish = "dist", command hieronder).
 #   Vercel: vercel.json (buildCommand + outputDirectory "dist"), Root Directory = webapp.
 #   Cloudflare Pages: Root directory "webapp", Build output directory "dist", Build command:
-#     CLOUDFLARE_BUILD: rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data fonts .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name '*.woff2' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete
+#     CLOUDFLARE_BUILD: rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data fonts .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name '*.woff2' ! -name '*.ttf' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete
 # Controle: node tests/exposed.js --config voert de build van netlify.toml, vercel.json en deze regel uit in een
 # tijdelijke kopie en faalt als er iets anders dan de app in dist/ komt. Na een deploy:
 #   node tests/exposed.js --alles https://<productie-url> --strict

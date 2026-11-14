@@ -8,12 +8,12 @@
   # ALLOWLIST: alleen wat de app nodig heeft gaat naar dist/ en alleen dist/ wordt gepubliceerd. Nieuwe interne
   # bestanden (docs, tests, supabase, tools, *.md, *.sql, *.py, *.sh, losse .html-pagina's, .env, .git) kunnen zo nooit
   # per ongeluk online komen; ook niet als iemand ze later in webapp/ zet. Daarna blijven alleen bestandstypen over
-  # die de app gebruikt (html/css/js/json/png/woff2; Nunito in fonts/) en alleen index.html als pagina; .well-known/assetlinks.json (Android-app)
+  # die de app gebruikt (html/css/js/json/png/woff2/ttf; Nunito in fonts/) en alleen index.html als pagina; .well-known/assetlinks.json (Android-app)
   # gaat mee (de map .well-known is de enige toegestane punt-map). _headers gaat mee (Netlify en
   # Cloudflare Pages lezen hem uit de publicatiemap). DEZELFDE opdracht staat in vercel.json en in _headers
   # (Cloudflare Pages); tests/exposed.js --config voert ze uit en controleert de inhoud van dist/.
   publish = "dist"
-  command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data fonts .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name '*.woff2' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
+  command = "rm -rf dist && mkdir dist && cp -R index.html styles.css sw.js manifest.json icon-192.png icon-512.png _headers css js data fonts .well-known dist/ && find dist -type f ! -name '*.html' ! -name '*.css' ! -name '*.js' ! -name '*.json' ! -name '*.png' ! -name '*.woff2' ! -name '*.ttf' ! -name _headers -delete && find dist -type f -name '*.html' ! -path dist/index.html -delete && find dist -type f -name '.*' -delete"
 
 # --- HTTP → HTTPS. Netlify stuurt zelf door zodra het certificaat er is; deze regels gelden ALLEEN voor de twee
 # domeinen hieronder. Komt de app op een ander adres, pas ze aan. Controleer na de deploy met

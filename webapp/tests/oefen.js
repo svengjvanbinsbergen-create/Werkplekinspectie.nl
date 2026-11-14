@@ -24,6 +24,26 @@
 //    alleen Ter plaatse → ‘Kijk nog eens bij Ter plaatse’); put C noemt wat er bij A volgt en dat C geen actie geeft;
 //  - samenvatting (alleen wat je echt deed) en "Klaar om echt te beginnen"; teksten zonder "!", "≠",
 //    "dringendheid", echte collega's of de afgekeurde formuleringen;
+//  - afkeuring ronde 4, via de knoppen doorgelopen: sleuf V + ‘Ladder vastbinden’ (kort maar concreet) wordt aanvaard
+//    en de samenvatting zegt ‘Goed gedaan’ zonder TRA-afwijking; sleuf V + ‘Direct gecorrigeerd’ → de samenvatting
+//    noemt alleen ‘Ter plaatse’ (geen ‘week je af van de TRA’, geen ‘een paar keuzes’); kast V + label + gecorrigeerd →
+//    actiescherm én samenvatting ‘afgerond’; kast A + ‘Toolbox over LOTOTO …’ is concreet (preventief; open, ronde 5);
+//    alle negen oordelen (put/sleuf/kast × C/A/V): precies één of geen TRA-afwijking, actiescherm = samenvatting over
+//    ‘afgerond’, het oordeel van de oefenaar blijft staan; ‘Beter opletten’ blijft vaag (tekstpunt, geen TRA-afwijking);
+//  - afkeuring ronde 5, via de knoppen: put A + ‘Band omdraaien en verder hijsen’ → ‘zo blijft het gevaar’ (niet
+//    aanvaard, geen ‘de band gaat uit gebruik’, samenvatting geen ‘Goed gedaan’); put A + alleen een toolbox → de band
+//    moet nú uit gebruik; put afkeuren + toolbox → aanvaard, de tekst volgt wat je schreef; kast ‘Slot eraf halen en
+//    doorwerken’ → niet aanvaard, nooit afgerond; kast toolbox (+ label) met ‘Direct gecorrigeerd’ → concreet maar OPEN
+//    (een toolbox die nog gegeven moet worden is niet getoetst), actiescherm = samenvatting; sleuf V + ‘Voorzichtiger
+//    werken’ / ‘Gewoon blijven opletten’ → vaag; samenvatting met een TRA-afwijking én andere punten telt en noemt de
+//    scènes (geen ‘Daarnaast nog iets’, geen ‘: de urgentie:’);
+//  - afkeuring ronde 6, via de knoppen: put ‘Niet meer met deze band hijsen’ → aanvaard (ook met woorden ertussen); put
+//    ‘Hijsband afkeuren’, het Voorstel en ‘vervangen door nieuwe gekeurde band’ → aanvaard zonder verzonnen ‘je pakt ook de
+//    oorzaak aan’ (afkeuren/gekeurd is geen oorzaak); put ‘Nieuwe band halen’ → niet aanvaard (de kapotte band gaat niet
+//    uit gebruik); kast ‘Afspraak …’ / ‘Instructie …’ / ‘Toolbox …’ + ‘Direct gecorrigeerd’ → het invoerscherm zegt al dat
+//    de actie open blijft en vraagt een urgentie (vastleggen wacht daarop), de tekst noemt wat de oefenaar schreef;
+//    kast ‘Label opgehangen en monteur uitleg gegeven’ (verleden tijd) → afgerond; kast ‘Label ontbreekt aan het slot’
+//    (een bevinding) → niet aanvaard; put V onveilig → ‘zo blijft het gevaar bestaan:’ met dát punt eerst;
 //  - een deel met het toetsenbord (Tab/Enter/Spatie);
 //  - NIETS wordt opgeslagen: alle IndexedDB-stores (inspecties, acties, concept, planning, outbox, …) hebben
 //    na afloop evenveel records, er loopt geen inspectie, de acties en meldingen zijn gelijk;
@@ -47,7 +67,7 @@ const errs = [];
 // (coördinator = inspecteert; vóór de rollenwijziging herkende de app alleen de rol "inspecteur")
 const INSP = { id: "u-oefen-insp", full_name: "Oefen Inspecteur", role: "coordinator", functie: "Montage Coördinator" };
 const QHSE = { id: "u-oefen-qhse", full_name: "Oefen Adviseur", role: "qhse", functie: "QHSE-manager" };
-const ok = (cond, wat) => { if (!cond) errs.push("OEFEN: " + wat); console.log((cond ? "  ok    " : "  FOUT  ") + wat); };
+const ok = (cond, wat, extra) => { if (!cond) errs.push("OEFEN: " + wat); console.log((cond ? "  ok    " : "  FOUT  ") + wat + (!cond && extra !== undefined ? " · " + JSON.stringify(extra) : "")); };
 
 async function nieuwePagina(b, w, h) {
   const ctx = await b.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 2, locale: "nl-NL" });
@@ -237,7 +257,7 @@ async function nieuwePagina(b, w, h) {
   await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
   const wieG = await p.locator("#oef-wie").innerText();
-  ok(await p.locator("#oef-prio-direct").count() === 0 && /jij de toetser/.test(wieG) && !/coördinator/.test(wieG) && await p.locator(".oef .oef-wie").count() === 1, "actie: bij ‘Direct gecorrigeerd’ één zin (jij bent de toetser), geen tegenstrijdige coördinator-tip");
+  ok(!(await p.locator("#oef-prio-direct").isVisible()) && /jij de toetser/.test(wieG) && !/coördinator/.test(wieG) && await p.locator(".oef .oef-wie").count() === 1, "actie: bij ‘Direct gecorrigeerd’ één zin (jij bent de toetser), geen tegenstrijdige coördinator-tip");
   await vast.click(); await wacht();
   ok(/jij hebt geen herstel gezien/.test(await fbTekstR()), "actie put: ‘Direct gecorrigeerd’ zonder gezien herstel → bijsturen");
   await knop("Pas je actievoorstel aan").click(); await wacht();
@@ -426,7 +446,7 @@ async function nieuwePagina(b, w, h) {
   ok(/Direct gecorrigeerd/.test(t3a) && await p.locator(".oef-corr li").count() === 1, "kast: niets gedaan → je zag het herstel, kies ‘Direct gecorrigeerd’");
   await knop("Pas je actievoorstel aan").click(); await wacht();
   await p.click("#oef-terPlaatse-gecorrigeerd"); await wacht();
-  ok(await p.locator("#oef-prio-kort").count() === 0 && !/coördinator/.test(await p.locator("#oef-wie").innerText()), "kast: direct gecorrigeerd → geen urgentie, geen coördinator-tip");
+  ok(!(await p.locator("#oef-prio-kort").isVisible()) && !/coördinator/.test(await p.locator("#oef-wie").innerText()), "kast: direct gecorrigeerd → geen urgentie, geen coördinator-tip");
   await scherm("s3-actie");
   await p.click("#oef-vastleg"); await wacht();
   const t3k = await fbTekstR();
@@ -476,6 +496,208 @@ async function nieuwePagina(b, w, h) {
   await scherm("zonmodus-actie");
   await ev(() => { App.pref = { veld: false, zon: false }; App.pasPrefToe(); App.oefOpnieuw(); }); await wacht();
   ok(JSON.stringify(await tellingen()) === JSON.stringify(voor), "veld/zon: niets opgeslagen");
+  // ================= afkeuring ronde 4: de herhalingen van de reviewer, via de knoppen (390×844) =================
+  // Een volledige ronde met per scène [oordeel, [actietekst | "VS", ter plaatse, urgentie]]. Bewijst: V met een korte,
+  // concrete tekst wordt aanvaard; de samenvatting noemt alleen een TRA-afwijking als het oordeel of de TRA-stap echt
+  // afweek, en noemt anders letterlijk wat er nog was (bv. alleen ‘Ter plaatse’); actiescherm en samenvatting zeggen
+  // hetzelfde over ‘afgerond’; een preventieve actie (toolbox) is concreet; het oordeel blijft altijd dat van de oefenaar.
+  console.log("afkeuring ronde 4 (doorlopen via de knoppen)");
+  const doorloop = async (plan) => {
+    await ev(() => { App.oefOpen(); App.oefOpnieuw(); }); await wacht(300);
+    await p.getByRole("button", { name: /met oefenen/ }).click(); await wacht();
+    const log = { oordeel: [], actie: [], hierna: [], gekozen: [] };
+    for (let guard = 0; guard < 40; guard++) {
+      const t = await p.locator(".oef h1").innerText();
+      if (/oefening zit erop/.test(t)) break;
+      const si = await ev(() => App.oefState().s), [x, act, zi] = plan[si];
+      if (/Wat doe je eerst/.test(t)) { await kies("ingrijpen", 0); await verder(); continue; }
+      if (/Het gesprek/.test(t)) { await kies("gesprek", 0); await verder(); continue; }
+      if (/Wat zag je/.test(t)) { await p.fill("#oef-f-zie", "De hijsband is aan één rand uitgerafeld en heeft een snee."); await p.locator('button[data-action="oefFeedback"]').click(); await wacht(); await verder(); continue; }
+      if (/De taak/.test(t)) { await p.fill("#oef-f-taak", "ze sluiten de nieuwe persleiding aan"); await p.locator('button[data-action="oefTaakVs"]').click(); await wacht(); await p.locator(".oef-vs .vpick").first().click(); await wacht(); await verder(); continue; }
+      if (/Koppel en beoordeel/.test(t)) {
+        if (zi === undefined && await p.locator(".oef-vs .vpick").count()) await p.locator(".oef-vs .vpick").first().click();
+        else { if (!(await ev(() => document.querySelector("details.zelfkies").open))) await p.locator("details.zelfkies summary").click(); await p.locator(".zpick").nth(zi || 0).click(); }
+        await wacht(300);
+        await p.locator(`.oef-odock button[data-args='["${x}"]']`).click(); await wacht(300);
+        log.oordeel[si] = await fbTekst(); await verder(); continue;
+      }
+      if (/voorstel/i.test(t)) {
+        const [tx, tp, pr, voorVast] = act;
+        if (tx === "VS") await knop("Laat de app een actie voorstellen").click(); else await p.fill("#oef-f-actie", tx);
+        await wacht(100);
+        await p.locator(`#oef-terPlaatse-${tp}`).click(); await wacht(200);
+        if (voorVast) await voorVast();   // ronde 7: het invoerscherm vóór ‘vastleggen’ bekijken (uitleg, urgentie)
+        // de urgentie staat er bij elke actie die open blijft (ook ‘Direct gecorrigeerd’ met iets dat nog moet gebeuren)
+        if (pr && await p.locator("#oef-prio-blok").isVisible()) { await p.locator(`#oef-prio-${pr}`).click(); await wacht(200); }
+        await p.locator("#oef-vastleg").click(); await wacht(300);
+        log.actie[si] = await fbTekst();
+        log.gekozen[si] = await p.locator(".oef-gekozen").count() ? (await p.locator(".oef-gekozen").innerText()).replace(/\s+/g, " ") : "";
+        log.hierna[si] = await p.locator(".oef-hierna").count() ? (await p.locator(".oef-hierna").innerText()).replace(/\s+/g, " ") : "";
+        if (await knop("Verder").count()) await verder();
+        else { await ev(() => App.oefVerder()); await wacht(); }   // bijsturen: de oefenaar gaat toch door (oordeel blijft van hem)
+        continue;
+      }
+      if (/Benoem wat goed gaat/.test(t)) { await p.fill("#oef-f-positief", "Goed dat de gasmeter bij jou in de sleuf hangt en de ladder als vluchtweg staat."); await p.locator('button[data-action="oefFeedback"]').click(); await wacht(); await verder(); continue; }
+      errs.push("OEFEN: doorloop: onbekende stap " + t); break;
+    }
+    const s = await ev(() => ({ kick: (document.querySelector(".oef-kicker") || {}).textContent || "", intro: (document.querySelector(".oef-kaart .oef-p") || {}).textContent || "",
+      rijen: [...document.querySelectorAll(".oef-lijst .row")].map((r) => r.innerText.replace(/\s+/g, " ")), anders: document.querySelectorAll(".oef-anders").length,
+      oordelen: App.oefState().a.map((a) => a.oordeel || null) }));
+    return Object.assign(log, s);
+  };
+  const STD = [["A", ["VS", "maatregel", "direct"]], ["C", null], ["A", ["VS", "gecorrigeerd", null]]];
+  const met = (i, x, act) => STD.map((d, j) => (j === i ? [x, act] : d));
+
+  // R1 sleuf V + ‘Ladder vastbinden’ (kort maar concreet) → aanvaard; samenvatting ‘Goed gedaan’, geen TRA-afwijking
+  const r1 = await doorloop(met(1, "V", ["Ladder vastbinden", "niets", "planmatig"]));
+  ok(/Dat kan/.test(r1.oordeel[1]) && /daar is V voor/.test(r1.oordeel[1]), "R1 sleuf V: oordeelscherm ‘Dat kan … daar is V voor’");
+  ok(/Verbetervoorstel vastgelegd/.test(r1.actie[1]) && !/concreter|concreet:/.test(r1.actie[1]), "R1 sleuf V + ‘Ladder vastbinden’: aanvaard als concreet (geen minimum aantal woorden)", r1.actie[1]);
+  ok(r1.kick === "Goed gedaan" && r1.anders === 0 && !/week je af|TRA aangeeft/.test(r1.intro), "R1 samenvatting: ‘Goed gedaan’, geen ‘week je af van wat de TRA aangeeft’", r1.intro);
+  ok(/\[V\] Verbeterpunt/.test(r1.rijen[1]) && /verbetervoorstel geschreven/.test(r1.rijen[1]) && !/niet concreet/.test(r1.rijen.join(" ")), "R1 samenvatting: sleuf [V] Verbeterpunt, verbetervoorstel geschreven");
+  ok(JSON.stringify(r1.oordelen) === JSON.stringify(["A", "V", "A"]), "R1 het oordeel van de oefenaar blijft staan (A, V, A)", r1.oordelen);
+  await shot("r4-sleufV-kort-samenvatting");
+
+  // R2 sleuf V + concreet, maar ‘Direct gecorrigeerd’ → alleen Ter plaatse; de samenvatting zegt precies dát
+  const r2 = await doorloop(met(1, "V", ["Tweede gasmeter voor de wacht", "gecorrigeerd", null]));
+  ok(/Kijk nog eens bij ‘Ter plaatse’/.test(r2.actie[1]) && !/concreter/.test(r2.actie[1]), "R2 sleuf V + ‘Direct gecorrigeerd’: actiescherm ‘Kijk nog eens bij Ter plaatse’");
+  ok(!/week je af|TRA aangeeft|een paar keuzes/.test(r2.intro) && /Nog één punt om naar te kijken/.test(r2.intro) && /Ter plaatse/.test(r2.intro) && /Werken in de sleuf/.test(r2.intro),
+    "R2 samenvatting: geen TRA-afwijking, geen ‘een paar keuzes’; noemt alleen ‘Ter plaatse’ bij Werken in de sleuf", r2.intro);
+  ok(r2.anders === 1 && /Ter plaatse/.test(r2.rijen[1]) && !/paste nog niet helemaal|niet concreet|jij koos/.test(r2.rijen[1]), "R2 sleufrij: alleen het punt over ‘Ter plaatse’", r2.rijen[1]);
+  ok(r2.kick === "Even terugkijken", "R2 ondertitel ‘Even terugkijken’ (er is één punt)");
+  await shot("r4-sleufV-terplaatse-samenvatting");
+
+  // R3 kast V (zelf gekozen TRA-stap) + label, ‘Direct gecorrigeerd’ → afgerond op het actiescherm én in de samenvatting
+  const r3 = await doorloop(met(2, "V", ["Label met naam en datum aan het slot hangen", "gecorrigeerd", null]));
+  ok(/Past bij wat je zag/.test(r3.actie[2]) && /afgerond/.test(r3.actie[2]) && /Getoetst/.test(r3.hierna[2]), "R3 kast V + label + gecorrigeerd: actiescherm afgerond, Hierna eindigt in Afgerond");
+  ok(/herstel gezien, actie afgerond/.test(r3.rijen[2]) && !/actievoorstel geschreven/.test(r3.rijen[2]), "R3 samenvatting kast: ‘herstel gezien, actie afgerond’ (zelfde als het actiescherm)", r3.rijen[2]);
+  ok(/jij koos V; volgens de TRA een afwijking \(A\)/.test(r3.rijen[2]) && /Bij één keuze week je af/.test(r3.intro) && !/een paar keuzes/.test(r3.intro) && /je oordeel bij ‘Bij de schakelkast’/.test(r3.intro), "R3 samenvatting: precies één TRA-afwijking (het oordeel bij de schakelkast)", r3.intro);
+  ok(r3.oordelen[2] === "V", "R3 het oordeel V blijft staan");
+
+  // R4 kast A + toolbox (preventieve actie) → concreet; sinds ronde 5 NIET afgerond (de toolbox moet nog gebeuren, zie P5)
+  const r4 = await doorloop(met(2, "A", ["Toolbox over LOTOTO geven aan de hele ploeg", "gecorrigeerd", "kort"]));
+  ok(!/concreter|wat ontbrak/.test(r4.actie[2]) && !/Getoetst/.test(r4.hierna[2]) && /Instellen/.test(r4.hierna[2]), "R4 kast A + ‘Toolbox over LOTOTO geven aan de hele ploeg’: concreet (preventief), open", r4.actie[2]);
+  ok(!/actie afgerond/.test(r4.rijen[2]) && r4.kick === "Goed gedaan" && r4.anders === 0 && !/niet concreet/.test(r4.rijen.join(" ")), "R4 samenvatting: open, ‘Goed gedaan’, geen ‘niet concreet’");
+
+  // de negen oordelen (put/sleuf/kast × C/A/V): de samenvatting noemt nooit een TRA-afwijking die er niet was,
+  // telt goed (‘één keuze’), en zegt over ‘afgerond’ hetzelfde als het actiescherm
+  const ACT = { put: ["VS", "maatregel", "direct"], sleuf: ["Ladder bovenaan vastbinden", "niets", "planmatig"], kast: ["VS", "gecorrigeerd", null] };
+  const PAST = { put: ["A"], sleuf: ["C", "V", "A"], kast: ["A"] };
+  for (const [i, sid] of [[0, "put"], [1, "sleuf"], [2, "kast"]]) {
+    for (const x of ["C", "A", "V"]) {
+      const r = await doorloop(met(i, x, x === "C" ? null : ACT[sid]));
+      const afw = !PAST[sid].includes(x);
+      const naam = sid + " " + x;
+      ok(afw ? /Bij één keuze week je af van wat de TRA aangeeft/.test(r.intro) : !/week je af|TRA aangeeft/.test(r.intro), naam + ": samenvatting noemt " + (afw ? "precies één" : "geen") + " TRA-afwijking", r.intro);
+      ok(!/een paar keuzes/.test(r.intro), naam + ": geen ‘een paar keuzes’");
+      if (r.actie[i]) ok(/is de actie (meteen )?afgerond/.test(r.actie[i]) === /actie afgerond/.test(r.rijen[i]), naam + ": actiescherm en samenvatting zeggen hetzelfde over ‘afgerond’", [r.actie[i], r.rijen[i]]);
+      ok(r.oordelen[i] === x, naam + ": het oordeel van de oefenaar blijft " + x);
+    }
+  }
+  // ‘Kort’ is geen eis meer, ‘vaag’ wel: ‘Beter opletten’ en ‘Meer aandacht voor veiligheid’ vragen nog om iets concreets
+  const vg = await doorloop(met(1, "V", ["Beter opletten", "niets", "planmatig"]));
+  ok(/Maak het nog wat concreter/.test(vg.actie[1]) && /verbetervoorstel was nog niet concreet/.test(vg.rijen[1]) && !/week je af/.test(vg.intro), "vaag ‘Beter opletten’: vraag om iets concreets, in de samenvatting als tekstpunt (geen TRA-afwijking)", vg.intro);
+
+  // ================= afkeuring ronde 5: de herhalingen van de reviewer, via de knoppen (390×844) =================
+  console.log("afkeuring ronde 5 (doorlopen via de knoppen)");
+  const goedeTekst = (t) => /Past bij wat je zag/.test(t);
+  // P1 put A + ‘Band omdraaien en verder hijsen’ + Maatregel + Direct: onveilig, niet aanvaard; geen ‘de band gaat uit gebruik’
+  const p1 = await doorloop(met(0, "A", ["Band omdraaien en verder hijsen", "maatregel", "direct"]));
+  ok(!goedeTekst(p1.actie[0]) && /zo blijft het gevaar/.test(p1.actie[0]) && /niet verder gehesen/.test(p1.actie[0]) && !/de band gaat uit gebruik\. Dat past/.test(p1.actie[0]),
+    "P1 put ‘Band omdraaien en verder hijsen’: niet aanvaard (‘zo blijft het gevaar’), geen bewering dat de band uit gebruik gaat", p1.actie[0]);
+  ok(p1.kick === "Even terugkijken" && /verder hijsen met de beschadigde band/.test(p1.rijen[0]) && !/Goed gedaan/.test(p1.kick), "P1 samenvatting: geen ‘Goed gedaan’; de putrij noemt het onveilige voorstel", p1.rijen[0]);
+  ok(!/week je af|TRA aangeeft/.test(p1.intro), "P1 samenvatting: geen TRA-afwijking (het oordeel A klopte)", p1.intro);
+  await shot("r5-put-omdraaien-samenvatting");
+  // P2 put A + alleen een toolbox: voorkomt herhaling, maar de beschadigde band moet nú uit gebruik
+  const p2 = await doorloop(met(0, "A", ["Toolbox over hijsmiddelen geven", "maatregel", "direct"]));
+  ok(!goedeTekst(p2.actie[0]) && /nú uit gebruik/.test(p2.actie[0]) && !/band gaat uit gebruik/.test(p2.actie[0]), "P2 put alleen ‘Toolbox over hijsmiddelen geven’: vraagt wat er met de band gebeurt; geen ‘band gaat uit gebruik’", p2.actie[0]);
+  ok(p2.kick === "Even terugkijken" && /band uit gebruik gaat/.test(p2.rijen[0]), "P2 samenvatting: geen ‘Goed gedaan’; putrij zegt dat de band nog niet uit gebruik ging", p2.rijen[0]);
+  // P3 put A + afkeuren én toolbox: aanvaard, en de terugkoppeling zegt wat de oefenaar echt schreef
+  const p3 = await doorloop(met(0, "A", ["Band afkeuren en weggooien, daarna toolbox over hijsmiddelen geven", "maatregel", "direct"]));
+  ok(goedeTekst(p3.actie[0]) && /volgens je actie gaat de beschadigde band uit gebruik, en je pakt ook de oorzaak aan/.test(p3.actie[0]), "P3 put afkeuren + toolbox: aanvaard; de tekst volgt wat je schreef", p3.actie[0]);
+  ok(p3.kick === "Goed gedaan" && /actievoorstel geschreven/.test(p3.rijen[0]), "P3 samenvatting: ‘Goed gedaan’");
+  // P4 kast A + ‘Slot eraf halen en doorwerken’ + Direct gecorrigeerd: het omgekeerde van de correctie, nooit afgerond
+  const p4 = await doorloop(met(2, "A", ["Slot eraf halen en doorwerken", "gecorrigeerd", null], 0));
+  ok(!goedeTekst(p4.actie[2]) && /zo blijft het gevaar/.test(p4.actie[2]) && /slot hoort erop te blijven/.test(p4.actie[2]) && !/afgerond/.test(p4.actie[2]) && !/Getoetst/.test(p4.hierna[2] || ""),
+    "P4 kast ‘Slot eraf halen en doorwerken’: niet aanvaard, niet afgerond", p4.actie[2]);
+  ok(!/actie afgerond/.test(p4.rijen[2]) && /haalde het slot eraf/.test(p4.rijen[2]) && p4.kick === "Even terugkijken", "P4 samenvatting: geen ‘actie afgerond’, wel ‘haalde het slot eraf’", p4.rijen[2]);
+  await shot("r5-kast-sloteraf-samenvatting");
+  // P5 kast A + toolbox + Direct gecorrigeerd: concreet (preventief), maar NIET afgerond: de toolbox moet nog gebeuren
+  const p5 = await doorloop(met(2, "A", ["Toolbox over LOTOTO geven aan de hele ploeg", "gecorrigeerd", "kort"], 0));
+  ok(!/concreter|wat ontbrak/.test(p5.actie[2]) && /blijft de actie open/.test(p5.actie[2]) && !/is de actie (meteen )?afgerond/.test(p5.actie[2]) && !/Getoetst/.test(p5.hierna[2] || "") && /Instellen/.test(p5.hierna[2] || ""),
+    "P5 kast ‘Toolbox over LOTOTO …’ + gecorrigeerd: aanvaard als concreet, maar open (geen Afgerond, geen ‘Getoetst jij’)", [p5.actie[2], p5.hierna[2]]);
+  ok(!/actie afgerond/.test(p5.rijen[2]) && /blijft open tot de toetser/.test(p5.rijen[2]), "P5 samenvatting: geen ‘herstel gezien, actie afgerond’; ‘blijft open tot de toetser het heeft gezien’ (zelfde als het actiescherm)", p5.rijen[2]);
+  await shot("r5-kast-toolbox-open");
+  // P6 kast A + label én toolbox + gecorrigeerd: het label is klaar, de toolbox nog niet → open
+  const p6 = await doorloop(met(2, "A", ["Label met naam en datum aan het slot gehangen; toolbox LOTOTO geven", "gecorrigeerd", "kort"], 0));
+  ok(/label zag je zelf hangen/.test(p6.actie[2]) && /blijft de actie open/.test(p6.actie[2]) && !/Getoetst/.test(p6.hierna[2] || "") && /Instellen/.test(p6.hierna[2] || "") && !/actie afgerond/.test(p6.rijen[2]), "P6 kast label + toolbox: label klaar, actie open (actiescherm = samenvatting)", p6.actie[2]);
+  // P7 sleuf V + vage alledaagse varianten: vragen om iets concreets
+  for (const vt of ["Voorzichtiger werken", "Gewoon blijven opletten"]) {
+    const r = await doorloop(met(1, "V", [vt, "niets", "kort"]));
+    ok(/Maak het nog wat concreter/.test(r.actie[1]) && !/Verbetervoorstel vastgelegd/.test(r.actie[1]) && r.kick === "Even terugkijken" && /niet concreet/.test(r.rijen[1]) && !/week je af/.test(r.intro),
+      "P7 sleuf V + ‘" + vt + "’: vaag → vraag om iets concreets, samenvatting geen ‘Goed gedaan’ en geen TRA-afwijking", [r.actie[1], r.intro]);
+  }
+  const vaagT = await ev(() => ["Voorzichtiger werken", "Gewoon blijven opletten", "Extra alert zijn", "Veiliger werken", "Iedereen moet beter uitkijken", "Scherp blijven", "Meer aandacht", "Beter op letten"].filter((x) => !App.oefVaag(x)));
+  const concreetT = await ev(() => ["Ladder vastbinden", "Tweede gasmeter voor de wacht", "Toolbox over LOTOTO", "Label met naam en datum", "Beter opletten bij de ladder"].filter((x) => App.oefVaag(x)));
+  ok(!vaagT.length && !concreetT.length, "P7 vaag/concreet: alledaagse vage zinnen zijn vaag; korte concrete zinnen niet", { nietVaag: vaagT, welVaag: concreetT });
+  // P8 samenvatting rustig: TRA-afwijking + andere punten → tellen en scènes noemen, niet alles herhalen; geen dubbele dubbele punt
+  const p8 = await doorloop([["A", ["VS", "niets", "planmatig"]], ["V", ["Tweede gasmeter voor de wacht", "gecorrigeerd", null]], ["A", ["VS", "maatregel", "kort"], 2]]);
+  ok(/Bij één keuze week je af van wat de TRA aangeeft \(de TRA-stap bij ‘Bij de schakelkast’\)/.test(p8.intro) && /Daarnaast zijn er nog vier punten om naar te kijken, bij ‘Pomp uit de put’, ‘Werken in de sleuf’ en ‘Bij de schakelkast’\./.test(p8.intro),
+    "P8 inleiding: één TRA-afwijking + ‘nog vier punten’ met de scènes", p8.intro);
+  ok(!/Daarnaast nog iets/.test(p8.intro) && !/: [^.]*: /.test(p8.intro) && !/koos je|urgentie/.test(p8.intro) && p8.intro.length < 330, "P8 inleiding: kort, geen ‘Daarnaast nog iets’, geen dubbele dubbele punt, punten niet herhaald (" + p8.intro.length + " tekens)", p8.intro);
+  ok(/urgentie hoort ‘Direct’ te zijn/.test(p8.rijen[0]) && !/urgentie: /.test(p8.rijen.join(" ")), "P8 putrij: ‘de urgentie hoort Direct te zijn’ (geen ‘de urgentie: …’)", p8.rijen[0]);
+  await shot("r5-samenvatting-rustig");
+
+  // ================= afkeuring ronde 6: de herhalingen van de reviewer, via de knoppen (390×844) =================
+  console.log("afkeuring ronde 6 (doorlopen via de knoppen)");
+  const geenOorzaak = (t) => !/pak[^.]*oorzaak aan/.test(t);
+  // Q1 put A + ‘Niet meer met deze band hijsen’: de band gaat uit gebruik (meerdere woorden tussen ‘niet meer’ en ‘hijsen’)
+  const q1 = await doorloop(met(0, "A", ["Niet meer met deze band hijsen", "maatregel", "direct"]));
+  ok(goedeTekst(q1.actie[0]) && !/concreter|wat gebeurt er met de beschadigde band/.test(q1.actie[0]) && geenOorzaak(q1.actie[0]), "Q1 put ‘Niet meer met deze band hijsen’: aanvaard (de band gaat uit gebruik), geen verzonnen oorzaak", q1.actie[0]);
+  ok(!/band uit gebruik gaat|niet concreet/.test(q1.rijen[0]) && !/band uit gebruik/.test(q1.intro) && q1.kick === "Goed gedaan", "Q1 samenvatting: geen ‘zei nog niet dat de band uit gebruik gaat’", [q1.rijen[0], q1.intro]);
+  // Q2 put A + afkeuren / Voorstel / vervangen door een gekeurde band: aanvaard, maar NIET ‘je pakt ook de oorzaak aan’
+  for (const tx of ["Hijsband afkeuren", "VS", "Band vervangen door nieuwe gekeurde band"]) {
+    const r = await doorloop(met(0, "A", [tx, "maatregel", "direct"]));
+    ok(goedeTekst(r.actie[0]) && /gaat de beschadigde band uit gebruik\. Dat past/.test(r.actie[0]) && geenOorzaak(r.actie[0]), "Q2 put ‘" + (tx === "VS" ? "Voorstel van de app" : tx) + "’: aanvaard, geen ‘je pakt ook de oorzaak aan’ (afkeuren/gekeurd is geen oorzaak)", r.actie[0]);
+  }
+  // Q3 put A + ‘Nieuwe band halen’: zegt niet wat er met de beschadigde band gebeurt → niet aanvaard, geen ‘gaat uit gebruik’
+  const q3 = await doorloop(met(0, "A", ["Nieuwe band halen", "maatregel", "direct"]));
+  ok(!goedeTekst(q3.actie[0]) && /wat er met de beschadigde band gebeurt/.test(q3.actie[0]) && !/volgens je actie gaat de beschadigde band uit gebruik/.test(q3.actie[0]), "Q3 put ‘Nieuwe band halen’: niet aanvaard; vraagt wat er met de beschadigde band gebeurt", q3.actie[0]);
+  ok(/band uit gebruik gaat/.test(q3.rijen[0]) && q3.kick === "Even terugkijken", "Q3 samenvatting: ‘zei nog niet dat de beschadigde band uit gebruik gaat’ (klopt hier)", q3.rijen[0]);
+  // Q4 kast A + iets dat nog moet gebeuren + ‘Direct gecorrigeerd’: het invoerscherm zegt al dat de actie open blijft,
+  // vraagt een urgentie (vastleggen kan pas daarna) en de terugkoppeling noemt wat de oefenaar schreef (nooit een vaste ‘toolbox’)
+  const Q4 = [["Afspraak maken met de ploeg over LOTOTO", "de afspraak"], ["Instructie aan de monteur", "de instructie"], ["Toolbox over LOTOTO geven aan de hele ploeg", "de toolbox"]];
+  for (const [tx, wat] of Q4) {
+    let invoer = null;
+    const r = await doorloop(met(2, "A", [tx, "gecorrigeerd", "kort", async () => {
+      invoer = await ev(() => ({ wie: document.getElementById("oef-wie").textContent, prio: !document.getElementById("oef-prio-blok").hidden, uit: document.getElementById("oef-vastleg").disabled }));
+    }]));
+    ok(invoer && /blijft de actie open/.test(invoer.wie) && !/urgentie is niet nodig|is de actie afgerond/.test(invoer.wie) && invoer.wie.includes(wat) && invoer.prio && invoer.uit,
+      "Q4 kast ‘" + tx + "’ + gecorrigeerd: invoerscherm zegt ‘blijft open’ (" + wat + "), toont de urgentie en vastleggen wacht daarop", invoer);
+    ok(/Vastgelegd, de actie blijft open/.test(r.actie[2]) && r.actie[2].includes("Maar " + wat + " moet nog gebeuren") && /met jouw urgentie \(kort/.test(r.actie[2]) && /urgentie: kort/.test(r.gekozen[2] || "") && /Instellen/.test(r.hierna[2]) && !/Getoetst/.test(r.hierna[2]),
+      "Q4 kast ‘" + tx + "’: open, met urgentie Kort; de tekst noemt " + wat, [r.actie[2], r.hierna[2]]);
+    if (wat !== "de toolbox") ok(!/toolbox/i.test(r.actie[2]), "Q4 kast ‘" + tx + "’: geen ‘toolbox’ die de oefenaar niet schreef", r.actie[2]);
+    ok(/blijft open tot de toetser/.test(r.rijen[2]) && !/actie afgerond/.test(r.rijen[2]), "Q4 samenvatting kast: open (zelfde als het actiescherm)", r.rijen[2]);
+  }
+  await shot("r6-kast-afspraak-open");
+  // Q5 kast A + wat al gebeurd is (verleden tijd): afgerond, geen urgentie nodig, samenvatting ‘herstel gezien, actie afgerond’
+  let q5in = null;
+  const q5 = await doorloop(met(2, "A", ["Label opgehangen en monteur uitleg gegeven over LOTOTO", "gecorrigeerd", "kort", async () => {
+    q5in = await ev(() => ({ wie: document.getElementById("oef-wie").textContent, prio: !document.getElementById("oef-prio-blok").hidden, uit: document.getElementById("oef-vastleg").disabled })); }]));
+  ok(q5in && /is de actie afgerond; een urgentie is niet nodig/.test(q5in.wie) && !q5in.prio && !q5in.uit, "Q5 kast ‘Label opgehangen en … uitleg gegeven’: invoerscherm afgerond, geen urgentie", q5in);
+  ok(/is de actie meteen afgerond/.test(q5.actie[2]) && /uitleg/.test(q5.actie[2]) && !/moet nog gebeuren|blijft (de actie )?open/.test(q5.actie[2]) && /Getoetst/.test(q5.hierna[2]), "Q5 kast: wat al gebeurd is heet niet ‘nog te doen’; afgerond", q5.actie[2]);
+  ok(/herstel gezien, actie afgerond/.test(q5.rijen[2]) && !/blijft open/.test(q5.rijen[2]), "Q5 samenvatting: ‘herstel gezien, actie afgerond’", q5.rijen[2]);
+  // Q6 kast A + een bevinding als actie (‘Label ontbreekt aan het slot’): geen actie → niet aanvaard, nooit afgerond
+  const q6 = await doorloop(met(2, "A", ["Label ontbreekt aan het slot", "gecorrigeerd", null]));
+  ok(!goedeTekst(q6.actie[2]) && /Maak het nog wat concreter/.test(q6.actie[2]) && /Dit is wat je zag/.test(q6.actie[2]) && !/afgerond/.test(q6.actie[2]), "Q6 kast ‘Label ontbreekt aan het slot’: een bevinding, geen actie → niet aanvaard, niet afgerond", q6.actie[2]);
+  ok(!/actie afgerond/.test(q6.rijen[2]) && /beschreef wat je zag/.test(q6.rijen[2]), "Q6 samenvatting: geen ‘herstel gezien, actie afgerond’", q6.rijen[2]);
+  // Q7 put V + ‘Band omdraaien en verder hijsen’ + Niets gedaan + Kort: ‘zo blijft het gevaar bestaan:’ gaat over het onveilige
+  // voorstel zelf (eerste punt); Ter plaatse en urgentie staan apart eronder
+  const q7 = await doorloop(met(0, "V", ["Band omdraaien en verder hijsen", "niets", "kort"]));
+  ok(/zo blijft het gevaar bestaan: Met een beschadigde hijsband wordt niet verder gehesen/.test(q7.actie[0]) && /Verder nog twee dingen: Er hing een last/.test(q7.actie[0]), "Q7 put V ‘omdraaien en verder hijsen’: eerst het gevaar, daarna apart ‘Verder nog twee dingen’ (Ter plaatse, urgentie)", q7.actie[0]);
+  ok(/je actievoorstel liet verder hijsen met de beschadigde band; bij ‘Ter plaatse’/.test(q7.rijen[0]), "Q7 samenvatting: het onveilige voorstel eerst", q7.rijen[0]);
+  await shot("r6-put-onveilig-eerst");
+
+  await ev(() => { App.oefOpnieuw(); }); await wacht();
   ok((await ev(() => window.__csp)).length === 0, "390: geen CSP-overtredingen");
   await ctx.close();
 

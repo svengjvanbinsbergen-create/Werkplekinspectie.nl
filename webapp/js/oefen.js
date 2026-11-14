@@ -161,8 +161,7 @@
         C: "Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden. Wat je zag, is dus niet in orde: dat is een afwijking. Kies je A, dan volgt een actievoorstel: daar leg je vast dat het hijsen is gestopt en wat er met de band moet gebeuren. Blijf je bij C, dan wordt er voor de beschadigde band geen actie vastgelegd.",
         NVT: "Er wordt hier echt gehesen, dus deze TRA-stap is van toepassing. Volgens de TRA mag er met een beschadigde hijsband niet gehesen worden. Kies je A, dan volgt een actievoorstel: daar leg je vast dat het hijsen is gestopt en wat er met de band moet gebeuren." },
       actie: { vs: "Beschadigde hijsband afkeuren en uit gebruik nemen. Pas verder hijsen met een gekeurde band.", ph: "Bijv. hijsband afkeuren en …",
-        maatregel: "bijv. hijsen gestopt", verwachtTp: "maatregel",
-        okTekst: "Het hijsen is gestopt en de band gaat uit gebruik. Dat past bij het gevaar. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst." } },
+        maatregel: "bijv. hijsen gestopt", verwachtTp: "maatregel" } },   // de terugkoppeling volgt wat de oefenaar schreef (oef_actie)
     { id: "sleuf", titel: "Werken in de sleuf", plek: "Persleiding naast het gemaal (verzonnen)", leer: "Wat doen ze, en wat gaat goed?",
       alt: "Tekening: een gestutte sleuf met een ladder die boven de rand uitsteekt. Onderin werkt een monteur met een gele gasmeter op zijn borst; bovenaan staat een collega als wacht.",
       tekst: ["Even verderop ligt een open sleuf van ongeveer anderhalve meter diep. Onderin werkt een monteur aan een leiding.",
@@ -236,7 +235,48 @@
   const leeg = (t) => { const w = woorden(t);
     return !w.length || /^(niks|niets|nvt|n v t|nee|geen (idee|actie|verbetering|verbeterpunt)|weet (ik )?niet|prima|ok|oke)\b/.test(w.join(" ")) ||
       w.every((x) => /^(niks|niets|geen|nvt|weet|niet|ok|oke|prima|goed|zo|laten|alles|is|het|in|orde|aan|de|hand|nodig|doen|gewoon|verder|hoor|dit|dat|er|hier|al|ja|nee)$/.test(x)); };
-  const vaag = (t) => leeg(t) || woorden(t).length < 3;   // vrije scène (sleuf): minstens een korte zin met inhoud
+  // vaag = geen enkel woord met inhoud ("beter opletten", "meer aandacht", "kan beter"). Kort mag: "Ladder vastbinden"
+  // zegt wát en hoe. Concreet betekent niet lang (eerder: minstens drie woorden, dat wees goede korte voorstellen af).
+  const VAAG = new Set(("beter beetje goed goede netjes veilig veiliger veiligheid opletten oppassen letten aandacht meer minder extra " +
+    "voortaan moet moeten kan kunnen zou zouden doen gedaan zorgen zorg verbeteren verbeterd verbetering verbeterpunt even iets alles " +
+    "altijd nooit voor punt punten graag mensen ploeg monteur monteurs hun zijn zich daar hier deze werk werken").split(" "));
+  // ronde 5: ook de alledaagse varianten ("voorzichtiger werken", "gewoon blijven opletten", "extra alert zijn") zijn vaag
+  const VAAG_STAM = /^(voorzichtig|oplet|opgelet|oppas|uitkijk|uitkijken|aandacht|alert|scherp|zorgvuldig|bewust|nauwkeurig|secuur|rustig|attent|serieus|nadenk|denken|blijven|blijf|gewoon|letten|zijn|wordt|worden|houden|gaan|elkaar|iedereen|wat|eens|keer|zaken|dingen|situatie|omgeving|rekening|focus|beter|veilig|goed|netter|netjes|extra)/;
+  const vaag = (t) => leeg(t) || !woorden(t).some((w) => w.length >= 4 && !VAAG.has(w) && !VAAG_STAM.test(w));
+  // een preventieve actie (toolbox, instructie, afspraak, controle vooraf) is ook concreet: ze pakt de oorzaak aan
+  const PREVENTIEF = /(toolbox|instructie|uitleg|uitleggen|bespre\w*|voorlicht\w*|afspra\w*|procedure|werkwijze|checklist|(controle\w*|controler\w*|check\w*|nakijk\w*|\binspect\w*) (\w+ ){0,4}(voor (het |elk |ieder )?(gebruik|hijs\w*)|vooraf|altijd|elke|iedere|dagelijks|wekelijks)|(voor (het |elk |ieder )?gebruik|vooraf|altijd|elke keer) (\w+ ){0,4}(controle\w*|controler\w*|check\w*|nakijk\w*|inspect\w*)|\blmra|voorraad|in de bus|herinner\w*|training|cursus|aanspre\w*|startwerkoverleg|werkoverleg|\bkeuring\w* (\w+ ){0,3}(regel\w*|plann\w*|bijhoud\w*|controle\w*|controler\w*|nalop\w*|check\w*|op orde)|(controle|check|nalopen) (\w+ ){0,3}(van )?(de )?keuring\w*|reserve\w* (\w+ ){0,3}(in de bus|op voorraad|bijhouden|meenemen)|voortaan|volgende keer|kantbescherm\w*|hoekbescherm\w*|beschermhoes\w*)/;
+  // ronde 7: "keur" alleen als eigen woord (keuring, keuren): "afkeuren" en "een gekeurde band" pakken de oorzaak niet aan
+  // een actie die nog moet gebeuren (toolbox, instructie, afspraak …): die kan niet ter plaatse al gezien en afgerond zijn
+  const TOEKOMST = /(toolbox|instructie|uitleg|uitleggen|bespre\w*|voorlicht\w*|afspra\w*|procedure|werkwijze|checklist|training|cursus|startwerkoverleg|werkoverleg|herinner\w*|voortaan|volgende keer|in de toekomst|aanspre\w*|voorraad|in de bus|\blmra|\bkeuring\w*|\binspectie\w*)/;
+  // ronde 7: wat al gebeurd is ("uitleg gegeven", "toolbox gehouden", "besproken", "afgesproken") moet niet meer gebeuren:
+  // per zinsdeel telt een voltooid deelwoord als gedaan (de inspecteur schreef dat het ter plaatse gebeurde)
+  const GEDAAN = /\b(gegeven|gehouden|gedaan|uitgelegd|besproken|afgesproken|doorgenomen|verteld|gedeeld|aangesproken|geinstrueerd|geïnstrueerd|herinnerd|gecontroleerd|geregeld|aangevuld|gelegd|gepakt|gebeurd|geweest|meteen|direct (gedaan|gegeven|besproken|uitgelegd))\b/;
+  // wat er nog moet gebeuren, in de woorden van de inspecteur: "de toolbox", "de afspraak", "de instructie" …
+  const NOG_NAAM = [[/toolbox/, "de toolbox"], [/instructie|ge[iï]nstrueerd/, "de instructie"], [/uitleg|uitgelegd/, "de uitleg"], [/afspra|afgesproken/, "de afspraak"], [/bespre|besproken/, "het gesprek"],
+    [/voorlicht/, "de voorlichting"], [/procedure|werkwijze/, "de nieuwe werkwijze"], [/checklist/, "de checklist"], [/training|cursus/, "de training"],
+    [/werkoverleg/, "het werkoverleg"], [/herinner/, "de herinnering"], [/aanspre/, "het aanspreken"], [/voorraad|in de bus/, "de voorraad in de bus"],
+    [/lmra/, "de LMRA"], [/keuring|inspectie/, "de keuring"], [/voortaan|volgende keer|in de toekomst/, "wat er voortaan moet gebeuren"]];
+  const opsomNl = (arr) => (!arr.length ? "dat deel" : arr.length === 1 ? arr[0] : arr.slice(0, -1).join(", ") + " en " + arr[arr.length - 1]);
+  const PRIO_NAAM = { direct: "direct", kort: "kort, ±2 weken", planmatig: "planmatig, ±8 weken" };
+  const zinsdelen = (t) => String(t || "").toLowerCase().split(/[,.;:!?]+|\s+(?:en|maar|daarna|ook)\s+/).map((x) => x.trim()).filter(Boolean);
+  // de zinsdelen die nog moeten gebeuren (een toekomstwoord zonder "gegeven/gedaan/besproken" erbij)
+  const nogTeDoen = (t) => zinsdelen(t).filter((d) => TOEKOMST.test(d) && !GEDAAN.test(d));
+  const gedaanNaam = (t) => { const d = zinsdelen(t).filter((x) => TOEKOMST.test(x) && GEDAAN.test(x)).join(" "); return [...new Set(NOG_NAAM.filter(([re]) => re.test(d)).map((x) => x[1]))].filter((x) => !/voortaan/.test(x)); };
+  const nogNaam = (t) => { const d = nogTeDoen(t).join(" "); const n = NOG_NAAM.filter(([re]) => re.test(d)).map((x) => x[1]); return [...new Set(n)]; };
+  // staat een woord in de tekst zonder "niet/nooit/geen" er vlak voor ("niet verder hijsen" is juist veilig)
+  const zegt = (t, re, neg) => { const g = new RegExp(re.source, "g"); let m; while ((m = g.exec(t))) { if (!(neg || /\b(niet|nooit|geen|pas|alleen|daarna|eerst)\s+(\S+\s+){0,2}$/).test(t.slice(Math.max(0, m.index - 30), m.index))) return true; } return false; };
+  // een preventieve actie zonder ontkenning ervoor ("geen toolbox nodig" telt niet; "daarna toolbox geven" wel)
+  const preventief = (t) => zegt(t, PREVENTIEF, /\b(niet|nooit|geen|zonder)\s+(\S+\s+){0,2}$/);
+  // put: wat de beschadigde band echt uit gebruik neemt; en wat het gevaar laat bestaan (doorhijsen, omdraaien, plakken)
+  const BAND_UIT = /(vervang\w*|afkeur\w*|afgekeurd\w*|weggooi\w*|weg ?gooi\w*|uit (het )?gebruik|niet meer (\w+ ){0,4}(gebruik|hijs|werk)\w*|nooit meer (\w+ ){0,4}(gebruik|hijs)\w*|(beschadigde|kapotte|oude|rafelige|gerafelde|deze) (hijs)?band (\w+ ){0,3}(weg|eruit)\b|(door|kapot|stuk) ?knip\w*|in de container|weg ?doen|apart (leggen|gelegd)|retour|terug ?sturen|uit de roulatie|onbruikbaar|niet (meer )?mee (hijsen|werken))/;
+  const DOORHIJSEN = /(omdraai\w*|om ?draaien|andere kant|\bknoop\w*|\btape\w*|plak\w*|repar\w*|naai\w*|lijm\w*|(verder|door|toch|gewoon) (\w+ ){0,2}(hijs\w*|werk\w*|gaan|takel\w*)|doorhijs\w*|doorwerk\w*|doorgaan|verder ?hijs\w*|dezelfde band)/;
+  const NIEUWE_BAND = /(nieuwe|andere|gekeurde|reserve|goede) ?(hijs)?band/;
+  // kast: het slot eraf of zonder slot werken is het omgekeerde van de correctie
+  const SLOT_ERAF = /((hang)?slot|sloten|vergrendeling|lototo)\w* (\w+ ){0,2}(eraf|weg|af ?halen|weghalen|verwijder\w*|losmaken|open ?maken|eraf ?halen)|(zonder|geen) (\w+ )?((hang)?slot|vergrendeling|lototo)\b (\w+ ){0,2}(werk\w*|verder|door)|((hang)?slot|lototo)\w* (\w+ ){0,3}(niet nodig|overbodig|hoeft niet)/;
+  const LABEL = /(label|naam|datum|kaart\w*|\btag\b)/;
+  // kast: een bevinding (wat ontbrak) tegenover een herstel of handeling (wat er gedaan is of moet gebeuren)
+  const BEVINDING = /(ontbr\w*|\bmist(e|en)?\b|vergeten|(hing|hangt|zat|zit|was|is) (er )?geen|^ ?geen label|zonder label|niet (aanwezig|aan het slot|op het slot))/;
+  const HERSTEL = /(hang\w*|gehangen|opgehangen|aangebracht|aanbreng\w*|bevestig\w*|plaats\w*|geplaatst|schrijf\w*|geschreven|invul\w*|ingevuld|toegevoeg\w*|toevoeg\w*|meeneem\w*|meenemen|\bpak\w*|gepakt|herstel\w*|\bmaak\w*|gemaakt|\bzorg\w*|geregeld|\bregel(en|t)\b|\bvul\w*|erbij|\berop\b|\bnu\b (\w+ ){0,2}(wel|er)|alsnog)/;
   const keuzeGoed = (sc, a, st) => { const K = sc.keuzes && sc.keuzes[st]; return !!(K && typeof a[st] === "number" && K.opties[a[st]] && K.opties[a[st]][1]); };
   const VERSIE = 3;   // opbouw van de voortgang; een oudere voortgang (andere stappen) begint opnieuw
 
@@ -257,6 +297,7 @@
   Object.assign(App, {
     _oef: null,
     oefAannames: aannames,
+    oefVaag: vaag,   // voor de test: is een voorstel vaag ("voorzichtiger werken") of concreet ("ladder vastbinden")
     oefState() {
       if (!this._oef || this._oefVan !== uid()) {
         const v = leesLS().voortgang; this._oefVan = uid();
@@ -310,6 +351,10 @@
       const o = this.oefState(), a = o.a[o.s] || {};
       document.querySelectorAll("[data-oef-need]").forEach((b) => { b.disabled = !b.getAttribute("data-oef-need").split(",").every((k) => gevuld(a[k])); });
       const v = $("oef-vastleg"); if (v) v.disabled = !this.oefActieOk(a, SC[o.s]);
+      // actiescherm: urgentie tonen zodra de actie open blijft, en de uitleg over wie toetst volgt wat je schrijft
+      const pb = $("oef-prio-blok"), w = $("oef-wie");
+      if (pb) pb.hidden = a.terPlaatse === "gecorrigeerd" && !this.oefActieNog(a);
+      if (w) { const t = this.oefWie(a); if (w.textContent !== t) w.textContent = t; }
     },
     oefTaakVs() { const a = this.oefState().a[this._oef.s]; if (!gevuld(a.taak)) return; a.taakVs = true; this.oefToon(); },
     oefKiesTaak(t) { const o = this.oefState(), a = o.a[o.s]; a.gekozenTaak = t; a.taakUitVs = t === SC[o.s].taak; this.oefFeedback(); },
@@ -345,37 +390,89 @@
       tril(12); this.oefBewaar();
       const y = window.scrollY; this._oefFocusId = "oef-" + k + "-" + val; this.route(); window.scrollTo(0, y);
     },
+    // urgentie: nodig voor elke actie die open blijft; alleen een gezien herstel zonder iets dat nog moet gebeuren is afgerond
     oefActieOk(a, sc) {
       if (!sc || !gevuld(a.actie) || !a.terPlaatse) return false;
-      return a.terPlaatse === "gecorrigeerd" || !!a.prio;
+      return (a.terPlaatse === "gecorrigeerd" && !this.oefActieNog(a)) || !!a.prio;
     },
-    oefVastleggen() { const o = this.oefState(), a = o.a[o.s]; if (!this.oefActieOk(a, SC[o.s])) return; a.actieKlaar = true; this.oefFeedback(); },
+    oefVastleggen() {
+      const o = this.oefState(), a = o.a[o.s]; if (!this.oefActieOk(a, SC[o.s])) return;
+      if (a.terPlaatse === "gecorrigeerd" && !this.oefActieNog(a)) a.prio = null;   // afgerond: geen urgentie
+      a.actieKlaar = true; this.oefFeedback();
+    },
+    oefWie(a) {
+      if (a.terPlaatse === "maatregel") return "Een maatregel maakt alleen het lopende werk veilig. De actie blijft open; daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst.";
+      if (a.terPlaatse === "gecorrigeerd") return this.oefActieNog(a)
+        ? "Direct gecorrigeerd: het herstel zag je zelf. Maar je actie vraagt ook " + opsomNl(nogNaam(a.actie)) + ", en dat moet nog gebeuren. Daarom blijft de actie open tot een toetser het heeft gezien: kies hoe dringend het is."
+        : "Direct gecorrigeerd: de ploeg heeft het ter plaatse opgelost en jij hebt het herstel zelf gezien. Dan ben jij de toetser en is de actie afgerond; een urgentie is niet nodig.";
+      return "Jij schrijft alleen het voorstel. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst.";
+    },
     // past het actievoorstel bij wat je zag? (alleen uitleg; het voorstel blijft van jou)
     // elk punt heeft een soort: "concreet" (de tekst zelf) of "zag" (ter plaatse / urgentie past niet bij wat je zag);
     // de kop en de samenvatting volgen die soort, zodat ze nooit iets anders vragen dan de punten zelf
     oefActieCheck(sc, a) {
-      const c = [], t = String(a.actie || "").toLowerCase(), gecorr = a.terPlaatse === "gecorrigeerd";
-      const zag = (x) => c.push({ soort: "zag", t: x }), concreet = (x) => c.push({ soort: "concreet", t: x });
+      const c = [], t = String(a.actie || "").toLowerCase(), gecorr = a.terPlaatse === "gecorrigeerd", naam = voorstelNaam(sc, a);
+      // t = de uitleg op het actiescherm; kort = precies dat punt in de samenvatting (zodat die nooit iets anders zegt)
+      const zag = (x, kort) => c.push({ soort: "zag", t: x, kort }), concreet = (x, kort) => c.push({ soort: "concreet", t: x, kort: kort || "je " + naam + " was nog niet concreet" });
+      // onveilig: het voorstel laat het gevaar bestaan of maakt het erger (verder hijsen met de kapotte band, slot eraf)
+      const onveilig = (x, kort) => c.push({ soort: "onveilig", t: x, kort });
+      const tpNaam = { niets: "Niets gedaan", maatregel: "Maatregel genomen", gecorrigeerd: "Direct gecorrigeerd" }[a.terPlaatse] || "";
       // het oordeel zelf komt hier niet meer terug: dat kreeg op het oordeelscherm al zijn (ene) uitleg
       if (sc.id === "sleuf") {
         // in orde volgens de TRA; bij V (een goed oordeel) en bij A alleen vragen om een concreet voorstel
         if (vaag(a.actie)) concreet(a.oordeel === "V" ? "Maak je verbetervoorstel concreet: wát kan er beter, en hoe? Dan weet het team wat het kan oppakken."
           : "Maak je actievoorstel concreet: wát moet er gebeuren, en waarom? Dan weet het team wat het kan oppakken.");
-        if (a.terPlaatse === "gecorrigeerd" || a.terPlaatse === "maatregel") zag("Ter plaatse is in deze scène niets veranderd: je zag geen maatregel en geen herstel. Kies ‘Niets gedaan’; je voorstel gaat naar het team.");
+        if (a.terPlaatse === "gecorrigeerd" || a.terPlaatse === "maatregel") zag("Ter plaatse is in deze scène niets veranderd: je zag geen maatregel en geen herstel. Kies ‘Niets gedaan’; je voorstel gaat naar het team.",
+          "bij ‘Ter plaatse’ koos je ‘" + tpNaam + "’, maar ter plaatse veranderde niets (‘Niets gedaan’)");
       } else if (sc.id === "put") {
-        if (a.terPlaatse === "niets") zag("Er hing een last aan een beschadigde band. Dan laat je het werk niet doorgaan. Het hijsen is gestopt: dat leg je vast als ‘Maatregel genomen’.");
-        if (gecorr) zag("Er hangt nog geen nieuwe band en jij hebt geen herstel gezien. Kies ‘Maatregel genomen’: het hijsen is gestopt, en de actie blijft open tot een toetser de nieuwe band heeft gezien.");
-        if (!gecorr && a.prio && a.prio !== "direct") zag("Een beschadigde hijsband is direct gevaar. Kies ‘Direct’: de band gaat nu uit gebruik, niet over een paar weken.");
-        if (/\b(later|ooit|binnenkort|op termijn|volgende week|na de klus|t\.z\.t)\b/.test(t)) zag("‘Later’ past niet bij direct gevaar. De band gaat nu uit gebruik, en er wordt pas weer gehesen met een gekeurde band.");
-        else if (leeg(a.actie) || !/(vervang|afkeur|afgekeurd|nieuwe|gekeurd|weggooi|uit gebruik|niet meer)/.test(t)) concreet("Maak je actie concreet: wat gebeurt er met de beschadigde band, en wanneer mag er weer gehesen worden?");
+        if (a.terPlaatse === "niets") zag("Er hing een last aan een beschadigde band. Dan laat je het werk niet doorgaan. Het hijsen is gestopt: dat leg je vast als ‘Maatregel genomen’.",
+          "bij ‘Ter plaatse’ koos je ‘Niets gedaan’, maar het hijsen werd gestopt (‘Maatregel genomen’)");
+        if (gecorr) zag("Er hangt nog geen nieuwe band en jij hebt geen herstel gezien. Kies ‘Maatregel genomen’: het hijsen is gestopt, en de actie blijft open tot een toetser de nieuwe band heeft gezien.",
+          "bij ‘Ter plaatse’ koos je ‘Direct gecorrigeerd’, maar je zag geen herstel (‘Maatregel genomen’)");
+        if (!gecorr && a.prio && a.prio !== "direct") zag("Een beschadigde hijsband is direct gevaar. Kies ‘Direct’: de band gaat nu uit gebruik, niet over een paar weken.",
+          "de urgentie hoort ‘Direct’ te zijn, want een beschadigde hijsband is direct gevaar");
+        // het voorstel zelf: neemt het de band uit gebruik? laat het het gevaar bestaan? een toolbox alleen is niet genoeg
+        const herstelWoord = /(omdraai\w*|om ?draaien|andere kant|\bknoop\w*|\btape\w*|plak\w*|repar\w*|naai\w*|lijm\w*|dezelfde band)/;
+        const doorhijsen = zegt(t, DOORHIJSEN) && (zegt(t, herstelWoord) || !NIEUWE_BAND.test(t));
+        if (doorhijsen) onveilig("Met een beschadigde hijsband wordt niet verder gehesen, ook niet als je hem omdraait, knoopt of plakt. De band gaat uit gebruik; er wordt pas weer gehesen met een gekeurde band.",
+          "je actievoorstel liet verder hijsen met de beschadigde band");
+        else if (/\b(later|ooit|binnenkort|op termijn|volgende week|na de klus|t\.z\.t)\b/.test(t)) zag("‘Later’ past niet bij direct gevaar. De band gaat nu uit gebruik, en er wordt pas weer gehesen met een gekeurde band.",
+          "‘later’ in je actievoorstel past niet bij direct gevaar");
+        else if (vaag(a.actie)) concreet("Maak je actie concreet: wat gebeurt er met de beschadigde band, en wanneer mag er weer gehesen worden?");
+        else if (!zegt(t, BAND_UIT)) concreet(preventief(t) ? "Dat voorkomt herhaling, en dat is goed. Maar de beschadigde band moet nú uit gebruik. Schrijf er ook bij wat er met de band gebeurt (bijvoorbeeld afkeuren) en dat er pas weer gehesen wordt met een gekeurde band."
+            // ronde 7: een nieuwe band halen is goed, maar zegt niet dat de kapotte band uit gebruik gaat (die kan terug de bus in)
+            : NIEUWE_BAND.test(t) ? "Een nieuwe band is goed. Schrijf er ook bij wat er met de beschadigde band gebeurt (bijvoorbeeld afkeuren en doorknippen), anders kan hij later terug in de bus belanden."
+            : "Maak je actie concreet: wat gebeurt er met de beschadigde band, en wanneer mag er weer gehesen worden?",
+          "je actievoorstel zei nog niet dat de beschadigde band uit gebruik gaat");
       } else if (sc.id === "kast") {
         // ook als het herstel al gezien is: de actie zegt wát er hersteld is; ‘Direct gecorrigeerd’ maakt een lege tekst niet goed
-        if (leeg(a.actie) || !/(label|naam|datum|kaart|tag)/.test(t)) concreet("Maak je actie concreet: wat ontbrak er aan het slot, en wat hangt er voortaan aan? Ook als het al hersteld is, lees je in de actie wát er hersteld is.");
-        if (a.terPlaatse === "niets") zag("Je zag de monteur het label ophangen. Dat herstel leg je vast als ‘Direct gecorrigeerd’.");
-        if (a.terPlaatse === "maatregel") zag("Het label hangt er nu en jij zag het: het is dus niet alleen veilig gemaakt, het is hersteld. Kies ‘Direct gecorrigeerd’.");
+        // het herstel (label met naam en datum) én een preventieve actie (toolbox over LOTOTO, labels in de bus) zijn concreet
+        const naWerk = /\b(als|wanneer|nadat|na) (het |de )?(werk|klus|klaar)\w*( \w+)?( (klaar|af|gedaan|is))?|na afloop|na het werk/.test(t);
+        if (zegt(t, SLOT_ERAF) && !naWerk) onveilig("Het slot hoort erop te blijven zolang er aan de installatie gewerkt wordt; het slot eraf halen is het omgekeerde van wat hier nodig is. Wat ontbrak, was het label met naam en datum.",
+          "je actievoorstel haalde het slot eraf");
+        else if (vaag(a.actie)) concreet("Maak je actie concreet: wat ontbrak er aan het slot, en wat hangt er voortaan aan? Ook als het al hersteld is, lees je in de actie wát er hersteld is.");
+        // ronde 7: een bevinding ("Label ontbreekt aan het slot") is geen actie: wat is er gedaan of wat moet er gebeuren?
+        else if (BEVINDING.test(t) && !HERSTEL.test(t) && !preventief(t)) concreet("Dit is wat je zag (het label ontbrak), nog niet wat er gedaan is of moet gebeuren. Schrijf wat er hersteld is, bijvoorbeeld ‘Label met naam en datum aan het slot gehangen’, of hoe je voorkomt dat het weer ontbreekt.",
+          "je actievoorstel beschreef wat je zag, niet wat er gedaan is of moet gebeuren");
+        else if (!LABEL.test(t) && !PREVENTIEF.test(t)) concreet("Je actie gaat nog niet over wat je zag: het label met naam en datum aan het slot. Schrijf wat er hersteld is, of hoe je voorkomt dat het weer ontbreekt.",
+          "je actievoorstel ging nog niet over het ontbrekende label");
+        if (a.terPlaatse === "niets") zag("Je zag de monteur het label ophangen. Dat herstel leg je vast als ‘Direct gecorrigeerd’.",
+          "bij ‘Ter plaatse’ koos je ‘Niets gedaan’, maar je zag het label ophangen (‘Direct gecorrigeerd’)");
+        if (a.terPlaatse === "maatregel") zag("Het label hangt er nu en jij zag het: het is dus niet alleen veilig gemaakt, het is hersteld. Kies ‘Direct gecorrigeerd’.",
+          "bij ‘Ter plaatse’ koos je ‘Maatregel genomen’, maar je zag het herstel (‘Direct gecorrigeerd’)");
       }
-      return c;
+      // ronde 7: wat het gevaar laat bestaan eerst, zodat "zo blijft het gevaar bestaan:" over dát punt gaat
+      return c.filter((x) => x.soort === "onveilig").concat(c.filter((x) => x.soort !== "onveilig"));
     },
+    // afgerond = jij zag het herstel (‘Direct gecorrigeerd’) en het voorstel is in orde; het oordeel speelt hier geen rol.
+    // Actiescherm en samenvatting gebruiken allebei deze ene regel, zodat ze nooit iets anders zeggen.
+    // Een actie die (ook) nog moet gebeuren (toolbox, instructie, afspraak) kan niet ter plaatse gezien zijn: die blijft open
+    // tot een toetser heeft gezien dat ze gebeurd is, ook als het herstel (het label) al hangt.
+    oefActieAfgerond(sc, a) { return !!(a && isAV(a.oordeel) && a.terPlaatse === "gecorrigeerd" && !this.oefActieCheck(sc, a).length && !this.oefActieNog(a)); },
+    // per zinsdeel: "Label opgehangen en monteur uitleg gegeven" is al gebeurd; "toolbox geven" moet nog gebeuren
+    oefActieNog(a) { return nogTeDoen((a && a.actie) || "").length > 0; },
+    // gecorrigeerd én iets dat nog moet gebeuren: dan blijft de actie open en is een urgentie nodig
+    oefOpenNaHerstel(a) { return !!(a && a.terPlaatse === "gecorrigeerd" && this.oefActieNog(a)); },
 
     // ---------------- weergave ----------------
     view_oefen() {
@@ -554,47 +651,64 @@
       const gezien = sc.gezien ? `<div class="oef-gezien"><b>Wat je zag:</b> ${esc(sc.gezien)}</div>` : "";
       if (fb) {
         // alleen het voorstel zelf telt hier; het oordeel kreeg op het oordeelscherm al zijn uitleg (niet terugsturen)
-        const corr = this.oefActieCheck(sc, a), nog = "Nog " + (TEL[corr.length] || corr.length + " dingen") + ":";
+        const corr = this.oefActieCheck(sc, a), nogTel = "Nog " + (TEL[corr.length] || corr.length + " dingen") + ":";
         const alleenConcreet = corr.length > 0 && corr.every((c) => c.soort === "concreet"), geenConcreet = corr.every((c) => c.soort !== "concreet");
-        const afgerond = gecorr && !corr.length;
+        const afgerond = this.oefActieAfgerond(sc, a);
         const stappen = this.actieStappen ? this.actieStappen({ status: afgerond ? "Afgerond" : "Voorstel" }, { gecorr: afgerond }) : "";
         const tp = { niets: "niets gedaan", maatregel: "maatregel genomen", gecorrigeerd: "direct gecorrigeerd" }[a.terPlaatse] || "–";
+        // wat de terugkoppeling zegt, volgt wat de oefenaar zelf schreef: nooit "de band gaat uit gebruik" als dat er niet
+        // staat, en nooit "afgerond" voor iets dat nog moet gebeuren (een toolbox die nog gegeven wordt)
+        const nog = this.oefActieNog(a), ta = String(a.actie || "").toLowerCase();
         const ok = corr.length ? "" : a.terPlaatse === "maatregel" && A.verwachtTp !== "maatregel"
           ? "Een maatregel maakt het lopende werk veilig. De actie blijft open tot ze is uitgevoerd en getoetst."
+          // ronde 7: de tekst noemt wát nog moet gebeuren, in de woorden van de oefenaar (nooit een vaste "toolbox")
+          : gecorr && nog ? (LABEL.test(ta) && HERSTEL.test(ta) ? "Het label zag je zelf hangen; dat herstel is klaar. " : "‘Direct gecorrigeerd’ zegt dat het label ter plaatse is hersteld; dat zag je zelf. ") +
+              "Maar " + opsomNl(nogNaam(ta)) + " moet nog gebeuren, en dat heb je niet zien gebeuren. Daarom blijft de actie open, met jouw urgentie (" + (PRIO_NAAM[a.prio] || "–") + "), tot een toetser heeft gezien dat het gebeurd is." +
+              (LABEL.test(ta) && HERSTEL.test(ta) ? " In het echt leg je dat liefst vast als een aparte actie." : "")
           : gecorr && A.verwachtTp !== "gecorrigeerd" ? "Jij zag het herstel: dan ben jij de toetser en is de actie afgerond. Zonder dat te zien, blijft ze open."
+          : sc.id === "put" ? "Het hijsen is gestopt (‘Maatregel genomen’) en volgens je actie gaat de beschadigde band uit gebruik" + (preventief(ta) ? ", en je pakt ook de oorzaak aan" : "") + ". Dat past bij het gevaar. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst."
+          // ronde 7: wat al gebeurd is ("monteur uitleg gegeven") noemt de terugkoppeling ook, in de woorden van de oefenaar
+          : sc.id === "kast" && gecorr && gedaanNaam(ta).length ? "Je zag zelf dat het label nu aan het slot hangt, en volgens je actie gebeurde " + opsomNl(gedaanNaam(ta)) + " ook al ter plaatse. Dan ben jij de toetser en is de actie meteen afgerond. Sluit af met wat goed ging: ‘Goed dat je hebt afgeschakeld en je slot erop hebt gedaan.’"
           : isV && A.okTekstV ? A.okTekstV : A.okTekst;
         // de kop vraagt precies wat de punten vragen: alleen de tekst → concreter; alleen ter plaatse/urgentie → kijk naar wat je zag
-        const kop = !corr.length ? (sc.id === "sleuf" ? (isV ? "Verbetervoorstel vastgelegd" : "Actievoorstel vastgelegd") : "Past bij wat je zag")
+        const onv = corr.some((c) => c.soort === "onveilig");
+        const kop = !corr.length ? (sc.id === "sleuf" ? (isV ? "Verbetervoorstel vastgelegd" : "Actievoorstel vastgelegd") : nog && gecorr ? "Vastgelegd, de actie blijft open" : "Past bij wat je zag")
+          : onv ? "Let op: zo blijft het gevaar"
           : alleenConcreet ? "Maak het nog wat concreter"
           : sc.id === "put" ? "Let op: dit is direct gevaar"
           : sc.id === "kast" ? "Kijk nog eens naar wat je zag"
           : geenConcreet ? "Kijk nog eens bij ‘Ter plaatse’" : "Bijna: nog even aanvullen";
+        // bij een onveilig voorstel: eerst het gevaar (bij de kop en de inleiding), de andere punten apart eronder
+        const li = (l) => `<ul class="oef-corr">${l.map((c) => `<li>${esc(c.t)}</li>`).join("")}</ul>`;
+        const onvL = corr.filter((c) => c.soort === "onveilig"), restL = corr.filter((c) => c.soort !== "onveilig");
+        const lijstHtml = onvL.length && restL.length ? li(onvL) + `<p class="oef-p oef-ook">Verder nog ${esc(TEL[restL.length] || restL.length + " dingen")}:</p>` + li(restL) : li(corr);
         const intro = !corr.length ? esc(ok)
-          : isV ? "Je oordeel V past hier, en je verbetervoorstel is van jou. " + nog
-          : sc.id === "sleuf" ? "Je oordeel en je actievoorstel zijn van jou. " + nog
-          : alleenConcreet ? "Het " + naam + " is van jou. " + nog
+          : isV ? "Je oordeel V past hier, en je verbetervoorstel is van jou. " + nogTel
+          : sc.id === "sleuf" ? "Je oordeel en je actievoorstel zijn van jou. " + nogTel
+          : onv ? "Het " + naam + " is van jou, maar zo blijft het gevaar bestaan:"
+          : alleenConcreet ? "Het " + naam + " is van jou. " + nogTel
           : "Het " + naam + " is van jou. Toch past het nog niet bij wat je zag:";
         return `<div class="q oef-kaart">${this.oefJij("“" + esc(String(a.actie || "").trim()) + "”")}
-          <div class="oef-gekozen">${a.actieHerkomst === "Voorstel" ? '<span class="lbl vs">Voorstel gebruikt</span>' : '<span class="lbl jij">zelf geschreven</span>'} · ter plaatse: <b>${esc(tp)}</b>${gecorr ? "" : ` · urgentie: <b>${esc({ direct: "direct", kort: "kort (±2 weken)", planmatig: "planmatig (±8 weken)" }[a.prio] || "–")}</b>`}</div></div>` +
+          <div class="oef-gekozen">${a.actieHerkomst === "Voorstel" ? '<span class="lbl vs">Voorstel gebruikt</span>' : '<span class="lbl jij">zelf geschreven</span>'} · ter plaatse: <b>${esc(tp)}</b>${gecorr && !nog ? "" : ` · urgentie: <b>${esc({ direct: "direct", kort: "kort (±2 weken)", planmatig: "planmatig (±8 weken)" }[a.prio] || "–")}</b>`}</div></div>` +
           this.oefFb(kop, intro,
-            corr.length ? [] : this.oefRegels(sc, "actie"), (corr.length ? `<ul class="oef-corr">${corr.map((c) => `<li>${esc(c.t)}</li>`).join("")}</ul>` : "") +
+            corr.length ? [] : this.oefRegels(sc, "actie"), (corr.length ? lijstHtml : "") +
               (stappen && !corr.length ? `<div class="hierna oef-hierna"><div class="hierna-t">Hierna</div>${stappen}</div>` : ""),
             corr.length ? this.oefKnoppenOpnieuw("Pas je " + naam + " aan", "oefAanpassen", true) : null, corr.length > 0);
       }
       const keus = (k, val, w, u) => `<button class="kvlak${a[k] === val ? " on" : ""}" id="oef-${k}-${val}"${act("oefZet", k, val)} aria-pressed="${a[k] === val}"><span class="w">${w}</span>${u ? `<span class="u">${esc(u)}</span>` : ""}</button>`;
       // één duidelijke zin over wie toetst, passend bij wat je kiest (nooit twee tegenstrijdige)
-      const wie = a.terPlaatse === "maatregel" ? "Een maatregel maakt alleen het lopende werk veilig. De actie blijft open; daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst."
-        : gecorr ? "Direct gecorrigeerd: de ploeg heeft het ter plaatse opgelost en jij hebt het herstel zelf gezien. Dan ben jij de toetser en is de actie afgerond; een urgentie is niet nodig."
-        : "Jij schrijft alleen het voorstel. Daarna stelt iemand uit het team de actie in: wie haar uitvoert en wie toetst.";
+      // één duidelijke zin over wie toetst, passend bij wat je kiest én schrijft (nooit twee tegenstrijdige); bij typen
+      // werkt oefKnoppen hem bij, en ook of de urgentie nodig is
+      const wie = this.oefWie(a), prioUit = gecorr && !this.oefActieNog(a);
       return `<div class="q akaart2 oef-kaart">${gezien}
           <div class="arij"><span id="oef-actiekop" class="oef-arijkop">${a.actieHerkomst === "Voorstel" ? `<span class="lbl vs">Voorstel</span><span class="s oef-s">pas gerust aan; het telt pas als jij het vastlegt</span>` : `<span class="arij-t">${isV ? "Wat kan er beter?" : "Wat moet er gebeuren?"}</span>`}</span>
             ${A.vs ? `<button class="wijzig arij-k"${act("oefActieVoorstel")}>Laat de app een actie voorstellen</button>` : ""}</div>
           ${this.oefInvoer("actie", isV && A.phV ? A.phV : A.ph, "Jouw " + naam, a.actie)}
           <div class="otitel" id="oef-tp-lab">Ter plaatse</div>
           <div class="kvlakken" role="group" aria-labelledby="oef-tp-lab">${keus("terPlaatse", "niets", "Niets gedaan")}${keus("terPlaatse", "maatregel", "Maatregel genomen", A.maatregel)}${keus("terPlaatse", "gecorrigeerd", "Direct gecorrigeerd")}</div>
-          ${gecorr ? "" : `<div class="otitel" id="oef-prio-lab">Hoe dringend vind jij het?</div>
-          <div class="kvlakken" role="group" aria-labelledby="oef-prio-lab">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div>`}
-          <div class="kvuitleg oef-wie" id="oef-wie">${wie}</div>
+          <div id="oef-prio-blok"${prioUit ? " hidden" : ""}><div class="otitel" id="oef-prio-lab">Hoe dringend vind jij het?</div>
+          <div class="kvlakken" role="group" aria-labelledby="oef-prio-lab">${keus("prio", "direct", "Direct", "meteen")}${keus("prio", "kort", "Kort", "±2 weken")}${keus("prio", "planmatig", "Planmatig", "±8 weken")}</div></div>
+          <div class="kvuitleg oef-wie" id="oef-wie" aria-live="polite">${esc(wie)}</div>
         </div>
         <button class="btn primary oef-verder" id="oef-vastleg"${act("oefVastleggen")}>${svg("check", 20)} ${isV ? "Verbetervoorstel" : "Actievoorstel"} vastleggen (oefening)</button>`;
     },
@@ -618,16 +732,18 @@
     // geen vinkjes: de methoderegels zijn wat je meeneemt, geen afvinklijst van wat je "gedaan" hebt.
     // A waar de TRA zegt dat het in orde is: die oefenaar kreeg op het oordeelscherm één rustige hint en bleef bewust
     // bij zijn oordeel; dat wordt hier niet nog eens als afwijking aangestreept (het oordeel is van de inspecteur).
+    // elk punt: { soort: "tra" (oordeel of TRA-stap wijkt af van wat de TRA aangeeft) | "concreet" | "zag" | "aanname", t }.
+    // Alleen "tra" telt als afwijking van de TRA; de tekst van een voorstel, ‘Ter plaatse’ of een aanname zijn andere punten.
     oefVerschillen(sc, a) {
       const uit = [], x = a.oordeel;
-      if (x && !past(sc, x) && !(x === "A" && past(sc, "C"))) uit.push("jij koos " + x + "; volgens de TRA " + sc.traTekst);
+      if (x && !past(sc, x) && !(x === "A" && past(sc, "C"))) uit.push({ soort: "tra", t: "jij koos " + x + "; volgens de TRA " + sc.traTekst, kort: "je oordeel" });
       if (a.regel && sc.koppel.goed.length && !sc.koppel.goed.includes(a.regel)) {
         const g = sc.koppel.opties.find((o) => o[0] === sc.koppel.goed[0]);
-        uit.push("TRA-stap: hier past " + (g ? g[1] : sc.koppel.goed[0]) + " het best");
+        uit.push({ soort: "tra", t: "TRA-stap: hier past " + (g ? g[1] : sc.koppel.goed[0]) + " het best", kort: "de TRA-stap" });
       }
       const corr = a.actieKlaar && isAV(x) ? this.oefActieCheck(sc, a) : [];
-      if (corr.length) uit.push("je " + voorstelNaam(sc, a) + (corr.every((c) => c.soort === "concreet") ? " was nog niet concreet" : " paste nog niet helemaal bij wat je zag"));
-      if (sc.stappen.includes("zie") && a.zie && aannames(a.zie).length) uit.push("in je waarneming stond een aanname");
+      corr.forEach((c) => { if (!uit.some((u) => u.t === c.kort)) uit.push({ soort: c.soort, t: c.kort }); });
+      if (sc.stappen.includes("zie") && a.zie && aannames(a.zie).length) uit.push({ soort: "aanname", t: "in je waarneming stond een aanname" });
       return uit;
     },
     oefSamenvatting() {
@@ -635,17 +751,33 @@
       const regel = (r) => `<li><span class="oef-bol" aria-hidden="true"></span><span><b>${esc(REGEL[r][0])}</b><span class="oef-s">${esc(REGEL[r][1])}</span></span></li>`;
       const verschil = SC.map((sc, i) => this.oefVerschillen(sc, o.a[i] || {}));
       const anders = verschil.some((v) => v.length);
+      // de inleiding zegt precies wat er afweek: alleen een oordeel of TRA-stap is "afwijken van de TRA"; een punt over
+      // de tekst, ‘Ter plaatse’ of een aanname wordt letterlijk genoemd (met de scène), nooit als TRA-afwijking
+      const tra = [], overig = [];
+      verschil.forEach((v, i) => v.forEach((x) => (x.soort === "tra" ? tra : overig).push({ x, sc: SC[i] })));
+      // rustig en kort: de punten zelf staan per scène hieronder; de inleiding telt ze en noemt de scènes (alleen één
+      // los punt staat er letterlijk in). Nooit "week je af van de TRA" voor iets anders dan het oordeel of de TRA-stap.
+      const KEUZES = ["", "één keuze", "twee keuzes", "drie keuzes", "vier keuzes", "vijf keuzes", "zes keuzes"];
+      const PUNT = ["", "één punt", "twee punten", "drie punten", "vier punten", "vijf punten", "zes punten", "zeven punten", "acht punten", "negen punten"];
+      const opsom = (arr) => (arr.length <= 1 ? arr.join("") : arr.slice(0, -1).join(", ") + " en " + arr[arr.length - 1]);
+      const scenesVan = (l) => opsom([...new Set(l.map((y) => "‘" + y.sc.titel + "’"))]);
+      const traZin = tra.length ? "Bij " + (KEUZES[tra.length] || tra.length + " keuzes") + " week je af van wat de TRA aangeeft (" + opsom(tra.map((y) => y.x.kort + " bij ‘" + y.sc.titel + "’")) + ")." : "";
+      const nPunt = PUNT[overig.length] || overig.length + " punten";
+      const overigZin = !overig.length ? "" : !tra.length && overig.length === 1 ? "Nog één punt om naar te kijken (‘" + overig[0].sc.titel + "’): " + overig[0].x.t + "."
+        : (tra.length ? " Daarnaast " + (overig.length === 1 ? "is er nog één punt" : "zijn er nog " + nPunt) : "Nog " + nPunt) + " om naar te kijken, bij " + scenesVan(overig) + ".";
+      const inleiding = anders ? traZin + overigZin + " Hieronder zie je per scène wat er was." : "Hieronder zie je per scène wat je deed.";
       const scRij = (sc, i) => { const a = o.a[i] || {}, x = a.oordeel;
         const keuzes = Object.keys(sc.keuzes || {}).map((st) => keuzeGoed(sc, a, st) ? sc.keuzes[st].samen : "");
         const delen = keuzes.concat([a.zie ? "waarneming beschreven" : "", a.gekozenTaak ? "taak gevraagd en bevestigd" : "", a.regel ? "TRA-stap gekoppeld" : "",
-          a.actieKlaar && isAV(x) ? (a.terPlaatse === "gecorrigeerd" && sc.actie.verwachtTp === "gecorrigeerd" && !verschil[i].length ? "herstel gezien, actie afgerond" : voorstelNaam(sc, a) + " geschreven") : isAV(x) ? voorstelNaam(sc, a) + " nog niet vastgelegd" : "",
+          a.actieKlaar && isAV(x) ? (this.oefActieAfgerond(sc, a) ? "herstel gezien, actie afgerond"
+            : voorstelNaam(sc, a) + " geschreven" + (a.terPlaatse === "gecorrigeerd" && this.oefActieNog(a) && !this.oefActieCheck(sc, a).length ? " (blijft open tot de toetser het heeft gezien)" : "")) : isAV(x) ? voorstelNaam(sc, a) + " nog niet vastgelegd" : "",
           a.positief ? "positief benoemd" : ""]);
         const tekst = delen.filter(Boolean).join(" · ") || "nog niet gedaan";
-        const v = verschil[i].length ? `<div class="oef-anders"><span class="oef-anders-ic" aria-hidden="true">i</span><span>Kijk nog eens: ${esc(verschil[i].join("; "))}.</span></div>` : "";
+        const v = verschil[i].length ? `<div class="oef-anders"><span class="oef-anders-ic" aria-hidden="true">i</span><span>Kijk nog eens: ${esc(verschil[i].map((x) => x.t).join("; "))}.</span></div>` : "";
         return `<div class="row"><span class="grow"><span class="t">${esc(sc.titel)}</span><div class="s oef-s">${esc(tekst)}</div>${v}</span>
           ${x ? `<span class="badge b-${x === "NVT" ? "N" : x}">[${x}] ${OORDEEL[x][0]}</span>` : ""}</div>`; };
       return `${this.oefKop("De oefening zit erop", anders ? "Even terugkijken" : "Goed gedaan")}
-        <div class="q oef-kaart"><p class="oef-p">Je hebt drie momentopnames geoefend. ${anders ? "Bij een paar keuzes week je af van wat de TRA aangeeft. Daar is oefenen voor: hieronder zie je per scène waar." : "Hieronder zie je per scène wat je deed."}</p></div>
+        <div class="q oef-kaart"><p class="oef-p">Je hebt drie momentopnames geoefend. ${esc(inleiding)}</p></div>
         <div class="listcard oef-lijst">${SC.map(scRij).join("")}</div>
         <div class="q oef-kaart"><p class="oef-p">Dit neem je mee naar de echte inspectie:</p>
           <ul class="oef-regels">${["stop", "gesprek", "positief", "zien", "jij", "toetser", "afgerond", "qhse"].map(regel).join("")}</ul></div>
@@ -685,7 +817,8 @@
     const r = vandaag0.apply(this, arguments);
     const plek = document.createElement("div"); plek.className = "oef-tipplek";
     const v = $("view"), voor = $("mijnact"); if (voor && voor.parentNode && v.contains(voor)) voor.parentNode.insertBefore(plek, voor); else v.appendChild(plek);   // vlak boven de acties (ook in de rechterkolom op een groot scherm)
-    this.oefTipNodig().then((ja) => { if (ja && document.body.contains(plek)) plek.innerHTML = this.oefTipHtml(); });
+    const tip = this.oefTipNodig().then((ja) => { if (ja && document.body.contains(plek)) plek.innerHTML = this.oefTipHtml(); });
+    if (window.WPI.laad && window.WPI.laad.opstartHoud) window.WPI.laad.opstartHoud([tip]);   // bij het openen: de tip komt mee in de eerste opbouw
     return r;
   };
   const inspecties0 = App.view_inspecties;

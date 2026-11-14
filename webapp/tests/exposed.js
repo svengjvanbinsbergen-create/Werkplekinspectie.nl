@@ -42,7 +42,7 @@ function vraag(url, method = "GET", ms = 10000) {
 }
 
 // ---------- welke paden ----------
-const NODIG = (rel) => /^(index\.html|styles\.css|sw\.js|manifest\.json|icon-\d+\.png|css\/.+\.css|js\/.+\.js|data\/.+\.json|fonts\/.+\.woff2)$/.test(rel);
+const NODIG = (rel) => /^(index\.html|styles\.css|sw\.js|manifest\.json|icon-\d+\.png|css\/.+\.css|js\/.+\.js|data\/.+\.json|fonts\/.+\.(woff2|ttf))$/.test(rel);
 const VAST = ["docs/", "tests/", "supabase/", "supabase/migrations/", ".git/HEAD", ".git/config", "../.git/HEAD", ".env", ".env.local",
   "README.md", "docs/README.md", "tests/README.md", "supabase/README.md", "package.json", ".DS_Store", "netlify.toml", "vercel.json", "_headers",
   "js/", "data/", "tools/", "handoff/", "wpi/", "node_modules/", ".vscode/settings.json", "backup.zip", "webapp.zip"];

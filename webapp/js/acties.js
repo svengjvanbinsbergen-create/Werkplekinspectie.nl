@@ -57,7 +57,9 @@
       await this.laadActies();
       if (nr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       const v = $("view"), B = this.bakjes(), hoofd = mag("team");
-      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
+      // "Te toetsen" alleen voor wie toetser kan zijn (de beheerder nooit): geen tabblad dat altijd leeg blijft
+      const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]].filter(([k]) => k !== "toetsen" || mag("toetser"));
+      if (this.actFilter && !tabs.some(([k]) => k === this.actFilter)) this.actFilter = null;
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
       v.appendChild(el(`<div><div class="hi">${hoofd ? "Het hele team" : "Jouw acties"}</div><h1 class="groot">Acties</h1></div>`));
       // groot scherm (≥ 1500px): rechts een rustig overzicht (wie heeft wat, wat komt eraan), zodat een korte lijst geen
@@ -66,10 +68,10 @@
       let v2 = v;
       if (zij) { const g = el(`<div class="agrid"><div class="ahoofd"></div></div>`); v.appendChild(g); v2 = g.firstElementChild; g.appendChild(el(this.actieZij())); }
       { const v = v2;   // de rest van het scherm in de hoofdkolom
-      v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " warm" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
-      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: mag("zietAlles") ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
+      v.appendChild(el(`<div class="tabs" role="group" aria-label="Welke acties tonen">${tabs.map(([k, l]) => `<button class="tabp${this.actFilter === k ? " on" : ""}${k === "telaat" && B.telaat.length ? " laat" : ""}"${act("actTab", k)} aria-pressed="${this.actFilter === k}">${l}<span>${B[k].length}</span></button>`).join("")}</div>`));
+      const uitleg = { telaat: "Van het hele team. Iedereen krijgt hier elke 2 dagen een melding over.", gepland: hoofd ? "Lopende acties van het hele team, op volgorde van plandatum." : "Op volgorde van plandatum.", toetsen: "Klaar gemeld door de actiehouder. Alleen jij als toetser kunt afronden.", instellen: "Voorstellen uit inspecties. Iedereen mag ze instellen: kies een actiehouder, een andere persoon als toetser en een plandatum.", alle: mag("zietAlles") ? "" : "Op jouw naam, door jou ingesteld of aangemaakt, voorstellen en wat te laat is." }[this.actFilter];
       if (uitleg) v.appendChild(el(`<div class="s uitleg">${uitleg}</div>`));
-      const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
+      const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", hoofd ? "Er staan geen lopende acties open in het team." : "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
       if (!isWeb()) v.appendChild(el(`<button class="btn primary" style="margin:0 0 14px"${act("nieuweActie")}>${svg("plus", 18)} Nieuwe actie</button>`));
       if (isWeb() && lijst.length) v.appendChild(el(this.actieTabel(lijst)));
@@ -102,15 +104,15 @@
       return `<aside class="azij" aria-label="Overzicht van de acties">
         <section class="card azkaart"><h2 class="azkop">Stand van zaken</h2><div class="azstand">${stand.map(([st, l]) => `<div><b>${tel(st)}</b><span>${l}</span></div>`).join("")}</div></section>
         <section class="card azkaart"><h2 class="azkop">Lopend per actiehouder</h2>${wie.length ? `<ul class="azlijst">${wie.map(([id, x]) => `<li>${id ? WPI.persLabel(id) : `<span class="s">nog geen actiehouder</span>`}
-            <span class="aztal">${x.laat ? `<span class="dchip warm">${x.laat} te laat</span>` : ""}<b>${x.n}</b><span class="sr-only"> lopend</span></span></li>`).join("")}</ul>` : `<p class="s">Geen lopende acties.</p>`}</section>
-        <section class="card azkaart"><h2 class="azkop">Eerstvolgende plandata</h2>${komt.length ? `<ul class="azlijst">${komt.map((a) => `<li><button class="azactie"${act("openActie", a.id)}><span class="dchip${dagenTot(a.plandatum) === 0 ? " warm" : ""}">${dagenTot(a.plandatum) === 0 ? "vandaag" : esc(dagLabel(a.plandatum))}</span><span class="azt">${esc(kort(a.tekst || "", 70))}</span></button></li>`).join("")}</ul>` : `<p class="s">Niets ingepland.</p>`}</section>
+            <span class="aztal">${x.laat ? `<span class="dchip laat">${x.laat} te laat</span>` : ""}<b>${x.n}</b><span class="sr-only"> lopend</span></span></li>`).join("")}</ul>` : `<p class="s">Geen lopende acties.</p>`}</section>
+        <section class="card azkaart"><h2 class="azkop">Eerstvolgende plandata</h2>${komt.length ? `<ul class="azlijst">${komt.map((a) => `<li><button class="azactie"${act("openActie", a.id)}><span class="dchip${dagenTot(a.plandatum) === 0 ? " binnen" : ""}">${dagenTot(a.plandatum) === 0 ? "vandaag" : esc(dagLabel(a.plandatum))}</span><span class="azt">${esc(kort(a.tekst || "", 70))}</span></button></li>`).join("")}</ul>` : `<p class="s">Niets ingepland.</p>`}</section>
       </aside>`;
     },
     actieKaart(a) {
       const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
       const plan = !a.plandatum ? `<span class="dchip">nog geen plandatum</span>`
-        : loopt && d < 0 ? `<span class="dchip warm">${-d} dag${d === -1 ? "" : "en"} te laat</span>`
-        : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : `<span class="dchip">📅 ${dagLabel(a.plandatum)}</span>`;
+        : loopt && d < 0 ? `<span class="dchip laat">${-d} dag${d === -1 ? "" : "en"} te laat</span>`
+        : loopt && d === 0 ? `<span class="dchip binnen">vandaag</span>` : `<span class="dchip">${svg("cal", 14)}${dagLabel(a.plandatum)}</span>`;
       const h = a.houder ? USERS.find((u) => u.id === a.houder) : null;
       return `<button class="akaart"${act("openActie", a.id)}>
         <div class="boven">${stBadge(a.status)}${plan}${prioChip(a.prio)}</div>
@@ -126,7 +128,7 @@
     // computer: overzicht als tabel
     actieTabel(lijst) {
       const plan = (a) => { const d = a.plandatum ? dagenTot(a.plandatum) : null, loopt = a.status === "Open" || a.status === "In uitvoering";
-        return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip warm">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip warm">vandaag</span>` : dagLabel(a.plandatum); };
+        return !a.plandatum ? `<span class="s">–</span>` : loopt && d < 0 ? `<span class="dchip laat">${-d} d te laat</span>` : loopt && d === 0 ? `<span class="dchip binnen">vandaag</span>` : dagLabel(a.plandatum); };
       const persoon = (id) => { const u = USERS.find((x) => x.id === id); return u ? `<span class="pers">${WPI.persLabel(u.id)}</span>` : `<span class="s">–</span>`; };
       // status boven de actietekst (niet in een eigen smalle kolom) en de herkomst in de grijze regel: de actietekst krijgt
       // de ruimte, ook naast het overzicht rechts op een groot scherm

@@ -15,7 +15,7 @@ const id=await p.evaluate(()=>App.planning.find(x=>x.code==='SLI').id);
 await p.evaluate((id)=>App.startGepland(id),id);await p.waitForTimeout(400);
 const pid=await p.evaluate(()=>App.state.inspectie.plan_id);console.log('plan_id',pid);if(pid!==id)errs.push('gestarte inspectie niet gekoppeld aan de planning: '+pid);
 await p.evaluate(()=>{App.state.inspectie.stap='klaar';App.route()});await p.waitForTimeout(300);
-await p.click('text=Inspectie vastleggen');await p.waitForTimeout(300);await p.click('button:has-text("Toch vastleggen")');await p.waitForTimeout(600);
+await p.click('button:has-text("Definitief afronden")');await p.waitForTimeout(300);await p.click('button:has-text("Toch definitief afronden")');await p.waitForSelector('#mod .afr-uitkomst',{timeout:20000});
 await p.evaluate(()=>{App.closeModal();App.planning=null;App.go('planning')});await p.waitForTimeout(600);
 const pst=await p.evaluate(()=>App.planning.find(x=>x.code==='SLI').status);console.log('status',pst);if(pst!=='uitgevoerd')errs.push('planning na vastleggen niet uitgevoerd: '+pst);
 await p.screenshot({path:'p5.png',fullPage:true});

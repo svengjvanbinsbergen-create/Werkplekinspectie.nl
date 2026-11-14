@@ -1,6 +1,6 @@
 /* Service worker — netwerk eerst, cache als terugval wanneer je offline bent.
    Zo zie je na een update altijd de nieuwste versie, en werkt de app zonder bereik. */
-const CACHE = "wpi-v25";
+const CACHE = "wpi-v35";
 const SHELL = [
   "./", "index.html", "styles.css", "manifest.json",
   "js/kern.js", "js/vandaag.js", "js/planning.js", "js/inspectie.js", "js/inspecties.js",
@@ -8,7 +8,9 @@ const SHELL = [
   "js/config.js", "js/sync.js", "js/auth.js", "js/beheer.js", "css/beheer.css",
   "js/oefen.js", "css/oefen.css",
   "js/koppel.js", "css/koppel.css",
+  "js/laden-start.js", "js/laden.js", "css/laden.css",
   "fonts/nunito-latin-wght-normal.woff2",
+  "js/rapport.js", "fonts/nunito-pdf-400.ttf", "fonts/nunito-pdf-800.ttf",   // rapport als PDF (ook offline)
   "icon-192.png", "icon-512.png",
   "data/cijfers.json", "data/kennisbank.json", "data/voorbeelddata.json", "data/trendacties.json",
 ];

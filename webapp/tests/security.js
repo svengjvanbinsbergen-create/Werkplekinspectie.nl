@@ -133,7 +133,7 @@ async function vulAlles(p, n, metEnter = true) {
     // ================= 3a. voorbeeldmodus: accountkiezer + Demo-label =================
     const dp = await pagina(b, TEL, 'demo');
     const dl = await dp.locator('#view').innerText();
-    ok(/Kies je account/.test(dl) && /Voorbeeld/.test(dl), 'voorbeeldmodus: accountkiezer met "Voorbeeld"-uitleg');
+    ok(/Kies een voorbeeldaccount/.test(dl) && /Voorbeeld/.test(dl), 'voorbeeldmodus: accountkiezer met "Voorbeeld"-uitleg');
     await scan(dp, 'inlogscherm (voorbeeld)');
     await dp.evaluate(() => App.login('u-hoofd2')); await dp.waitForTimeout(500);   // telefoon: een hoofd dat inspecteert (geen rol inspecteur meer)
     ok(await dp.locator('#acct .demolabel').innerText().then((t) => t.trim() === 'Demo').catch(() => false), 'voorbeeldmodus: rustig "Demo"-label bovenin na het inloggen');
@@ -277,7 +277,7 @@ async function vulAlles(p, n, metEnter = true) {
     const pp = await pagina(b, TEL, 'productie', { productie: true, consoleFoutMag: true, init: () => { try { localStorage.setItem('wpi_user', JSON.stringify({ id: 'u-hoofd' })); } catch (e) {} } });
     const pl = await pp.locator('#view').innerText();
     ok(await pp.locator('#l-mail').count() === 1 && await pp.locator('#l-ww').count() === 1, 'productie: echt inlogscherm (e-mail + wachtwoord)');
-    ok(!/Kies je account|Voorbeeld|Björn Sloos|Bram Voorbeeld|Femke Fictief|Carla Proef|Dirk Demo|Gijs Gefingeerd|Hanna Hypothese|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
+    ok(!/Kies je account|Kies een voorbeeldaccount|Voorbeeld|Björn Sloos|Bram Voorbeeld|Femke Fictief|Carla Proef|Dirk Demo|Gijs Gefingeerd|Hanna Hypothese|Inspecteur \(demo\)/.test(pl), 'productie: geen accountkiezer, geen voorbeeldtekst, geen fictieve namen');
     ok(await pp.evaluate(() => App.user === null), 'productie: "wpi_user" uit localStorage genegeerd (niemand ingelogd)');
     ok(await pp.evaluate(() => localStorage.getItem('wpi_user') === null), 'productie: oude "wpi_user" opgeruimd');
     ok(await pp.evaluate(() => WPI.USERS.length === 0), 'productie: geen fictieve accounts in WPI.USERS');
