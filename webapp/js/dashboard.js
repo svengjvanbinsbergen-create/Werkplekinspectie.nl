@@ -31,16 +31,23 @@
         return perMatch(m) && (!f.product || w.product === f.product) && (!f.locatie || w.locatie === f.locatie) && (!f.klasse || r.classificatie === f.klasse);
       });
       const oordeel = { Conform: 0, Afwijking: 0, Verbeterpunt: 0, "Niet van toepassing": 0 };
-      const waarn = { totaal: 0, TRA: 0, Algemeen: 0 }, klasse = {}, om = {}, mset = new Set(), wset = new Set();
+      const waarn = { totaal: 0, TRA: 0, Algemeen: 0, buiten: 0 }, klasse = {}, om = {}, mset = new Set(), wset = new Set(), perWpi = {};
       regels.forEach((r) => {
         const o = r.oordeel; if (oordeel[o] !== undefined) oordeel[o]++;
         waarn.totaal++;
-        if (/lgemeen/.test(r.soort || "")) waarn.Algemeen++; else if (r.soort === "TRA") waarn.TRA++;
+        if (/lgemeen/.test(r.soort || "")) waarn.Algemeen++; else if (r.soort === "TRA") waarn.TRA++; else waarn.buiten++;
+        const pw = (perWpi[r.wpi] = perWpi[r.wpi] || { ingang: (wmap[r.wpi] || {}).ingang || "", oord: {} }); pw.oord[o] = (pw.oord[o] || 0) + 1;
         const k = r.classificatie || "—"; (klasse[k] = klasse[k] || { Afwijking: 0, Verbeterpunt: 0, Conform: 0, tot: 0});
         if (oordeel[o] !== undefined && klasse[k][o] !== undefined) klasse[k][o]++; klasse[k].tot++;
         const m = (r.datum || "").slice(0, 7); mset.add(m); (om[m] = om[m] || {}); om[m][o] = (om[m][o] || 0) + 1; wset.add(r.wpi);
       });
-      return { oordeel, waarn, klasse, om, maanden: [...mset].sort(), n_wpi: wset.size };
+      return { oordeel, waarn, klasse, om, maanden: [...mset].sort(), n_wpi: wset.size, perWpi, wmap };
+    },
+    // de actieve filters in woorden (voor de detailvensters: zelfde selectie als de tegels)
+    filterTekst() {
+      const f = this.dashFilter, PER = { Q2: "Q2 (mei–jun)", Q3: "Q3 (jul–sep)", Q4: "Q4 (okt–nov)" }, d = [];
+      if (f.product) d.push(f.product); if (f.locatie) d.push(f.locatie); if (f.periode) d.push(PER[f.periode] || f.periode); if (f.klasse) d.push("klasse " + f.klasse);
+      return d.length ? "Selectie: " + d.join(" · ") + "." : "";
     },
     setFilter(k, val) { this.dashFilter[k] = this.dashFilter[k] === val ? "" : val; this.route(); },
     view_dashboard() {
@@ -183,16 +190,16 @@
         <span class="kl">${esc(k)}</span><span class="spoor"><span style="width:${(a / mx * 100).toFixed(1)}%;background:${P.A}"></span><span style="width:${(vv / mx * 100).toFixed(1)}%;background:${P.V}"></span></span><b>${a + vv}</b></button>`).join("")}</div>`;
     },
     drill(key, param) {
-      const c = this.data.cijfers, OB = { C: "b-C", A: "b-A", V: "b-V" };
-      const bg = (o) => `<span class="badge b-${o[0] === "N" ? "N" : o[0]}">${o[0]} ${0}</span>`;
+      // tegels, grafieken en detailvensters rekenen met dezelfde gefilterde waarnemingen (computeDash)
+      const c = this.data.cijfers, D = this.computeDash(), ft = this.filterTekst(), sel = (t) => (ft ? ft + " " : "") + t;
       const oc = (o) => ["Conform", "Afwijking", "Verbeterpunt", "Niet van toepassing"].filter((k) => o[k]).map((k) =>
         `<span class="badge b-${k === "Niet van toepassing" ? "N" : k[0]}">${k[0]} ${o[k]}</span>`).join(" ") || "—";
       const tbl = (h, rows) => `<table><thead><tr>${h.map((x) => `<th>${x}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((x) => `<td>${x}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
       if (key === "conform" || key === "waarnemingen") {
-        const o = c.oordeel, w = c.waarnemingen;
-        return this.openModal("Waarnemingen en oordelen", "Alle waarnemingen in de periode (momentopname).",
+        const o = D.oordeel, w = D.waarn;
+        return this.openModal("Waarnemingen en oordelen", sel("Alle waarnemingen in de " + (this.dashFilter.periode ? "gekozen periode" : "periode") + " (momentopname)."),
           tbl(["Oordeel", "Aantal"], [["Conform", o.Conform], ["Afwijking", o.Afwijking], ["Verbeterpunt", o.Verbeterpunt], ["Niet van toepassing", o["Niet van toepassing"]]].map((r) => [`<span class="badge b-${r[0] === "Niet van toepassing" ? "N" : r[0][0]}">${esc(r[0])}</span>`, r[1]]))
-          + `<div class="muted" style="margin-top:14px;font-size:13px">TRA-regels ${w.TRA} · onderwerpen ${w.Algemeen} · buiten TRA ${w.buiten_TRA} · totaal ${w.totaal}.</div>`);
+          + `<div class="muted" style="margin-top:14px;font-size:13px">TRA-regels ${w.TRA} · onderwerpen ${w.Algemeen} · buiten TRA ${w.buiten} · totaal ${w.totaal}${o["Niet van toepassing"] ? ` (waarvan ${o["Niet van toepassing"]} niet van toepassing)` : ""}.</div>`);
       }
       if (key === "programma") {
         let rows = c.vp_mis.map((o) => [esc(o.project.replace(" (fictief)", "")), esc(o.product), esc(o.locatie), mlabel(o.maand), esc(o.cat), `<span class="badge b-A">gemist</span>`]);
@@ -201,18 +208,18 @@
         return this.openModal("Gemiste verplichte WPI’s", sub, rows.length ? tbl(["Project", "Product", "Locatie", "Maand", "Soort", ""], rows) : `<div class="muted">Geen gemiste WPI’s in deze selectie.</div>`);
       }
       if (key === "oordeelmaand") {
-        const o = c.oordeel_maand[param] || {};
-        return this.openModal("Oordelen · " + mlabel(param), "Waarnemingen in deze maand.", `<div style="margin-bottom:6px">${oc(o)}</div>`);
+        const o = D.om[param] || {};
+        return this.openModal("Oordelen · " + mlabel(param), sel("Waarnemingen in deze maand."), `<div style="margin-bottom:6px">${oc(o)}</div>`);
       }
       if (key === "klasse") {
-        const v = c.klasse_gezien[param] || {};
-        return this.openModal(param, "Waarnemingen in deze klasse.", tbl(["", "Aantal"],
+        const v = D.klasse[param] || {};
+        return this.openModal(param, sel("Waarnemingen in deze klasse."), tbl(["", "Aantal"],
           [["Conform", v.Conform || 0], ["Afwijking", v.Afwijking || 0], ["Verbeterpunt", v.Verbeterpunt || 0], ["Totaal gezien", v.tot || 0]].map((r) => [`<span class="badge b-${r[0] === "Totaal gezien" ? "N" : r[0][0]}">${esc(r[0])}</span>`, r[1]])));
       }
       if (key === "inspecties") {
-        const wmap = {}; (this.data.voorbeelddata.wpis || []).forEach((w) => { wmap[w.nr] = w; });
-        const rows = Object.entries(c.per_wpi).sort().map(([nr, w]) => [esc(nr), wmap[nr] && wmap[nr].inspecteur ? WPI.inspLabel(null, wmap[nr].inspecteur) : "–", esc(w.ingang || ""), oc(w.oord || {})]);
-        return this.openModal("Inspecties", c.n_wpi + " WPI’s in de periode.", `<div class="tablewrap">${tbl(["WPI", "Inspecteur", "Ingang", "Oordelen"], rows)}</div>`);
+        const wmap = D.wmap;
+        const rows = Object.entries(D.perWpi).sort().map(([nr, w]) => [esc(nr), wmap[nr] && wmap[nr].inspecteur ? WPI.inspLabel(null, wmap[nr].inspecteur) : "–", esc(w.ingang || ""), oc(w.oord || {})]);
+        return this.openModal("Inspecties", sel(D.n_wpi + (D.n_wpi === 1 ? " WPI" : " WPI’s") + (ft ? " in deze selectie." : " in de periode.")), rows.length ? `<div class="tablewrap">${tbl(["WPI", "Inspecteur", "Ingang", "Oordelen"], rows)}</div>` : `<div class="muted">Geen inspecties in deze selectie.</div>`);
       }
       if (key === "acties") {
         const rows = this.data.trendacties.map((a) => [esc(a.nr), esc(a.onderwerp), esc(a.actiehouder), esc(a.termijn), `<span class="badge ${a.status === "Open" ? "b-V" : "b-done"}">${esc(a.status)}</span>`]);

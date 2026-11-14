@@ -52,6 +52,9 @@ function pagina(ctx, naam) {
   return ctx.newPage().then((p) => {
     p.on('pageerror', (e) => errs.push(naam + ' PAGEERR ' + e.message));
     p.on('console', (m) => { if (m.type() === 'error' && !/401|400|403|Failed to load resource|ERR_INTERNET_DISCONNECTED/.test(m.text())) errs.push(naam + ' CONSOLE ' + m.text()); });
+    // 'Failed to load resource' wordt hierboven genegeerd (verwachte 401/403); een 404 van /rest/v1 betekent dat de mock
+    // (of de app) een tabel/route mist: dan wordt die serverkant in echte modus niet getest
+    p.on('response', (r) => { if (r.status() === 404 && /\/rest\/v1\//.test(r.url())) errs.push(naam + ' 404 ' + r.request().method() + ' ' + r.url().replace(/^https?:\/\/[^/]+/, '')); });
     return p;
   });
 }
@@ -531,7 +534,7 @@ async function inloggen(p, mail, ww = WW, onthoud = true) {
     await g2.route('**/rest/v1/inspecties**', geenServer); await g2.route('**/rest/v1/acties**', geenServer);
     await inloggen(g2, 'carla@noardling.test', WW, false); await g2.waitForTimeout(1500);
     ok(await g2.evaluate(() => App.user && App.user.full_name === 'Carla Proef'), 'Ingrid logt in terwijl het ophalen mislukt (lie-fi)');
-    ok(/Is dit je eigen telefoon/.test(await g2.locator('#mod').innerText().catch(() => '')), 'eerste login van een inspecteur met het vinkje uit: vraag "Is dit je eigen telefoon?"');
+    ok(/Is dit je eigen (telefoon|toestel)/.test(await g2.locator('#mod').innerText().catch(() => '')), 'eerste login van een inspecteur met het vinkje uit: vraag "Is dit je eigen telefoon?"');
     await g2.click('#mod button:has-text("Nee, gedeeld toestel")'); await g2.waitForTimeout(200);
     ok(await g2.evaluate(() => localStorage.getItem('wpi_ingelogd_blijven') === '0' && !localStorage.getItem('wpi_sessie')), '"Nee, gedeeld toestel": refresh-token niet in localStorage');
     ok(!(await ruweIdb(g2, 'GEHEIM-W')), 'GEHEIM-W niet in IndexedDB bij Ingrid');

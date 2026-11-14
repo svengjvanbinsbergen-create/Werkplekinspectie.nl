@@ -248,14 +248,14 @@
     H: "nood brandblusser ehbo verbanddoos vluchtweg noodvoorziening reddingsboei oogdouche",
     I: "gedrag samenwerking communicatie houding afspraak haast",
   };
-  // TRA-maatregelen ["Collectief: a; b", ...] -> ["Collectief · a", "Collectief · b", ...]
+  // TRA-maatregelen ["Collectief: a; b", ...] -> ["Collectief · a", "Collectief · b", ...] (onafgekapt; het actievoorstel en het dossier gebruiken de volledige tekst)
   function splitMaatregelen(list) {
     const out = [];
     (Array.isArray(list) ? list : list ? [list] : []).forEach((item) => {
       const m = String(item).match(/^\s*([A-Za-zÀ-ÿ]+)\s*:\s*([\s\S]*)$/);
       const type = m ? m[1] : "", rest = m ? m[2] : String(item);
       rest.split(/;\s*/).map((x) => x.trim().replace(/\.$/, "")).filter(Boolean)
-        .forEach((x) => out.push((type ? type + " · " : "") + (x.length > 110 ? x.slice(0, 107) + "…" : x)));
+        .forEach((x) => out.push((type ? type + " · " : "") + x));   // volledige tekst: afkappen alleen bij weergave (chips)
     });
     return out.slice(0, 8);
   }

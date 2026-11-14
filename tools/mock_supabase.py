@@ -5,7 +5,8 @@ Serveert op één poort (zelfde origin, dus de CSP connect-src 'self' volstaat):
   - de statische app uit webapp/ (met een ingevulde js/config.js die naar deze server wijst)
   - /auth/v1     token (password, refresh_token, pkce), user (GET/PUT), logout, recover (met PKCE), factors (TOTP)
   - /__mock/herstellink?email=…[&soort=recovery|invite]  de link uit de herstel-/uitnodigingsmail
-  - /rest/v1     profiles, inspecties, acties, planning, actie_log (+ rpc/report_security_event)
+  - /rest/v1     profiles, inspecties, acties, planning, actie_log, monteurs, instellingen
+                 (+ rpc/report_security_event, rpc/monteur_aanmelden)
   - /storage/v1  object/fotos/<pad> (upload) en object/authenticated/fotos/<pad> (download)
   - /__mock/...  testhulp: verberg?tabel=…&id=…&uid=… (die gebruiker krijgt die rij niet, zoals RLS; sinds 0008 ziet
                  iedereen in het team alles, dus zo bootsen de tests "de server geeft jou dit niet" na),
@@ -33,9 +34,11 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import struct
 import threading
 import time
+import unicodedata
 import uuid
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -98,11 +101,24 @@ def nieuwe_state():
              u(7, "beheer@noardling.test", "Hanna Hypothese", "beheerder", "Applicatiebeheerder"),
              u(8, "norol@noardling.test", "Nieuwe Collega", None, "")]
     return {"users": {x["email"]: x for x in users}, "sessions": {}, "refresh": {}, "challenges": {},
-            "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "security_events": [],
+            "tables": {"inspecties": {}, "acties": {}, "planning": {}}, "actie_log": [], "monteurs": {}, "instellingen": {}, "security_events": [],
             "fotos": {}, "recover": [], "pkce": {}, "logins": [], "verborgen": [], "fail": {"n": 0, "status": 503, "pad": "", "methode": "", "code": ""}, "requests": [], "max_rows": 1000}
 
 
 STATE = nieuwe_state()
+
+
+def naam_schoon(n):   # 0001 naam_schoon: NFC, witruimte samenvoegen, randen en losse leestekens aan het eind weg
+    n = unicodedata.normalize("NFC", str(n))
+    n = re.sub(r"[\u0020\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+", " ", n).strip(" ")
+    return re.sub(r"[ .,;:\u00B7]+$", "", n)
+
+
+def naam_sleutel(n):   # 0001 naam_sleutel (benadering): kleine letters, zonder accenten, spaties en leestekens
+    n = re.sub(r"[\u0001-\u001F\u007F-\u009F\u00AD\u180E\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u206F\uFEFF]", "", str(n)).lower()
+    n = n.translate(str.maketrans("øđðłıħ", "oddlih")).replace("æ", "ae").replace("œ", "oe").replace("ß", "ss").replace("þ", "th")
+    n = "".join(ch for ch in unicodedata.normalize("NFD", n) if not unicodedata.combining(ch))
+    return "".join(ch for ch in n if ch.isalnum())
 
 
 def user_by_id(uid):
@@ -452,6 +468,8 @@ class Handler(SimpleHTTPRequestHandler):
                     return self.fout(400, "23514", "Er moet altijd minstens één actief hoofd zijn")
                 u["profiel"].update(b)
             return self.stuur(204)
+        if tabel in ("monteurs", "instellingen", "rpc/monteur_aanmelden"):
+            return self.beheer_tabel(tabel, q, x, c, past, resultaat)
         if tabel == "actie_log":
             if m == "GET":
                 zicht = set(self.zichtbaar("acties", x))
@@ -514,6 +532,108 @@ class Handler(SimpleHTTPRequestHandler):
                 T[i] = nieuw
                 uit.append(nieuw)
             return self.stuur(200, uit) if "return=representation" in self.headers.get("Prefer", "") else self.stuur(204)
+        return self.fout(405, "PGRST", "method not allowed")
+
+    def beheer_tabel(self, tabel, q, x, c, past, resultaat):
+        """monteurs en instellingen (0001 + 0003/0008-RLS): lezen = ieder actief lid met een rol; monteurs schrijven =
+        coördinator, of hoofd/QHSE-manager/beheerder met aal2; instellingen schrijven = de beheerrollen met aal2.
+        Zoals PostgREST: een update/verwijdering zonder recht raakt 0 rijen, een insert zonder recht = 42501."""
+        m, rol, aal2 = self.command, x["profiel"]["role"], c.get("aal") == "aal2"
+        beheer = rol in ("hoofd", "qhse", "beheerder") and aal2
+        mag_m = rol == "coordinator" or beheer
+        rls = lambda t: self.fout(403, "42501", "new row violates row-level security policy for table \"%s\"" % t)
+        if tabel == "rpc/monteur_aanmelden":
+            if m != "POST":
+                return self.fout(405, "PGRST", "method not allowed")
+            if rol not in ("hoofd", "coordinator", "inspecteur"):
+                return self.fout(403, "42501", "Alleen wie inspecteert (een hoofd of coördinator) voegt tijdens een inspectie een monteur toe; de lijst beheer je in Beheer")
+            if rol == "hoofd" and not aal2:
+                return self.fout(403, "42501", "Log in met tweestapsverificatie om een monteur toe te voegen")
+            naam = naam_schoon((self.jbody() or {}).get("p_naam") or "")
+            if not 1 <= len(naam) <= 120 or not naam_sleutel(naam):
+                return self.fout(400, "22023", "Vul een naam in van 1 tot 120 tekens")
+            r = next((r for r in STATE["monteurs"].values() if naam_sleutel(r["naam"]) == naam_sleutel(naam)), None)
+            if r:
+                her = not r["actief"]
+                if her:
+                    r.update(actief=True, updated_at=nu_iso())
+                return self.stuur(200, {"id": r["id"], "naam": r["naam"], "actief": True, "nieuw": False, "heractiveerd": her})
+            r = {"id": str(uuid.uuid4()), "naam": naam, "actief": True, "created_at": nu_iso(), "updated_at": nu_iso()}
+            STATE["monteurs"][r["id"]] = r
+            return self.stuur(200, {"id": r["id"], "naam": naam, "actief": True, "nieuw": True, "heractiveerd": False})
+        if tabel == "monteurs":
+            T = STATE["monteurs"]
+            if m == "GET":
+                return self.stuur(200, resultaat([dict(r) for r in T.values() if past(r)]))
+            dubbel = lambda naam, eigen=None: any(naam_sleutel(r["naam"]) == naam_sleutel(naam) and r["id"] != eigen for r in T.values())
+            if m == "POST":
+                if not mag_m:
+                    return rls("monteurs")
+                b = self.jbody()
+                uit = []
+                for r in (b if isinstance(b, list) else [b]):
+                    if not isinstance(r, dict) or set(r) - {"id", "naam", "actief"}:
+                        return self.fout(400, "PGRST204", "Could not find the column in the schema cache")
+                    naam = naam_schoon(r.get("naam") or "")
+                    if not 1 <= len(naam) <= 120 or not naam_sleutel(naam):
+                        return self.fout(400, "23514", "new row for relation \"monteurs\" violates check constraint \"monteurs_naam_lengte\"")
+                    if dubbel(naam):
+                        return self.fout(409, "23505", "duplicate key value violates unique constraint \"monteurs_naam_uniek\"")
+                    rij = {"id": r.get("id") or str(uuid.uuid4()), "naam": naam, "actief": r.get("actief") is not False, "created_at": nu_iso(), "updated_at": nu_iso()}
+                    T[rij["id"]] = rij
+                    uit.append(dict(rij))
+                return self.stuur(201, resultaat(uit)) if "return=representation" in self.headers.get("Prefer", "") else self.stuur(201)
+            if m == "PATCH":
+                b = self.jbody()
+                if not isinstance(b, dict) or set(b) - {"naam", "actief"}:
+                    return self.fout(400, "PGRST204", "Could not find the column in the schema cache")
+                uit = []
+                for r in ([r for r in T.values() if past(r)] if mag_m else []):
+                    nieuw = dict(r, **b)
+                    if "naam" in b:
+                        nieuw["naam"] = naam_schoon(str(b["naam"] or ""))
+                        if not 1 <= len(nieuw["naam"]) <= 120 or not naam_sleutel(nieuw["naam"]):
+                            return self.fout(400, "23514", "new row for relation \"monteurs\" violates check constraint \"monteurs_naam_lengte\"")
+                        if dubbel(nieuw["naam"], r["id"]):
+                            return self.fout(409, "23505", "duplicate key value violates unique constraint \"monteurs_naam_uniek\"")
+                    nieuw["actief"] = nieuw.get("actief") is not False
+                    nieuw["updated_at"] = nu_iso()
+                    T[r["id"]] = nieuw
+                    uit.append(dict(nieuw))
+                return self.stuur(200, resultaat(uit)) if "return=representation" in self.headers.get("Prefer", "") else self.stuur(204)
+            if m == "DELETE":
+                for i in ([r["id"] for r in T.values() if past(r)] if mag_m else []):
+                    del T[i]
+                return self.stuur(204)
+            return self.fout(405, "PGRST", "method not allowed")
+        T = STATE["instellingen"]
+        if m == "GET":
+            return self.stuur(200, resultaat([dict(r) for r in T.values() if past(r)]))
+        if m == "POST":
+            if "merge-duplicates" not in self.headers.get("Prefer", ""):
+                if any(isinstance(r, dict) and r.get("sleutel") in T for r in (lambda b: b if isinstance(b, list) else [b])(self.jbody())):
+                    return self.fout(409, "23505", "duplicate key value violates unique constraint \"instellingen_pkey\"")
+            if not beheer:
+                return rls("instellingen")
+            b = self.jbody()
+            for r in (b if isinstance(b, list) else [b]):
+                if not isinstance(r, dict) or set(r) - {"sleutel", "waarde"}:
+                    return self.fout(400, "PGRST204", "Could not find the column in the schema cache")
+                k, v = r.get("sleutel"), r.get("waarde")
+                if k == "doel_conform":
+                    ok = v is None or (isinstance(v, int) and not isinstance(v, bool) and 1 <= v <= 100)
+                elif k == "mfa_verplicht_hoofd":
+                    ok = isinstance(v, bool)
+                else:
+                    ok = False
+                if not ok:
+                    return self.fout(400, "23514", "new row for relation \"instellingen\" violates check constraint \"instellingen_waarde_geldig\"")
+                T[k] = {"sleutel": k, "waarde": v, "updated_at": nu_iso()}
+            return self.stuur(201)
+        if m == "DELETE":
+            for k in ([k for k, r in T.items() if past(r)] if beheer else []):
+                del T[k]
+            return self.stuur(204)
         return self.fout(405, "PGRST", "method not allowed")
 
     def zichtbaar(self, tabel, x):

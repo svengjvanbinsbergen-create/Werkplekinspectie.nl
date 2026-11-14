@@ -132,7 +132,7 @@
     productKeuzeRows() {
       const kb = this.data.kennisbank;
       return Object.keys(kb).sort((a, b) => kb[a].naam.localeCompare(kb[b].naam, "nl")).map((code) =>
-        `<div class="row prodrij" data-naam="${esc(kb[code].naam.toLowerCase())}" style="cursor:pointer"${actSluit("startInspectie", code, "spontaan", kb[code].naam)}>
+        `<div class="row prodrij" data-naam="${esc(kb[code].naam.toLowerCase())}" style="cursor:pointer"${actSluit("startInspectie", code, "", kb[code].naam)}>
           <span class="grow"><span class="t">${esc(kb[code].naam)}</span> <span class="s">· ${kb[code].regels.length} regels</span></span>
           <span class="s">${svg("chev", 18)}</span></div>`).join("");
     },

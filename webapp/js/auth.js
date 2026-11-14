@@ -266,7 +266,7 @@
         <label class="flab" for="l-ww">Wachtwoord</label>
         <input id="l-ww" class="fin" type="password" autocomplete="current-password" required maxlength="200">
         <label style="display:flex;gap:10px;align-items:center;margin:14px 0 4px;font-size:14px"><input type="checkbox" id="l-onthoud"${keuzeOnthoud() ? " checked" : ""} style="width:20px;height:20px;accent-color:var(--accent)"> Ingelogd blijven op dit toestel</label>
-        <div class="muted" style="margin:0 0 10px 30px;font-size:13px;line-height:1.4">Nodig om de app zonder bereik opnieuw te openen. Alleen aanzetten op je eigen telefoon, nooit op een gedeeld toestel. Voor de hoofden, de QHSE-manager en de beheerder geldt de login altijd alleen zolang de app open is.</div>
+        <div class="muted" style="margin:0 0 10px 30px;font-size:13px;line-height:1.4">Nodig om de app zonder bereik opnieuw te openen. Alleen aanzetten op je eigen ${WPI.isWeb() ? "computer" : "telefoon"}, nooit op een gedeeld toestel. Voor de hoofden, de QHSE-manager en de beheerder geldt de login altijd alleen zolang de app open is.</div>
         <div id="l-fout" class="fout" role="alert"></div>
         <button class="btn primary" id="l-knop" type="submit" style="margin-top:8px">Inloggen</button>
       </form>
@@ -522,7 +522,7 @@
     // eenmalig na de eerste login van een coördinator (inspecteert, geen beheerrol) op dit toestel met het vinkje uit
     authToestelVraag() {
       if (!App.user || App._page === "inspectie" || ($("ov") && $("ov").classList.contains("on"))) return;
-      App.openModal("Is dit je eigen telefoon?", "Dan kun je ingelogd blijven, zodat je de app ook zonder bereik opnieuw kunt openen (bijv. op een locatie zonder signaal).",
+      App.openModal("Is dit je eigen " + (WPI.isWeb() ? "toestel" : "telefoon") + "?", "Dan kun je ingelogd blijven, zodat je de app ook zonder bereik opnieuw kunt openen (bijv. op een locatie zonder signaal).",
         `<div class="s" style="margin-bottom:12px;line-height:1.45">Doe dit alleen op een toestel dat alleen jij gebruikt. Op een gedeeld toestel ben je uitgelogd zodra de app of het tabblad sluit. Wat dan nog niet verstuurd is, blijft op het toestel tot de volgende gebruiker inlogt; die kan het wissen. Synchroniseer op een gedeeld toestel dus altijd vóór je stopt.</div>
          <button class="btn primary"${act("authOnthoud", true)}>Ja, ingelogd blijven</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${act("authOnthoud", false)}>Nee, gedeeld toestel</button>`);
@@ -572,7 +572,7 @@
       App.openModal("Nog niet alles op de server", wat.charAt(0).toUpperCase() + wat.slice(1) + ".",
         `<div class="s" style="margin-bottom:12px;line-height:1.45">Dit staat alleen op dit toestel en is niet versleuteld: wie dit toestel na jou gebruikt, kan het met technische hulpmiddelen inzien. Logt er hier iemand anders in, dan wordt het gewist.</div>
          ${n ? `<button class="btn primary"${actSluit("syncOpnieuw")}>Eerst synchroniseren</button>` : ""}
-         <button class="btn ${n ? "ghost" : "primary"}" style="margin-top:10px;width:100%"${doe}>Bewaren en uitloggen (alleen eigen telefoon)</button>
+         <button class="btn ${n ? "ghost" : "primary"}" style="margin-top:10px;width:100%"${doe}>Bewaren en uitloggen (alleen eigen ${WPI.isWeb() ? "toestel" : "telefoon"})</button>
          <button class="btn ghost" style="margin-top:10px;width:100%"${act("authWisVraag", !!overal)}>Wissen en uitloggen (gedeeld toestel)</button>`);
     },
     authWisVraag(overal) {

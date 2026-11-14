@@ -159,8 +159,8 @@
       await this.laadActies();
       const a = { id: "ACT-" + Date.now(), handmatig: true, inspectie_titel: "Handmatig aangemaakt", ref: "Handmatig", oordeel: "–", waarneming: $("na-aanl").value.trim(),
         foto: null, tekst, prio: null, status: "Open", houder, toetser, plandatum: plan, log: [] };
+      if (!(await this.bewaarActie(a, `Handmatig aangemaakt: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`))) return;
       this.acties.push(a);
-      await this.bewaarActie(a, `Handmatig aangemaakt: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);
       tril(30); this.closeModal(); this.actFilter = "gepland"; this.route();
     },
     openActie(id) {
@@ -213,10 +213,18 @@
       h += `<div class="s" style="font-weight:700;margin:18px 0 4px">Verloop</div><div class="tijdlijn">${(a.log || []).slice().reverse().map((l) => `<div><span>${new Date(l.t).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</span> ${esc(l.wie)} · ${l.bron === "server" ? '<b class="dchip" title="Vastgelegd door de server, niet door een persoon getypt">automatisch</b> ' : ""}${esc(l.wat)}</div>`).join("")}</div>`;
       this.openModal(kort(a.tekst || "Actie", 60), a.demo ? "Voorbeeldactie (fictief)" : "", h);
     },
-    async bewaarActie(a, wat) {
-      a.log = (a.log || []).concat([{ t: new Date().toISOString(), wie: this.user.full_name, wat }]);
-      try { await DB.put("acties", a); } catch (e) { alert("Opslaan mislukt op dit toestel."); }
+    // wijz = de wijziging (status, plandatum …): pas na geslaagd opslaan in het geheugen, zodat een mislukte
+    // opslag niets half veranderd achterlaat. Mislukt: melding in het venster (zoals App.fout), venster blijft open.
+    async bewaarActie(a, wat, wijz) {
+      const nieuw = Object.assign({}, a, wijz || {}, { log: (a.log || []).concat([{ t: new Date().toISOString(), wie: this.user.full_name, wat }]) });
+      try { await DB.put("acties", nieuw); } catch (e) {
+        if (!$("ai-fout")) { const b = $("modbody") || $("mod"); if (b) b.appendChild(el(`<div id="ai-fout" class="fout" role="alert"></div>`)); }
+        this.fout("Opslaan mislukt op dit toestel. Probeer het opnieuw; lukt het niet, herstart de app.");
+        return false;
+      }
+      Object.assign(a, nieuw);
       this.checkMeldingen();
+      return true;
     },
     // foutmelding in een formulier (modal): tekst in #ai-fout (role=alert, wordt voorgelezen), het veld krijgt
     // aria-invalid + aria-describedby naar de melding en de focus, zodat je meteen kunt verbeteren (WCAG 3.3.1, 4.1.3)
@@ -248,26 +256,29 @@
       if (nietKiesbaar("houder", houder)) return this.fout(nietKiesbaar("houder", houder), "ai-houder");
       if (nietKiesbaar("toetser", toetser)) return this.fout(nietKiesbaar("toetser", toetser), "ai-toetser");
       if (!plan) return this.fout("Kies een plandatum.", "ai-plan");
-      const aangepast = tekst !== a.tekst; Object.assign(a, { tekst, houder, toetser, plandatum: plan, status: "Open" });
-      await this.bewaarActie(a, `Ingesteld${aangepast ? " (tekst aangepast)" : ""}: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`);
+      const aangepast = tekst !== a.tekst;
+      if (!(await this.bewaarActie(a, `Ingesteld${aangepast ? " (tekst aangepast)" : ""}: actiehouder ${naam(houder)}, toetser ${naam(toetser)}, plandatum ${dagLabel(plan)}`, { tekst, houder, toetser, plandatum: plan, status: "Open" }))) return;
       tril(30); this.closeModal(); this.route();
     },
     async vervalVoorstel(id) {
       const a = this.acties.find((x) => x.id === id), r = ($("ai-reden") || {}).value || "";
       if (!r.trim()) { const f = $("ai-reden"); if (f) { f.focus(); f.placeholder = "Reden is verplicht"; } return; }
-      a.status = "Vervallen"; await this.bewaarActie(a, "Voorstel vervallen: " + r.trim()); this.closeModal(); this.route();
+      if (!(await this.bewaarActie(a, "Voorstel vervallen: " + r.trim(), { status: "Vervallen" }))) return;
+      this.closeModal(); this.route();
     },
     // uitvoeren en klaar melden mag alleen de actiehouder (en nooit als hij ook toetser is): zelfde regel als de knoppen
     magUitvoeren(a) { return !!(a && this.user && a.houder === this.user.id && a.toetser !== this.user.id && (a.status === "Open" || a.status === "In uitvoering")); },
     async zetStatus(id, st, wat) {
       const a = (this.acties || []).find((x) => x.id === id); if (!this.magUitvoeren(a) || !["In uitvoering", "Klaar voor toetsing"].includes(st)) return;
-      a.status = st; await this.bewaarActie(a, wat); tril(25); this.closeModal(); this.route();
+      if (!(await this.bewaarActie(a, wat, { status: st }))) return;
+      tril(25); this.closeModal(); this.route();
     },
     naFoto(id) {
       if (!this.magUitvoeren((this.acties || []).find((x) => x.id === id))) return;
       const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.capture = "environment";
       inp.onchange = async () => { const f = inp.files && inp.files[0]; if (!f) return; const d = await fotoDataURL(f); const a = this.acties.find((x) => x.id === id); if (!d || !this.magUitvoeren(a)) return;
-        a.nafoto = d; a.status = "Klaar voor toetsing"; await this.bewaarActie(a, "Klaar voor toetsing gemeld, met na-foto"); tril(25); this.closeModal(); this.route(); };
+        if (!(await this.bewaarActie(a, "Klaar voor toetsing gemeld, met na-foto", { nafoto: d, status: "Klaar voor toetsing" }))) return;
+        tril(25); this.closeModal(); this.route(); };
       inp.click();
     },
     async akkoord(id) {
@@ -275,16 +286,19 @@
       // → Afgerond is niet over te slaan (zelfde regel als de knoppen in openActie)
       const a = (this.acties || []).find((x) => x.id === id); if (!a || a.toetser !== this.user.id || a.status !== "Klaar voor toetsing") return;
       if (a.houder === a.toetser) return this.fout("Toetser en actiehouder zijn dezelfde persoon; afronden kan niet.");
-      a.status = "Afgerond"; await this.bewaarActie(a, "Getoetst en akkoord · afgerond"); tril([30, 50, 30]); this.closeModal(); this.route();
+      if (!(await this.bewaarActie(a, "Getoetst en akkoord · afgerond", { status: "Afgerond" }))) return;
+      tril([30, 50, 30]); this.closeModal(); this.route();
     },
     async nietAkkoord(id) {
       const a = (this.acties || []).find((x) => x.id === id), r = ($("ai-reden") || {}).value || ""; if (!a || a.toetser !== this.user.id || a.status !== "Klaar voor toetsing") return;
       if (!r.trim()) return this.fout("Geef een reden, zodat de actiehouder weet wat er nog moet gebeuren.", "ai-reden");
-      a.status = "In uitvoering"; await this.bewaarActie(a, "Niet akkoord na toetsing: " + r.trim()); this.closeModal(); this.route();
+      if (!(await this.bewaarActie(a, "Niet akkoord na toetsing: " + r.trim(), { status: "In uitvoering" }))) return;
+      this.closeModal(); this.route();
     },
     async wijzigPlan(id) {
       const a = this.acties.find((x) => x.id === id), v = ($("ai-plan2") || {}).value; if (!a || !v) return;
-      const oud = a.plandatum; a.plandatum = v; await this.bewaarActie(a, `Plandatum gewijzigd van ${dagLabel(oud)} naar ${dagLabel(v)}`); this.closeModal(); this.route();
+      if (!(await this.bewaarActie(a, `Plandatum gewijzigd van ${dagLabel(a.plandatum)} naar ${dagLabel(v)}`, { plandatum: v }))) return;
+      this.closeModal(); this.route();
     },
   });
 })();

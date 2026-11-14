@@ -6,6 +6,20 @@
   const { $, el, esc, svg, DB, staf, naam, kort, dagLabel, stBadge, act, op, WAARDE } = window.WPI;
   // oordeel uit een (lokaal) record alleen als C/A/V/NVT in de HTML (anders leeg): nooit ruwe tekst in class of tekst
   const ov = (o) => ({ C: "C", A: "A", V: "V", NVT: "NVT" }[o] === o ? o : "");
+  // direct gevaar en "Werk stilgelegd" (VCA-traceerbaarheid): alleen wat de inspecteur koos of meldde, als vaste tekst
+  const gevaarVan = (w) => !!(w && (w.direct === true || (w.oordeel === "A" && w.actie && typeof w.actie.gevaar === "string" && w.actie.gevaar)));
+  const stilVan = (w) => !!(w && w.actie && w.actie.terPlaatse === "maatregel" && w.actie.stilgelegd === true);
+  // wat de inspecteur ter plaatse deed, in woorden voor het rapport
+  function terPlaatseTekst(w) {
+    const a = w.actie || {}, gv = gevaarVan(w);
+    if (stilVan(w)) return "Direct gevaar: werk ter plaatse stilgelegd. De actie blijft open tot de oorzaak is opgelost en getoetst.";
+    if (a.terPlaatse === "maatregel") return (gv ? "Direct gevaar: ter plaatse" : "Ter plaatse") + " een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.";
+    if (a.terPlaatse === "gecorrigeerd") return (gv ? "Direct gevaar: ter plaatse" : "Ter plaatse") + " direct gecorrigeerd; de inspecteur zag het herstel.";
+    if (gv && a.terPlaatse === "niets") return "Direct gevaar: ter plaatse nog niets gedaan (keuze van de inspecteur).";
+    return "";
+  }
+  // project in de rapportkop: een spontane inspectie heeft geen project (oude records: "spontaan")
+  const projectTekst = (r) => { const p = typeof r.project === "string" ? r.project.trim() : ""; return p && p.toLowerCase() !== "spontaan" ? "Project " + p : r.plan_id ? "Project –" : "Spontane inspectie"; };
   Object.assign(window.App, {
     // ---------------- INSPECTIES ----------------
     // filter per inspecteur (geen filter per monteur: monteurs blijven wel aan de inspectie gekoppeld en staan op de kaart)
@@ -52,7 +66,8 @@
       const wRows = ws.map((w) => {
         const i = this.infoVoor(r.code, w.regel_id, w.buiten);
         return `<div class="row" style="align-items:flex-start"><span class="grow"><span class="t">${esc(i.ref)} · ${esc(kort(i.titel, 90))}</span>
-          ${w.tekst ? `<div class="s">Waarneming: “${esc(w.tekst.trim())}”</div>` : ""}
+          ${gevaarVan(w) ? `<div class="s"><b>Direct gevaar${stilVan(w) ? " · werk ter plaatse stilgelegd" : ""}</b></div>` : ""}
+          ${typeof w.tekst === "string" && w.tekst ? `<div class="s">Waarneming: “${esc(w.tekst.trim())}”</div>` : ""}
           ${w.maatregelen && w.maatregelen.length ? `<div class="s">Maatregel gezien: ${esc(w.maatregelen.join("; "))}</div>` : ""}</span>
           <span class="badge b-${ov(w.oordeel) === "NVT" ? "N" : ov(w.oordeel)}">[${ov(w.oordeel)}] ${ob[ov(w.oordeel)] || ""}</span></div>`;
       }).join("");
@@ -67,9 +82,10 @@
         return `<div class="row" style="align-items:flex-start${live ? ";cursor:pointer" : ""}"${live ? `${act("openActie", live.id)}` : ""}><span class="grow"><span class="t">${n + 1}. ${esc(a.tekst || "(geen actietekst)")}</span>
           <div class="s">${esc(i.ref)} · dringendheid volgens inspecteur: ${prioLab[w.actie.prio] || "–"}${live ? " · plandatum " + dagLabel(live.plandatum) : a.termijn ? " · termijn " + esc(a.termijn) : ""}</div>
           <div class="s">Actiehouder: ${esc(houder)} · toetser: ${esc(toetser)}</div>
-          ${w.actie.terPlaatse === "maatregel" ? `<div class="s">Ter plaatse een maatregel genomen; actie blijft open tot uitgevoerd en getoetst.</div>` : ""}</span>
+          ${terPlaatseTekst(w) ? `<div class="s">${esc(terPlaatseTekst(w))}</div>` : ""}</span>
           ${stBadge(live ? live.status : a.status || "Open")}</div>`;
       }).join("");
+      const nGevaar = ws.filter(gevaarVan).length, nStil = ws.filter((w) => gevaarVan(w) && stilVan(w)).length;
       const kz = r.keuzes || [], kc = (u) => kz.filter((k) => k.uitkomst === u).length, meer = (n, een, veel) => n + " " + (n === 1 ? een : veel);
       let nr = 0; const kop = (t) => `<h2>${++nr}. ${t}</h2>`;   // doorlopend genummerd, ook als een sectie ontbreekt
       // alle foto's per waarneming (hoofdfoto + extraFotos, zie App.fotoLijst); oude records met alleen w.foto blijven werken
@@ -78,7 +94,8 @@
       v.appendChild(el(`<div id="rap">
         <div class="kicker" style="margin-top:12px">WPI-rapport · momentopname · ${new Date(r.opgeslagen).toLocaleString("nl-NL")}</div>
         <h1 style="margin-bottom:6px">${esc(r.titel)}</h1>
-        <div class="s rapkop">Project ${esc(r.project || "–")} · inspecteur ${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</div>
+        <div class="s rapkop">${esc(projectTekst(r))} · inspecteur ${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</div>
+        ${nGevaar ? `<div class="card" style="margin:0 0 14px;box-shadow:inset 6px 0 0 var(--red)"><b>Direct gevaar bij ${meer(nGevaar, "waarneming", "waarnemingen")}${nStil ? ` · werk ter plaatse stilgelegd bij ${nStil}` : ""}</b><div class="s" style="margin-top:4px">Zie Waarnemingen en Acties: wat de inspecteur ter plaatse deed staat bij de actie.</div></div>` : ""}
         ${kop("Getoetst tijdens bezoek")}<div class="card"><div class="s">${taken.map(esc).join(" · ")}</div>
           <div class="s" style="margin-top:6px">Monteurs: ${(r.monteurs || []).length ? (r.monteurs || []).map(esc).join(", ") : "niet vastgelegd"}</div></div>
         ${kop("Waarnemingen")}<div class="listcard">${wRows || '<div class="row"><span class="s">Geen</span></div>'}</div>

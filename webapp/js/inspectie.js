@@ -459,7 +459,7 @@
       // maatregelen van de voorgestelde regel: optioneel aantikken, ook als je meteen je oordeel kiest (alleen bij een sterke match)
       const mrGezien = cur.mrVoor === id0 ? cur.maatregelen || [] : [];
       const mr = sterk && info0.maatregelen.length ? `<details class="vs-mr"${mrGezien.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${mrGezien.length ? `<span class="n">${mrGezien.length} gezien</span>` : ""}</summary>
-          <div class="chips">${info0.maatregelen.map((m, i) => `<button class="chipb${mrGezien.includes(m) ? " on" : ""}"${act("togVsMaatregel", i, ELEMENT)} aria-pressed="${mrGezien.includes(m)}">${esc(m)}</button>`).join("")}</div></details>` : "";
+          <div class="chips">${info0.maatregelen.map((m, i) => `<button class="chipb${mrGezien.includes(m) ? " on" : ""}"${act("togVsMaatregel", i, ELEMENT)} aria-pressed="${mrGezien.includes(m)}"${m.length > 110 ? ` title="${esc(m)}"` : ""}>${esc(kort(m, 110))}</button>`).join("")}</div></details>` : "";
       const zwakTekst = vs.reden === "een-woord" && vs.enkel ? `Alleen “${esc(vs.enkel)}” past bij een regel. Tik de regel aan die klopt; daarna kies je je oordeel.`
         : vs.reden === "twijfel" ? "Twee regels passen ongeveer even goed. Tik de regel aan die klopt; daarna kies je je oordeel."
         : vs.reden === "controle" ? "Controleer het voorstel: tik de regel aan die klopt; daarna kies je je oordeel."
@@ -573,7 +573,7 @@
       if (cur.vraag) h += `<div class="doorvraag"><span class="lbl vs">Doorvraag</span> ${esc(cur.vraag)}</div>`;
       // maatregelen (optioneel) ingeklapt: zo staan C/A/V op 390×844 boven de vouw; open zodra je er een aantikte
       if (info.maatregelen.length) h += `<details class="vs-mr omr"${cur.maatregelen.length ? " open" : ""}><summary>Welke maatregel zag je? <span class="opt">optioneel</span>${cur.maatregelen.length ? `<span class="n">${cur.maatregelen.length} gezien</span>` : ""}</summary>
-        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}">${esc(m)}</button>`).join("")}</div></details>`;
+        <div class="chips">${info.maatregelen.map((m, i) => `<button class="chipb${cur.maatregelen.includes(m) ? " on" : ""}"${act("togMaatregel", i)} aria-pressed="${cur.maatregelen.includes(m)}"${m.length > 110 ? ` title="${esc(m)}"` : ""}>${esc(kort(m, 110))}</button>`).join("")}</div></details>`;
       h += `</div>`;
       // wat er na je keuze gebeurt: rustig onderaan, zodat het scherm niet in een lege vlakte eindigt
       const hierna = `<section class="hierna ohierna" aria-labelledby="ohierna-t"><div class="hierna-t" id="ohierna-t">Hierna</div>
@@ -708,7 +708,7 @@
       }
       if (!tekst) {
         const m = info.maatregelen.find((x) => !cur.maatregelen.includes(x)) || info.maatregelen[0];
-        tekst = m ? "Zorg dat de TRA-maatregel wordt toegepast: " + m.replace(/^[^·]*·\s*/, "")
+        tekst = m ? "Zorg dat de TRA-maatregel wordt toegepast: " + m.replace(/^[^·]*·\s*/, "") + "."
           : cur.buiten ? "Risico beoordelen en een maatregel opnemen in de TRA: " + cur.tekst.trim()
           : "Met de ploeg bespreken en verhelpen: " + cur.tekst.trim();
         bron = m ? "TRA-maatregel" : "jouw woorden"; waarom = m ? "deze TRA-maatregel heb je niet als gezien aangevinkt" : cur.buiten ? "het risico staat niet in de TRA" : "wat je zelf zag en zei";
