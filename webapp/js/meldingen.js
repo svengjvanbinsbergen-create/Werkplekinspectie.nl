@@ -81,7 +81,7 @@
       const M = this.meldingen(), gelezen = this._set("wpi_gelezen");
       const perm = !("Notification" in window) ? "nee" : Notification.permission;
       const permHtml = perm === "granted" ? `<div class="s" style="margin-top:12px">✓ Meldingen op dit toestel staan aan.</div>`
-        : perm === "denied" ? `<div class="hint" style="margin-top:12px">Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</div>`
+        : perm === "denied" ? `<div class="msys" role="note"><span class="msys-ic" aria-hidden="true">i</span><span>Meldingen zijn op dit toestel geblokkeerd. Zet ze aan in de instellingen van je browser. In de app zie je ze altijd hier.</span></div>`
         : perm === "nee" ? `<div class="s" style="margin-top:12px">Dit toestel ondersteunt geen meldingen in deze weergave; je ziet ze altijd hier en in de balk bovenin het scherm.</div>`
         : `<button class="btn primary" style="margin-top:14px"${act("meldingenAan")}>${svg("bell", 18)} Meldingen op dit toestel aanzetten</button>`;
       // drie blokken onder elkaar, elk met een gekleurde kop en het aantal: te laat (rood), niet gedaan (oranje),
@@ -104,7 +104,8 @@
     },
     leesMelding(mid, aid) {
       const g = this._set("wpi_gelezen"); g.add(mid); this._bewaarSet("wpi_gelezen", g);
-      if (/:gemist:/.test(mid)) { this.closeModal(); if (location.hash === "#/planning") this.route(); else this.go("planning"); return; }   // gemiste inspectie → Planning
+      // gemiste inspectie → Planning, met die ingeplande inspectie uitgelicht en met de focus (zie view_planning)
+      if (/:gemist:/.test(mid)) { this._focusPlan = mid.split(":gemist:")[0]; this._modTerug = null; this.closeModal(); if (location.hash === "#/planning") this.route(); else this.go("planning"); return; }
       this.checkMeldingen(); this.openActie(aid);
     },
     // Vandaag: tegel "Inspectie nog niet gedaan" naast "Actie te laat"; opent de Planning. Alleen voor inspecties van

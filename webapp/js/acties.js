@@ -53,7 +53,9 @@
     },
 
     async view_acties() {
+      const nr = this._routeNr;
       await this.laadActies();
+      if (nr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       const v = $("view"), B = this.bakjes(), hoofd = mag("team");
       const tabs = [["telaat", "Te laat"], ["gepland", "Gepland"], ["toetsen", "Te toetsen"], ["instellen", "In te stellen"], ["alle", "Alle"]];
       if (!this.actFilter) this.actFilter = B.telaat.length ? "telaat" : B.toetsen.length ? "toetsen" : B.instellen.length ? "instellen" : "gepland";
@@ -70,9 +72,22 @@
       const LEEG = { telaat: ["🌿", "Niets te laat", "Alle acties liggen op schema."], gepland: ["📅", "Niets gepland", "Er staan geen lopende acties op jouw naam."], toetsen: ["✅", "Niets te toetsen", "Er wacht niets op jouw toetsing."], instellen: ["✨", "Alles ingesteld", "Er staan geen voorstellen uit inspecties klaar."], alle: ["📋", "Nog geen acties", ""] }[this.actFilter];
       const lijst = B[this.actFilter] || [];
       if (!isWeb()) v.appendChild(el(`<button class="btn primary" style="margin:0 0 14px"${act("nieuweActie")}>${svg("plus", 18)} Nieuwe actie</button>`));
-      if (isWeb() && lijst.length) { v.appendChild(el(this.actieTabel(lijst))); return; }
-      v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
-        : `<div class="leeg"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
+      if (isWeb() && lijst.length) v.appendChild(el(this.actieTabel(lijst)));
+      else v.appendChild(el(lijst.length ? `<div class="akaarten">${lijst.map((a) => this.actieKaart(a)).join("")}</div>`
+        : `<div class="leeg${zij ? " kort" : ""}"><span class="bol">${LEEG[0]}</span><div class="t">${LEEG[1]}</div><div class="s">${LEEG[2]}</div></div>`));
+      // groot scherm met een korte (of lege) lijst: daaronder wat er in de andere bakjes staat, elk met een eigen kop
+      // en een knop naar dat tabblad. Zo blijft de hoofdkolom niet half leeg naast het overzicht rechts.
+      if (zij && lijst.length < 4) {
+        const gezien = new Set(lijst.map((a) => a.id)); let n = lijst.length;
+        tabs.filter(([k]) => k !== this.actFilter && k !== "alle").forEach(([k, l]) => {
+          if (n >= 6) return;
+          const rest = (B[k] || []).filter((a) => !gezien.has(a.id)).slice(0, 6 - n);
+          if (!rest.length) return;
+          rest.forEach((a) => gezien.add(a.id)); n += rest.length;
+          v.appendChild(el(`<section class="avolgend" aria-label="Ook: ${esc(l)}"><div class="avkop"><h2 class="vsectie">Ook: ${esc(l)} <span class="vtel">${B[k].length}</span></h2>
+            <button class="linkje"${act("actTab", k)}>Alleen ${esc(l.toLowerCase())} tonen ›</button></div>${this.actieTabel(rest)}</section>`));
+        });
+      }
       }
     },
     // zijpaneel op een groot scherm: lopende acties per actiehouder en de eerstvolgende plandata (zelfde reikwijdte als "Alle")

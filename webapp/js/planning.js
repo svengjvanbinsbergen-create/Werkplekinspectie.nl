@@ -74,7 +74,9 @@
     nieuwPlanId() { const b = "PL-" + Date.now(); let id = b, n = 1; while ((this.planning || []).some((x) => x.id === id)) id = b + "-" + n++; return id; },
     async verwijderPlan(id) { if (!mag("plant")) return; this.planning = this.planning.filter((x) => x.id !== id); try { await DB.del("planning", id); } catch (e) {} this.closeModal(); this.route(); },
     async view_planning() {
+      const nr = this._routeNr;
       await this.laadPlanning();
+      if (nr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       const v = $("view"), vandaag = isoDag(new Date()), me = this.user.id, P = this.planning;
       const zicht = mag("zietAlles") ? P : P.filter((p) => p.inspecteur === me);
       v.appendChild(el(`<div><div class="hi">${mag("zietAlles") ? "Inspectieprogramma van het team" : "Jouw inspecties"}</div><h1 class="groot">Planning</h1></div>`));
@@ -88,6 +90,14 @@
         + g("Komende 7 dagen", gp.filter((p) => p.datum > vandaag && dagenTot(p.datum) <= 7)) + g("Later", gp.filter((p) => dagenTot(p.datum) > 7))
         + (zicht.some((p) => p.status === "uitgevoerd") ? g("Uitgevoerd", zicht.filter((p) => p.status === "uitgevoerd").sort((a, b) => b.datum.localeCompare(a.datum)).slice(0, 6)) : "");
       v.appendChild(el(`<div>${html || `<div class="leeg"><span class="bol">📅</span><div class="t">Nog niets ingepland</div><div class="s">${mag("plant") ? "Tik op “Inspectie inplannen”." : "De hoofden en coördinatoren plannen de inspecties."}</div></div>`}</div>`));
+      // vanuit een melding "Inspectie nog niet gedaan": die ingeplande inspectie uitgelicht, in beeld en met de focus
+      const fp = this._focusPlan; this._focusPlan = null;
+      const kaart = fp ? [...v.querySelectorAll(".pkaart[data-plan]")].find((k) => k.getAttribute("data-plan") === fp) : null;
+      if (kaart) {
+        kaart.setAttribute("tabindex", "-1");
+        const t = kaart.querySelector(".titel"); if (t) kaart.setAttribute("aria-label", "Uit de melding: " + t.textContent + ", nog niet gedaan");
+        try { kaart.focus({ preventScroll: true }); kaart.scrollIntoView({ block: "center" }); } catch (e) {}
+      }
     },
     // ---------------- PROGRAMMA-VOORSTEL (VCA 7.1, trendactie TREND-2026-1) ----------------
     // Uit de projectplanning (voorbeelddata.projecten) een voorstel voor volgende maand. Niets wordt
@@ -304,7 +314,7 @@
     planKaart(p, vandaag) {
       const d = dagenTot(p.datum), dl = d === 0 ? "Vandaag" : d === 1 ? "Morgen" : dagLabel(p.datum);
       const magStarten = p.status === "gepland" && p.datum <= vandaag && p.inspecteur === this.user.id;
-      return `<div class="pkaart"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
+      return `<div class="pkaart${this._focusPlan === p.id ? " uitgelicht" : ""}" data-plan="${esc(p.id)}"><div class="boven"><span class="dchip${p.status === "gepland" && d < 0 ? " warm" : ""}">📅 ${dl}</span>${p.status === "uitgevoerd" ? stBadge("Afgerond").replace("Afgerond", "Uitgevoerd") : ""}${p.demo ? `<span class="s">voorbeeld</span>` : ""}${p.bron === "programma" ? `<span class="s">programma</span>` : ""}
           ${p.status === "gepland" && mag("plant") ? `<button class="wijzig"${act("planForm", p.id)} aria-label="Wijzig planning: ${esc(this.productNaam(p.code))} · ${esc(dl)}">Wijzig</button>` : ""}</div>
         <div class="titel">${esc(this.productNaam(p.code))}</div>
         <div class="s">${esc([p.project, p.locatie].filter(Boolean).join(" · "))}${p.monteurs ? " · " + esc(p.monteurs) + " monteurs" : ""}</div>

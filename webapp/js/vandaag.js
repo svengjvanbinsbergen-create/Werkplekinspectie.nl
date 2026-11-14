@@ -24,19 +24,21 @@
       const kop = el(`<div class="vkop"><div class="hi">${groet} ${esc(vn)} · ${esc(datum)}</div><h1 class="groot">${lo ? "Je inspectie loopt nog" : "&nbsp;"}</h1></div>`); v.appendChild(kop);
       if (this._spontaan) { this._spontaan = false; setTimeout(() => this.kiesProduct(), 0); }   // oude link-route blijft werken
 
-      // telefoon: alles onder elkaar (zelfde volgorde als altijd); groot scherm: links de inspecties, rechts acties en "Meer" (css .vgrid)
-      const grid = el(`<div class="vgrid"><div class="vlinks"></div><div class="vrechts"></div></div>`); v.appendChild(grid);
-      const links = grid.firstElementChild, rechts = grid.lastElementChild;
+      // telefoon: alles onder elkaar (zelfde volgorde als altijd). Groot scherm (css .vgrid.vandaaggrid): een raster
+      // met rijen die even hoog zijn, zodat beide kolommen even ver doorlopen: [inspectie | acties],
+      // [binnenkort gepland | laatste inspecties], daaronder "Meer" over de volle breedte.
+      const grid = el(`<div class="vgrid vandaaggrid"><div class="vlinks"><div class="vtop"></div></div><div class="vrechts"><div class="vact"></div></div></div>`); v.appendChild(grid);
+      const links = grid.firstElementChild, rechts = grid.lastElementChild, top = links.firstElementChild, vact = rechts.firstElementChild;
       // ---- lopende inspectie: altijd bovenaan ----
       if (lo) {
         const n = lo.waarnemingen.length, delen = lo.titel.split(" · ");
-        links.appendChild(el(this.heroKnop("hero nu", act("goIns"), `Bezig · ${meer(n, "waarneming", "waarnemingen")}`, esc(delen[0]),
+        top.appendChild(el(this.heroKnop("hero nu", act("goIns"), `Bezig · ${meer(n, "waarneming", "waarnemingen")}`, esc(delen[0]),
           `<span class="s">${esc(delen.slice(1).join(" · "))}${lo.taak ? (delen.length > 1 ? " · " : "") + esc(lo.taak) : ""}</span>`, "Verder met de inspectie", "play")));
       }
 
       // ---- planning: eerstvolgende groot, de rest als rustige rijen ----
-      const plan = el(`<div class="vplan"></div>`); links.appendChild(plan);
-      const actKaart = el(`<div id="mijnact"></div>`); rechts.appendChild(actKaart);
+      const plan = el(`<div class="vplan"></div>`); top.appendChild(plan);
+      const actKaart = el(`<div id="mijnact"></div>`); vact.appendChild(actKaart);
       const ander = el(`<div class="vmeer"></div>`); rechts.appendChild(ander);
       // groot scherm (≥ 1100px): de linkerkolom niet leeg laten onder één kaart. Wat er binnenkort gepland staat en
       // de laatste inspecties, rustig als rijen. Telefoon: niet getekend (zelfde scherm als altijd).
@@ -95,8 +97,9 @@
           <span class="s">${esc(dagenTot(p.datum) === 1 ? "Morgen" : dagLabel(p.datum))}${p.project ? " · " + esc(p.project) : ""}${p.locatie ? " · " + esc(p.locatie) : ""}</span></span>
           ${team ? `<span class="vkwie"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(p.inspecteur)}</span>` : ""}${svg("chev", 18)}</button>`;
       doos.innerHTML = `<h2 class="vsectie">Binnenkort gepland${lijst.length ? ` <span class="vtel">${lijst.length}</span>` : ""}</h2><div class="listcard vlijst">${lijst.length
-        ? lijst.slice(0, 5).map(rij).join("") + (lijst.length > 5 ? `<button class="vknop vkmeer"${act("go", "planning")}><span class="grow"><span class="t">Nog ${lijst.length - 5} in de planning</span></span>${svg("chev", 18)}</button>` : "")
-        : `<div class="vrij"><span class="grow"><span class="t">Niets gepland de komende twee weken</span><span class="meta">${mag("plant") ? "Plan een inspectie in via “Inspectie inplannen”." : "De hoofden en coördinatoren plannen de inspecties."}</span></span></div>`}</div>`;
+        ? lijst.slice(0, 5).map(rij).join("")
+        : `<div class="vrij"><span class="grow"><span class="t">Niets gepland de komende twee weken</span><span class="meta">${mag("plant") ? "Plan een inspectie in via “Inspectie inplannen”." : "De hoofden en coördinatoren plannen de inspecties."}</span></span></div>`}
+        <button class="vknop vkvoet"${act("go", "planning")}><span class="grow"><span class="t">${lijst.length > 5 ? `Nog ${lijst.length - 5} in de planning` : "Hele planning bekijken"}</span></span>${svg("chev", 18)}</button></div>`;
     },
     // groot scherm: de laatste inspecties (eigen op dit toestel + voorbeelden, zoals op Inspecties)
     async vandaagLaatste(doos) {
@@ -106,10 +109,11 @@
       const rijen = saved.filter((r) => team || r.inspecteur_id === me).map((r) => ({ eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, inspecteur_id: r.inspecteur_id || null }))
         .concat(team ? ((this.data.voorbeelddata || {}).wpis || []).map((w) => ({ eigen: false, id: w.nr, titel: w.product + (w.locatie ? " · " + w.locatie : ""), datum: w.datum, inspecteur: w.inspecteur })) : [])
         .filter((r) => r.datum).sort((a, b) => b.datum.localeCompare(a.datum)).slice(0, 4);
-      if (!rijen.length) { doos.remove(); return; }
+      if (!rijen.length) { const g = doos.closest(".vgrid"); if (g) g.classList.add("zonderlaatst"); doos.remove(); return; }
       doos.innerHTML = `<h2 class="vsectie">Laatste inspecties</h2><div class="listcard vlijst">${rijen.map((r) => `<button class="vknop vkbreed"${act("go", r.eigen ? "rapport/" + r.id : "inspecties")}>
           <span class="cirkel">${svg("list", 20)}</span><span class="grow"><span class="t">${esc(kort(String(r.titel || "").split(" · ")[0], 40))}</span><span class="s">${esc([dagLabel(r.datum)].concat(String(r.titel || "").split(" · ").slice(1)).join(" · "))}${r.eigen ? " · op dit toestel" : " · voorbeeld"}</span></span>
-          <span class="vkwie"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</span>${svg("chev", 18)}</button>`).join("")}</div>`;
+          <span class="vkwie"><span class="sr-only">Inspecteur:</span>${WPI.inspLabel(r.inspecteur_id, r.inspecteur)}</span>${svg("chev", 18)}</button>`).join("")}
+          <button class="vknop vkvoet"${act("go", "inspecties")}><span class="grow"><span class="t">Alle inspecties bekijken</span></span>${svg("chev", 18)}</button></div>`;
     },
     // grote kaart = startknop. Alleen <span>'s (geldige inhoud van een <button>); de groene balk onderin
     // maakt duidelijk dat de hele kaart tikbaar is. kop/titel/inhoud zijn al ge-escapete HTML.

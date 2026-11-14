@@ -5,8 +5,15 @@
 
 /* ---- Beheer ---- */
 .bhgrid{display:grid;gap:14px;grid-template-columns:1fr}
+.bhkol{display:flex;flex-direction:column;gap:14px;min-width:0}
 @media(min-width:900px){
-  .bhgrid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}
+  /* links monteurs + doel onder elkaar, rechts het team: kolommen even hoog (de laatste kaart links rekt mee) */
+  .bhgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch}
+  .bhkol>.bhkaart:last-child{flex:1}
+  .bhgrid>.bhteam{margin-top:0}
+  .bhgrid.enkel{grid-template-columns:1fr}
+  .bhgrid.enkel .bhlijst{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));column-gap:32px}
+  .bhgrid.enkel .bhrij:last-child{border-bottom:1px solid var(--line, #F1ECE4)}
   .tabbar a.bhtab{margin-top:auto}
 }
 .bhkaart .bhkop{font-size:18px;font-weight:800;display:flex;align-items:baseline;gap:8px;margin:0 0 2px}

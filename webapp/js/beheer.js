@@ -346,7 +346,9 @@
         : `<div class="row bhrij${actief ? "" : " uit"}"><span class="mini-av">${esc(n[0] || "?")}</span><span class="grow"><span class="t">${esc(n)}</span></span>
             ${actief ? `<button class="bhknop"${act("beheerBewerk", i)}>Wijzig<span class="bhvh"> ${esc(n)}: hernoemen of op non-actief zetten</span></button>`
               : `<button class="bhknop"${act("beheerActief", i, true)}>Weer actief</button>`}</div>`;
-      v.appendChild(el(`<div class="bhgrid">
+      const teamHtml = beheer ? this._bhTeamKaart() : "";
+      // groot scherm: links monteurs en doel onder elkaar, rechts het team; zo lopen beide kolommen even ver door
+      v.appendChild(el(`<div class="bhgrid${beheer ? "" : " enkel"}"><div class="bhkol">
         <section class="card bhkaart" id="bh-monteurs">
           <h2 class="bhkop">Monteurs <span class="sub">${actieven.length} actief</span></h2>
           <p class="s bhuitleg">Uit deze lijst kiest de inspecteur wie er aan het werk was.</p>
@@ -363,25 +365,26 @@
             <button class="btn primary sm"${act("beheerDoel")}>Opslaan</button></div>
           <div id="bh-doel-fout" class="fout">${esc(b.doelFout || "")}</div>
           <div class="s bhstand">${doel != null ? `Huidig doel: <b>${doel}% conform</b>` : "Er is nu geen doel ingesteld."}</div>
-        </section>` : ""}</div>`));
-      if (beheer) {
-        const n = sbAan() ? (this._team || []).length : window.WPI.USERS.length;
-        v.appendChild(el(`<section class="card bhkaart bhteam" id="bh-team">
-          <h2 class="bhkop">Team en rollen <span class="sub">${n ? n + (n === 1 ? " persoon" : " personen") : ""}</span></h2>
-          <p class="s bhuitleg">Kies per collega de rol. Je eigen rol wijzigt een ander.</p>
-          <div id="bh-team-fout" class="fout" role="alert">${esc(this._teamFout || "")}</div>
-          <div class="bhlijst" id="bh-teamlijst">${this._teamHtml()}</div>
-          <p class="s bhregels">Inspecteren en plannen: de hoofden en de coördinatoren. Actiehouder: een hoofd of coördinator. Toetser: een hoofd, coördinator of de QHSE-manager, nooit de actiehouder. De QHSE-manager en de beheerder kijken overal mee en beheren, maar inspecteren niet.</p>
-          <details class="bhuitnodig"><summary>Nieuwe collega uitnodigen</summary>
-            <p class="s">${sbAan() ? "Uitnodigen gaat via Supabase: <b>Authentication › Users › Invite user</b> (alleen het e-mailadres). Na het accepteren staat de collega hier met <b>Nog geen rol</b> en heeft nog nergens toegang; kies dan de rol: hoofd, coördinator, QHSE-manager of beheerder."
-              : "In de voorbeeldmodus is er geen server: rollen bekijken kan, uitnodigen en wijzigen kan in de echte omgeving (via Supabase › Authentication › Invite user, daarna de rol kiezen in deze lijst)."}</p></details>
-        </section>`));
-        if (sbAan() && !this._team) this.teamLaad();
-      }
+        </section>` : ""}</div>${teamHtml}</div>`));
+      if (beheer && sbAan() && !this._team) this.teamLaad();
       v.appendChild(el(`<p class="s bhdeel">${esc(this._bhStand())}</p>`));
       this._beheer = { hernoem: b.hernoem };
       if (b.hernoem) { const i = $("bh-hernoem"); if (i) { i.focus(); i.select(); } }
       this.beheerSync();                                                // nieuwste stand van de server (max. elke 5 min)
+    },
+    // kaart "Team en rollen" (alleen met het recht beheer); rechterkolom van .bhgrid op een groot scherm
+    _bhTeamKaart() {
+      const n = sbAan() ? (this._team || []).length : window.WPI.USERS.length;
+      return `<section class="card bhkaart bhteam" id="bh-team">
+        <h2 class="bhkop">Team en rollen <span class="sub">${n ? n + (n === 1 ? " persoon" : " personen") : ""}</span></h2>
+        <p class="s bhuitleg">Kies per collega de rol. Je eigen rol wijzigt een ander.</p>
+        <div id="bh-team-fout" class="fout" role="alert">${esc(this._teamFout || "")}</div>
+        <div class="bhlijst" id="bh-teamlijst">${this._teamHtml()}</div>
+        <p class="s bhregels">Inspecteren en plannen: de hoofden en de coördinatoren. Actiehouder: een hoofd of coördinator. Toetser: een hoofd, coördinator of de QHSE-manager, nooit de actiehouder. De QHSE-manager en de beheerder kijken overal mee en beheren, maar inspecteren niet.</p>
+        <details class="bhuitnodig"><summary>Nieuwe collega uitnodigen</summary>
+          <p class="s">${sbAan() ? "Uitnodigen gaat via Supabase: <b>Authentication › Users › Invite user</b> (alleen het e-mailadres). Na het accepteren staat de collega hier met <b>Nog geen rol</b> en heeft nog nergens toegang; kies dan de rol: hoofd, coördinator, QHSE-manager of beheerder."
+            : "In de voorbeeldmodus is er geen server: rollen bekijken kan, uitnodigen en wijzigen kan in de echte omgeving (via Supabase › Authentication › Invite user, daarna de rol kiezen in deze lijst)."}</p></details>
+      </section>`;
     },
     // fout tonen zonder wat er getypt is kwijt te raken
     _beheerFout(t, k) {

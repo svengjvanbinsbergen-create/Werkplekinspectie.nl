@@ -173,40 +173,40 @@
   // ---- persoonslabel: elke persoon een eigen, VASTE kleur (per profiel-id, niet per plek in een lijst) ----
   // Eén helper voor alle plekken waar een persoon staat: inspecteur (inspecties, planning, dashboard, rapport),
   // actiehouder en toetser (acties, actievenster) en het team (Beheer). Eén beeldtaal voor mensen.
-  // Kleuren bewust ver van de statuskleuren: geen groen/geel/rood (C/A/V) en geen rood/oranje/blauw (meldingen).
-  // Vier tinten die onderling én ten opzichte van die statuskleuren ver uit elkaar liggen (violet, petrol, pruim,
-  // leisteen), elk in twee vormen: licht (gekleurde tekst op een lichte tint) en vol (witte tekst op de kleur).
-  // Dat geeft 8 duidelijk verschillende labels (css: .ilabel.ik0 … .ik7, AA-contrast, ook in zonmodus).
-  // Bekende demo-id's een vaste plek. Elk ander id: een vaste startplek via een hash (FNV-1a); valt die samen met
-  // iemand anders in het team (WPI.USERS), dan de eerstvolgende vrije plek. Zo heeft een team van maximaal 8
-  // mensen altijd 8 verschillende labels; pas bij meer dan 8 mensen komt een kleur twee keer voor (naam en
-  // voorletter staan er altijd bij). Volgorde van de toewijzing: op id, dus niet afhankelijk van een lijst op het scherm.
-  // (De fictieve voorbeeld-inspecties hebben alleen een rolnaam: die volgen de kleur van de bijbehorende demo-rol.)
-  // De vier inspecteurs in de demo: violet, petrol, leisteen licht en pruim vol (de twee paarsachtige tinten dus in
-  // een verschillende vorm, zodat ze naast elkaar nooit op elkaar lijken).
-  const INSP_KLEUR = Object.freeze({ "u-hoofd": 0, "u-hoofd2": 1, "u-coord1": 6, "u-coord2": 3, "u-qhse": 7, "u-beheer": 5,
-    "Directielid (fictief)": 0, "Coördinator 1 (fictief)": 6, "Coördinator 2 (fictief)": 3 });
-  const N_KLEUR = 8;
-  const hashNr = (s) => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % N_KLEUR; };
+  // Kleuren bewust ver van ALLE kleuren die in de app al iets betekenen: geen groen/geel/rood (C/A/V), geen
+  // rood/oranje/blauw (meldingen), geen lila (het AI-"Voorstel": .lbl.vs, .b-vs, .pick) en geen groen/petrol van
+  // de hoofdkleur (--accent: datumblokjes, actief menu, Demo-chip). Wat overblijft: indigo, roze/pruim, bruin en
+  // grijs/antraciet. Daarmee drie vormen (css: .ilabel.ik0 … .ik12, AA-contrast, ook in zonmodus):
+  //   ik0–ik7   teamleden (iemand met een profiel in WPI.USERS): gevulde labels, vol (witte naam op de kleur) of licht
+  //   ik8–ik12  namen ZONDER profiel (de fictieve voorbeeld-inspecties met een rolnaam, oud-collega's): wit label
+  //             met een gestippelde rand. Zo lijkt een voorbeeldnaam nooit op een echt teamlid.
+  // Bekende demo-id's en de drie fictieve rolnamen een vaste plek: alle negen namen in de demo hebben elk een eigen
+  // label. Elk ander id: een vaste startplek via een hash (FNV-1a) binnen zijn eigen groep; valt die samen met iemand
+  // anders in het team, dan de eerstvolgende vrije plek. Een team tot 8 mensen heeft dus altijd 8 verschillende
+  // labels. Volgorde van de toewijzing: op id, dus niet afhankelijk van een lijst op het scherm.
+  const INSP_KLEUR = Object.freeze({ "u-hoofd": 0, "u-hoofd2": 1, "u-coord1": 2, "u-coord2": 3, "u-qhse": 4, "u-beheer": 5,
+    "Coördinator 2 (fictief)": 8, "Coördinator 1 (fictief)": 9, "Directielid (fictief)": 10 });
+  const N_TEAM = 8, N_LOS = 5;   // gevulde plekken (team) en gestippelde plekken (namen zonder profiel)
+  const hashNr = (s, n) => { let h = 2166136261; for (const c of s) { h ^= c.codePointAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % n; };
   let kleurCache = { sleutel: null, kaart: null };
   const teamKaart = () => {   // id → kleurnummer voor het hele team, opnieuw berekend zodra het team verandert
     const ids = USERS.map((u) => u.id).filter(Boolean).sort(), sleutel = ids.join("|");
     if (kleurCache.sleutel === sleutel) return kleurCache.kaart;
     const kaart = Object.create(null), bezet = new Set();
-    ids.forEach((id) => { if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, id)) { kaart[id] = INSP_KLEUR[id]; bezet.add(INSP_KLEUR[id]); } });
+    ids.forEach((id) => { const k = INSP_KLEUR[id]; if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, id) && k < N_TEAM) { kaart[id] = k; bezet.add(k); } });
     ids.forEach((id) => {
       if (kaart[id] !== undefined) return;
-      let k = hashNr(id);
-      if (bezet.size < N_KLEUR) while (bezet.has(k)) k = (k + 1) % N_KLEUR;
+      let k = hashNr(id, N_TEAM);
+      if (bezet.size < N_TEAM) while (bezet.has(k)) k = (k + 1) % N_TEAM;
       kaart[id] = k; bezet.add(k);
     });
     kleurCache = { sleutel, kaart }; return kaart;
   };
   const kleurNr = (sleutel) => {
     sleutel = String(sleutel || "");
-    if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, sleutel)) return INSP_KLEUR[sleutel];
     const kaart = teamKaart(); if (kaart[sleutel] !== undefined) return kaart[sleutel];
-    return hashNr(sleutel);
+    if (Object.prototype.hasOwnProperty.call(INSP_KLEUR, sleutel) && INSP_KLEUR[sleutel] >= N_TEAM) return INSP_KLEUR[sleutel];
+    return N_TEAM + hashNr(sleutel, N_LOS);   // geen profiel: altijd een gestippeld label
   };
   const persSleutel = (id, tekst) => {
     let u = id ? USERS.find((x) => x.id === id) : null;
@@ -433,10 +433,11 @@
       // focus na het opnieuw tekenen: menu → blijft op het menu; stond hij in de inhoud (of nergens) → naar de kop
       // van het nieuwe scherm (in de inspectie: de nieuwe vraag), zodat toetsenbord en schermlezer meegaan
       const fa = document.activeElement, inMenu = fa && $("tabbar").contains(fa), y0 = window.scrollY;
-      const naarKop = !inMenu && (!fa || fa === document.body || $("view").contains(fa));
+      let naarKop = !inMenu && (!fa || fa === document.body || $("view").contains(fa));
       // zelfde scherm opnieuw getekend (bijv. een keuzechip aan/uit): focus terug op hetzelfde element
       const h0 = $("view").querySelector("h1"), zelfde = { page: this._page, kop: h0 ? h0.textContent : null, sleutel: fa && fa !== document.body && $("view").contains(fa) ? focusSleutel(fa) : null };
       this.renderAcct();
+      if (fa && fa !== document.body && !fa.isConnected && !inMenu) naarKop = true;   // knop in de kopbalk opnieuw getekend (bijv. de bel): focus niet op <body> laten vallen
       if (!this.user) { $("app").classList.add("nonav"); $("view").dataset.page = "login"; $("tabbar").classList.add("hidden"); $("alert").classList.add("hidden"); $("view").innerHTML = ""; return this.view_login(); }
       $("tabbar").classList.remove("hidden");
       let parts = (location.hash.replace(/^#\/?/, "") || "vandaag").split("/");
@@ -516,8 +517,12 @@
     },
     // naam van het scherm achter het venster (voor de terugknop in de kopregel); "" = onbekend (dan alleen "‹ Terug")
     terugNaam() {
-      const p = this.user ? this._page : "", t = TABS.find((x) => x.id === p);
-      return t ? t.lab : ({ rapport: "Rapport", inspectie: "Inspectie", beheer: "Beheer", oefen: "Oefenen", alleenweb: "Vandaag" })[p] || "";
+      // uit de huidige hash (niet uit _page): na location.replace (bijv. bewaarInspectie → rapport) loopt de route pas
+      // later, maar het scherm achter het venster is dan al het nieuwe
+      let p = this.user ? ((location.hash.replace(/^#\/?/, "") || "vandaag").split("/")[0]) : "";
+      const t = TABS.find((x) => x.id === p);
+      if (t && t.web && !isWeb()) p = "alleenweb";   // telefoon: dashboard/rapportage tonen "Alleen op de computer"
+      return t && p !== "alleenweb" ? t.lab : ({ rapport: "Rapport", inspectie: "Inspectie", beheer: "Beheer", oefen: "Oefenen", alleenweb: "Vandaag" })[p] || "";
     },
     closeModal() {
       const ov = $("ov"), was = ov.classList.contains("on"), mod = $("mod");

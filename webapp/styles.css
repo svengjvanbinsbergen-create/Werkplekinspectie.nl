@@ -410,6 +410,14 @@ body.zon .alertbar{background:#fff;color:#141A22;border:2px solid #A65A00}
 .atabel .pers .ilabel{max-width:220px}
 .atabel .atcel{min-width:240px}.atabel .atst{margin-bottom:5px}.atabel td:not(.atcel){white-space:nowrap}
 /* Acties, groot scherm (≥ 1500px): lijst links, overzicht rechts (js/acties.js actieZij) */
+.avolgend{margin-top:18px}
+/* naast het overzicht: alle tabellen dezelfde kolommen, zodat ze onder elkaar netjes uitlijnen */
+.ahoofd .atabel{table-layout:fixed;width:100%}
+.ahoofd .atabel th:nth-child(2),.ahoofd .atabel th:nth-child(3){width:23%}.ahoofd .atabel th:nth-child(4){width:12%}
+.ahoofd .atabel td:not(.atcel){overflow:hidden}.ahoofd .atabel .pers{max-width:100%}.ahoofd .atabel .pers .ilabel{max-width:100%}
+.avkop{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.avkop .vsectie{margin:4px 4px 8px}
+.leeg.kort{padding-top:18px;padding-bottom:18px}
 .agrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,340px);gap:24px;align-items:start}
 .azij{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(var(--tb) + 16px)}
 .azkaart{padding:18px 20px}
@@ -498,8 +506,16 @@ h2 .s{font-size:14px;font-weight:700}
 .filtersel{width:auto;flex:1;min-width:150px;max-width:280px;font-weight:700;background:#fff}
 .filtersel.aan{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent)}
 .linkje{font-weight:800;color:var(--accent);font-size:14px;padding:8px}
-.ikaarten{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-.ikaart{background:#fff;border-radius:24px;padding:16px 18px;box-shadow:var(--shadow)}
+.ikaarten{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr))}
+.ikaart{background:#fff;border-radius:24px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.ikaart .onder{margin-top:auto!important;padding-top:10px}
+/* kaarten naast elkaar: datum, titel, nummer, inspecteur en monteurs op dezelfde hoogte (subgrid; anders flex hierboven) */
+@supports (grid-template-rows:subgrid){
+  @media(min-width:700px){
+    .ikaart{display:grid;grid-row:span 5;grid-template-rows:subgrid;row-gap:0;align-content:start}
+    .ikaart .titel{align-self:start}.ikaart .onder{margin-top:0!important;align-self:end}.ikaart .monteurs{align-self:start}
+  }
+}
 .ikaart .boven{display:flex;gap:8px;align-items:center;justify-content:space-between}
 .ikaart .titel{font-size:17px;font-weight:800;margin:10px 0 2px}
 .ikaart .onder{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px;font-weight:700;color:var(--soft)}
@@ -1018,13 +1034,53 @@ body.veld .modterug,body.veld .modsluit{min-height:56px}body.veld .modsluit{widt
 body.zon .modkop{background:#fff}body.zon .modkop.schaduw{box-shadow:0 2px 0 #141A22}
 body.zon .modterug{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
 body.zon .modsluit{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+/* computer: de terugknop is daar een rustige tekstlink (geen tweede opvallende knop naast de titel en het ×); op de
+   telefoon de grote pil in de duimzone. Doelgebied blijft ≥ 44px. */
+@media(min-width:900px){
+  .modterug{background:transparent;color:#5E544A;font-size:14px;padding:0 10px 0 4px;min-height:44px}
+  .modterug:hover{background:#F6F1EA;color:var(--ink)}
+  .modterug .pijl{font-size:22px}
+  body.zon .modterug{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
+}
+/* systeemmelding in het meldingenvenster (bijv. "geblokkeerd"): neutraal grijs met een i, zodat hij niet lijkt op een
+   statusblok (rood/oranje/blauw) */
+.msys{display:flex;gap:10px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:16px;background:var(--mist);color:#374151;font-size:14px;line-height:1.45;border:1.5px dashed #C9CED6}
+.msys-ic{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#4A5565;color:#fff;font-weight:800;font-size:13px;font-style:italic;font-family:Georgia,serif}
+body.zon .msys{background:#fff;color:#141A22;border:2px solid #141A22}
+/* Planning: de ingeplande inspectie waar je vanuit een melding naartoe ging */
+.pkaart.uitgelicht{box-shadow:0 0 0 3px #8A4B00,var(--shadow)}
+.pkaart.uitgelicht:focus{outline:3px solid #8A4B00;outline-offset:3px}
+body.zon .pkaart.uitgelicht{box-shadow:0 0 0 3px #141A22}
 
 /* ================= Vandaag op een groot scherm: twee kolommen (inspecties links, acties en Meer rechts) ================= */
 @media(min-width:1100px){
   .vgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0 28px;align-items:start}
   .vrechts>:first-child>.vsectie:first-child,.vrechts>.oef-tipplek+#mijnact>.vsectie:first-child{margin-top:0}
   .vrechts .oef-hint{margin-top:0}
+  /* Vandaag: raster met rijen die even hoog zijn (js/vandaag.js), zodat beide kolommen even ver doorlopen */
+  .vgrid.vandaaggrid{grid-template-areas:"top act" "binnen laatst" "meer meer";align-items:stretch}
+  .vgrid.vandaaggrid.zonderlaatst{grid-template-areas:"top act" "binnen meer"}
+  .vandaaggrid>.vlinks,.vandaaggrid>.vrechts{display:contents}
+  .vandaaggrid .vtop{grid-area:top;display:flex;flex-direction:column;min-width:0}
+  .vandaaggrid .vtop>.vplan{flex:1;display:flex;flex-direction:column}
+  .vandaaggrid .vtop>.vplan>.heroknop:only-child,.vandaaggrid .vtop>.heroknop:first-child:nth-last-child(2){flex:1;margin-bottom:0}
+  .vandaaggrid .vtop .heroknop{display:flex;flex-direction:column;justify-content:flex-start}
+  .vandaaggrid .vtop .heroknop .hk-balk{margin-top:auto;align-self:flex-start}
+  .vandaaggrid .vtop .heroknop>span.s,.vandaaggrid .vtop .heroknop>span.meta{margin-bottom:16px}
+  .vandaaggrid .vact{grid-area:act;display:flex;flex-direction:column;min-width:0}
+  .vandaaggrid .vact>#mijnact{flex:1;display:flex;flex-direction:column}
+  .vandaaggrid .vact>#mijnact>.listcard{flex:1}
+  .vandaaggrid .vact>#mijnact>.vsectie:first-child,.vandaaggrid .vact>.oef-tipplek+#mijnact>.vsectie:first-child{margin-top:0}
+  .vandaaggrid .vbinnen{grid-area:binnen}.vandaaggrid .vlaatst{grid-area:laatst}
+  .vandaaggrid .vbinnen,.vandaaggrid .vlaatst{display:flex;flex-direction:column;min-width:0}
+  .vandaaggrid .vbinnen>.listcard,.vandaaggrid .vlaatst>.listcard{flex:1;display:flex;flex-direction:column}
+  .vandaaggrid .vmeer{grid-area:meer;min-width:0}
+  .vgrid.vandaaggrid:not(.zonderlaatst) .vmeer .listcard{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));column-gap:28px}
+  .vgrid.vandaaggrid:not(.zonderlaatst) .vmeer .vknop{border-bottom:0}
 }
+/* voetregel onder "Binnenkort gepland" en "Laatste inspecties" (alleen groot scherm): staat altijd onderaan de kaart */
+.vknop.vkvoet{margin-top:auto;min-height:56px;border-top:1px solid #F4EDE3;border-bottom:0}
+.vknop.vkvoet .t{font-size:15px;color:var(--accent)}
 /* Vandaag, groot scherm: binnenkort gepland en laatste inspecties onder de grote kaart (js/vandaag.js) */
 .alleenbreed{display:none}
 @media(min-width:1100px){.alleenbreed{display:block}}
@@ -1033,29 +1089,48 @@ body.zon .modsluit{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141
 .vkbreed .vdat .w{font-size:11.5px;font-weight:800;text-transform:lowercase}
 .vkbreed .vdat .d{font-size:19px;font-weight:800;margin-top:2px}
 .vkbreed .vkwie{flex:none;max-width:42%;display:flex}
+/* smallere computerschermen: de naam onder de titel in plaats van ernaast, zodat hij nooit wordt afgekapt */
+@media(min-width:1100px) and (max-width:1699px){
+  .vkbreed{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:12px;row-gap:4px}
+  .vkbreed>.vdat,.vkbreed>.cirkel{grid-row:1/span 2;align-self:center}
+  .vkbreed>.grow{grid-column:2;grid-row:1}
+  .vkbreed>.vkwie{grid-column:2;grid-row:2;max-width:100%;justify-self:start}
+  .vkbreed>svg{grid-column:3;grid-row:1/span 2;align-self:center}
+}
 .vkbreed .cirkel{background:#F4EDE3;color:#6E6255}
 body.zon .vkbreed .vdat,body.zon .vkbreed .cirkel{background:#fff;color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
 
 /* ================= Persoonslabel: elke persoon een vaste eigen kleur (WPI.inspLabel / WPI.persIni in js/kern.js) =================
-   Eén beeldtaal voor mensen (inspecteur, actiehouder, toetser, team). Vier tinten ver van de statuskleuren
-   (geen groen/geel/rood van C/A/V, geen rood/oranje/blauw van de meldingen): violet, petrol, pruim, leisteen;
-   elk licht (ik0–ik3) en vol (ik4–ik7). Contrast: tekst op tint ≥ 5.9:1, wit op de kleur ≥ 7:1 (AA). */
+   Eén beeldtaal voor mensen (inspecteur, actiehouder, toetser, team). Alleen kleuren die in de app nog niets
+   betekenen: geen groen/geel/rood (C/A/V), rood/oranje/blauw (meldingen), lila (AI-Voorstel) of groen/petrol (hoofdkleur).
+   Teamleden (ik0–ik7) gevuld: vol = witte naam op de kleur (indigo, bruin, pruim, antraciet, leisteen),
+   licht = gekleurde naam op een tint (roze, lichtgrijs, taupe). Namen zonder profiel (fictieve voorbeelden,
+   ik8–ik12): wit met een gestippelde rand. Contrast: tekst ≥ 6.5:1, wit op de kleur ≥ 6.5:1 (AA). */
 span.ilabel{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:26px;padding:2px 10px 2px 3px;border-radius:999px;font-size:13px;font-weight:800;line-height:1.2;vertical-align:middle;background:var(--ib);color:var(--ic)}
 span.ilabel>span.ini,.pini{flex:none;width:21px;height:21px;border-radius:50%;display:grid;place-items:center;text-align:center;font-size:11.5px;font-weight:800;line-height:1;background:var(--ic);color:#fff}
 span.ilabel>span.nm{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-span.ilabel.leeg{padding:2px 10px;background:#F4EDE3;color:#6E6255}
+span.ilabel.leeg{padding:2px 10px;background:transparent;color:#6E6255;box-shadow:inset 0 0 0 1.5px #D9CFC2}
 .pini{width:26px;height:26px;font-size:12.5px}
-.ik0,.ik4{--ic:#5B2E91;--ib:#EFE7F8}   /* violet   */
-.ik1,.ik5{--ic:#0A6363;--ib:#DDF0EF}   /* petrol   */
-.ik2,.ik6{--ic:#7B2470;--ib:#F7E6F3}   /* pruim    */
-.ik3,.ik7{--ic:#3D4A58;--ib:#E7EBEF}   /* leisteen */
+.ik0{--ic:#34368F}                  /* indigo (vol)      */
+.ik1{--ic:#8B1A58;--ib:#FAE3F0}     /* roze (licht)      */
+.ik2{--ic:#6B4226}                  /* bruin (vol)       */
+.ik3{--ic:#2F4256;--ib:#E2E8EE}     /* lichtgrijs        */
+.ik4{--ic:#651E5E}                  /* pruim (vol)       */
+.ik5{--ic:#25292F}                  /* antraciet (vol)   */
+.ik6{--ic:#4C5E74}                  /* leisteen (vol)    */
+.ik7{--ic:#56463A;--ib:#EEE7DF}     /* taupe (licht)     */
+.ik8{--ic:#25292F}.ik9{--ic:#651E5E}.ik10{--ic:#6B4226}.ik11{--ic:#34368F}.ik12{--ic:#4C5E74}   /* gestippeld (geen profiel) */
 /* volle vorm: witte naam op de kleur, rondje omgekeerd */
-span.ilabel.ik4,span.ilabel.ik5,span.ilabel.ik6,span.ilabel.ik7{background:var(--ic);color:#fff}
-span.ilabel.ik4>span.ini,span.ilabel.ik5>span.ini,span.ilabel.ik6>span.ini,span.ilabel.ik7>span.ini{background:#fff;color:var(--ic)}
-.pini.ik4,.pini.ik5,.pini.ik6,.pini.ik7{background:#fff;color:var(--ic);box-shadow:inset 0 0 0 2.5px var(--ic)}
-body.zon span.ilabel{background:#fff;box-shadow:inset 0 0 0 2px var(--ic)}
-body.zon span.ilabel.ik4,body.zon span.ilabel.ik5,body.zon span.ilabel.ik6,body.zon span.ilabel.ik7{background:var(--ic);box-shadow:none}
+span.ilabel:is(.ik0,.ik2,.ik4,.ik5,.ik6){background:var(--ic);color:#fff}
+span.ilabel:is(.ik0,.ik2,.ik4,.ik5,.ik6)>span.ini{background:#fff;color:var(--ic)}
+.pini:is(.ik0,.ik2,.ik4,.ik5,.ik6){background:#fff;color:var(--ic);box-shadow:inset 0 0 0 2.5px var(--ic)}
+/* geen profiel: wit, gestippelde rand in de kleur */
+span.ilabel:is(.ik8,.ik9,.ik10,.ik11,.ik12){background:#fff;color:var(--ic);border:2px dashed var(--ic);padding:0 8px 0 1px}
+.pini:is(.ik8,.ik9,.ik10,.ik11,.ik12){background:#fff;color:var(--ic);border:2px dashed var(--ic)}
+/* zonmodus: lichte vorm krijgt een harde rand (tint blijft, zodat licht ≠ gestippeld wit) */
+body.zon span.ilabel:is(.ik1,.ik3,.ik7){box-shadow:inset 0 0 0 2px var(--ic)}
+body.zon span.ilabel:is(.ik8,.ik9,.ik10,.ik11,.ik12){border-width:2.5px}
 body.zon span.ilabel.leeg{color:#141A22;box-shadow:inset 0 0 0 2px #141A22}
-.ikaart .onder .ilabel,.pkaart .onder .ilabel{max-width:calc(100% - 80px)}
+.ikaart .onder .ilabel,.pkaart .onder .ilabel{max-width:100%}
 .rapkop{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin-bottom:14px}
 @media(min-width:900px){body.veld .tabbar a{font-size:15px;padding:12px 14px}}   /* veldmodus: zijmenu op de computer niet kleiner */

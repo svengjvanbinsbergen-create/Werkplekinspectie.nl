@@ -361,7 +361,7 @@ Versleutelen met een sleutel die bij de sessie hoort (zoals de aanvallers als be
 
 **Bevinding.** Zonder regels publiceert een host alles in de map: testscripts, databasebestanden, onderzoeksdocumenten, interne pagina's, `.git`.
 
-**Fix.** **Allowlist-publicatie**: bij elke deploy wordt een map `dist/` opnieuw gebouwd met **alleen** wat de app nodig heeft (index.html, styles, js, css, data, iconen, manifest, service worker). Daarna blijven alleen html/css/js/json/png over en alleen `index.html` als pagina. Zo kunnen `docs/`, `tests/`, `supabase/`, `tools/`, `*.md`, `*.sql`, `*.py`, `*.sh`, `.env`, `.git` en interne pagina's (`beveiliging.html`, `onderzoek.html`, …) nooit online komen, ook niet als ze later bijkomen. Als extra vangnet geven die paden een 404 (Netlify, Vercel) of `noindex` + een lege sandbox (Cloudflare).
+**Fix.** **Allowlist-publicatie**: bij elke deploy wordt een map `dist/` opnieuw gebouwd met **alleen** wat de app nodig heeft (index.html, styles, js, css, data, iconen, het lettertype in `fonts/`, manifest, service worker en `.well-known/assetlinks.json`). Daarna blijven alleen html/css/js/json/png/woff2 over en alleen `index.html` als pagina. Zo kunnen `docs/`, `tests/`, `supabase/`, `tools/`, `*.md`, `*.sql`, `*.py`, `*.sh`, `.env`, `.git` en interne pagina's (`beveiliging.html`, `onderzoek.html`, …) nooit online komen, ook niet als ze later bijkomen. Als extra vangnet geven die paden een 404 (Netlify, Vercel) of `noindex` + een lege sandbox (Cloudflare).
 
 **Aanbevolen indeling:**
 ```

@@ -14,7 +14,9 @@
     wisInspFilter() { this.inspFilter = { insp: "" }; this.route(); },
     async view_inspecties() {
       const v = $("view"), mine = !WPI.mag("zietAlles"), f = this.inspFilter;   // iedereen in het team ziet alle inspecties
+      const nr = this._routeNr;
       let saved = []; try { saved = await DB.all(); } catch (e) {}
+      if (nr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       // één lijst: eigen (op dit toestel) + voorbeeld-inspecties, met inspecteur en monteurs
       const rijen = saved.filter((r) => !mine || r.inspecteur_id === this.user.id).map((r) => ({
         eigen: true, id: r.id, titel: r.titel, datum: (r.opgeslagen || "").slice(0, 10), inspecteur: r.inspecteur, inspecteur_id: r.inspecteur_id || null, monteurs: r.monteurs || [],
@@ -36,9 +38,10 @@
         : `<div class="leeg"><span class="bol">🔍</span><div class="t">Geen inspecties gevonden</div><div class="s">${mine ? "Start er een via Vandaag." : "Pas het filter aan."}</div></div>`));
     },
     async view_rapport(parts) {
-      const id = parts[0];
+      const id = parts[0], rnr = this._routeNr;
       const v = $("view");
       let saved = []; try { saved = await DB.all(); } catch (e) {}
+      if (rnr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       const r = saved.find((x) => x.id === id);
       if (!r) { v.appendChild(el(`<div><button class="btn ghost sm"${act("go", "inspecties")}>${svg("back", 16)} Terug</button><h1>Rapport niet gevonden</h1></div>`)); return; }
       const ws = r.versie >= 2 ? r.waarnemingen : Object.entries(r.oordelen || {}).filter(([, o]) => o)
@@ -55,6 +58,7 @@
       }).join("");
       const acties = ws.filter((w) => (w.oordeel === "A" || w.oordeel === "V") && w.actie);
       await this.laadActies();
+      if (rnr !== this._routeNr) return;   // intussen opnieuw gerouteerd: niet dubbel tekenen
       const aRows = acties.map((w, n) => {
         const i = this.infoVoor(r.code, w.regel_id, w.buiten), live = (this.acties || []).find((x) => x.id === w.actie.actie_id);
         const a = live || w.actie;   // live status uit Acties; oude rapporten (v2) vallen terug op het record
